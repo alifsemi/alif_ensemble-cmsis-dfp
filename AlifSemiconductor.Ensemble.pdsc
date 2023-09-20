@@ -1,0 +1,1710 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<package schemaVersion="1.4" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="PACK.xsd">
+<vendor>AlifSemiconductor</vendor>
+  <name>Ensemble</name>
+  <description>Alif Semiconductor Ensemble Device Family Pack</description>
+  <url>https://github.com/alifsemi/alif_ensemble-cmsis-dfp/raw/main/</url>
+  <supportContact>support@alifsemi.com</supportContact>
+  <!-- optional license file -->
+  <!--
+  <license>
+  </license>
+  -->
+
+  <releases>
+    <release version="0.9.6" date="2023-09-20">
+      Initial release
+    </release>
+  </releases>
+
+  <keywords>
+    <!-- keywords for indexing -->
+    <keyword>AlifSemiconductor</keyword>
+    <keyword>Ensemble</keyword>
+  </keywords>
+
+
+  <!-- devices section : Describes Alif Semiconductor Fusion Processor SOC -->
+  <devices>
+   <!-- ********************  Alif Semiconductor Fusion Processor  ******************** -->
+    <family Dfamily="Ensemble" Dvendor="Alif Semiconductor:165">
+      <!--book name="Device/AlifSemi/Documents/Arm Cortex-M55 Processor Datasheet.pdf" title="Arm Cortex-M55 Processor Datasheet"/-->
+      <!-- Debug configuration settings -->
+	  <!--  Removing SDF file till MDK fixes it  -->
+      <!--<debugconfig  sdf="Boards/Alif Semiconductor/Fusion/Fusion.sdf" dormant="true"/>-->
+	  <debugconfig dormant="true"/>
+
+      <description>
+	The Alif Semiconductor Ensemble family of Microcontrollers and Fusion processors are built on the latest generation embedded processing technology that scale from single Arm® Cortex-M55 MCUs to a new class of multi-core devices — fusion processors — that blend up to two Cortex-M55 MCU cores, up to two Cortex-A32 microprocessors (MPU) cores capable of running high-level operating systems, and up to two Arm Ethos-U55 microNPUs for artificial intelligence (AI) and machine learning (ML) acceleration. Ensemble family devices contain an advanced secure enclave that provides multiple layers of security, such as device integrity protection, secure identity and strong root-of-trust, secure lifecycle management, large on-chip SRAM and nonvolatile memory, accelerated graphics, imaging, and class-leading power characteristics.
+      </description>
+
+	  <algorithm name="Flash/algorithms/Ensemble.FLM" start="0x80000000" size="0x00580000" RAMstart="0x00000000" RAMsize="0x20000" default="1"/>
+
+      <sequences>
+        <sequence name="DebugDeviceUnlock">
+        <block>
+          DAP_Delay(500000);  // Delay for 500ms
+        </block>
+        </sequence>
+      </sequences>
+
+      <subFamily DsubFamily="E7">
+        <!-- ******************************  E7  ******************************* -->
+
+        <!-- Device processor attributes -->
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="400000000" Pname="M55_HP"/>
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="160000000" Pname="M55_HE"/>
+
+        <!-- On-chip NVM Region -->
+        <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+        <!-- On-Chip RAM Regions 13.5MB-->
+        <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+        <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+        <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+        <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+        <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+        <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+        <memory name="SRAM6_A" start="0x62000000" size="0x00100000" access="rwx" default="1"/>
+        <memory name="SRAM6_B" start="0x62400000" size="0x00100000" access="rwx" default="1"/>
+        <memory name="SRAM7" start="0x63000000" size="0x00080000" access="rwx" default="1"/>
+        <memory name="SRAM8" start="0x63200000" size="0x00200000" access="rwx" default="1"/>
+        <memory name="SRAM9" start="0x60000000" size="0x000C0000" access="rwx" default="1"/>
+
+        <compile Pname="M55_HP" Pdefine="M55_HP"/>
+        <compile Pname="M55_HE" Pdefine="M55_HE"/>
+        <!-- Cortex-M55 Access Ports -->
+        <accessportV2 __apid="0" address="0x00200000"/>
+        <accessportV2 __apid="1" address="0x00300000"/>
+        <debug Pname="M55_HP" __apid="0"/>
+        <debug Pname="M55_HE" __apid="1"/>
+        <!-- Device properties, header files and preprocessor defines -->
+        <feature type="XTAL" n="38400000" name="High-Frequency Crystal Oscillator"/>
+        <feature type="IntRC" n="76800000" name="High-Frequency Internal RC Oscillator"/>
+        <feature type="PLL" n="1" name="Internal PLL with 3 clock outputs"/>
+        <feature type="PowerMode" n="5" name="GO, READY, IDLE, STANDBY, STOP"/>
+        <feature type="PowerOther" n="1" name="POR"/>
+        <feature type="PowerOther" n="1" name="BOR"/>
+        <!--Security-->
+        <feature type="CoreOther" n="1" name="Full Secure Enclave"/>
+        <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+        <feature type="CoreOther" n="1" m="46" name="Neural Processing Unit (NPU)/HE"/>
+        <feature type="CoreOther" n="1" name="CRC Calculation Unit"/>
+        <!--External Memory-->
+        <feature type="ComOther" n="2" name="Cryptographic Octal SPI (OSPI)"/>
+        <!-- Serial Connectivity   -->
+        <feature type="UART" n="8"  name="UART Interface"/>
+        <feature type="UART" n="1" name="Low Power UART Interface"/>
+        <feature type="SPI" n="4"  name="SPI Interface"/>
+        <feature type="SPI" n="1" name="Low Power SPI Interface"/>
+        <feature type="I2C" n="4" name="Inter-Integrated Circuit (I2C)"/>
+        <feature type="I2C" n="1" name="Low Power Inter-Integrated Circuit (LPI2C)"/>
+        <feature type="ComOther" n="1" name="MIPI I3C"/>
+        <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        <!--High Speed Connectivity-->
+        <feature type="USBD" n="1" name="USB 2.0 Device"/>
+        <feature type="USBH" n="1" name="USB 2.0 Host"/>
+        <feature type="ETH" n="1" m="100000000" name="Ethernet 10/100 Controller (ETH)"/>
+        <feature type="SDIO" n="1"  name="SDMMC, SDIO"/>
+        <!--Graphics-->
+        <feature type="Other" n="1" name="GPU2D"/>
+        <!--Display-->
+        <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI DSI"/>
+        <!--Camera-->
+        <feature type="Camera" n="1" m="16" name="Camera Parallel Interface"/>
+        <feature type="Camera" n="1" m="8" name="Low Power Camera Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI CSI2"/>
+        <!--Audio-->
+        <feature type="I2S"   n="4" name="Inter-IC Sound (I2S)"/>
+        <feature type="I2S" n="1" name="Low Power Inter-IC Sound (I2S)"/>
+        <feature type="ComOther" n="1" m="8" name="Pulse Density Modulation (PDM) Interface"/>
+        <feature type="ComOther" n="1" m="8" name="Low Power Pulse Density Modulation (PDM) Interface"/>
+        <!--Timers-->
+        <feature type="TimerOther" n="12" m="32" name="Universal Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Low Power Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Quadrature Encoder"/>
+        <feature type="TimerOther" n="1" name="Real-Time Counter"/>
+        <feature type="TimerOther" n="1" name="Local Watchdog Timer"/>
+        <!-- Analog -->
+        <feature type="TempSens" n="1"  name="Temperature Sensor"/>
+        <feature type="ADC" n="3" m="12" name="6 single-ended or 3 Differential Channel ADC12, SAR"/>
+        <feature type="ADC" n="1" m="24" name="4 Differential Channel ADC24, Sigma Delta"/>
+        <feature type="DAC" n="2" m="12" name="Digital-to-Analog Converter (DAC12)"/>
+        <feature type="AnalogOther" n="4" name="High-Speed Comparator"/>
+        <feature type="AnalogOther" n="1" name="Low Power Comparator"/>
+        <!--GPIO-->
+        <feature type="IOs" n="120"  name="General Purpose I/Os, 1.8V tolerant"/>
+        <feature type="IOs" n="8"  name="General Purpose Flex I/Os, 1.8V or 3.3V tolerant"/>
+        <!--Operation Range-->
+        <feature type="VCC" n="1.71" m="4.2"/>
+        <feature type="Temp" n="-40" m="75"/>
+        <device Dname="AE722F80F55D5AS">
+          <book name="https://www.alifsemi.com/download/2021" title="E7 Datasheet"/>
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+         <feature type="PackageOther" n="208" name="WLCSP"/>
+        </device>
+        <device Dname="AE722F80F55D5LS">
+          <book name="https://www.alifsemi.com/download/2021" title="E7 Datasheet"/>
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+        </device>
+      </subFamily>
+
+      <subFamily DsubFamily="E5">
+        <!-- ******************************  E5  ******************************* -->
+
+        <!-- Device processor attributes -->
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="400000000" Pname="M55_HP"/>
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="160000000" Pname="M55_HE"/>
+
+        <!-- On-chip NVM Region -->
+        <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+
+        <compile Pname="M55_HP" Pdefine="M55_HP"/>
+        <compile Pname="M55_HE" Pdefine="M55_HE"/>
+        <!-- Cortex-M55 Access Ports -->
+        <accessportV2 __apid="0" address="0x00200000"/>
+        <accessportV2 __apid="1" address="0x00300000"/>
+        <debug Pname="M55_HP" __apid="0"/>
+        <debug Pname="M55_HE" __apid="1"/>
+        <!-- Device properties, header files and preprocessor defines -->
+        <feature type="XTAL" n="38400000" name="High-Frequency Crystal Oscillator"/>
+        <feature type="IntRC" n="76800000" name="High-Frequency Internal RC Oscillator"/>
+        <feature type="PLL" n="1" name="Internal PLL with 3 clock outputs"/>
+        <feature type="PowerMode" n="5" name="GO, READY, IDLE, STANDBY, STOP"/>
+        <feature type="PowerOther" n="1" name="POR"/>
+        <feature type="PowerOther" n="1" name="BOR"/>
+        <!--Security-->
+        <feature type="CoreOther" n="1" name="Full Secure Enclave"/>
+        <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+        <feature type="CoreOther" n="1" m="46" name="Neural Processing Unit (NPU)/HE"/>
+        <feature type="CoreOther" n="1" name="CRC Calculation Unit"/>
+        <!--External Memory-->
+        <feature type="ComOther" n="2" name="Cryptographic Octal SPI (OSPI)"/>
+        <!-- Serial Connectivity   -->
+        <feature type="UART" n="8"  name="UART Interface"/>
+        <feature type="UART" n="1" name="Low Power UART Interface"/>
+        <feature type="SPI" n="4"  name="SPI Interface"/>
+        <feature type="SPI" n="1" name="Low Power SPI Interface"/>
+        <feature type="I2C" n="4" name="Inter-Integrated Circuit (I2C)"/>
+        <feature type="I2C" n="1" name="Low Power Inter-Integrated Circuit (LPI2C)"/>
+        <feature type="ComOther" n="1" name="MIPI I3C"/>
+        <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        <!--High Speed Connectivity-->
+        <feature type="USBD" n="1" name="USB 2.0 Device"/>
+        <feature type="USBH" n="1" name="USB 2.0 Host"/>
+        <feature type="ETH" n="1" m="100000000" name="Ethernet 10/100 Controller (ETH)"/>
+        <feature type="SDIO" n="1"  name="SDMMC, SDIO"/>
+        <!--Graphics-->
+        <feature type="Other" n="1" name="GPU2D"/>
+        <!--Display-->
+        <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI DSI"/>
+        <!--Camera-->
+        <feature type="Camera" n="1" m="16" name="Camera Parallel Interface"/>
+        <feature type="Camera" n="1" m="8" name="Low Power Camera Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI CSI2"/>
+        <!--Audio-->
+        <feature type="I2S"   n="4" name="Inter-IC Sound (I2S)"/>
+        <feature type="I2S" n="1" name="Low Power Inter-IC Sound (I2S)"/>
+        <feature type="ComOther" n="1" m="8" name="Pulse Density Modulation (PDM) Interface"/>
+        <feature type="ComOther" n="1" m="8" name="Low Power Pulse Density Modulation (PDM) Interface"/>
+        <!--Timers-->
+        <feature type="TimerOther" n="12" m="32" name="Universal Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Low Power Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Quadrature Encoder"/>
+        <feature type="TimerOther" n="1" name="Real-Time Counter"/>
+        <feature type="TimerOther" n="1" name="Local Watchdog Timer"/>
+        <!-- Analog -->
+        <feature type="TempSens" n="1"  name="Temperature Sensor"/>
+        <feature type="ADC" n="3" m="12" name="6 single-ended or 3 Differential Channel ADC12, SAR"/>
+        <feature type="ADC" n="1" m="24" name="4 Differential Channel ADC24, Sigma Delta"/>
+        <feature type="DAC" n="2" m="12" name="Digital-to-Analog Converter (DAC12)"/>
+        <feature type="AnalogOther" n="4" name="High-Speed Comparator"/>
+        <feature type="AnalogOther" n="1" name="Low Power Comparator"/>
+        <!--GPIO-->
+        <feature type="IOs" n="120"  name="General Purpose I/Os, 1.8V tolerant"/>
+        <feature type="IOs" n="8"  name="General Purpose Flex I/Os, 1.8V or 3.3V tolerant"/>
+        <!--Operation Range-->
+        <feature type="VCC" n="1.71" m="4.2"/>
+        <feature type="Temp" n="-40" m="75"/>
+        <device Dname="AE512F80F55D5AS">
+          <book name="https://www.alifsemi.com/download/2022" title="E5/C5 Datasheet"/>
+          <!-- On-Chip RAM Regions 13.5MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM6_A" start="0x62000000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM6_B" start="0x62400000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM7" start="0x63000000" size="0x00080000" access="rwx" default="1"/>
+          <memory name="SRAM8" start="0x63200000" size="0x00200000" access="rwx" default="1"/>
+          <memory name="SRAM9" start="0x60000000" size="0x000C0000" access="rwx" default="1"/>
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+           <feature type="PackageOther" n="208" name="WLCSP"/>
+        </device>
+
+		<device Dname="AE512F80F5582AS">
+          <book name="https://www.alifsemi.com/download/2022" title="E5/C5 Datasheet"/>
+          <!--On-Chip RAM Regions 8.25MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+          <!-- processor & Compile headers-->
+	  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+	  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="208" name="WLCSP"/>
+        </device>
+
+        <device Dname="AE512F80F55D5LS">
+          <book name="https://www.alifsemi.com/download/2022" title="E5/C5 Datasheet"/>
+          <!-- On-Chip RAM Regions 13.5MB -->
+                    <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM6_A" start="0x62000000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM6_B" start="0x62400000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM7" start="0x63000000" size="0x00080000" access="rwx" default="1"/>
+          <memory name="SRAM8" start="0x63200000" size="0x00200000" access="rwx" default="1"/>
+          <memory name="SRAM9" start="0x60000000" size="0x000C0000" access="rwx" default="1"/>
+
+	  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+	  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+        </device>
+
+        <device Dname="AE512F80F5582LS">
+          <book name="https://www.alifsemi.com/download/2022" title="E5/C5 Datasheet"/>
+          <!-- On-Chip RAM Regions 8.25MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+
+	  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+	  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+        </device>
+      </subFamily>
+
+      <subFamily DsubFamily="E3">
+        <!-- ******************************  E3  ******************************* -->
+
+        <!-- Device processor attributes -->
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="400000000" Pname="M55_HP"/>
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="160000000" Pname="M55_HE"/>
+
+        <compile Pname="M55_HP" Pdefine="M55_HP"/>
+        <compile Pname="M55_HE" Pdefine="M55_HE"/>
+        <!-- Cortex-M55 Access Ports -->
+        <accessportV2 __apid="0" address="0x00200000"/>
+        <accessportV2 __apid="1" address="0x00300000"/>
+        <debug Pname="M55_HP" __apid="0"/>
+        <debug Pname="M55_HE" __apid="1"/>
+        <!-- Device properties, header files and preprocessor defines -->
+        <feature type="XTAL" n="38400000" name="High-Frequency Crystal Oscillator"/>
+        <feature type="IntRC" n="76800000" name="High-Frequency Internal RC Oscillator"/>
+        <feature type="PLL" n="1" name="Internal PLL with 3 clock outputs"/>
+        <feature type="PowerMode" n="5" name="GO, READY, IDLE, STANDBY, STOP"/>
+        <feature type="PowerOther" n="1" name="POR"/>
+        <feature type="PowerOther" n="1" name="BOR"/>
+        <!--Security-->
+        <feature type="CoreOther" n="1" name="Full Secure Enclave"/>
+        <feature type="CoreOther" n="1" m="46" name="Neural Processing Unit (NPU)/HE"/>
+        <feature type="CoreOther" n="1" name="CRC Calculation Unit"/>
+        <!--External Memory-->
+        <feature type="ComOther" n="2" name="Cryptographic Octal SPI (OSPI)"/>
+        <!-- Serial Connectivity   -->
+        <feature type="UART" n="8"  name="UART Interface"/>
+        <feature type="UART" n="1" name="Low Power UART Interface"/>
+        <feature type="SPI" n="4"  name="SPI Interface"/>
+        <feature type="SPI" n="1" name="Low Power SPI Interface"/>
+        <feature type="I2C" n="4" name="Inter-Integrated Circuit (I2C)"/>
+        <feature type="I2C" n="1" name="Low Power Inter-Integrated Circuit (LPI2C)"/>
+        <feature type="ComOther" n="1" name="MIPI I3C"/>
+        <!--High Speed Connectivity-->
+        <feature type="USBD" n="1" name="USB 2.0 Device"/>
+        <feature type="USBH" n="1" name="USB 2.0 Host"/>
+        <feature type="ETH" n="1" m="100000000" name="Ethernet 10/100 Controller (ETH)"/>
+        <feature type="SDIO" n="1"  name="SDMMC, SDIO"/>
+        <!--Graphics-->
+        <feature type="Other" n="1" name="GPU2D"/>
+        <!--Display-->
+        <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI DSI"/>
+        <!--Camera-->
+        <feature type="Camera" n="1" m="16" name="Camera Parallel Interface"/>
+        <feature type="Camera" n="1" m="8" name="Low Power Camera Parallel Interface"/>
+        <feature type="Other" n="1" name="MIPI CSI2"/>
+        <!--Audio-->
+        <feature type="I2S"   n="4" name="Inter-IC Sound (I2S)"/>
+        <feature type="I2S" n="1" name="Low Power Inter-IC Sound (I2S)"/>
+        <feature type="ComOther" n="1" m="8" name="Pulse Density Modulation (PDM) Interface"/>
+        <feature type="ComOther" n="1" m="8" name="Low Power Pulse Density Modulation (PDM) Interface"/>
+        <!--Timers-->
+        <feature type="TimerOther" n="12" m="32" name="Universal Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Low Power Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Quadrature Encoder"/>
+        <feature type="TimerOther" n="1" name="Real-Time Counter"/>
+        <feature type="TimerOther" n="1" name="Local Watchdog Timer"/>
+        <!-- Analog -->
+        <feature type="TempSens" n="1"  name="Temperature Sensor"/>
+        <feature type="ADC" n="3" m="12" name="6 single-ended or 3 Differential Channel ADC12, SAR"/>
+        <feature type="ADC" n="1" m="24" name="4 Differential Channel ADC24, Sigma Delta"/>
+        <feature type="DAC" n="2" m="12" name="Digital-to-Analog Converter (DAC12)"/>
+        <feature type="AnalogOther" n="4" name="High-Speed Comparator"/>
+        <feature type="AnalogOther" n="1" name="Low Power Comparator"/>
+        <!--GPIO-->
+        <feature type="IOs" n="120"  name="General Purpose I/Os, 1.8V tolerant"/>
+        <feature type="IOs" n="8"  name="General Purpose Flex I/Os, 1.8V or 3.3V tolerant"/>
+        <!--Operation Range-->
+        <feature type="VCC" n="1.71" m="4.2"/>
+        <feature type="Temp" n="-40" m="85"/>
+        <device Dname="AE302F80F55D5AE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+
+          <!-- On-Chip RAM Regions 13.5 MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM6_A" start="0x62000000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM6_B" start="0x62400000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM7" start="0x63000000" size="0x00080000" access="rwx" default="1"/>
+          <memory name="SRAM8" start="0x63200000" size="0x00200000" access="rwx" default="1"/>
+          <memory name="SRAM9" start="0x60000000" size="0x000C0000" access="rwx" default="1"/>
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="208" name="WLCSP"/>
+          <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+          <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        </device>
+
+		<device Dname="AE302F80F5582AE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+
+          <!-- On-Chip RAM Regions 8.25MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+           <feature type="PackageOther" n="208" name="WLCSP"/>
+            <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+          <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        </device>
+
+        <device Dname="AE302F80F55D5LE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+
+          <!-- On-Chip RAM Regions 13.5MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM6_A" start="0x62000000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM6_B" start="0x62400000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM7" start="0x63000000" size="0x00080000" access="rwx" default="1"/>
+          <memory name="SRAM8" start="0x63200000" size="0x00200000" access="rwx" default="1"/>
+          <memory name="SRAM9" start="0x60000000" size="0x000C0000" access="rwx" default="1"/>
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+          <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+          <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        </device>
+
+        <device Dname="AE302F80F5582LE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
+
+          <!-- On-Chip RAM Regions 8.25MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM1" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+          <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+          <feature type="CAN" n="1"  name="CAN FD Controller"/>
+        </device>
+
+        <device Dname="AE302F80C1557LE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
+
+          <!-- On-Chip RAM Regions 5.75MB-->
+          <memory name="SRAM0" start="0x02000000" size="0x00400000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+           <feature type="PackageOther" n="194" name="FBGA"/>
+           <feature type="CoreOther" n="1" m="204" name="Neural Processing Unit (NPU)/HP"/>
+        </device>
+
+		<device Dname="AE302F40C1537LE">
+          <book name="https://www.alifsemi.com/download/2023" title="E3/C3 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
+
+          <!--On-Chip RAM Regions 3.75MB -->
+          <memory name="SRAM0" start="0x02000000" size="0x00200000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+		  <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+           <feature type="PackageOther" n="194" name="FBGA"/>
+        </device>
+
+      </subFamily>
+<!-- ToDo : Add E1 subfamily-->
+      <subFamily DsubFamily="E1">
+        <!-- ******************************  E1  ******************************* -->
+
+        <!-- Device processor attributes -->
+
+        <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Configurable" Dclock="160000000" Pname="M55_HE"/>
+
+        <compile Pname="M55_HE" Pdefine="M55_HE"/>
+        <!-- Cortex-M55 Access Ports -->
+        <accessportV2 __apid="0" address="0x00300000"/>
+        <debug Pname="M55_HE" __apid="0"/>
+        <!-- Device properties, header files and preprocessor defines -->
+        <feature type="XTAL" n="38400000" name="High-Frequency Crystal Oscillator"/>
+        <feature type="IntRC" n="76800000" name="High-Frequency Internal RC Oscillator"/>
+        <feature type="PLL" n="1" name="Internal PLL with 3 clock outputs"/>
+        <feature type="PowerMode" n="5" name="GO, READY, IDLE, STANDBY, STOP"/>
+        <feature type="PowerOther" n="1" name="POR"/>
+        <feature type="PowerOther" n="1" name="BOR"/>
+        <!--Security-->
+        <feature type="CoreOther" n="1" name="Full Secure Enclave"/>
+        <feature type="CoreOther" n="1" name="CRC Calculation Unit"/>
+        <!--External Memory-->
+        <feature type="ComOther" n="1" name="Cryptographic Octal SPI (OSPI)"/>
+        <!-- Serial Connectivity   -->
+        <feature type="UART" n="6"  name="UART Interface"/>
+        <feature type="UART" n="1" name="Low Power UART Interface"/>
+        <feature type="SPI" n="4"  name="SPI Interface"/>
+        <feature type="SPI" n="1" name="Low Power SPI Interface"/>
+        <feature type="I2C" n="4" name="Inter-Integrated Circuit (I2C)"/>
+        <feature type="I2C" n="1" name="Low Power Inter-Integrated Circuit (LPI2C)"/>
+        <feature type="ComOther" n="1" name="MIPI I3C"/>
+        <!--High Speed Connectivity-->
+        <feature type="USBD" n="1" name="USB 2.0 Device"/>
+        <feature type="USBH" n="1" name="USB 2.0 Host"/>
+        <feature type="SDIO" n="1"  name="SDMMC, SDIO"/>
+        <!--Camera-->
+        <feature type="Camera" n="1" m="8" name="Low Power Camera Parallel Interface"/>
+        <!--Audio-->
+        <feature type="I2S"   n="2" name="Inter-IC Sound (I2S)"/>
+        <feature type="I2S" n="1" name="Low Power Inter-IC Sound (I2S)"/>
+        <feature type="ComOther" n="1" m="8" name="Pulse Density Modulation (PDM) Interface"/>
+        <feature type="ComOther" n="1" m="8" name="Low Power Pulse Density Modulation (PDM) Interface"/>
+        <!--Timers-->
+        <feature type="TimerOther" n="8" m="32" name="Universal Timer"/>
+        <feature type="TimerOther" n="2" m="32" name="Low Power Timer"/>
+        <feature type="TimerOther" n="4" m="32" name="Quadrature Encoder"/>
+        <feature type="TimerOther" n="1" name="Real-Time Counter"/>
+        <feature type="TimerOther" n="1" name="Local Watchdog Timer"/>
+        <!-- Analog -->
+        <feature type="TempSens" n="1"  name="Temperature Sensor"/>
+        <feature type="ADC" n="2" m="12" name="6 single-ended or 3 Differential Channel ADC12, SAR"/>
+        <feature type="ADC" n="1" m="24" name="4 Differential Channel ADC24, Sigma Delta"/>
+        <feature type="DAC" n="1" m="12" name="Digital-to-Analog Converter (DAC12)"/>
+        <feature type="AnalogOther" n="2" name="High-Speed Comparator"/>
+        <feature type="AnalogOther" n="1" name="Low Power Comparator"/>
+        <!--GPIO-->
+        <feature type="IOs" n="120"  name="General Purpose I/Os, 1.8V tolerant"/>
+        <feature type="IOs" n="8"  name="General Purpose Flex I/Os, 1.8V or 3.3V tolerant"/>
+        <!--Operation Range-->
+        <feature type="VCC" n="1.71" m="4.2"/>
+        <feature type="Temp" n="-40" m="105"/>
+        <device Dname="AE101F4071542LH">
+		  <!-- Todo: update doc link -->
+          <book name="https://www.alifsemi.com/download/" title="E1/C1 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
+
+          <!--On-Chip RAM Regions 4.25MB -->
+          <memory name="SRAM0" start="0x08000000" size="0x00280000" access="rwx" default="1"/>
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+           <feature type="PackageOther" n="194" name="FBGA"/>
+           <feature type="CoreOther" n="1" m="46" name="Neural Processing Unit (NPU)/HE"/>
+           <feature type="CAN" n="1"  name="CAN FD Controller"/>
+           <feature type="Other" n="1" name="GPU2D"/>
+           <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
+           <feature type="Other" n="1" name="MIPI DSI"/>
+        </device>
+
+          <device Dname="AE101F1061517LH">
+		  <!-- Todo: update doc link -->
+          <book name="https://www.alifsemi.com/download/" title="E1/C1 Datasheet"/>
+
+		  <!-- On-chip NVM Region -->
+          <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
+
+          <!--On-Chip RAM Regions 1.75MB -->
+          <memory name="SRAM2" start="0x50000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM3" start="0x50800000" size="0x00100000" access="rwx" default="1"/>
+          <memory name="SRAM4" start="0x58000000" size="0x00040000" access="rwx" default="1"/>
+          <memory name="SRAM5" start="0x58800000" size="0x00040000" access="rwx" default="1"/>
+		  <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
+          <feature type="PackageOther" n="194" name="FBGA"/>
+        </device>
+    </subFamily>
+
+    </family>
+
+  </devices>
+
+  <!-- examples section: Contains Example projects for devkit-e7 board   -->
+  <examples>
+    <!--<example name="LED Blinky M55-HE" doc="Abstract.txt" folder="Examples/LED_Blinky">
+      <description>LED Blinky app running on M55-HE</description>
+	  <board name="devkit-e7 board" vendor="AlifSemiconductor"/>
+      <project>
+        <environment name="uv" load="LED_Blinky.uvprojx"/>
+      </project>
+      <attributes>
+        <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM"/>
+        <component Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO" Cvendor="AlifSemiconductor"/>
+        <component Cclass="Device" Cgroup="Conf" Csub="RTE_Device" Cvendor="AlifSemiconductor"/>
+        <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cvendor="AlifSemiconductor"/>
+        <component Cclass="SOC Peripherals TestApp" Cgroup="TestApp" Csub="LED Blinky" Cvendor="AlifSemiconductor"/>
+      </attributes>
+    </example>-->
+
+    <example name="Blinky_M55_HE" doc="Abstract.txt" folder="Boards/DevKit-e7/Examples/BareMetal_LED_Blinky">
+      <description>LED Blinky app running out of MRAM on M55-HE</description>
+	  <board name="DevKit-e7 board" vendor="AlifSemiconductor"/>
+      <project>
+        <environment name="uv" load="BareMetal_LED_Blinky.uvprojx"/>
+      </project>
+      <attributes>
+    <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM"/>
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO" Cvendor="AlifSemiconductor"/>
+    <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cvendor="AlifSemiconductor"/>
+      </attributes>
+    </example>
+
+    <example name="Blinky_M55_HE_TCM" doc="Abstract.txt" folder="Boards/DevKit-e7/Examples/BareMetal_LED_Blinky_TCM">
+      <description>LED Blinky app running out of TCM on M55-HE</description>
+	  <board name="DevKit-e7 board" vendor="AlifSemiconductor"/>
+      <project>
+        <environment name="uv" load="BareMetal_LED_Blinky_TCM.uvprojx"/>
+      </project>
+      <attributes>
+    <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM"/>
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO" Cvendor="AlifSemiconductor"/>
+    <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cvendor="AlifSemiconductor"/>
+      </attributes>
+    </example>
+
+    <example name="HelloWorld_M55_HP" doc="Abstract.txt" folder="Boards/DevKit-e7/Examples/Hello_World">
+      <description>Hello World app running out of MRAM on M55-HP</description>
+	  <board name="DevKit-e7 board" vendor="AlifSemiconductor"/>
+      <project>
+        <environment name="uv" load="Hello_World.uvprojx"/>
+      </project>
+      <attributes>
+        <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM"/>
+        <component Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF" Cvendor="AlifSemiconductor"/>
+        <component Cclass="Device" Cgroup="SOC Peripherals" Csub="USART" Cvendor="AlifSemiconductor"/>
+        <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cvendor="AlifSemiconductor"/>
+      </attributes>
+    </example>
+  </examples>
+
+<!-- conditions section -->
+  <boards>
+    <board vendor="AlifSemiconductor" name="DevKit-e7 board">
+      <description>Ensemble: CPU and Base Board</description>
+      <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE722F80*"/>
+	  <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE7*"/>
+    </board>
+  </boards>
+
+ <!-- conditions section -->
+  <conditions>
+    <!-- compiler -->
+    <condition id="ARMCC6">
+      <accept Tcompiler="ARMCC" Toptions="AC6"/>
+      <!--<accept Tcompiler="ARMCC" Toptions="AC6LTO"/>-->
+    </condition>
+    <condition id="GCC">
+      <require Tcompiler="GCC"/>
+    </condition>
+	<condition id="M55_HP CMSIS-Core">
+		<description>Generic Alif Semiconductor M55_HP device startup and depends on CMSIS Core</description>
+		<require Dvendor="Alif Semiconductor:165"/>
+		<accept Pname="M55_HP" Dname="AE722F80*"/>
+		<accept Pname="M55_HP" Dname="AE512F80*"/>
+		<accept Pname="M55_HP" Dname="AE302F*"/>
+		<require Cclass="CMSIS" Cgroup="CORE"/>
+	</condition>
+	<condition id="M55_HE CMSIS-Core">
+		<description>Generic Alif Semiconductor M55_HP device startup and depends on CMSIS Core</description>
+		<require Dvendor="Alif Semiconductor:165"/>
+		<accept Pname="M55_HE" Dname="AE722F80*"/>
+		<accept Pname="M55_HE" Dname="AE512F80*"/>
+		<accept Pname="M55_HE" Dname="AE302F*"/>
+		<accept Pname="M55_HE" Dname="AE101F*"/>
+		<require Cclass="CMSIS" Cgroup="CORE"/>
+	</condition>
+    <condition id="Ensemble">
+      <description>AlifSemiconductor Ensemble Series devices</description>
+	  <require Dvendor="Alif Semiconductor:165"/>
+      <accept Dvendor="Alif Semiconductor:165" Dname="AE722F80*"/>
+      <accept Dvendor="Alif Semiconductor:165" Dname="AE512F80*"/>
+	  <accept Dvendor="Alif Semiconductor:165" Dname="AE302F*"/>
+	  <accept Dvendor="Alif Semiconductor:165" Dname="AE101F*"/>
+      <deny Cclass="Device" Cgroup="SDK Utilities"/>
+    </condition>
+    <condition id="Ensemble CMSIS_Driver">
+      <description>Requirement for CMSIS Driver</description>
+      <require condition="Ensemble"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+      <!--<require Cclass="Device" Cgroup="Conf" Csub="RTE_Device"/>-->
+    </condition>
+
+
+	<condition id="Ensemble Camera Driver">
+      <description>Requirement for CMSIS CAMERA Driver</description>
+      <require condition="Ensemble"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+	</condition>
+	<condition id="Camera Sensor MT9M114 Driver">
+      <description>Requirement for MT9M114 SENSOR Driver</description>
+      <require condition="Ensemble"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+	</condition>
+
+	<condition id="Analog Components Driver">
+      <description>Requirement for Analog Components Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+	</condition>
+
+    <condition id="ILI LCD Driver">
+      <description>Requirement for ILI9806E LCD Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="MIPI DSI"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC"/>
+    </condition>
+
+     <condition id="GT911 Touch Driver">
+      <description>Requirement for GT911 Touch Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO"/>
+      <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C"/>
+      <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C"/>
+      <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C"/>
+    </condition>
+
+      <condition id="MIPI CSI2 Driver">
+      <description>Requirement for MIPI CSI2 Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+    </condition>
+
+     <condition id="MIPI DSI Driver">
+      <description>Requirement for MIPI DSI Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC"/>
+    </condition>
+
+    <condition id="I2S Driver">
+      <description>Requirement for I2S Driver</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="DMA"/>
+    </condition>
+
+    <condition id="OSPI XIP UTILITY">
+      <description>Requirement OSPI XIP utility </description>
+      <require condition="Ensemble"/>
+      <require Cclass="Device" Cgroup="OSPI FLASH XIP" Csub="core"/>
+    </condition>
+
+	<condition id="Camera Sensor ARX3A0 Driver">
+      <description>Requirement for ARX3A0 SENSOR Driver</description>
+      <require condition="Ensemble"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C"/>
+	  <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="MIPI CSI2"/>
+	</condition>
+
+    <condition id="SE SERVICES MHU">
+      <description>Requirement SE SERVICES MHU </description>
+      <require condition="Ensemble"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+    </condition>
+<!--    <condition id="SE SERVICES LIB">
+      <description>Requirement OSPI XIP utility library</description>
+      <require condition="SE SERVICES MHU"/>
+      <require condition="ARMCC6"/>
+      <require Cclass="Device" Cgroup="SE Services" Csub="MHU Driver"/>
+    </condition> -->
+    <condition id="SE SERVICES SRC">
+      <description>Requirement SE SERVICES SRC</description>
+      <require condition="SE SERVICES MHU"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU"/>
+    </condition>
+    <condition id="SE SERVICES INIT">
+      <description>Requirement SE SERVICES SRC</description>
+      <require condition="SE SERVICES SRC"/>
+      <require Cclass="Device" Cgroup="SE runtime Services" Csub="core"/>
+    </condition>
+
+    <condition id="Retarget IO STDIN">
+      <description>Requirement for Retarget IO STDIN</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDIN" Cvariant="User"/>
+	</condition>
+
+    <condition id="Retarget IO STDOUT">
+      <description>Requirement for Retarget IO STDOUT</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDOUT" Cvariant="User"/>
+	</condition>
+
+    <condition id="Retarget IO STDERR">
+      <description>Requirement for Retarget IO STDERR</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDERR" Cvariant="User"/>
+	</condition>
+
+  </conditions>
+<!-- component section -->
+  <components>
+<!-- Add HP CM55 -->
+    <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cversion="0.9.5" condition="M55_HP CMSIS-Core">
+      <description>System and Startup for M55_HP device</description>
+      <files>
+        <!-- include folder / device header file -->
+        <file category="include" name="Device/common/include/"/>
+        <!-- startup / system file -->
+        <file category="sourceC" name="Device/core/M55_HP/source/startup_M55_HP.c"/>
+        <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/ARM/M55_HP.sct" version="1.0.0" attr="config" condition="ARMCC6"/>
+        <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/GCC/gcc_M55_HP.ld" version="1.0.0" attr="config" condition="GCC"/>
+        <file category="sourceC" name="Device/common/source/system_M55.c"/>
+        <file category="header" name="Device/E7/AE722F80F55D5XX/RTE_Device.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/core/M55_HP/include/M55_HP_map.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/core/M55_HP/config/M55_HP_Config.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/common/include/global_map.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/common/include/app_map.h" version="1.0.0" attr="config"/>
+        <file category="sourceC" name="Device/common/source/system_utils.c"/>
+        <file category="sourceC" name="Device/common/source/tgu_M55.c"/>
+        <file category="sourceC" name="Device/common/source/mpu_M55.c"/>
+        <!-- SAU configuration -->
+        <file category="header" name="Device/core/M55_HP/config/partition_M55_HP.h" version="1.0.0" attr="config"/>
+
+        <!-- Baremetal Templates -->
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_blink_baremetal.c" attr="template" select="Baremetal LED Blinky"/>
+        <file category="header" name="libs/conductor/example/pins.h" attr="template" select="Baremetal LED Blinky"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPTimer_Baremetal.c" attr="template" select="Baremetal LPTIMER APP"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_masterside.c" attr="template" select="I3C Master Baremetal testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_slaveside.c" attr="template" select="I3C Slave Baremetal testapp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/SPI0_SPI1_baremetal.c" attr="template" select="SPI Baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Baremetal.c" attr="template" select="ADC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CRC_baremetal.c" attr="template" select="CRC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/RTC_Baremetal.c" attr="template" select="RTC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART4_Baremetal.c" attr="template" select="UART4 baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Utimer_Baremetal.c" attr="template" select="Utimer baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/WDT_Baremetal.c" attr="template" select="WDT baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C over I3C baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CMP_baremetal.c" attr="template" select="Comparator baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/HWSEM_Baremetal.c" attr="template" select="HWSEM baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I2S_Baremetal.c" attr="template" select="I2S baremetal testApp"/>
+		<file category="header" name="Boards/DevKit-e7/Templates/Baremetal/Include/i2s_samples.h" attr="template" select="I2S baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FLASH_ISSI_Baremetal.c" attr="template" select="OSPI FLASH baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/QEC_Baremetal.c" attr="template" select="QEC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CDC200_Baremetal.c" attr="template" select="CDC200 baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/PDM_baremetal.c" attr="template" select="PDM baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_Test_Baremetal.c" attr="template" select="Dphy Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_pm_baremetal.c" attr="template" select="Baremetal Power Management testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPUART_Baremetal.c" attr="template" select="LPUART testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Parallel_Display_Baremetal.c" attr="template" select="Parallel Display testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART2_Baremetal.c" attr="template" select="UART2 Baremetal  test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ospi_hyperram_xip_demo.c" attr="template" select="OSPI Hyperram XIP test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Int_Loopback.c" attr="template" select="Baremetal CANFD Internal Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Bus_Monitor.c" attr="template" select="Baremetal CANFD Bus Monitor testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_NormalMode.c" attr="template" select="Baremetal CANFD data transfer testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Ext_Loopback.c" attr="template" select="Baremetal CANFD External Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LVGL_baremetal.c" attr="template" select="Baremetal LVGL testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/lv_port_disp.c" attr="template" select="Baremetal LVGL testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/MRAM_Baremetal.c" attr="template" select="Baremetal MRAM testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/GT911_Baremetal.c" attr="template" select="Baremetal GT911 Touch Screen testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/TSENS_Baremetal.c" attr="template" select="Baremetal TSENS testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="Baremetal SDMMC testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="Baremetal SDIO testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/dma_testmemcpy.c" attr="template" select="Baremetal DMA Mem-Mem testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Click_Board_Baremetal.c" attr="template" select="Baremetal ADC Click Board test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Ext_Trigger_Baremetal.c" attr="template" select="Baremetal ADC External Trigger test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Potentiometer_Baremetal.c" attr="template" select="Baremetal Potentiometer test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_TSENS_Baremetal.c" attr="template" select="Baremetal TSENS test App"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/temperature.h" attr="template" select="Baremetal TSENS test App"/>
+
+	<!--  FreeRTOS templates -->
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/arx3A0_camera_sensor_testApp.c" attr="template" select="FreeRTOS ARX3A0 Camera Sensor test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/bayer2rgb/bayer2rgb.c" attr="template" select="FreeRTOS ARX3A0 Camera Sensor test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/bayer2rgb/bayer.c" attr="template" select="FreeRTOS ARX3A0 Camera Sensor test App"/>
+        <file category="header"	name="Boards/DevKit-e7/Templates/bayer2rgb/bayer.h" attr="template" select="FreeRTOS ARX3A0 Camera Sensor test App"/>
+
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/gt911_touchscreen_testApp.c" attr="template" select="FreeRTOS GT911 TouchScreen test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/mt9m114_camera_sensor_testapp.c" attr="template" select="FreeRTOS MT9m114 Camera Sensor test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/bayer2rgb/bayer2rgb.c" attr="template" select="FreeRTOS MT9m114 Camera Sensor test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/bayer2rgb/bayer.c" attr="template" select="FreeRTOS MT9m114 Camera Sensor test App"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/bayer2rgb/bayer.h" attr="template" select="FreeRTOS MT9m114 Camera Sensor test App"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/rtc_testApp.c" attr="template" select="FreeRTOS Real Time Counter test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/UTIMER_app.c" attr="template" select="FreeRTOS UTIMER test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LPTimer_testApp.c" attr="template" select="FreeRTOS LPTIMER test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/uart4_testapp.c" attr="template" select="FreeRTOS UART4 test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CRC_testApp.c" attr="template" select="CRC FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LED_Blinky_testapp.c" attr="template" select="LED Blinky FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/PDM_testApp.c" attr="template" select="PDM FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/SPI0_SPI1_app.c" attr="template" select="SPI FreeRTOS testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/uart2_testapp.c" attr="template" select="UART2 FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2c_testApp.c" attr="template" select="I2C FreeRTOS testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/QEC_app.c" attr="template" select="FreeRTOS QEC test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2c_using_i3c_testApp.c" attr="template" select="FreeRTOS I2C using I3C test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/mix_bus_i2c_i3c_testApp.c" attr="template" select="FreeRTOS I3C Mix Bus test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/MRAM_FreeRTOS.c" attr="template" select="FreeRTOS MRAM test App"/>
+
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd.c" attr="template" select="LWIP httpd example"/>
+	<file category="header" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd_structs.h" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/main.c" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/HWSEM_FreeRTOS.c" attr="template" select="FreeRTOS HWSEM test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/Flash_ISSI_FreeRTOS_app.c" attr="template" select="FreeRTOS OSPI Flash test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/DAC_testapp.c" attr="template" select="FreeRTOS DAC testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Ext_Loopback.c" attr="template" select="FreeRTOS CANFD External Loopback testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Int_Loopback.c" attr="template" select="FreeRTOS CANFD Internal Loopback testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Bus_Monitor.c" attr="template" select="FreeRTOS CANFD Bus Monitor testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_NormalMode.c" attr="template" select="FreeRTOS CANFD data transfer testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CMP_testApp.c" attr="template" select="FreeRTOS HSCMP testApp"/>
+      </files>
+    </component>
+
+<!-- Add HE CM55 -->
+      <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cversion="0.9.5" condition="M55_HE CMSIS-Core">
+      <description>System and Startup for M55_HE device</description>
+	  <files>
+        <!-- include folder / device header file -->
+        <file category="include" name="Device/common/include/"/>
+        <!-- startup / system file -->
+        <file category="sourceC" name="Device/core/M55_HE/source/startup_M55_HE.c"/>
+        <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/ARM/M55_HE.sct" version="1.0.0" attr="config" condition="ARMCC6"/>
+        <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/GCC/gcc_M55_HE.ld" version="1.0.0" attr="config" condition="GCC"/>
+        <file category="sourceC" name="Device/common/source/system_M55.c"/>
+        <file category="header" name="Device/E7/AE722F80F55D5XX/RTE_Device.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/core/M55_HE/include/M55_HE_map.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/core/M55_HE/config/M55_HE_Config.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/common/include/global_map.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/common/include/app_map.h" version="1.0.0" attr="config"/>
+        <file category="sourceC" name="Device/common/source/system_utils.c"/>
+        <file category="sourceC" name="Device/common/source/tgu_M55.c"/>
+	<file category="sourceC" name="Device/common/source/mpu_M55.c"/>
+
+        <!-- SAU configuration -->
+        <file category="header" name="Device/core/M55_HE/config/partition_M55_HE.h" version="1.0.0" attr="config"/>
+
+        <!-- Baremetal Templates -->
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_blink_baremetal.c" attr="template" select="Baremetal LED Blinky"/>
+        <file category="header" name="libs/conductor/example/pins.h" attr="template" select="Baremetal LED Blinky"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPTimer_Baremetal.c" attr="template" select="Baremetal LPTIMER APP"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_masterside.c" attr="template" select="I3C Master Baremetal testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/HWSEM_Baremetal.c" attr="template" select="HWSEM baremetal testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_slaveside.c" attr="template" select="I3C Slave Baremetal testapp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPPDM_baremetal.c" attr="template" select="LPPDM Baremetal testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPSPI_SPI_baremetal.c" attr="template" select="LPSPI Baremetal testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/SPI0_SPI1_baremetal.c" attr="template" select="SPI Baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Baremetal.c" attr="template" select="ADC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CRC_baremetal.c" attr="template" select="CRC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/RTC_Baremetal.c" attr="template" select="RTC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART4_Baremetal.c" attr="template" select="UART4 baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Utimer_Baremetal.c" attr="template" select="Utimer baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/WDT_Baremetal.c" attr="template" select="WDT baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C over I3C baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CMP_baremetal.c" attr="template" select="Comparator baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I2S_Baremetal.c" attr="template" select="I2S baremetal testApp"/>
+	    <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/Include/i2s_samples.h" attr="template" select="I2S baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FLASH_ISSI_Baremetal.c" attr="template" select="OSPI FLASH baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/QEC_Baremetal.c" attr="template" select="QEC baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CDC200_Baremetal.c" attr="template" select="CDC200 baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/PDM_baremetal.c" attr="template" select="PDM baremetal testApp"/>
+		<file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_Test_Baremetal.c" attr="template" select="Dphy Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_pm_baremetal.c" attr="template" select="Baremetal Power Management testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPUART_Baremetal.c" attr="template" select="LPUART testApp"/>
+	    <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Parallel_Display_Baremetal.c" attr="template" select="Parallel Display testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART2_Baremetal.c" attr="template" select="UART2 Baremetal  test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ospi_hyperram_xip_demo.c" attr="template" select="OSPI Hyperram XIP test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Int_Loopback.c" attr="template" select="Baremetal CANFD Internal Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Bus_Monitor.c" attr="template" select="Baremetal CANFD Bus Monitor testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_NormalMode.c" attr="template" select="Baremetal CANFD data transfer testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/CANFD_Ext_Loopback.c" attr="template" select="Baremetal CANFD External Loopback testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LVGL_baremetal.c" attr="template" select="Baremetal LVGL testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/lv_port_disp.c" attr="template" select="Baremetal LVGL testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/MRAM_Baremetal.c" attr="template" select="Baremetal MRAM testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/GT911_Baremetal.c" attr="template" select="Baremetal GT911 Touch Screen testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/TSENS_Baremetal.c" attr="template" select="Baremetal TSENS testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="Baremetal SDMMC testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="Baremetal SDIO testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/dma_testmemcpy.c" attr="template" select="Baremetal DMA Mem-Mem testApp"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Click_Board_Baremetal.c" attr="template" select="Baremetal ADC Click Board test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Ext_Trigger_Baremetal.c" attr="template" select="Baremetal ADC External Trigger test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_Potentiometer_Baremetal.c" attr="template" select="Baremetal Potentiometer test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ADC_TSENS_Baremetal.c" attr="template" select="Baremetal TSENS test App"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/temperature.h" attr="template" select="Baremetal TSENS test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LPI2C_Baremetal.c" attr="template" select="Baremetal LPI2C test App"/>
+
+
+
+	<!--  FreeRTOS templates -->
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/arx3A0_camera_sensor_testApp.c" attr="template" select="FreeRTOS ARX3A0 Camera Sensor test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/gt911_touchscreen_testApp.c" attr="template" select="FreeRTOS GT911 TouchScreen test App"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/mt9m114_camera_sensor_testapp.c" attr="template" select="FreeRTOS MT9m114 Camera Sensor test App"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/rtc_testApp.c" attr="template" select="FreeRTOS Real Time Counter test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/UTIMER_app.c" attr="template" select="FreeRTOS UTIMER test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LPTimer_testApp.c" attr="template" select="FreeRTOS LPTIMER test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/uart4_testapp.c" attr="template" select="FreeRTOS UART4 test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CRC_testApp.c" attr="template" select="CRC FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LED_Blinky_testapp.c" attr="template" select="LED Blinky FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LPPDM_testApp.c" attr="template" select="LPPDM FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LPSPI_SPI_app.c" attr="template" select="LPSPI FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/PDM_testApp.c" attr="template" select="PDM FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/SPI0_SPI1_app.c" attr="template" select="SPI FreeRTOS testApp"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/LPUART_testapp.c" attr="template" select="LPUART FreeRTOS testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/uart2_testapp.c" attr="template" select="UART2 FreeRTOS testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2c_testApp.c" attr="template" select="I2C FreeRTOS testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/QEC_app.c" attr="template" select="FreeRTOS QEC test App"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2c_using_i3c_testApp.c" attr="template" select="FreeRTOS I2C using I3C test App"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/mix_bus_i2c_i3c_testApp.c" attr="template" select="FreeRTOS I3C Mix Bus test App"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/MRAM_FreeRTOS.c" attr="template" select="FreeRTOS MRAM test App"/>
+
+
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd.c" attr="template" select="LWIP httpd example"/>
+	<file category="header" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd_structs.h" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/main.c" attr="template" select="LWIP httpd example"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/HWSEM_FreeRTOS.c" attr="template" select="FreeRTOS HWSEM test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/Flash_ISSI_FreeRTOS_app.c" attr="template" select="FreeRTOS OSPI Flash test App"/>
+	<file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/DAC_testapp.c" attr="template" select="FreeRTOS DAC testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Ext_Loopback.c" attr="template" select="FreeRTOS CANFD External Loopback testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Int_Loopback.c" attr="template" select="FreeRTOS CANFD Internal Loopback testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_Bus_Monitor.c" attr="template" select="FreeRTOS CANFD Bus Monitor testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CANFD_NormalMode.c" attr="template" select="FreeRTOS CANFD data transfer testApp"/>
+    <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/CMP_testApp.c" attr="template" select="FreeRTOS HSCMP testApp"/>
+      </files>
+    </component>
+
+<!-- Add HE CM55 ENDS -->
+
+<!-- Driver components  -->
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="USART" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>UART Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+		#define RTE_Drivers_USART0   1           /* Driver UART0 */
+        #define RTE_Drivers_USART1   1           /* Driver UART1 */
+	    #define RTE_Drivers_USART2   1           /* Driver UART2 */
+	    #define RTE_Drivers_USART3   1           /* Driver UART3 */
+	    #define RTE_Drivers_USART4   1           /* Driver UART4 */
+	    #define RTE_Drivers_USART5   1           /* Driver UART5 */
+	    #define RTE_Drivers_USART6   1           /* Driver UART6 */
+	    #define RTE_Drivers_USART7   1           /* Driver UART7 */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_USART.c"/>
+		<file category="source" name="drivers/source/uart.c"/>
+		<file category="header" name="drivers/include/uart.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_uart.h"/>
+	    <file category="header" name="Alif_CMSIS/Source/Driver_USART_Private.h"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_USART.h"/>
+      </files>
+    </component>
+
+   <component Cclass="Device" Cgroup="SOC Peripherals" Csub="I2S" Cversion="0.9.5" condition="I2S Driver">
+     <description>I2S Driver for Alif Semiconductor SOC</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_SAI   1           /* Driver SAI */
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Alif_CMSIS/Source/Driver_I2S.c"/>
+       <file category="header" name="Alif_CMSIS/Source/Driver_I2S_Private.h"/>
+       <file category="source" name="drivers/source/i2s.c"/>
+       <file category="header" name="drivers/include/i2s.h"/>
+       <file category="header" name="drivers/include/sys_ctrl_i2s.h"/>
+     </files>
+   </component>
+
+   <component Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+     <description>I2C Driver for Alif Semiconductor SOC</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_I2C   1           /* Driver I2C */
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Alif_CMSIS/Source/Driver_I2C.c"/>
+       <file category="header" name="Alif_CMSIS/Source/Driver_I2C_Private.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_I2C.h"/>
+	   <file category="source" name="drivers/source/i2c.c"/>
+	   <file category="header" name="drivers/include/i2c.h"/>
+     </files>
+   </component>
+
+
+   <component Cclass="BSP" Cgroup="External peripherals" Csub="Ethernet PHY" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+     <description>Generic Ethernet PHY Driver</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_PHY_GENERIC           /* Driver PHY generic */
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="components/Source/driver_phy.c"/>
+       <file category="header" name="components/Include/driver_phy.h"/>
+     </files>
+   </component>
+
+   <component Cclass="Device" Cgroup="SOC Peripherals" Csub="Ethernet MAC" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+     <description>DW EQOS Ethernet MAC Driver</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_MAC_DW_EQOS           /* Driver MAC DW EQOS */
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Alif_CMSIS/Source/driver_mac.c"/>
+       <file category="header" name="Alif_CMSIS/Source/driver_mac.h"/>
+	   <file category="header" name="drivers/include/sys_ctrl_eth.h"/>
+     </files>
+   </component>
+
+
+   <component Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>PinMUX and PinPAD Config Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_LL_PINCONF   1           /* Driver PinPAD and PinMux */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="drivers/source/pinconf.c"/>
+        <file category="header" name="drivers/include/pinconf.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>GPIO Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_GPIO   1           /* Driver GPIO */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_GPIO.c"/>
+        <file category="source" name="Alif_CMSIS/Source/Driver_GPIO_Private.h"/>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_GPIO.h"/>
+	    <file category="header" name="drivers/include/sys_ctrl_gpio.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="PDM" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>PDM Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_PDM   1           /* Driver PDM */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_PDM.c"/>
+        <file category="source" name="Alif_CMSIS/Source/Driver_PDM_Private.h"/>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_PDM.h"/>
+		<file category="header" name="drivers/include/pdm.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_pdm.h"/>
+		<file category="source" name="drivers/source/pdm.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="LPTIMER" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>LPTIMER Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_LPTIMER   1           /* Driver LPTIMER */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_LPTIMER.c"/>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_LPTIMER.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_LPTIMER_Private.h"/>
+		<file category="header" name="drivers/include/lptimer.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_lptimer.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="UTIMER" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>UTIMER Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_UTIMER   1           /* Driver UTIMER */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_UTIMER.c"/>
+		<file category="header" name="Alif_CMSIS/Include/Driver_UTIMER.h"/>
+		<file category="header" name="Alif_CMSIS/Source/Driver_UTIMER_Private.h"/>
+        <file category="header" name="drivers/include/utimer.h"/>
+		<file category="source" name="drivers/source/utimer.c"/>
+       </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="RTC" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>Real Time Counter Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_RTC   1           /* Driver RTC */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_RTC.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_RTC.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_RTC_Private.h"/>
+		<file category="header" name="drivers/include/rtc.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_rtc.h"/>
+      </files>
+    </component>
+
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="WDT" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>Local Watchdog Driver for M55_HP/HE </description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_WDT   1           /* Driver RTC */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_WDT.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_WDT.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_WDT_Private.h"/>
+		<file category="header" name="drivers/include/wdt.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="SPI" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>SPI Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_SPI   1           /* Driver SPI */
+      </RTE_Components_h>
+      <files>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_SPI.h"/>
+        <file category="source" name="Alif_CMSIS/Source/Driver_SPI.c"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_SPI_Private.h"/>
+		<file category="header" name="drivers/include/spi.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_spi.h"/>
+		<file category="source" name="drivers/source/spi.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI" Cversion="0.9.5" condition="Ensemble Camera Driver">
+      <description>CAMERA Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CPI   1           /* Driver CAMERA Controller */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_CPI.c"/>
+		<file category="header" name="Alif_CMSIS/Source/Driver_CPI_Private.h"/>
+        <file category="source" name="Alif_CMSIS/Source/Camera_Sensor_i2c.c"/>
+		<file category="header" name="Alif_CMSIS/Include/Camera_Common.h"/>
+		<file category="header" name="Alif_CMSIS/Include/Driver_CPI.h"/>
+		<file category="header" name="Alif_CMSIS/Source/Camera_Sensor_i2c.h"/>
+		<file category="header" name="Alif_CMSIS/Include/Camera_Sensor.h"/>
+		<file category="header" name="drivers/include/cpi.h"/>
+	    <file category="header" name="drivers/include/sys_ctrl_cpi.h"/>
+	    <file category="source" name="drivers/source/cpi.c"/>
+      </files>
+    </component>
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor MT9M114" Cversion="0.9.5" condition="Camera Sensor MT9M114 Driver">
+      <description>CAMERA Sensor Driver for MT9M114</description>
+      <RTE_Components_h> <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CAMERA_SENSOR_MT9M114			1           /* Driver CAMERA Sensor */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="components/Source/MT9M114_Camera_Sensor.c"/>
+      </files>
+    </component>
+
+<component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor ARX3A0" Cversion="0.9.5" condition="Camera Sensor ARX3A0 Driver">
+      <description>CAMERA Sensor Driver for ARX3A0</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CAMERA_SENSOR_ARX3A0			1           /* Driver CAMERA Sensor */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="components/Source/arx3A0_camera_sensor.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>I3C Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_I3C0			1           /* Driver I3C */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_I3C.c"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_I3C_Private.h"/>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_I3C.h"/>
+		<file category="source" name="drivers/source/i3c.c"/>
+		<file category="header" name="drivers/include/i3c.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_i3c.h"/>
+      </files>
+    </component>
+
+     <component Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>I2C Over I3c Bus Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_I2C_I3C			1           /* Driver I2C_I3C */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_I3C_I2C.c"/>
+      </files>
+    </component>
+
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="ADC" Cversion="0.9.5" condition="Analog Components Driver">
+      <description>ADC Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_ADC			1           /* Driver ADC */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_ADC.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_ADC.h"/>
+	    <file category="header" name="Alif_CMSIS/Source/Driver_ADC_Private.h"/>
+		<file category="header" name="drivers/include/adc.h"/>
+		<file category="source" name="drivers/source/adc.c"/>
+		<file category="header" name="drivers/include/sys_ctrl_adc.h"/>
+	  </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="DAC" Cversion="0.9.5" condition="Analog Components Driver">
+      <description>DAC Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_DAC			1           /* Driver DAC */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_DAC.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_DAC.h"/>
+	    <file category="header" name="Alif_CMSIS/Source/Driver_DAC_Private.h"/>
+	    <file category="header" name="drivers/include/dac.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_dac.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MIPI CSI2" Cversion="0.9.5" condition="MIPI CSI2 Driver">
+      <description>MIPI CSI2 Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>   <!--the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_MIPI_CSI2			1   /* Driver MIPI CSI2 */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_MIPI_CSI2.c"/>
+        <file category="source" name="Alif_CMSIS/Source/DPHY_init.c"/>
+        <file category="header" name="Alif_CMSIS/Source/DPHY_init.h"/>
+		<file category="header" name="Alif_CMSIS/Source/DPHY_Private.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_CSI_Private.h"/>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_MIPI_CSI2.h"/>
+		<file category="source" name="drivers/source/dsi.c"/>
+		<file category="header" name="drivers/include/dsi.h"/>
+		<file category="source" name="drivers/source/csi.c"/>
+		<file category="header" name="drivers/include/csi.h"/>
+		<file category="header" name="drivers/include/sys_ctrl_csi.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MIPI DSI" Cversion="0.9.5" condition="MIPI DSI Driver">
+      <description>MIPI DSI Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h> <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_MIPI_DSI			1   /* Driver MIPI DSI */
+      </RTE_Components_h>
+    <files>
+	     <file category="source" name="Alif_CMSIS/Source/Driver_MIPI_DSI.c"/>
+	     <file category="header" name="Alif_CMSIS/Source/Driver_DSI_Private.h"/>
+	     <file category="header" name="Alif_CMSIS/Source/DSI_DCS.h"/>
+	     <file category="header" name="Alif_CMSIS/Include/Driver_MIPI_DSI.h"/>
+         <file category="source" name="Alif_CMSIS/Source/DPHY_init.c"/>
+         <file category="header" name="Alif_CMSIS/Source/DPHY_init.h"/>
+	     <file category="header" name="Alif_CMSIS/Source/DPHY_Private.h"/>
+		 <file category="header" name="drivers/include/dsi.h"/>
+		 <file category="header" name="drivers/include/sys_ctrl_dsi.h"/>
+		 <file category="source" name="drivers/source/dsi.c"/>
+		 <file category="header" name="Alif_CMSIS/Source/DPHY_Loopback_test.h"/>
+		 <file category="header" name="Alif_CMSIS/Source/dphy.h"/>
+		 <file category="header" name="drivers/include/sys_ctrl_dphy.h"/>
+      </files>
+    </component>
+
+
+
+	 <component Cclass="Device" Cgroup="SOC Peripherals" Csub="CRC" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>CRC Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CRC	1   /* Driver CRC*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="Alif_CMSIS/Source/Driver_CRC.c"/>
+	   <file category="header" name="Alif_CMSIS/Source/Driver_CRC_Private.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_CRC.h"/>
+	   <file category="header" name="drivers/include/crc.h"/>
+       <file category="source" name="drivers/source/crc.c"/>
+     </files>
+    </component>
+
+	 <component Cclass="Device" Cgroup="SOC Peripherals" Csub="HWSEM" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>HWSEM Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_HWSEM	1   /* Driver HWSEM*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="Alif_CMSIS/Source/Driver_HWSEM.c"/>
+	   <file category="header" name="Alif_CMSIS/Source/Driver_HWSEM_Private.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_HWSEM.h"/>
+	   <file category="header" name="drivers/include/hwsem.h"/>
+     </files>
+    </component>
+
+<component Cclass="Device" Cgroup="SOC Peripherals" Csub="DMA" Cversion="0.9.5" condition="Ensemble ">
+      <description>DMA Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_DMA	1   /* Driver DMA*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="Alif_CMSIS/Source/Driver_DMA.c"/>
+	   <file category="header" name="Alif_CMSIS/Source/DMA_dev.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/DMA_Common.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_DMA.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/config/dma_config.h" version="1.0.0" attr="config"/>
+	   <file category="header" name="Alif_CMSIS/Include/dma_opcode.h"/>
+	   <file category="header" name="drivers/include/sys_ctrl_dma.h"/>
+     </files>
+    </component>
+
+	 <component Cclass="Device" Cgroup="SOC Peripherals" Csub="HSCMP" Cversion="0.9.5" condition="Analog Components Driver">
+      <description>HSCMP Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_HSCMP	1   /* Driver COMPARATOR*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="Alif_CMSIS/Source/Driver_CMP.c"/>
+	   <file category="header" name="Alif_CMSIS/Source/Driver_CMP_Private.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_CMP.h"/>
+	   <file category="source" name="drivers/source/cmp.c"/>
+	   <file category="header" name="drivers/include/cmp.h"/>
+	   <file category="header" name="drivers/include/sys_ctrl_cmp.h"/>
+     </files>
+    </component>
+
+	 <component Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>CDC200 Display controller Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CDC200	1   /* Driver CDC200*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="Alif_CMSIS/Source/Driver_CDC200.c"/>
+	   <file category="header" name="Alif_CMSIS/Source/Driver_CDC_Private.h"/>
+	   <file category="header" name="Alif_CMSIS/Include/Driver_CDC200.h"/>
+	   <file category="header" name="Alif_CMSIS/Source/display.h"/>
+	   <file category="header" name="drivers/include/cdc.h"/>
+	   <file category="header" name="drivers/include/sys_ctrl_cdc.h"/>
+	   <file category="source" name="drivers/source/cdc.c"/>
+	   </files>
+    </component>
+
+<component Cclass="BSP" Cgroup="External peripherals" Csub="ILI9806E LCD panel" Cversion="0.9.5" condition="ILI LCD Driver">
+      <description>ILI9806E LCD panel Display  Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_MIPI_DSI_ILI9806E_PANEL 1   /* Driver ILI9806E LCD panel*/
+      </RTE_Components_h>
+      <files>
+	   <file category="source" name="components/Source/ILI9806E_LCD_panel.c"/>
+	   </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MRAM" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>MRAM Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_MRAM   1           /* Driver MRAM */
+      </RTE_Components_h>
+      <files>
+	    <file category="header" name="Alif_CMSIS/Include/Driver_MRAM.h"/>
+	    <file category="source" name="Alif_CMSIS/Source/Driver_MRAM.c"/>
+	    <file category="header" name="Alif_CMSIS/Source/Driver_MRAM_Private.h"/>
+	    <file category="header" name="drivers/include/mram.h"/>
+	    <file category="source" name="drivers/source/mram.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="CAN-FD" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>CAN-FD Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_CANFD   1           /* Driver CAN-FD */
+      </RTE_Components_h>
+      <files>
+        <file category="header" name="Alif_CMSIS/Include/Driver_CAN.h"/>
+        <file category="header" name="Alif_CMSIS/Source/CANFD_Private.h"/>
+        <file category="source" name="Alif_CMSIS/Source/Driver_CAN.c"/>
+        <file category="header" name="drivers/include/canfd.h"/>
+        <file category="header" name="drivers/include/sys_ctrl_canfd.h"/>
+        <file category="source" name="drivers/source/canfd.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="OSPI" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>OSPI Controller Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_OSPI   1           /* Driver OSPI */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_OSPI.c"/>
+        <file category="source" name="drivers/source/ospi.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_OSPI.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_OSPI_Private.h"/>
+        <file category="header" name="drivers/include/ospi.h"/>
+	<file category="header" name="drivers/include/sys_ctrl_aes.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="SDMMC" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>SDMMC Controller Driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_SD   1           /* Driver SD */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="drivers/source/sd.c"/>
+        <file category="source" name="drivers/source/sd_host.c"/>
+        <file category="source" name="drivers/source/sdio.c"/>
+        <file category="header" name="drivers/include/sd.h"/>
+        <file category="header" name="drivers/include/sd_host.h"/>
+        <file category="header" name="drivers/include/sdio.h"/>
+        <file category="header" name="drivers/include/sys_ctrl_sd.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="OSPI FLASH XIP" Csub="core" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>OSPI XIP Mode setup for ISSI flash on Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_OSPI_XIP_CORE   1           /* OSPI XIP CORE */
+      </RTE_Components_h>
+      <files>
+	<file category="include" name="ospi_xip/include/"/>
+        <file category="source" name="ospi_xip/source/issi_flash/issi_flash.c"/>
+        <file category="source" name="ospi_xip/source/ospi/ospi_drv.c"/>
+        <file category="header" name="ospi_xip/source/issi_flash/issi_flash_private.h"/>
+        <file category="header" name="ospi_xip/source/ospi/ospi_drv.h"/>
+        <file category="header" name="ospi_xip/source/ospi/ospi_private.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="OSPI FLASH XIP" Csub="utility" Cversion="0.9.5" condition="OSPI XIP UTILITY">
+      <description>OSPI XIP Mode setup utility for Alif DevKit-e7 board</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_OSPI_XIP_UTILITY   1           /* OSPI XIP SETUP utility*/
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="ospi_xip/app/app_issi_flash.c"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="OSPI HYPERRAM XIP" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>OSPI XIP Mode setup for ISSI HyperRAM Device on Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_OSPI_XIP_HYPERRAM        /* OSPI XIP HYPERRAM */
+      </RTE_Components_h>
+      <files>
+	<file category="header" name="drivers/include/ospi_hyperram_xip.h"/>
+        <file category="source" name="drivers/source/ospi_hyperram_xip.c"/>
+      </files>
+    </component>
+
+
+    <component Cclass="Device" Cgroup="Power Management" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>Power Management for Alif Semiconductor SOC</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_PM   1           /* Power Management */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Device/common/source/pm.c"/>
+        <file category="header" name="Device/common/include/pm.h"/>
+        <file category="header" name="Device/common/include/pm_internal.h"/>
+        <file category="header" name="Device/common/include/power.h"/>
+      </files>
+    </component>
+
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="OSPI Flash ISSI" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>External Peripherals Drivers</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_ISSI_FLASH	1
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="components/Source/IS25WX256.c"/>
+	<file category="header" name="components/Include/IS25WX256.h"/>
+      </files>
+    </component>
+
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="GT911 Touch Controller" Cversion="0.9.5" condition="GT911 Touch Driver">
+      <description>External Peripherals Drivers</description>
+      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+        #define RTE_Drivers_GT911	1
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="components/Source/GT911_touch_driver.c"/>
+	<file category="header" name="components/Include/Driver_Touch_Screen.h"/>
+      </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="0.81.0" condition="SE SERVICES MHU">
+      <description>Message Handling Unit driver for Alif Soc</description>
+      <files>
+        <file category="header" name="drivers/include/drivers_common.h"/>
+        <file category="header" name="drivers/include/mhu.h"/>
+        <file category="header" name="drivers/include/mhu_driver.h"/>
+        <file category="source" name="drivers/source/mhu_driver.c"/>
+        <file category="source" name="drivers/source/mhu_receiver.c"/>
+        <file category="source" name="drivers/source/mhu_sender.c"/>
+      </files>
+    </component>
+
+<!--   commenting lib component
+     <component Cclass="Device" Cgroup="SE Services" Csub="SE RunTime services" Cvariant="Lib" Cversion="0.74.0" condition="SE SERVICES LIB">
+      <description>SE runtime Services library for RTSS cores</description>
+      <files>
+        <file category="include" name="se_services/include/"/>
+        <file category="library" name="se_services/lib/libservices_m55_lib.a"/>
+        <file category="library" name="se_services/lib/libmhu_m55_lib.a"/>
+      </files>
+    </component> -->
+
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="0.81.0" condition="SE SERVICES SRC">
+      <description>SE runtime Services for RTSS cores</description>
+      <files>
+        <file category="doc" name="se_services/document/se-sw-services-user_guide-v039.pdf"/>
+        <file category="include" name="se_services/include/"/>
+        <file category="source" name="se_services/source/services_host_application.c"/>
+        <file category="source" name="se_services/source/services_host_boot.c"/>
+        <file category="source" name="se_services/source/services_host_cryptocell.c"/>
+        <file category="source" name="se_services/source/services_host_error.c"/>
+        <file category="source" name="se_services/source/services_host_handler.c"/>
+        <file category="source" name="se_services/source/services_host_maintenance.c"/>
+        <file category="source" name="se_services/source/services_host_padcontrol.c"/>
+        <file category="source" name="se_services/source/services_host_pinmux.c"/>
+        <file category="source" name="se_services/source/services_host_power.c"/>
+        <file category="source" name="se_services/source/services_host_system.c"/>
+        <file category="source" name="se_services/source/services_host_clocks.c"/>
+         <!--se services example-->
+        <file category="source" name="se_services/templates/m55_services_main.c" attr="template" select="SE Services Example"/>
+        <file category="header" name="se_services/templates/services_lib_interface.h" attr="template" select="SE Services Example"/>
+        <file category="source" name="se_services/templates/services_lib_interface.c" attr="template" select="SE Services Example"/>
+        <file category="source" name="se_services/templates/services_test.c" attr="template" select="SE Services Example"/>
+      </files>
+    </component>
+
+
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="Initialization Helper" Cvariant="Source" Cversion="0.9.5" condition="SE SERVICES INIT">
+      <description>SE runtime Services initialization helper for RTSS cores</description>
+      <files>
+        <file category="include" name="se_services/port/include/"/>
+        <file category="source" name="se_services/port/se_services_port.c"/>
+      </files>
+    </component>
+
+
+    <component Cclass="Device" Cgroup="Conductor Tool support" Cversion="0.9.5" condition="Ensemble CMSIS_Driver">
+      <description>Conductor Tool based board configuration for RTSS</description>
+      <files>
+        <file category="source" name="libs/conductor/conductor_board_config.c"/>
+        <file category="header" name="libs/conductor/conductor_board_config.h"/>
+      </files>
+    </component>
+	<component Cclass="Device" Cgroup="Retarget IO" Csub="STDIN" Cversion="0.9.6" condition="Retarget IO STDIN">
+      <description>Retarget STDIN to UART</description>
+      <files>
+        <file category="header" name="libs/retarget_io/config/retarget_config.h" version="1.0.0" attr="config"/>
+        <file category="source" name="libs/retarget_io/source/stdin_USART.c"/>
+      </files>
+    </component>
+	<component Cclass="Device" Cgroup="Retarget IO" Csub="STDOUT" Cversion="0.9.6" condition="Retarget IO STDOUT">
+      <description>Retarget STDOUT to UART</description>
+      <files>
+        <file category="header" name="libs/retarget_io/config/retarget_config.h" version="1.0.0" attr="config"/>
+        <file category="source" name="libs/retarget_io/source/stdout_USART.c"/>
+      </files>
+    </component>
+	<component Cclass="Device" Cgroup="Retarget IO" Csub="STDERR" Cversion="0.9.6" condition="Retarget IO STDERR">
+      <description>Retarget STDERR to UART</description>
+      <files>
+        <file category="header" name="libs/retarget_io/config/retarget_config.h" version="1.0.0" attr="config"/>
+        <file category="source" name="libs/retarget_io/source/stderr_USART.c"/>
+      </files>
+    </component>
+
+  </components>
+
+</package>
