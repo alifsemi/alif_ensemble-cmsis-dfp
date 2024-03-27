@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0 */
 /**
  * @file services_lib_ids.h
  *
@@ -134,6 +133,7 @@ enum SERVICE_ID_t {
    * Update Services
    */
 	SERVICE_UPDATE_START       = 600,                                   /**< SERVICE_UPDATE_START                       */
+	SERVICE_UPDATE_STOC        = SERVICE_UPDATE_START,                  /**< SERVICE_UPDATE_STOC                        */
 	SERVICE_UPDATE_END         = 699,                                   /**< SERVICE_UPDATE_END                         */
 
   /**

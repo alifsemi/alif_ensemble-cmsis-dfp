@@ -84,7 +84,7 @@ uint32_t SERVICES_uart_write(uint32_t services_handle,
 
   return SERVICES_send_request(services_handle,
                                SERVICE_APPLICATION_UART_WRITE_ID,
-                               NULL);
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -103,7 +103,7 @@ uint32_t SERVICES_get_se_revision(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle,
                                   SERVICE_APPLICATION_FIRMWARE_VERSION_ID,
-                                  NULL);
+                                  DEFAULT_TIMEOUT);
 
   memcpy((void *)revision_data, (const void *)p_svc->resp_se_revision,
       p_svc->resp_se_revision_length);
@@ -132,7 +132,7 @@ uint32_t SERVICES_application_ospi_write_key(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle,
                                        SERVICE_APPLICATION_OSPI_WRITE_KEY_ID,
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
 

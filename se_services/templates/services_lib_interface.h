@@ -43,6 +43,8 @@
  *  G L O B A L   D E F I N E S
  ******************************************************************************/
 
+#define PRINT_BUFFER_SIZE           256
+
 /*******************************************************************************
  *  F U N C T I O N   P R O T O T Y P E S
  ******************************************************************************/
@@ -52,5 +54,7 @@ void SERVICES_Setup(MHU_send_message_t send_message, uint32_t timeout);
 #endif
 int SERVICES_print(const char * fmt, ...);
 int32_t SERVICES_wait_ms(uint32_t wait_time_ms);
+
+void TEST_print(uint32_t services_handle, char *fmt, ...);
 
 #endif /* __SERVICES_LIB_INTERFACE_H__ */

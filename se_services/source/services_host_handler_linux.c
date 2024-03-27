@@ -179,14 +179,14 @@ void SERVICES_unregister_channel(uint32_t mhu_id,
  * @param services_handle
  * @param service_id
  * @param service_data
- * @param callback
+ * @param service_timeout
  * @return
  */
 uint32_t SERVICES_send_request(uint32_t services_handle, 
                                uint16_t service_id, 
-                               SERVICES_sender_callback callback)
+                               uint32_t service_timeout)
 {
-  UNUSED(callback);
+  UNUSED(service_timeout);
 
   if (services_handle >= MHU_NUMBER) return SERVICES_LIB_ERROR;
 

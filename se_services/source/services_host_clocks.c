@@ -104,7 +104,7 @@ uint32_t SERVICES_clocks_select_osc_source(uint32_t services_handle,
   p_svc->send_clock_target = target;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SELECT_OSC_SOURCE, NULL);
+      SERVICE_CLOCK_SELECT_OSC_SOURCE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -135,7 +135,7 @@ uint32_t SERVICES_clocks_select_pll_source(uint32_t services_handle,
   p_svc->send_clock_target = target;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SELECT_PLL_SOURCE, NULL);
+      SERVICE_CLOCK_SELECT_PLL_SOURCE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -166,7 +166,7 @@ uint32_t SERVICES_clocks_enable_clock(uint32_t services_handle,
   p_svc->send_enable = enable;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SET_ENABLE, NULL);
+      SERVICE_CLOCK_SET_ENABLE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -193,7 +193,7 @@ uint32_t SERVICES_clocks_set_ES0_frequency(uint32_t services_handle,
   p_svc->send_frequency = frequency;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_ES0_SET_FREQ, NULL);
+      SERVICE_CLOCK_ES0_SET_FREQ, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -220,7 +220,7 @@ uint32_t SERVICES_clocks_set_ES1_frequency(uint32_t services_handle,
   p_svc->send_frequency = frequency;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_ES1_SET_FREQ, NULL);
+      SERVICE_CLOCK_ES1_SET_FREQ, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -247,7 +247,7 @@ uint32_t SERVICES_clocks_select_a32_source(uint32_t services_handle,
   p_svc->send_source = source;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SELECT_A32_SOURCE, NULL);
+      SERVICE_CLOCK_SELECT_A32_SOURCE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -274,7 +274,7 @@ uint32_t SERVICES_clocks_select_aclk_source(uint32_t services_handle,
   p_svc->send_source = source;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SELECT_ACLK_SOURCE, NULL);
+      SERVICE_CLOCK_SELECT_ACLK_SOURCE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -305,7 +305,7 @@ uint32_t SERVICES_clocks_set_divider(uint32_t services_handle,
   p_svc->send_value = value;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_SET_DIVIDER, NULL);
+      SERVICE_CLOCK_SET_DIVIDER, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -326,7 +326,7 @@ uint32_t SERVICES_pll_initialize(uint32_t services_handle,
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_INITIALIZE, NULL);
+      SERVICE_PLL_INITIALIZE, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -346,7 +346,7 @@ uint32_t SERVICES_pll_deinit(uint32_t services_handle, uint32_t * error_code)
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_DEINIT, NULL);
+      SERVICE_PLL_DEINIT, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -380,7 +380,7 @@ uint32_t SERVICES_pll_xtal_start(uint32_t services_handle,
   p_svc->send_delay_count = delay_count;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_XTAL_START, NULL);
+      SERVICE_PLL_XTAL_START, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -401,7 +401,7 @@ uint32_t SERVICES_pll_xtal_stop(uint32_t services_handle,
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_XTAL_STOP, NULL);
+      SERVICE_PLL_XTAL_STOP, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -425,7 +425,7 @@ uint32_t SERVICES_pll_xtal_is_started(uint32_t services_handle,
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_XTAL_IS_STARTED, NULL);
+      SERVICE_PLL_XTAL_IS_STARTED, DEFAULT_TIMEOUT);
 
   *is_started = p_svc->resp_error_code != 0x0;
   *error_code = p_svc->resp_error_code;
@@ -456,7 +456,7 @@ uint32_t SERVICES_pll_clkpll_start(uint32_t services_handle,
   p_svc->send_delay_count = delay_count;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_CLKPLL_START, NULL);
+      SERVICE_PLL_CLKPLL_START, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -477,7 +477,7 @@ uint32_t SERVICES_pll_clkpll_stop(uint32_t services_handle,
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_CLKPLL_STOP, NULL);
+      SERVICE_PLL_CLKPLL_STOP, DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -501,7 +501,7 @@ uint32_t SERVICES_pll_clkpll_is_locked(uint32_t services_handle,
       (generic_svc_t *)SERVICES_prepare_packet_buffer(sizeof(generic_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_PLL_CLKPLL_IS_LOCKED, NULL);
+      SERVICE_PLL_CLKPLL_IS_LOCKED, DEFAULT_TIMEOUT);
 
   *is_locked = p_svc->resp_error_code != 0x0;
   *error_code = p_svc->resp_error_code;
@@ -526,7 +526,7 @@ uint32_t SERVICES_clocks_get_clocks(uint32_t services_handle,
       SERVICES_prepare_packet_buffer(sizeof(clk_get_clocks_svc_t));
 
   uint32_t ret = SERVICES_send_request(services_handle,
-      SERVICE_CLOCK_GET_CLOCKS, NULL);
+      SERVICE_CLOCK_GET_CLOCKS, DEFAULT_TIMEOUT);
 
   *error_code = (*pp_svc)->resp_error_code;
   return ret;

@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+
 /**
  * @file services_lib_api.h
  *
@@ -33,6 +33,11 @@ extern "C" {
 /*******************************************************************************
  *  M A C R O   D E F I N E S
  ******************************************************************************/
+
+/**
+ * Default service call timeout
+ */
+#define DEFAULT_TIMEOUT                            (0)
 
 /**
  * Common Service error codes - follow the pattern from the PLL services
@@ -308,7 +313,9 @@ typedef enum {
 	CLKEN_CLK_160M,
 	CLKEN_CLK_100M,
 	CLKEN_USB,
-	CLKEN_HFOSC
+	CLKEN_HFOSC,
+	CLKEN_SRAM0,
+	CLKEN_SRAM1
 } clock_enable_t;
 
 typedef enum {
@@ -357,7 +364,6 @@ char *SERVICES_error_to_string(uint32_t error_code);
 
 // Services functional APIs
 uint32_t SERVICES_heartbeat(uint32_t services_handle);
-uint32_t SERVICES_heartbeat_async(uint32_t services_handle, SERVICES_sender_callback callback);
 uint32_t SERVICES_uart_write(uint32_t services_handle, size_t size, const uint8_t *uart_data);
 uint32_t SERVICES_pinmux(uint32_t services_handle, uint8_t port_number, uint8_t pin_number,
 			 uint8_t config_data,
@@ -621,6 +627,13 @@ uint32_t SERVICES_pll_clkpll_is_locked(uint32_t services_handle, bool *is_locked
 // External System 0 Services
 uint32_t SERVICES_Boot_Net_Proc(uint32_t services_handle, net_proc_boot_args_t *boot_args, uint32_t *error_code);
 uint32_t SERVICES_Shutdown_Net_Proc(uint32_t services_handle, uint32_t *error_code);
+
+// Update services
+uint32_t SERVICES_update_stoc(uint32_t services_handle,
+							  uint32_t image_address,
+							  uint32_t image_size,
+							  uint32_t *error_code);
+
 
 #ifdef __cplusplus
 }

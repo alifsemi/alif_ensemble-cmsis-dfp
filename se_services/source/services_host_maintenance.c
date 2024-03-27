@@ -44,25 +44,14 @@
  ******************************************************************************/
 
 /**
- * @brief   Hearbeat async service call
- * @return  Errorcode
- * @note    No payload required.
- */
-uint32_t SERVICES_heartbeat_async(uint32_t services_handle, 
-                                  SERVICES_sender_callback callback)
-{
-  SERVICES_prepare_packet_buffer(sizeof(service_header_t));
-  return SERVICES_send_request(services_handle, 
-                               SERVICE_MAINTENANCE_HEARTBEAT_ID, callback);
-}
-
-/**
- * @brief   Hearbeat service call
+ * @brief   Heart beat service call
  * @return  Errorcode
  * @note    No payload required.
  */
 uint32_t SERVICES_heartbeat(uint32_t services_handle)
 {
-  return SERVICES_heartbeat_async(services_handle, NULL);
+  SERVICES_prepare_packet_buffer(sizeof(service_header_t));
+  return SERVICES_send_request(services_handle, 
+                               SERVICE_MAINTENANCE_HEARTBEAT_ID,
+                               DEFAULT_TIMEOUT);
 }
-

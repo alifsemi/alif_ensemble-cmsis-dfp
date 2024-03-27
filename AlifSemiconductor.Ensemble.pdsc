@@ -12,7 +12,8 @@
   -->
 
   <releases>
-    <release version="1.1.0" date="2024-02-22">
+    <release version="1.1.1" tag="v1.1.1" url="https://github.com/alifsemi/b0-cmsis-dfp_DEV/releases/download/v1.1.1/AlifSemiconductor.Ensemble.1.1.1.pack" date="2024-03-25">
+      - Update SE services to v1.0.92
       - Update drivers and testapps
       - Rename HSCMP component as CMP
     </release>
@@ -1734,7 +1735,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.0.90" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.0.92" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -1756,10 +1757,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.0.90" condition="SE SERVICES SRC">
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.0.92" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.0.90.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.0.92.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
@@ -1773,6 +1774,7 @@
         <file category="source" name="se_services/source/services_host_system.c"/>
         <file category="source" name="se_services/source/services_host_clocks.c"/>
         <file category="source" name="se_services/source/services_host_extsys0.c"/>
+        <file category="source" name="se_services/source/services_host_update.c"/>
          <!--se services example-->
         <file category="source" name="se_services/templates/m55_services_main.c" attr="template" select="SE Services Example"/>
         <file category="header" name="se_services/templates/services_lib_interface.h" attr="template" select="SE Services Example"/>

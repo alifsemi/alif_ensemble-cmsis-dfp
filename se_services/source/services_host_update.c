@@ -1,17 +1,15 @@
 /**
- * @file services_host_padcontrol.c
+ * @file services_host_update.c
  *
- * @brief Pad control service source file
- * @ingroup host_services
- * @par
- *
- * Copyright (C) 2022 Alif Semiconductor - All Rights Reserved.
+ * Copyright (C) 2024 Alif Semiconductor - All Rights Reserved.
  * Use, distribution and modification of this code is permitted under the
  * terms stated in the Alif Semiconductor Software License Agreement
  *
  * You should have received a copy of the Alif Semiconductor Software
  * License Agreement with this file. If not, please write to:
  * contact@alifsemi.com, or visit: https://alifsemi.com/license
+ *
+ * @ingroup host_services
  */
 
 /******************************************************************************
@@ -24,16 +22,17 @@
 #include "services_lib_api.h"
 #include "services_lib_protocol.h"
 #include "services_lib_ids.h"
-
-/**
- * @ingroup services
- */
+#if defined(A32)
+#include "a32_device.h"
+#else
+#include "system_utils.h"
+#endif
 
 /*******************************************************************************
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 
-#define SERVICES_PAD_CONTROL_PAYLOAD_LENGTH    3
+#define UNUSED(x) (void)(x)
 
 /*******************************************************************************
  *  T Y P E D E F S
@@ -48,30 +47,27 @@
  ******************************************************************************/
 
 /**
- * @brief Pad control service API
- * @param services_handle
- * @param port_number
- * @param pin_number
- * @param config_data
- * @return
+ * @fn      uint32_t SERVICES_update_stoc(uint32_t services_handle,
+ *                                        uint32_t image_address,
+ *                                        uint32_t image_address,
+ *                                        uint32_t *error_code)
+ *
+ * @brief   Update the whole STOC
  */
-uint32_t SERVICES_padcontrol(uint32_t services_handle, 
-                             uint8_t port_number, 
-                             uint8_t pin_number, 
-                             uint8_t config_data,
-                             uint32_t * error_code)
-
+uint32_t SERVICES_update_stoc(uint32_t services_handle,
+                              uint32_t image_address,
+                              uint32_t image_size,
+                              uint32_t *error_code)
 {
-  pad_control_svc_t * p_svc = (pad_control_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(pad_control_svc_t));
+  update_stoc_svc_t * p_svc = (update_stoc_svc_t *)
+      SERVICES_prepare_packet_buffer(sizeof(update_stoc_svc_t));
 
-  p_svc->send_port_num = port_number;
-  p_svc->send_pin_num = pin_number;
-  p_svc->send_config_data = config_data;
+  p_svc->send_image_address = LocalToGlobal((void *)image_address);
+  p_svc->send_image_size = image_size;
+  uint32_t ret = SERVICES_send_request(services_handle, 
+                                       SERVICE_UPDATE_STOC,
+                                       DEFAULT_TIMEOUT);
 
-  uint32_t ret =  SERVICES_send_request(services_handle,
-                                        SERVICE_APPLICATION_PAD_CONTROL_ID,
-                                        DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code;
   return ret;
 }

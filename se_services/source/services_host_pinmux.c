@@ -63,7 +63,8 @@ uint32_t SERVICES_pinmux(uint32_t services_handle,
   p_svc->send_config_data = config_data;
 
   uint32_t ret = SERVICES_send_request(services_handle,
-                               SERVICE_APPLICATION_PINMUX_ID, NULL);
+                                       SERVICE_APPLICATION_PINMUX_ID,
+                                       DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code;
   return ret;
 }

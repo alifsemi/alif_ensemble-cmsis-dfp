@@ -61,7 +61,7 @@ uint32_t SERVICES_system_get_toc_version(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle, 
                                        SERVICE_SYSTEM_MGMT_GET_TOC_VERSION, 
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
 
   *toc_version = p_svc->resp_version;
   *error_code = p_svc->resp_error_code;
@@ -85,7 +85,7 @@ uint32_t SERVICES_system_get_toc_number(uint32_t services_handle,
 	
   uint32_t ret = SERVICES_send_request(services_handle, 
                                        SERVICE_SYSTEM_MGMT_GET_TOC_NUMBER, 
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
 
   *toc_number = p_svc->resp_number_of_toc;
   *error_code = p_svc->resp_error_code;
@@ -141,7 +141,7 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle,
     if (SERVICE_SUCCESS == SERVICES_send_request(
                                               services_handle,
                                               SERVICE_SYSTEM_MGMT_GET_TOC_INFO,
-                                              NULL))
+                                              DEFAULT_TIMEOUT))
     {
       if (cpuid == p_svc->resp_toc_entry.cpu)
       {
@@ -189,7 +189,7 @@ uint32_t SERVICES_system_get_toc_data (uint32_t services_handle,
     if (SERVICE_SUCCESS == SERVICES_send_request(
                                               services_handle,
                                               SERVICE_SYSTEM_MGMT_GET_TOC_INFO,
-                                              NULL))
+                                              DEFAULT_TIMEOUT))
     {
       memcpy(&toc_info->toc_entry[i],
              &p_svc->resp_toc_entry,
@@ -217,7 +217,7 @@ uint32_t SERVICES_system_get_device_part_number(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle, 
                                        SERVICE_SYSTEM_MGMT_GET_DEVICE_PART_NUMBER, 
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
 
   *device_part_number = p_svc->resp_device_string;
   *error_code = p_svc->resp_error_code;
@@ -243,7 +243,7 @@ uint32_t SERVICES_system_set_services_debug (uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle,
                                        SERVICE_SYSTEM_MGMT_SET_CAPABILITIES_DEBUG,
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
 
   *error_code = p_svc->resp_error_code;
   return ret;
@@ -267,7 +267,7 @@ uint32_t SERVICES_system_get_otp_data (uint32_t services_handle,
 
  return_code = SERVICES_send_request(services_handle,
                                      SERVICE_SYSTEM_MGMT_GET_OTP_INFO,
-                                     NULL);
+                                     DEFAULT_TIMEOUT);
  /**
   * @todo
   */
@@ -297,7 +297,7 @@ uint32_t SERVICES_system_get_device_data(uint32_t services_handle,
 
   return_code = SERVICES_send_request(services_handle,
                                       SERVICE_SYSTEM_MGMT_GET_DEVICE_REVISION_DATA,
-                                      NULL);
+                                      DEFAULT_TIMEOUT);
 
   /* unpack and return */
   device_info->revision_id = p_svc->revision_id;
@@ -348,7 +348,7 @@ uint32_t SERVICES_system_read_otp(uint32_t services_handle,
  p_svc->send_offset = otp_offset;
  return_code = SERVICES_send_request(services_handle,
                                      SERVICE_SYSTEM_MGMT_READ_OTP,
-                                     NULL);
+                                     DEFAULT_TIMEOUT);
  *otp_value_word = p_svc->otp_word;
  *error_code = p_svc->resp_error_code;
 
@@ -380,7 +380,7 @@ uint32_t SERVICES_system_write_otp(uint32_t services_handle,
  p_svc->otp_word = otp_value_word;
  return_code = SERVICES_send_request(services_handle,
                                      SERVICE_SYSTEM_MGMT_WRITE_OTP,
-                                     NULL);
+                                     DEFAULT_TIMEOUT);
 
  *error_code = p_svc->resp_error_code;
   return return_code;

@@ -30,6 +30,10 @@
  ******************************************************************************/
 #define PRINT_BUFFER_MAXIMUM  256 /* Max size of TTY print buffer */
 
+#define TEST_PRINT_ENABLE           1   /* Enable printing from Test harness  */
+#define PRINT_VIA_CONSOLE           0   /* Print via Debugger console         */
+#define PRINT_VIA_SE_UART           1   /* Print via SE UART terminal         */
+
 /*******************************************************************************
  *  T Y P E D E F S
  ******************************************************************************/
@@ -110,4 +114,40 @@ void SERVICES_Setup(MHU_send_message_t send_message, uint32_t timeout)
   drv_debug_print_fn = &SERVICES_print;
 
   SERVICES_initialize(&services_init_params);
+}
+
+/**
+ * @fn    void TEST_print(uint32_t services_handle, char * fmt, ...)
+ * @param services_handle
+ * @param buffer_size
+ * @param fmt
+ */
+void TEST_print(uint32_t services_handle, char *fmt, ...)
+{
+#if TEST_PRINT_ENABLE != 0
+  va_list args;
+  static char buffer[PRINT_BUFFER_SIZE] = { 0 };
+  size_t buffer_size;
+
+  /*
+   * @todo Handle long strings bigger than buffer size
+   */
+  va_start(args,fmt);
+  buffer_size = vsnprintf(buffer, PRINT_BUFFER_SIZE, fmt, args);
+  va_end(args);
+
+  /**
+   * Choice of Console printing or via the SE-UART
+   */
+#if PRINT_VIA_CONSOLE != 0
+  if (buffer_size >= 0)
+  {
+    printf("%s", buffer);
+  }
+#endif
+#if PRINT_VIA_SE_UART != 0
+  SERVICES_uart_write(services_handle, strlen(buffer)+1, (uint8_t *)buffer);
+#endif
+  (void)buffer_size;
+#endif // #if SERVICES_PRINT_ENABLE != 0
 }

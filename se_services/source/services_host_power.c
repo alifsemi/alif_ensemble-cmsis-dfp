@@ -61,7 +61,8 @@ uint32_t SERVICES_get_run_cfg(uint32_t services_handle, run_profile_t *pp,
       SERVICES_prepare_packet_buffer(sizeof(aipm_get_run_profile_svc_t));
 
   srv_error_code = SERVICES_send_request(services_handle,
-                                         SERVICE_POWER_GET_RUN_REQ_ID, NULL);
+                                         SERVICE_POWER_GET_RUN_REQ_ID,
+                                         DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code; /* return actual call error */
 
   pp->aon_clk_src       = p_svc->resp_aon_clk_src;
@@ -120,7 +121,8 @@ uint32_t SERVICES_set_run_cfg(uint32_t services_handle, run_profile_t *pp,
   p_svc->send_vtor_address_ns  = pp->vtor_address_ns;
 
   srv_error_code = SERVICES_send_request(services_handle,
-                                         SERVICE_POWER_SET_RUN_REQ_ID, NULL);
+                                         SERVICE_POWER_SET_RUN_REQ_ID,
+                                         DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code; /* return actual call error */
 
    return srv_error_code;  /* Return error */
@@ -143,7 +145,8 @@ uint32_t SERVICES_get_off_cfg(uint32_t services_handle, off_profile_t *wp,
       SERVICES_prepare_packet_buffer(sizeof(aipm_get_off_profile_svc_t));
 
   srv_error_code = SERVICES_send_request(services_handle,
-                                         SERVICE_POWER_GET_OFF_REQ_ID, NULL);
+                                         SERVICE_POWER_GET_OFF_REQ_ID,
+                                         DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code; /* return actual call error */
 
   wp->dcdc_voltage      = p_svc->resp_dcdc_voltage;
@@ -199,7 +202,8 @@ uint32_t SERVICES_set_off_cfg(uint32_t services_handle, off_profile_t *wp,
   p_svc->send_ewic_cfg         = wp->ewic_cfg;
 
   srv_error_code = SERVICES_send_request(services_handle,
-                                         SERVICE_POWER_SET_OFF_REQ_ID, NULL);
+                                         SERVICE_POWER_SET_OFF_REQ_ID,
+                                         DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code; /* return actual call error */
 
   return srv_error_code;  /* Return error */
@@ -224,7 +228,8 @@ uint32_t SERVICES_power_stop_mode_req(uint32_t services_handle,
   p_svc->pad           = 0x0;
 
   return SERVICES_send_request(services_handle, 
-                               SERVICE_POWER_STOP_MODE_REQ_ID, NULL);
+                               SERVICE_POWER_STOP_MODE_REQ_ID,
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -246,7 +251,8 @@ uint32_t SERVICES_power_memory_req(uint32_t services_handle,
   UNUSED(error_code);
 
   return SERVICES_send_request(services_handle,
-                               SERVICE_POWER_MEMORY_POWER_REQ_ID, NULL);
+                               SERVICE_POWER_MEMORY_POWER_REQ_ID,
+                               DEFAULT_TIMEOUT);
 }
 
 
@@ -268,7 +274,8 @@ uint32_t SERVICES_power_ewic_config(uint32_t services_handle,
   p_svc->power_profile    = power_profile;
 
   return SERVICES_send_request(services_handle,
-                               SERVICE_POWER_EWIC_CONFIG_REQ_ID, NULL);
+                               SERVICE_POWER_EWIC_CONFIG_REQ_ID,
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -290,7 +297,8 @@ uint32_t SERVICES_power_wakeup_config(uint32_t services_handle,
   p_svc->power_profile           = power_profile;
 
   return SERVICES_send_request(services_handle,
-                               SERVICE_POWER_VBAT_WAKEUP_CONFIG_REQ_ID, NULL);
+                               SERVICE_POWER_VBAT_WAKEUP_CONFIG_REQ_ID,
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -314,7 +322,7 @@ SERVICES_power_mem_retention_config(uint32_t services_handle,
 
   return SERVICES_send_request(services_handle,
                                SERVICE_POWER_MEM_RETENTION_CONFIG_REQ_ID,
-                               NULL);
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -340,7 +348,7 @@ SERVICES_power_m55_he_vtor_save(uint32_t services_handle,
 
   return SERVICES_send_request(services_handle,
                                SERVICE_POWER_M55_HE_VTOR_SAVE_REQ_ID,
-                               NULL);
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -366,7 +374,7 @@ SERVICES_power_m55_hp_vtor_save(uint32_t services_handle,
 
   return SERVICES_send_request(services_handle,
                                SERVICE_POWER_M55_HP_VTOR_SAVE_REQ_ID,
-                               NULL);
+                               DEFAULT_TIMEOUT);
 }
 
 /**
@@ -394,7 +402,7 @@ SERVICES_corstone_standby_mode(uint32_t services_handle,
 
   srv_error_code = SERVICES_send_request(services_handle,
                                          SERVICE_POWER_GLOBAL_STANDBY_REQ_ID,
-                                         NULL);
+                                         DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code; /* return actual call error */
 
   return srv_error_code;  /* Return SERVICES error code */
@@ -423,7 +431,7 @@ SERVICES_power_dcdc_voltage_control(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle,
                                        SERVICE_POWER_DCDC_VOLTAGE_REQ_ID,
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code;
 
   return ret;
@@ -452,7 +460,7 @@ SERVICES_power_ldo_voltage_control(uint32_t services_handle,
 
   uint32_t ret = SERVICES_send_request(services_handle,
                                        SERVICE_POWER_LDO_VOLTAGE_REQ_ID,
-                                       NULL);
+                                       DEFAULT_TIMEOUT);
   *error_code = p_svc->resp_error_code;
 
   return ret;

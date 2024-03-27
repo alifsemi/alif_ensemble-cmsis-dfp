@@ -95,17 +95,12 @@ static uint32_t test_services_get_eui(char *p_test_name, uint32_t services_handl
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 #define RANDOMIZER_FEATURE          0
-#define TEST_PRINT_ENABLE           1   /* Enable printing from Test harness  */
-#define PRINT_VIA_CONSOLE           0   /* Print via Debugger console         */
-#define PRINT_VIA_SE_UART           1   /* Print via SE UART terminal         */
 #define NUMBER_OF_TEST_RUNS         1   /* Number of times to test            */
 
 #define SANITY_TESTS_ENABLE         1   /* Enable the sanity tests run as part of release builds */
 #define A32_BOOT_WORKAROUND         1   /* Skip A32 boot tests that crash the current B0 device */
 #define PLL_XTAL_TESTS_ENABLE       0
 #define CPU_BOOT_SEQUENCE_TEST_ENABLE 0 /* Boot a CPU core using the low level APIs */
-
-#define PRINT_BUFFER_SIZE           256 /* Maximum print buffer               */
 
 #if defined(M55_HE)
 #define CPU_STRING "M55_HE"
@@ -303,42 +298,6 @@ char *flags_to_string(uint32_t flags, char flag_string[])
 
   flag_string[FLAG_STRING_END] = '\0';
   return (char *)&flag_string[0]; /*!< return string back to printing */
-}
-
-/**
- * @fn    void TEST_print(uint32_t services_handle, char * fmt, ...)
- * @param services_handle
- * @param buffer_size
- * @param fmt
- */
-void TEST_print(uint32_t services_handle, char *fmt, ...)
-{
-#if TEST_PRINT_ENABLE != 0
-  va_list args;
-  static char buffer[PRINT_BUFFER_SIZE] = { 0 };
-  size_t buffer_size;
-
-  /*
-   * @todo Handle long strings bigger than buffer size
-   */
-  va_start(args,fmt);
-  buffer_size = vsnprintf(buffer, PRINT_BUFFER_SIZE, fmt, args);
-  va_end(args);
-
-  /**
-   * Choice of Console printing or via the SE-UART
-   */
-#if PRINT_VIA_CONSOLE != 0
-  if (buffer_size >= 0)
-  {
-    printf("%s", buffer);
-  }
-#endif
-#if PRINT_VIA_SE_UART != 0
-  SERVICES_uart_write(services_handle, strlen(buffer)+1, (uint8_t *)buffer);
-#endif
-  (void)buffer_size;
-#endif // #if SERVICES_PRINT_ENABLE != 0
 }
 
 /**
