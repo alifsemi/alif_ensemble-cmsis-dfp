@@ -56,6 +56,7 @@ extern "C"
 #define CDC200_CONFIGURE_LAYER_WINDOW    (1U << 6)    ///< Configure Layer window
 #define CDC200_CONFIGURE_BG_COLOR        (1U << 7)    ///< Configure Background color
 #define CDC200_CONFIGURE_LAYER_BLENDING  (1U << 8)    ///< Configure Layer blending
+#define CDC200_FRAMEBUF_UPDATE_VSYNC     (1U << 9)    ///< Update layer Frame buffer on vertical blanking
 
 /**
 \brief CDC200 Layer index

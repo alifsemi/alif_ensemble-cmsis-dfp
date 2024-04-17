@@ -307,6 +307,7 @@ static int32_t CDC200_PowerCtrl (ARM_POWER_STATE state,
  \param[in]   control CDC200 contol code operation.
                 - \ref CDC200_CONFIGURE_DISPLAY :         Configure Display
                 - \ref CDC200_FRAMEBUF_UPDATE :           Update layer Frame buffer
+                - \ref CDC200_FRAMEBUF_UPDATE_VSYNC :     Update layer Frame buffer on vertical blanking
                 - \ref CDC200_SCANLINE0_EVENT :           Enable/Disable Scanline0 event
                 - \ref CDC200_CONFIGURE_LAYER :           Configure Layer
                 - \ref CDC200_LAYER_ON :                  Turn On the Layer
@@ -317,6 +318,7 @@ static int32_t CDC200_PowerCtrl (ARM_POWER_STATE state,
  \param[in]   arg Argument of operation.
                - CDC200_CONFIGURE_DISPLAY :         Frame buffer address
                - CDC200_FRAMEBUF_UPDATE :           Frame buffer address
+               - CDC200_FRAMEBUF_UPDATE_VSYNC :     Frame buffer address
                - CDC200_SCANLINE0_EVENT :           ENABLE/DISABLE
                - CDC200_CONFIGURE_LAYER :           Pointer to layer info \ref ARM_CDC200_LAYER_INFO
                - CDC200_LAYER_ON :                  layer index /ref ARM_CDC200_LAYER_INDEX
@@ -557,6 +559,18 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
             cdc_set_layer_blending (cdc->regs, (CDC_LAYER)cdc200_layer_info->layer_idx,
                                     CDC_SHADOW_RELOAD_IMR, cdc200_layer_info->const_alpha,
                                     (CDC_BLEND_FACTOR)cdc200_layer_info->blend_factor);
+            break;
+        }
+        
+        case CDC200_FRAMEBUF_UPDATE_VSYNC:
+        {
+            if (arg == NULL)
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+
+            /* Update the buffer start address for new buffer content */
+            cdc_set_layer_fb_addr (cdc->regs, CDC_LAYER_1, CDC_SHADOW_RELOAD_VBR, LocalToGlobal((void*)arg));
             break;
         }
 
