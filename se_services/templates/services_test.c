@@ -1641,13 +1641,18 @@ static uint32_t test_services_pll_xtal(char *p_test_name, uint32_t services_hand
 
   // Switch from PLL to OSC clocks
   uint32_t pll_source = PLL_SOURCE_OSC;
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_UART,      &service_error_code);
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES0,       &service_error_code);
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES1,       &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_UART,        &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES0,         &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES1,         &service_error_code);
   TEST_print(services_handle, "Switching from PLL to RC: %d\n", service_error_code);
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SYSREFCLK, &service_error_code);
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SYSCLK,    &service_error_code);
-  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SECENC,    &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SYSREFCLK,   &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SYSCLK,      &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_SECENC,      &service_error_code);
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_PD4_SRAM,    &service_error_code);
+
+  // Switch from XTAL to RC
+  SERVICES_clocks_select_osc_source(services_handle, OSCILLATOR_SOURCE_RC, OSCILLATOR_TARGET_SYS_CLOCKS, &service_error_code);
+  SERVICES_clocks_select_osc_source(services_handle, OSCILLATOR_SOURCE_RC, OSCILLATOR_TARGET_PERIPH_CLOCKS, &service_error_code);
 
   // Stop PLL and XTAL
   SERVICES_pll_clkpll_stop(services_handle, &service_error_code);
@@ -1666,7 +1671,7 @@ static uint32_t test_services_pll_xtal(char *p_test_name, uint32_t services_hand
   SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_UART,        &service_error_code);
   SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES0,         &service_error_code);
   SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_ES1,         &service_error_code);
-
+  SERVICES_clocks_select_pll_source(services_handle, pll_source, PLL_TARGET_PD4_SRAM,    &service_error_code);
 
   // Recover the device
   SERVICES_pll_initialize(services_handle, &service_error_code);

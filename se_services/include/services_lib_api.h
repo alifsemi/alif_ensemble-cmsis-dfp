@@ -301,7 +301,8 @@ typedef enum {
 	PLL_TARGET_UART,
 	PLL_TARGET_ES0,
 	PLL_TARGET_ES1,
-	PLL_TARGET_SECENC
+	PLL_TARGET_SECENC,
+	PLL_TARGET_PD4_SRAM
 } pll_target_t;
 
 typedef enum {

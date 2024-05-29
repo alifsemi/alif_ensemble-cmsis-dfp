@@ -34,8 +34,8 @@ extern "C" {
  * @struct services_lib_t
  */
 typedef struct {
-  uint32_t             packet_buffer_address;
-  print_msg_t          fn_print_msg;
+	uint32_t             packet_buffer_address;
+	print_msg_t          fn_print_msg;
 } services_lib_t;
 
 /*******************************************************************************

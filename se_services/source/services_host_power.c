@@ -155,7 +155,6 @@ uint32_t SERVICES_get_off_cfg(uint32_t services_handle, off_profile_t *wp,
   wp->aon_clk_src       = p_svc->resp_aon_clk_src;
   wp->stby_clk_src      = p_svc->resp_stby_clk_src;
   wp->stby_clk_freq     = p_svc->resp_stby_clk_freq;
-  wp->sysref_clk_src    = 0; // currently unused
   wp->ip_clock_gating   = p_svc->resp_ip_clock_gating;
   wp->phy_pwr_gating    = p_svc->resp_phy_pwr_gating;
   wp->vdd_ioflex_3V3    = p_svc->resp_vdd_ioflex_3V3;

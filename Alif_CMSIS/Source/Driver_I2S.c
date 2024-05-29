@@ -1337,9 +1337,9 @@ static void I2S_IRQHandler(I2S_RESOURCES *I2S)
 
         if(transfer->status & I2S_TRANSFER_STATUS_TX_COMPLETE)
         {
-            I2S->cb_event(ARM_SAI_EVENT_SEND_COMPLETE);
             I2S->drv_status.status_b.tx_busy = 0U;
             transfer->status &= ~I2S_TRANSFER_STATUS_TX_COMPLETE;
+            I2S->cb_event(ARM_SAI_EVENT_SEND_COMPLETE);
         }
     }
 
@@ -1349,17 +1349,17 @@ static void I2S_IRQHandler(I2S_RESOURCES *I2S)
 
         if(transfer->status & I2S_TRANSFER_STATUS_RX_COMPLETE)
         {
-            I2S->cb_event(ARM_SAI_EVENT_RECEIVE_COMPLETE);
             I2S->drv_status.status_b.rx_busy = 0U;
             transfer->status &= ~I2S_TRANSFER_STATUS_RX_COMPLETE;
+            I2S->cb_event(ARM_SAI_EVENT_RECEIVE_COMPLETE);
         }
 
         if(transfer->status & I2S_TRANSFER_STATUS_RX_OVERFLOW)
         {
             /* Send event to application to handle it */
-            I2S->cb_event(ARM_SAI_EVENT_RX_OVERFLOW);
             transfer->status &= ~I2S_TRANSFER_STATUS_RX_OVERFLOW;
             I2S->drv_status.status_b.rx_overflow = 1U;
+            I2S->cb_event(ARM_SAI_EVENT_RX_OVERFLOW);
         }
     }
 }

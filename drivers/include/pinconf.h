@@ -30,22 +30,22 @@ extern "C"
 #define _PORT_(n)  PORT_##n
 #define  PORT_(n) _PORT_(n)
 
-#define PORT_0                                              0U
-#define PORT_1                                              1U
-#define PORT_2                                              2U
-#define PORT_3                                              3U
-#define PORT_4                                              4U
-#define PORT_5                                              5U
-#define PORT_6                                              6U
-#define PORT_7                                              7U
-#define PORT_8                                              8U
-#define PORT_9                                              9U
-#define PORT_10                                             10U
-#define PORT_11                                             11U
-#define PORT_12                                             12U
-#define PORT_13                                             13U
-#define PORT_14                                             14U
-#define PORT_15                                             15U
+#define PORT_0                                              0
+#define PORT_1                                              1
+#define PORT_2                                              2
+#define PORT_3                                              3
+#define PORT_4                                              4
+#define PORT_5                                              5
+#define PORT_6                                              6
+#define PORT_7                                              7
+#define PORT_8                                              8
+#define PORT_9                                              9
+#define PORT_10                                             10
+#define PORT_11                                             11
+#define PORT_12                                             12
+#define PORT_13                                             13
+#define PORT_14                                             14
+#define PORT_15                                             15
 #define PORT_LP                                             PORT_15  /* PORT 15 name Alias */
 
 #define PIN_0                                               0U

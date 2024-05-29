@@ -75,7 +75,7 @@ enum SERVICE_ID_t {
    * Power Services
    */
 	SERVICE_POWER_START        = 300,                                   /**< SERVICE_POWER_START                        */
-	SERVICE_POWER_STOP_MODE_REQ_ID,                                     /**< SERVICE_POWER_STOP_MODE_REQ_ID             */
+	SERVICE_POWER_STOP_MODE_REQ_ID = SERVICE_POWER_START,               /**< SERVICE_POWER_STOP_MODE_REQ_ID             */
 	SERVICE_POWER_EWIC_CONFIG_REQ_ID,                                   /**< SERVICE_POWER_EWIC_CONFIG_REQ_ID           */
 	SERVICE_POWER_VBAT_WAKEUP_CONFIG_REQ_ID,                            /**< SERVICE_POWER_VBAT_WAKEUP_CONFIG_REQ_ID    */
 	SERVICE_POWER_MEM_RETENTION_CONFIG_REQ_ID,                          /**< SERVICE_POWER_MEM_RETENTION_CONFIG_REQ_ID  */

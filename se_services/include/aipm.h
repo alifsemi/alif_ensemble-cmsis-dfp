@@ -223,9 +223,9 @@ typedef enum {
 #define EWIC_BROWN_OUT               0x00400000UL// bit22
 
 typedef enum {
-	DCDC_VOUT_0800 = 1,
-	DCDC_VOUT_0825 = 2,
-	DCDC_VOUT_0850 = 3
+  DCDC_VOUT_0800 = 1,
+  DCDC_VOUT_0825 = 2,
+  DCDC_VOUT_0850 = 3
 } dcdc_voltage_t;
 
 typedef enum {
@@ -288,7 +288,7 @@ typedef enum {
 /* Power Management Data Structures */
 typedef struct {
 	uint32_t power_domains;         /* Power domains to stay on */
-	dcdc_voltage_t dcdc_voltage;    /* DCDC output voltage */
+	uint32_t dcdc_voltage;          /* DCDC output voltage 750-850mv */
 	dcdc_mode_t dcdc_mode;          /* DCDC mode - PWM or PFM based on the workload */
 	lfclock_t aon_clk_src;          /* LFRC/LFXO */
 	hfclock_t run_clk_src;          /* HFRC/HFXO/PLL */
@@ -306,18 +306,18 @@ typedef struct {
 
 typedef struct {
 	uint32_t power_domains;         /* Power domains to stay on */
-	dcdc_voltage_t dcdc_voltage;    /* DCDC output voltage */
+  uint32_t dcdc_voltage;          /* DCDC output voltage 750-850mv */
 	dcdc_mode_t dcdc_mode;          /* DCDC mode - PWM or PFM based on the workload */
 	lfclock_t aon_clk_src;          /* LFRC/LFXO */
 	hfclock_t stby_clk_src;         /* HFRC/HFXO/PLL */
 	scaled_clk_freq_t stby_clk_freq; /* Selected automatically in SoC Standby mode */
-	uint32_t sysref_clk_src;         /* SoC Reference Clock shared with all subsystems */
+	uint32_t __unused__;             /* Unused, leaving the field for 'binary compatibility' */
 	uint32_t memory_blocks;          /* Memories blocks to be retained/powered */
 	uint32_t ip_clock_gating;        /* IP Clock Gating */
 	uint32_t phy_pwr_gating;         /* PHY Power Gating */
 	ioflex_mode_t vdd_ioflex_3V3;    /* Flex GPIOs voltage */
 	uint32_t wakeup_events;
-	int32_t ewic_cfg;
+	uint32_t ewic_cfg;
 	uint32_t vtor_address;
 	uint32_t vtor_address_ns;
 } off_profile_t;

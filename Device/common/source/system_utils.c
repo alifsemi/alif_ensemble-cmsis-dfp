@@ -158,8 +158,8 @@ bool RTSS_IsCacheClean_Required_by_Addr (volatile void *addr, int32_t size)
     /*
      * This is a hook, where user can redefine its implementation in application.
      *
-     * For some scenarios, User don’t need to do anything apart from DSB for
-     * un-cached or shared regions, and don’t need to clean write-through regions.
+     * For some scenarios, User do not need to do anything apart from DSB for
+     * un-cached or shared regions, and do not need to clean write-through regions.
      * This particular API is introduced to reduce the overhead in Cache operation
      * function for the above scenarios mentioned.
      *
@@ -194,8 +194,8 @@ bool RTSS_IsCacheInvalidate_Required_by_Addr (volatile void *addr, int32_t size)
     /*
      * This is a hook, where user can redefine its implementation in application.
      *
-     * For some scenarios, User don’t need to do anything apart from DSB for
-     * un-cached or shared regions, and don’t need to clean write-through regions.
+     * For some scenarios, User do not need to do anything apart from DSB for
+     * un-cached or shared regions, and do not need to clean write-through regions.
      * This particular API is introduced to reduce the overhead in Cache operation
      * function for the above scenarios mentioned.
      *

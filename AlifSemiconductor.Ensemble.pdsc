@@ -12,7 +12,7 @@
   -->
 
   <releases>
-    <release version="1.2.0-rc1" date="2024-05-20">
+    <release version="1.2.0-rc2" date="2024-05-29">
       - updated 1.2.0 release
     </release>
     <release version="1.1.3" date="2024-05-13">
@@ -939,7 +939,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C using I3C Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/mix_bus_i2c_i3c_baremetal.c" attr="template" select="I2C-I3C Mix Bus Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I2S_Baremetal.c" attr="template" select="I2S Baremetal Demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/Include/i2s_samples.h" attr="template" select="I2S Baremetal Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_masterside.c" attr="template" select="I3C Master Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_slaveside.c" attr="template" select="I3C Slave Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_blink_baremetal.c" attr="template" select="LED Blinky Baremetal Demo"/>
@@ -1015,6 +1015,8 @@
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/UTIMER_app.c" attr="template" select="UTIMER FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/TSENS_testapp.c" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS FreeRTOS Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_testapp.c" attr="template" select="I2S FreeRTOS Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
         
 	<!--  LWIP templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd Demo"/>
@@ -1069,7 +1071,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C using I3C Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/mix_bus_i2c_i3c_baremetal.c" attr="template" select="I2C I3C Mix Bus Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I2S_Baremetal.c" attr="template" select="I2S Baremetal Demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/Include/i2s_samples.h" attr="template" select="I2S Baremetal Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_masterside.c" attr="template" select="I3C Master Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_slaveside.c" attr="template" select="I3C Slave Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_blink_baremetal.c" attr="template" select="LED Blinky Baremetal Demo"/>
@@ -1151,6 +1153,8 @@
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/UTIMER_app.c" attr="template" select="UTIMER FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/TSENS_testapp.c" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS FreeRTOS Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_testapp.c" attr="template" select="I2S FreeRTOS Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
 	<!--  LWIP templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd.c" attr="template" select="LWIP httpd Demo"/>
@@ -1749,7 +1753,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.0.93" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.0.94" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -1771,10 +1775,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.0.93" condition="SE SERVICES SRC">
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.0.94" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.0.93.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.0.94.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
@@ -1846,7 +1850,6 @@
         <file category="header" name="components/Include/WiFi_utils.h"/>
         <file category="header" name="components/Include/WiFi_we310f5.h"/>
         <file category="header" name="components/Include/WiFi_we310f5_HW_Config.h"/>
-        <file category="source" name="components/Source/HM0360_camera_sensor.c"/>
         <file category="source" name="components/Source/WiFi_utils.c"/>                                                    
         <file category="source" name="components/Source/WiFi_we310f5.c"/>
         <file category="source" name="components/Source/WiFi_we310f5_HW.c"/>

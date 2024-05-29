@@ -18,12 +18,11 @@
 #include "drivers_common.h"
 #include "mhu_driver.h"
 
-#define MHU_RECEIVER_TIMEOUT_MAX              0x100000
+#define MHU_RECEIVER_TIMEOUT_MAX              1000000
 
 static MHU_sender_callback s_nr2r_callback;
 static MHU_sender_callback s_r2nr_callback;
 static MHU_send_msg_acked_callback_t s_chcomb_callback;
-static volatile bool nr2r_irq_occurred = false;
 
 static uint32_t s_sender_frame_base_address_list[MHU_NUMBER_MAX];
 static uint32_t s_sender_frame_count = 0;
@@ -103,7 +102,6 @@ static void clear_irq(MHU_sender_frame_register_t * sender_reg_base,
   WRITE_REGISTER_U32(&sender_reg_base->INT_CLR, mask);
 }
 
-#if 0
 /**
  * @brief     Function returns access ready status
  * @param     sender_id Sender frame ID
@@ -114,7 +112,6 @@ static bool sender_is_access_ready(uint32_t sender_id)
   MHU_sender_frame_register_t * sender_reg_base = get_sender_frame(sender_id);
   return (sender_reg_base->ACCESS_READY & MHU_ACC_RDY) == MHU_ACC_RDY;
 }
-#endif
 
 /**
  * @brief     Interrupt handler for send message
@@ -141,7 +138,6 @@ void MHU_send_message_irq_handler(uint32_t sender_id)
     {
       s_nr2r_callback();
     }
-    nr2r_irq_occurred = true;
   }
 
   if (status & MHU_R2NR)
@@ -232,13 +228,12 @@ mhu_send_status_t MHU_send_message(uint32_t sender_id,
   uint32_t ch_num = channel_number;
 
   // Request access
-  nr2r_irq_occurred = false;
   sender_request_access(sender_id);
 
   // Wait for access
   for (timeout = MHU_RECEIVER_TIMEOUT_MAX; timeout > 0; timeout--)
   {
-    if (nr2r_irq_occurred)
+    if (sender_is_access_ready(sender_id))
     {
       break;
     }
