@@ -58,8 +58,8 @@
 #define DIMAGE_X                 (RTE_PANEL_HACTIVE_TIME)
 #define DIMAGE_Y                 (RTE_PANEL_VACTIVE_LINE)
 
-static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section("lcd_frame_buf")));
-static uint8_t lcd_image2[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section("lcd_frame_buf")));
+static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section(".bss.lcd_frame_buf")));
+static uint8_t lcd_image2[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section(".bss.lcd_frame_buf")));
 
 /* CDC200 driver instance */
 extern ARM_DRIVER_CDC200 Driver_CDC200;
@@ -129,6 +129,17 @@ static void hw_disp_init(void)
         printf("\r\nSE: get_run_cfg error = %d\n", error_code);
         goto error_disable_hfosc_clk;
     }
+
+    /*
+     * Note:
+     * This demo uses a specific profile setting that only enables the
+     * items it needs. For example, it only requests the RAM regions and
+     * peripheral power that are relevant for this demo. If you want to adapt
+     * this example for your own use case, you should adjust the profile setting
+     * accordingly. You can either add any additional items that you need, or
+     * remove the request altogether to use the default setting that turns on
+     * almost everything.
+     */
 
     runp.memory_blocks = MRAM_MASK | SRAM0_MASK;
 

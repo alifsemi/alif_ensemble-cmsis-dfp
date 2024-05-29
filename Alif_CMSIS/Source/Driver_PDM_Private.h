@@ -26,6 +26,13 @@
 #define PDM_DMA_ENABLE  0
 #endif
 
+/* Verify if support for Blocking (Polling) mode is enabled */
+#if(RTE_PDM_BLOCKING_MODE_ENABLE || RTE_LPPDM_BLOCKING_MODE_ENABLE)
+#define PDM_BLOCKING_MODE_ENABLE   1
+#else
+#define PDM_BLOCKING_MODE_ENABLE   0
+#endif
+
 #if PDM_DMA_ENABLE
 #include <DMA_Common.h>
 #endif
@@ -64,11 +71,15 @@ typedef struct _PDM_RESOURCES
     PDM_DRIVER_STATE                  state;                /* PDM Driver state                   */
     PDM_INSTANCE                      instance;             /* PDM Driver instance                */
     uint8_t                           fifo_watermark;       /* PDM fifo watermark value           */
-#if PDM_DMA_ENABLE
+    ARM_PDM_STATUS                    status;               /* PDM Driver status                  */
+    #if PDM_DMA_ENABLE
     ARM_DMA_SignalEvent_t             dma_cb;               /* PDM DMA Callback                   */
     PDM_DMA_HW_CONFIG                *dma_cfg;              /* DMA controller configuration       */
     bool                              dma_enable;           /* PDM instance DMA enable            */
     uint8_t                           dma_irq_priority;     /* PDM instance DMA irq priority      */
+#endif
+#if PDM_BLOCKING_MODE_ENABLE
+    bool                              blocking_mode;        /* PDM blocking mode transfer enable  */
 #endif
     IRQn_Type                         error_irq;            /* PDM error IRQ number               */
     IRQn_Type                         warning_irq;          /* PDM warning IRQ number             */

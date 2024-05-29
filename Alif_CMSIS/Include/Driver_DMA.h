@@ -29,6 +29,7 @@ extern "C"
 #define ARM_DMA_USER_PROVIDED_MCODE     (0x01UL)    ///< Use User provided microcode; arg = microcode address in memory
 #define ARM_DMA_I2S_MONO_MODE           (0x02UL)    ///< Support for I2S mono mode;
 #define ARM_DMA_CRC_MODE                (0x03UL)    ///< Support for CRC which doesn't require handshaking
+#define ARM_DMA_ENDIAN_SWAP_SIZE        (0x04UL)    ///< Set the Endian Swap Size
 
 /**
 \brief DMA Data Direction
@@ -50,6 +51,17 @@ typedef enum {
     BS_BYTE_8,
     BS_BYTE_16,
 } ARM_DMA_BS_Type;
+
+/**
+\brief DMA Endian Swap Size
+*/
+typedef enum {
+    ESS_SWAP_NONE,
+    ESS_SWAP_16BIT,
+    ESS_SWAP_32BIT,
+    ESS_SWAP_64BIT,
+    ESS_SWAP_128BIT,
+} ARM_DMA_ESS_Type;
 
 /****** DMA specific error codes *****/
 #define ARM_DMA_ERROR_HANDLE        (ARM_DRIVER_ERROR_SPECIFIC - 1)     ///< Handle error

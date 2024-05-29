@@ -294,7 +294,7 @@ static inline int32_t set_i2s_sampling_rate(I2S_INSTANCE instance,
 {
     long int div;
 
-    div = lroundf((float)(clock_source / sclk_freq));
+    div = lroundf(((float) clock_source / sclk_freq));
 
     if(div > I2S_CLK_DIVISOR_MAX)
         return -1;

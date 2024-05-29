@@ -29,6 +29,12 @@ extern "C"
 #include <stdint.h>
 #include "Driver_I2C.h"
 
+/* To ensure proper operation, please allocate sufficient stack
+ * space for the camera_sensor_i2c_write_burst API in your application
+ * configuration. This includes the 50-byte buffer along with the
+ * driver's own stack requirements.*/
+#define CAMERA_SENSOR_MAX_BURST_SIZE 50
+
 /**
 \brief Camera Sensor i2c Register Address Type
 */
@@ -58,19 +64,26 @@ typedef struct CAMERA_SENSOR_SLAVE_I2C_CONFIG {
 
 
 /* initialize i2c driver. */
-extern int32_t camera_sensor_i2c_init(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c);
+int32_t camera_sensor_i2c_init(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c);
 
 /* write value to Camera Sensor slave register using i2c. */
-extern int32_t camera_sensor_i2c_write(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
-                                       uint32_t                        reg_addr,
-                                       uint32_t                        reg_value,
-                                       CAMERA_SENSOR_I2C_REG_SIZE      reg_size);
+int32_t camera_sensor_i2c_write(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
+                                uint32_t                        reg_addr,
+                                uint32_t                        reg_value,
+                                CAMERA_SENSOR_I2C_REG_SIZE      reg_size);
+
+/* write burst of values to Camera Sensor slave register using i2c. */
+int32_t camera_sensor_i2c_write_burst(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
+                                      uint32_t                        reg_addr,
+                                      void                           *reg_values,
+                                      CAMERA_SENSOR_I2C_REG_SIZE      reg_size,
+                                      uint32_t                        burst_len);
 
 /* read value from Camera Sensor slave register using i2c. */
-extern int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
-                                      uint32_t                        reg_addr,
-                                      uint32_t                       *reg_value,
-                                      CAMERA_SENSOR_I2C_REG_SIZE      reg_size);
+int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
+                               uint32_t                        reg_addr,
+                               uint32_t                       *reg_value,
+                               CAMERA_SENSOR_I2C_REG_SIZE      reg_size);
 
 #ifdef  __cplusplus
 }

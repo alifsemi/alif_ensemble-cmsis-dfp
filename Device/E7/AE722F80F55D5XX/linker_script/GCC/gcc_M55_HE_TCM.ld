@@ -31,6 +31,12 @@ __STACK_SIZE    = 0x00002000;
 __HEAP_SIZE     = 0x00004000;
 __APP_HEAP_SIZE = 0x00004000;
 
+/*
+ * Note:
+ * The empty regions(eg SRAM1) are ON by default, but may have been released
+ * by some example applications. So make sure your application requests
+ * power for these regions before adding contents.
+ */
 MEMORY
 {
   ITCM  (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00040000
@@ -103,10 +109,10 @@ SECTIONS
 
   .bss.at_sram0 (NOLOAD) : ALIGN(8)
   {
-    *(lcd_crop_and_interpolate_buf)  /* LCD crop and intrepolate image processing buffer. */
-    *(lcd_frame_buf)                 /* LCD frame Buffer. */
-    *(camera_frame_buf)              /* Camer Frame Buffer */
-    *(camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
+    *(.bss.lcd_crop_and_interpolate_buf)  /* LCD crop and intrepolate image processing buffer. */
+    *(.bss.lcd_frame_buf)                 /* LCD frame Buffer. */
+    *(.bss.camera_frame_buf)              /* Camer Frame Buffer */
+    *(.bss.camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
   } > SRAM0
 
   .bss (NOLOAD) : ALIGN(8)

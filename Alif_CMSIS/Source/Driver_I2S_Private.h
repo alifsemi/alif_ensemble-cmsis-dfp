@@ -40,6 +40,14 @@
 #include <DMA_Common.h>
 #endif
 
+#if ( RTE_I2S0_BLOCKING_MODE_ENABLE || RTE_I2S1_BLOCKING_MODE_ENABLE || \
+      RTE_I2S2_BLOCKING_MODE_ENABLE || RTE_I2S3_BLOCKING_MODE_ENABLE || \
+      RTE_LPI2S_BLOCKING_MODE_ENABLE )
+#define I2S_BLOCKING_MODE_ENABLE  1
+#else
+#define I2S_BLOCKING_MODE_ENABLE  0
+#endif
+
 #ifdef  __cplusplus
 extern "C"
 {
@@ -80,6 +88,12 @@ typedef struct _I2S_CONFIG_INFO {
 
     /*!< I2S clock source in Hz */
     const uint32_t clk_source;
+
+#if I2S_BLOCKING_MODE_ENABLE
+    /*!< I2S instance blocking mode transfer enable */
+    const bool blocking_mode;
+#endif
+
 
 #if I2S_DMA_ENABLE
     /*!< I2S dma enable */

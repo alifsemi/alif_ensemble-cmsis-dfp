@@ -50,10 +50,17 @@ CAMERA_SENSOR_DEVICE *Get_LPCamera_Sensor(void) \
 } \
 
 /**
+\brief Camera Sensor interface
+*/
+typedef enum _CAMERA_SENSOR_INTERFACE {
+    CAMERA_SENSOR_INTERFACE_PARALLEL,          /* Camera sensor parallel interface */
+    CAMERA_SENSOR_INTERFACE_MIPI               /* Camera sensor serial interface */
+} CAMERA_SENSOR_INTERFACE;
+
+/**
 \brief CPI information structure
 */
 typedef struct _CPI_INFO {
-    CPI_INTERFACE            interface;        /* CPI Interface */
     CPI_WAIT_VSYNC           vsync_wait;       /* CPI VSYNC Wait */
     CPI_CAPTURE_DATA_ENABLE  vsync_mode;       /* CPI VSYNC Mode */
     CPI_SIG_POLARITY         pixelclk_pol;     /* CPI Pixel Clock Polarity */
@@ -100,6 +107,7 @@ typedef struct _CAMERA_SENSOR_OPERATIONS {
 \brief CAMERA Sensor Device
 */
 typedef struct _CAMERA_SENSOR_DEVICE {
+    CAMERA_SENSOR_INTERFACE   interface; /* Camera Sensor interface */
     int                       width;     /* Frame Width */
     int                       height;    /* Frame Height */
     CPI_INFO                  *cpi_info; /* CPI Camera Sensor device Information */

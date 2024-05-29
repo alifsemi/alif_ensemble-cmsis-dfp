@@ -63,7 +63,7 @@
 #define WAIT_CYCLE_ADDRESS                                      0x00000001U
 #define OCTAL_DDR_WO_DQS                                        (0xC7U)
 #define OCTAL_DDR                                               (0xE7U)
-#define DEFAULT_WAIT_CYCLES                                     (0x10U)
+#define DEFAULT_WAIT_CYCLES                                     RTE_ISSI_FLASH_WAIT_CYCLES
 
 #define FLAG_STATUS_BUSY                                        0x80U
 #define FLAG_STATUS_ERROR                                       0x30U

@@ -148,6 +148,9 @@ void uart_receive_blocking (UART_Type *uart, UART_TRANSFER *transfer)
 {
     /* RX fifo Available count. */
     uint32_t rx_fifo_available_cnt  = 0U;
+
+    /* RX line status. */
+    uint32_t rx_line_status = 0U;
     uint32_t i = 0U;
 
     /* block till uart receives all the data. */
@@ -167,6 +170,39 @@ void uart_receive_blocking (UART_Type *uart, UART_TRANSFER *transfer)
             {
                 /* Come out as it received all the user data. */
                 break;
+            }
+
+            /* check for any RX line status error. */
+            rx_line_status = uart->UART_LSR;
+
+            if (rx_line_status & (UART_LSR_RECEIVER_FIFO_ERR | UART_LSR_OVERRUN_ERR) )
+            {
+                /* mark status as error. */
+                transfer->status = UART_TRANSFER_STATUS_ERROR;
+
+                /* there can be multiple RX line status,
+                 * break character implicitly generates a framing error / parity error.
+                 */
+
+                if (rx_line_status & UART_LSR_BREAK_INTERRUPT)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_BREAK;
+                }
+
+                if (rx_line_status & UART_LSR_FRAME_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_FRAMING;
+                }
+
+                if (rx_line_status & UART_LSR_PARITY_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_PARITY;
+                }
+
+                if (rx_line_status & UART_LSR_OVERRUN_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_OVERRUN;
+                }
             }
 
             /* read character from rbr receive buffer register. */
@@ -324,9 +360,9 @@ void uart_set_flow_control(UART_Type          *uart,
 void uart_irq_handler (UART_Type *uart, UART_TRANSFER *transfer)
 {
     uint32_t uart_int_status        = 0U;   /* uart interrupt status    */
+    uint32_t rx_line_status         = 0U;   /* uart rx line status      */
     uint32_t tx_fifo_available_cnt  = 0U;   /* TX fifo Available count. */
     uint32_t rx_fifo_available_cnt  = 0U;   /* RX fifo Available count. */
-
     uint32_t i = 0U;
 
     /* get uart interrupt status from iir interrupt identity register */
@@ -340,7 +376,37 @@ void uart_irq_handler (UART_Type *uart, UART_TRANSFER *transfer)
             break;
 
         case UART_IIR_RECEIVER_LINE_STATUS: /* receiver line status */
-            /* not yet implemented. */
+            rx_line_status = uart->UART_LSR;
+
+            /* check for any RX line status error. */
+            if (rx_line_status & (UART_LSR_RECEIVER_FIFO_ERR | UART_LSR_OVERRUN_ERR) )
+            {
+                /* mark status as error. */
+                transfer->status = UART_TRANSFER_STATUS_ERROR;
+
+                /* there can be multiple RX line status,
+                 * break character implicitly generates framing error / parity error.
+                 */
+                if (rx_line_status & UART_LSR_BREAK_INTERRUPT)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_BREAK;
+                }
+
+                if (rx_line_status & UART_LSR_FRAME_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_FRAMING;
+                }
+
+                if (rx_line_status & UART_LSR_PARITY_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_PARITY;
+                }
+
+                if (rx_line_status & UART_LSR_OVERRUN_ERR)
+                {
+                    transfer->status |= UART_TRANSFER_STATUS_ERROR_RX_OVERRUN;
+                }
+            }
             break;
 
         case UART_IIR_TRANSMIT_HOLDING_REG_EMPTY: /* transmit holding register empty */

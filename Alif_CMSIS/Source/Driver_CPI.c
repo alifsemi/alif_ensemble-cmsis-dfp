@@ -529,7 +529,15 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sen
             /* Set all CPI Configurations. */
             cpi_cfg_info_t cpi_info;
 
-            cpi_info.sensor_info.interface       = camera_sensor->cpi_info->interface;
+            if(camera_sensor->interface == CAMERA_SENSOR_INTERFACE_PARALLEL)
+            {
+                cpi_info.sensor_info.interface = CPI_INTERFACE_PARALLEL;
+            }
+            else
+            {
+                cpi_info.sensor_info.interface = CPI_INTERFACE_MIPI_CSI;
+            }
+
             cpi_info.sensor_info.vsync_wait      = camera_sensor->cpi_info->vsync_wait;
             cpi_info.sensor_info.vsync_mode      = camera_sensor->cpi_info->vsync_mode;
             cpi_info.rw_roundup                  = CPI->row_roundup;

@@ -39,6 +39,18 @@
 volatile unsigned char sdbuffer[512*4] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(32)));
 
 const diskio_t  *p_SD_Driver = &SD_Driver;
+volatile uint32_t dma_done_irq = 0;
+
+/**
+  \fn           sd_cb(uint32_t status)
+  \brief        SD interrupt callback
+  \param[in]    uint32_t status
+  \return       none
+*/
+void sd_cb(uint32_t status) {
+    /* dummy callback definition to resolve linking error */
+    /* data transfer in SDIO mode needs Stack (wifi/bluetooth) */
+}
 
 /**
   \fn           BareMetalSDTest(uint32_t startSec, uint32_t EndSector)

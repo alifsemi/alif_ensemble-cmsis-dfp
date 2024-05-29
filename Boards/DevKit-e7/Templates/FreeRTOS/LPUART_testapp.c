@@ -43,7 +43,6 @@
 #include "retarget_stdout.h"
 #endif  /* RTE_Compiler_IO_STDOUT */
 
-
 /*Define for FreeRTOS*/
 #define STACK_SIZE     1024
 #define TIMER_SERVICE_TASK_STACK_SIZE configTIMER_TASK_STACK_DEPTH
@@ -63,8 +62,14 @@ extern ARM_DRIVER_USART ARM_Driver_USART_(UART);
 static ARM_DRIVER_USART *USARTdrv = &ARM_Driver_USART_(UART);
 
 /*Define for FreeRTOS objects */
-#define UART_RX_CB_EVENT                       0x01
-#define UART_TX_CB_EVENT                       0x02
+
+#define UART_CB_TX_EVENT           (1U << 0)
+#define UART_CB_RX_EVENT           (1U << 1)
+#define UART_CB_RX_TIMEOUT         (1U << 2)
+#define UART_CB_RX_BREAK           (1U << 3)
+#define UART_CB_RX_FRAMING_ERROR   (1U << 4)
+#define UART_CB_RX_PARITY_ERROR    (1U << 5)
+#define UART_CB_RX_OVERFLOW        (1U << 6)
 
 TaskHandle_t Uart_xHandle;
 
@@ -112,32 +117,72 @@ void myUART_callback(uint32_t event)
 
    if (event & ARM_USART_EVENT_SEND_COMPLETE)
    {
-      /* Success: Wakeup Thread */
-      xTaskNotifyFromISR(Uart_xHandle,UART_TX_CB_EVENT,eSetBits, &xHigherPriorityTaskWoken);
+      /* Send Success: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_TX_EVENT, eSetBits, &xHigherPriorityTaskWoken);
       if (xResult == pdTRUE)
       {
-          portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
       }
    }
 
    if (event & ARM_USART_EVENT_RECEIVE_COMPLETE)
    {
-      /* Success: Wakeup Thread */
-      xTaskNotifyFromISR(Uart_xHandle,UART_RX_CB_EVENT,eSetBits, &xHigherPriorityTaskWoken);
+      /* Receive Success: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_EVENT, eSetBits, &xHigherPriorityTaskWoken);
       if (xResult == pdTRUE)
       {
-          portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
       }
    }
 
    if (event & ARM_USART_EVENT_RX_TIMEOUT)
    {
-      /* Error: Call debugger or replace with custom error handling */
+      /* Receive Timeout: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_TIMEOUT, eSetBits, &xHigherPriorityTaskWoken);
+      if (xResult == pdTRUE)
+      {
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      }
    }
 
-   if (event & (ARM_USART_EVENT_RX_OVERFLOW | ARM_USART_EVENT_TX_UNDERFLOW))
+   if (event & ARM_USART_EVENT_RX_BREAK)
    {
-      /* Error: Call debugger or replace with custom error handling */
+      /* Receive Break: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_BREAK, eSetBits, &xHigherPriorityTaskWoken);
+      if (xResult == pdTRUE)
+      {
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      }
+   }
+
+   if (event & ARM_USART_EVENT_RX_FRAMING_ERROR)
+   {
+      /* Receive Framing Error: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_FRAMING_ERROR, eSetBits, &xHigherPriorityTaskWoken);
+      if (xResult == pdTRUE)
+      {
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      }
+   }
+
+   if (event & ARM_USART_EVENT_RX_PARITY_ERROR)
+   {
+      /* Receive Parity Error: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_PARITY_ERROR, eSetBits, &xHigherPriorityTaskWoken);
+      if (xResult == pdTRUE)
+      {
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      }
+   }
+
+   if (event & ARM_USART_EVENT_RX_OVERFLOW)
+   {
+      /* Receive Overflow: Wakeup Thread */
+      xResult = xTaskNotifyFromISR(Uart_xHandle, UART_CB_RX_OVERFLOW, eSetBits, &xHigherPriorityTaskWoken);
+      if (xResult == pdTRUE)
+      {
+          portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      }
    }
 }
 
@@ -164,6 +209,7 @@ void Uart_Thread(void *pvParameters)
    uint8_t cmd = 0;
    uint32_t ret = 0;
    uint32_t events = 0;
+   uint32_t ulNotificationValue;
    ARM_DRIVER_VERSION version;
 
    printf("\r\n >>> UART testApp starting up!!!...<<< \r\n");
@@ -230,7 +276,7 @@ void Uart_Thread(void *pvParameters)
       printf("\r\n Error in UART Send.\r\n");
       goto error_poweroff;
    }
-   xTaskNotifyWait(NULL,UART_TX_CB_EVENT,NULL, portMAX_DELAY);
+   xTaskNotifyWait(NULL, UART_CB_TX_EVENT, NULL, portMAX_DELAY);
 
    while (1)
    {
@@ -242,18 +288,53 @@ void Uart_Thread(void *pvParameters)
 
          goto error_poweroff;
       }
-      /* wait till Receive complete event comes in isr callback */
-      xTaskNotifyWait(NULL,UART_RX_CB_EVENT,NULL, portMAX_DELAY);
 
-      if (cmd == 13) /* CR, send greeting  */
+      /* wait till Receive complete or Receive timeout event comes in isr callback */
+      xTaskNotifyWait(NULL, (UART_CB_RX_EVENT | UART_CB_RX_TIMEOUT | UART_CB_RX_BREAK), \
+                      &ulNotificationValue, portMAX_DELAY);
+
+      /* check for any RX error. */
+      if (ulNotificationValue & (UART_CB_RX_BREAK | UART_CB_RX_FRAMING_ERROR | \
+                                 UART_CB_RX_PARITY_ERROR | UART_CB_RX_OVERFLOW))
       {
-         USARTdrv->Send("\r\nHello World!\r\n", 16);
+          /* clear error flags. */
+          if (ulNotificationValue & (UART_CB_RX_BREAK))
+          {
+              printf("\r\n RX Break sequence detected.\r\n");
+              ulTaskNotifyValueClear(Uart_xHandle, UART_CB_RX_BREAK);
+          }
+
+          if (ulNotificationValue & (UART_CB_RX_FRAMING_ERROR))
+          {
+              printf("\r\n RX Framing Error.\r\n");
+              ulTaskNotifyValueClear(Uart_xHandle, UART_CB_RX_FRAMING_ERROR);
+          }
+
+          if (ulNotificationValue & (UART_CB_RX_PARITY_ERROR))
+          {
+              printf("\r\n RX Parity Error.\r\n");
+              ulTaskNotifyValueClear(Uart_xHandle, UART_CB_RX_PARITY_ERROR);
+          }
+
+          if (ulNotificationValue & (UART_CB_RX_OVERFLOW))
+          {
+              printf("\r\n RX Overflow Error.\r\n");
+              ulTaskNotifyValueClear(Uart_xHandle, UART_CB_RX_OVERFLOW);
+          }
       }
-      else /* else send back received character. */
+
+      if (ulNotificationValue & (UART_CB_RX_EVENT))
       {
-         ret = USARTdrv->Send(&cmd, 1);
+          if (cmd == 13) /* CR, send greeting  */
+          {
+             USARTdrv->Send("\r\nHello World!\r\n", 16);
+          }
+          else /* else send back received character. */
+          {
+             USARTdrv->Send(&cmd, 1);
+          }
+          xTaskNotifyWait(NULL, UART_CB_TX_EVENT, NULL, portMAX_DELAY);
       }
-      xTaskNotifyWait(NULL,UART_TX_CB_EVENT,NULL, portMAX_DELAY);
    }
 
    printf("\r\n XXX UART demo thread exiting XXX...\r\n");

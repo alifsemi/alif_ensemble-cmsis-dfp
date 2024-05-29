@@ -347,6 +347,10 @@ typedef struct {
 	uint32_t trng_len;
 } net_proc_boot_args_t;
 
+typedef enum {
+  POWER_SETTING_BOR_EN
+} power_setting_t;
+
 /*******************************************************************************
  *  G L O B A L   D E F I N E S
  ******************************************************************************/
@@ -601,6 +605,16 @@ SERVICES_power_ldo_voltage_control(uint32_t services_handle,
 				   uint32_t ret_ldo_voltage,
 				   uint32_t aon_ldo_voltage,
 				   uint32_t *error_code);
+
+uint32_t SERVICES_power_setting_configure(uint32_t services_handle,
+                                          power_setting_t setting_type,
+                                          uint32_t value,
+                                          uint32_t *error_code);
+uint32_t SERVICES_power_setting_get(uint32_t services_handle,
+                                    power_setting_t setting_type,
+                                    uint32_t *value,
+                                    uint32_t *error_code);
+
 
 // Clocks services
 uint32_t SERVICES_clocks_select_osc_source(uint32_t services_handle, oscillator_source_t source, oscillator_target_t target, uint32_t *error_code);

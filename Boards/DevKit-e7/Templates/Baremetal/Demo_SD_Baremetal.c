@@ -37,6 +37,18 @@
 volatile unsigned char sdbuffer[512*4] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(32)));
 
 const diskio_t  *p_SD_Driver = &SD_Driver;
+volatile uint32_t dma_done_irq = 0;
+
+/**
+  \fn           sd_cb(uint32_t status)
+  \brief        SD interrupt callback
+  \param[in]    uint32_t status
+  \return       none
+*/
+void sd_cb(uint32_t status) {
+    if(!status)
+        dma_done_irq = 1;
+}
 
 /**
   \fn           BareMetalSDTest(uint32_t startSec, uint32_t EndSector)
@@ -74,8 +86,12 @@ void BareMetalSDTest(uint32_t startSec, uint32_t EndSector){
     /* read and print sector data from start to end */
     while(startSec < EndSector){
 
+        dma_done_irq = 0; // clear dma done callback status
+
         if(p_SD_Driver->disk_read(startSec, 1, sdbuffer) != SD_DRV_STATUS_OK)
             continue;
+
+        while(!dma_done_irq); //wait for dma completion interrupt callback
 
         printf("Sector %d\n",startSec);
         j = 0;

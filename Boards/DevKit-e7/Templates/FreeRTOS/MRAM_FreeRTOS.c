@@ -96,8 +96,8 @@ void MRAM_Thread_entry(void *pvParameters);
 #define MRAM_ADDR_OFFSET           (0x100000)
 
 /* Buffer size and value which needs to write to MRAM. */
-#define BUFFER_SIZE   0x10000 /* any random size.(for demo purpose size taken as 64KB) */
-#define BUFFER_VALUE  0xA4    /* any random value. */
+#define BUFFER_SIZE   0x1000    /* any random size.(for demo purpose size taken as 4KB) */
+#define BUFFER_VALUE  0xA4      /* any random value. */
 
 uint8_t buff_TX[BUFFER_SIZE] = {0x00};
 uint8_t buff_RX[BUFFER_SIZE] = {0x00};
@@ -148,7 +148,7 @@ void MRAM_Thread_entry(void *pvParameters)
         goto error_uninitialize;
     }
 
-    /* write data to MRAM (for demo purpose write 1MB data (64KB x 16) ) */
+    /* write data to MRAM (for demo purpose write 64KB data (4KB x 16) ) */
     for(int i = 0; i < 16; i++)
     {
         ret = MRAM_drv->ProgramData(addr, buff_TX, BUFFER_SIZE);

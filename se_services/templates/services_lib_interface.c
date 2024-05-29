@@ -151,3 +151,24 @@ void TEST_print(uint32_t services_handle, char *fmt, ...)
   (void)buffer_size;
 #endif // #if SERVICES_PRINT_ENABLE != 0
 }
+
+/**
+ * @fn    void TEST_init(uint32_t services_handle)
+ * @param services_handle
+ */
+void TEST_init(uint32_t services_handle)
+{
+  /* keep sending heartbeat services requests until one succeeds */
+  int retry_count = SERVICES_synchronize_with_se(services_handle);
+  TEST_print(services_handle, "SERVICES_synchronize_with_se() returned %d\n",
+             retry_count);
+
+  /* Disable tracing output for services */
+  uint32_t service_error_code;
+  SERVICES_system_set_services_debug(services_handle, false,
+                                     &service_error_code);
+
+  /* show services version */
+  TEST_print(services_handle, "SERVICES version %s %s %s\n",
+             SERVICES_version(), __DATE__, __TIME__);
+}

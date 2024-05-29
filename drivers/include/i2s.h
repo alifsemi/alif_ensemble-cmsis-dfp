@@ -723,6 +723,24 @@ void i2s_tx_irq_handler(I2S_Type *i2s, i2s_transfer_t *transfer);
 */
 void i2s_rx_irq_handler(I2S_Type *i2s, i2s_transfer_t *transfer);
 
+/**
+  \fn          void i2s_send_blocking(I2S_Type *i2s, i2s_transfer_t *transfer)
+  \brief       Execute a blocking I2S send described by the transfer structure.
+  \param[in]   i2s       Pointer to the I2S register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      none
+*/
+void i2s_send_blocking(I2S_Type *i2s, i2s_transfer_t *transfer);
+
+/**
+  \fn          void i2s_receive_blocking(I2S_Type *i2s, i2s_transfer_t *transfer)
+  \brief       Execute a blocking I2S receive described by the transfer structure.
+  \param[in]   i2s       Pointer to the I2S register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      none
+*/
+void i2s_receive_blocking(I2S_Type *i2s, i2s_transfer_t *transfer);
+
 #ifdef  __cplusplus
 }
 #endif

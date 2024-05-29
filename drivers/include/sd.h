@@ -31,6 +31,7 @@ extern "C" {
 //#define SDMMC_PRINTF_DEBUG
 //#define SDMMC_PRINTF_SD_STATE_DEBUG
 //#define SDMMC_PRINT_SEC_DATA
+#define SDMMC_IRQ_MODE
 
 /**
  * @brief  SD driver status enum definition
@@ -118,6 +119,9 @@ typedef struct _diskio_t{
     SD_CARD_STATE (*disk_status)        (sd_handle_t *);                            /*!< Get Disk Status            */
     SD_DRV_STATUS (*disk_read)          (uint32_t, uint16_t, volatile uint8_t *);   /*!< Read Sector(s)             */
     SD_DRV_STATUS (*disk_write)         (uint32_t, uint32_t, volatile uint8_t *);   /*!< Write Sector(s)            */
+#ifdef SDMMC_IRQ_MODE
+    void (*disk_cb)(uint32_t);
+#endif
 }diskio_t;
 
 extern const diskio_t SD_Driver;
@@ -133,6 +137,9 @@ SD_DRV_STATUS sd_card_init(sd_handle_t *);
 SD_DRV_STATUS sd_write(uint32_t, uint32_t, volatile unsigned char *);
 SD_DRV_STATUS sd_read(uint32_t, uint16_t, volatile unsigned char *);
 SD_DRV_STATUS sd_error_handler();
+#ifdef SDMMC_IRQ_MODE
+void sd_cb(uint32_t);
+#endif
 SDMMC_HC_STATUS hc_send_cmd(sd_handle_t *, sd_cmd_t *);
 SDMMC_HC_STATUS hc_reset(sd_handle_t *, uint8_t);
 void hc_set_bus_power(sd_handle_t *, uint8_t);
@@ -160,6 +167,7 @@ uint32_t hc_get_response1(sd_handle_t *);
 uint32_t hc_get_response2(sd_handle_t *);
 uint32_t hc_get_response3(sd_handle_t *);
 uint32_t hc_get_response4(sd_handle_t *);
+void hc_config_interrupt(sd_handle_t *);
 SDMMC_HC_STATUS hc_io_reset(sd_handle_t *);
 SDMMC_HC_STATUS hc_check_bus_idle(sd_handle_t *);
 SDMMC_HC_STATUS hc_get_io_opcond(sd_handle_t *, uint32_t, uint32_t *);

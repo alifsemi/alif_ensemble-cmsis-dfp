@@ -55,7 +55,7 @@
 #define PIXEL_BYTES    (2)
 #endif
 
-static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section("lcd_frame_buf"))) = {0};
+static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section(".bss.lcd_frame_buf")));
 
 extern ARM_DRIVER_CDC200 Driver_CDC200;
 static ARM_DRIVER_CDC200 *CDCdrv = &Driver_CDC200;
@@ -121,6 +121,16 @@ static void CDC_demo()
         goto error_disable_hfosc_clk;
     }
 
+    /*
+     * Note:
+     * This demo uses a specific profile setting that only enables the
+     * items it needs. For example, it only requests the RAM regions and
+     * peripheral power that are relevant for this demo. If you want to adapt
+     * this example for your own use case, you should adjust the profile setting
+     * accordingly. You can either add any additional items that you need, or
+     * remove the request altogether to use the default setting that turns on
+     * almost everything.
+     */
     runp.memory_blocks = MRAM_MASK | SRAM0_MASK;
 
     runp.phy_pwr_gating = MIPI_PLL_DPHY_MASK | MIPI_TX_DPHY_MASK | MIPI_RX_DPHY_MASK | LDO_PHY_MASK;

@@ -64,6 +64,15 @@ LR_ROM __RO_BASE __RO_SIZE  {                       ; load region size_region
    *.o (RESET, +First)
    *(InRoot$$Sections)
    *.o (startup_ro_data)
+
+   ; These should be part of primary load region
+   *startup_M55*.o (+RO)
+   *clk*.o (+RO)
+   *pm*.o (+RO)
+   *tgu_*.o (+RO)
+   *mpu_*.o (+RO)
+   *system_*.o (+RO)
+
    .ANY (+RO)
    .ANY (+XO)
   }
@@ -90,11 +99,19 @@ LR_ROM __RO_BASE __RO_SIZE  {                       ; load region size_region
   }
 
   RW_SRAM0 SRAM0_BASE SRAM0_SIZE  {  ; Update sections as needed
-   * (lcd_crop_and_interpolate_buf)  ; LCD crop and intrepolate image processing buffer.
-   * (lcd_frame_buf)                 ; LCD frame Buffer.
-   * (camera_frame_buf)              ; Camera Frame Buffer
-   * (camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion
+   * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and intrepolate image processing buffer.
+   * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.
+   * (.bss.camera_frame_buf)              ; Camera Frame Buffer
+   * (.bss.camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion
   }
+
+  /*
+   * Note:
+   * The below empty regions are ON by default, but may have been released
+   * by some example applications. So make sure your application requests
+   * power for these regions before adding contents.
+   */
+
   RW_SRAM1 SRAM1_BASE SRAM1_SIZE  {  ; Update sections as needed
 
   }

@@ -1091,22 +1091,6 @@ __NO_RETURN void Reset_Handler_C(void)
   __PROGRAM_START();                        /* Enter PreMain (C library entry point) */
 }
 
-/* This hook is called automatically by the ARM C library after scatter loading */
-/* We add it to the preinit table for GCC */
-void _platform_pre_stackheap_init(void)
-{
-    /* Synchronise the caches for any copied code */
-    if (!(MEMSYSCTL->MSCR & MEMSYSCTL_MSCR_DCCLEAN_Msk))
-    {
-        SCB_CleanDCache();
-    }
-    SCB_InvalidateICache();
-}
-
-#if !defined(__ARMCC_VERSION)
-void (*_do_platform_pre_stackheap_init)() __attribute__((section(".preinit_array"))) = _platform_pre_stackheap_init;
-#endif
-
 #if defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wmissing-noreturn"

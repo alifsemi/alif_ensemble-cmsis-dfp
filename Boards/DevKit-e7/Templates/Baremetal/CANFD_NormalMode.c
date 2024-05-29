@@ -119,12 +119,12 @@ static void canfd_check_error(void);
  */
 static int32_t pinmux_config(void)
 {
-    int32_t ret_val = 0U;
+    int32_t ret_val = 0;
 
     /* pinmux configurations for CANFD pins */
     ret_val = pinconf_set(PORT_7, PIN_0, PINMUX_ALTERNATE_FUNCTION_7,
-                         (PADCTRL_READ_ENABLE | PADCTRL_SCHMITT_TRIGGER_ENABLE |
-                          PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
+                         (PADCTRL_READ_ENABLE |
+                          PADCTRL_OUTPUT_DRIVE_STRENGTH_2MA));
     if(ret_val)
     {
         printf("ERROR: Failed to configure PINMUX for CANFD Rx \r\n");
@@ -132,13 +132,21 @@ static int32_t pinmux_config(void)
     }
 
     ret_val = pinconf_set(PORT_7, PIN_1, PINMUX_ALTERNATE_FUNCTION_7,
-                         (PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA |
-                          PADCTRL_SCHMITT_TRIGGER_ENABLE));
+                          PADCTRL_OUTPUT_DRIVE_STRENGTH_2MA);
     if(ret_val)
     {
         printf("ERROR: Failed to configure PINMUX for CANFD Tx \r\n");
         return ret_val;
     }
+
+    ret_val = pinconf_set(PORT_7, PIN_3, PINMUX_ALTERNATE_FUNCTION_7,
+                          PADCTRL_OUTPUT_DRIVE_STRENGTH_2MA);
+    if(ret_val)
+    {
+        printf("ERROR: Failed to configure PINMUX for CANFD Standby \r\n");
+        return ret_val;
+    }
+
     return ret_val;
 }
 
@@ -628,7 +636,6 @@ static void canfd_transmit_message(const CANFD_FRAME msg_type)
             tx_msg_header.edl = 0x1U;
             tx_msg_size       = 0x10U;
             break;
-
         case CANFD_FRAME_OVER:
         default:
             /* stop_execution = true; */

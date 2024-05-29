@@ -115,6 +115,8 @@ typedef struct _SDMMC_Type {                              /*!< (SDMMC Structure 
 #define SDMMC                                   ((SDMMC_Type *) SDMMC_BASE)
 #define SDMMC_HC_VERSION_REG                    (SDMMC_BASE + 0xFEU)
 #define SDMMC_HC_VERSION_REG_Msk                0xFFFFU
+#define SDMMC_IRQ_NUM                           SDMMC_IRQ_IRQn
+#define SDMMC_WAKEUP_IRQ_NUM                    SDMMC_WAKEUP_IRQ_IRQn
 
 /**
  * @brief  Host controller driver status enum definition
@@ -305,7 +307,22 @@ typedef struct _adma2_desc_t{
 #define SDMMC_CLK_50MHz_DIV                     0x2U
 #define SDMMC_CLK_100MHz_DIV                    0x1U
 #define SDMMC_INIT_FREQ                         SDMMC_CLK_400KHz_DIV
-#define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_25MHz_DIV
+
+#define SD_RUNNING_CLOCK_12_5MHz                0U
+#define SD_RUNNING_CLOCK_25MHz                  1U
+#define SD_RUNNING_CLOCK_50MHz                  2U
+
+#if (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_12_5MHz)
+    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_12_5MHz_DIV
+#elif  (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_25MHz)
+    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_25MHz_DIV
+#elif  (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_50MHz)
+    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_50MHz_DIV
+#else
+    #warning "Inavlid SD Clock selection, switching to default 25MHz...\n"
+    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_25MHz_DIV
+#endif
+
 #define SDMMC_INIT_CLK_DIVSOR_Msk               (SDMMC_INIT_FREQ)
 #define SDMMC_OP_CLK_DIVSOR_Msk                 (SDMMC_OP_FREQ_SEL << SDMMC_FREQ_SEL_Pos)
 
@@ -335,6 +352,11 @@ typedef struct _adma2_desc_t{
 
 /* DMA */
 #define SDMMC_HC_DMA_ADMA2_32_Msk               0x00000010U /**< ADMA2 Mode - 32 bit */
+
+/* Wakeup Control Register Mask */
+#define SDMMC_WKUP_CARD_IRQ_Msk                 0x00000001U /*!< Card Interrupt           */
+#define SDMMC_WKUP_CARD_INSRT_Msk               0x00000002U /*!< Card Insertion           */
+#define SDMMC_WKUP_CARD_REM_Msk                 0x00000004U /*!< Card Removal             */
 
 /* Normal IRQs Mask */
 #define SDMMC_INTR_CC_Msk                       0x00000001U /*!< Command Complete         */

@@ -143,6 +143,7 @@
 #define I3C_BASE                    0x49034000UL
 #define EVTRTR0_BASE                0x49035000UL
 #define CANFD_BASE                  0x49036000UL
+#define CANFD_CNT_BASE              0x49037000UL
 #define INTGEN_0__internal_BASE     0x49038000UL
 #define INTGEN_1__internal_BASE     0x49039000UL
 #define INTGEN_2__internal_BASE     0x4903A000UL

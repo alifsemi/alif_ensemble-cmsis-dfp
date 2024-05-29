@@ -24,11 +24,6 @@
 #include "sys_ctrl_spi.h"
 #include "spi.h"
 
-#ifdef RTE_Drivers_SPI_MultiSlave
-#include "SPI_MultiSlave.h"
-#include "SPI_MultiSlave_Config.h"
-#endif
-
 #if !((RTE_SPI0) || (RTE_SPI1) || (RTE_SPI2) || (RTE_SPI3) || (RTE_LPSPI))
 #error "SPI is not enabled in the RTE_Device.h"
 #endif
@@ -726,7 +721,18 @@ static int32_t ARM_SPI_Send(SPI_RESOURCES *SPI, const void *data, uint32_t num)
         {
             if (SPI->drv_instance == LPSPI_INSTANCE)
             {
-                lpspi_send(SPI->regs);
+#if SPI_BLOCKING_MODE_ENABLE
+                if (SPI->blocking_mode)
+                {
+                    lpspi_send_blocking(SPI->regs, &SPI->transfer);
+                    SPI->transfer.status = SPI_TRANSFER_STATUS_COMPLETE;
+                    SPI->status.busy = 0;
+                }
+                else
+#endif
+                {
+                    lpspi_send(SPI->regs);
+                }
             }
             else
             {
@@ -839,6 +845,12 @@ static int32_t ARM_SPI_Receive(SPI_RESOURCES *SPI, void *data, uint32_t num)
             spi_dma_receive(SPI->regs, &SPI->transfer);
         }
 
+        if (SPI->rx_fifo_threshold > 0)
+        {
+            SPI->rx_fifo_threshold = spi_dma_calc_rx_level(SPI->transfer.rx_total_cnt, SPI->rx_fifo_threshold);
+            spi_set_dma_rx_level(SPI->regs, SPI->rx_fifo_threshold);
+        }
+
         /* Start the DMA engine for receive the data to SPI */
         rx_dma_params.peri_reqno    = (int8_t)SPI->dma_cfg->dma_rx.dma_periph_req;
         rx_dma_params.dir           = ARM_DMA_DEV_TO_MEM;
@@ -864,43 +876,6 @@ static int32_t ARM_SPI_Receive(SPI_RESOURCES *SPI, void *data, uint32_t num)
             rx_dma_params.burst_size = BS_BYTE_1;
         }
 
-        /* spi master: feeding one dummy data to spi to start clock */
-        if (SPI->transfer.is_master)
-        {
-            uint32_t dummy_data = 0x0;
-            ARM_DMA_PARAMS tx_dma_params;
-
-            if (SPI->transfer.frame_size > 16)
-            {
-                tx_dma_params.num_bytes = sizeof(uint32_t);
-                tx_dma_params.burst_size = BS_BYTE_4;
-            }
-            else if (SPI->transfer.frame_size > 8)
-            {
-                tx_dma_params.num_bytes = sizeof(uint16_t);
-                tx_dma_params.burst_size = BS_BYTE_2;
-            }
-            else
-            {
-                tx_dma_params.num_bytes = sizeof(uint8_t);
-                tx_dma_params.burst_size = BS_BYTE_1;
-            }
-
-            /* Start the DMA engine to feed one dummy data to SPI */
-            tx_dma_params.peri_reqno    = (int8_t)SPI->dma_cfg->dma_tx.dma_periph_req;
-            tx_dma_params.dir           = ARM_DMA_MEM_TO_DEV;
-            tx_dma_params.cb_event      = SPI->dma_cb;
-            tx_dma_params.src_addr      = &dummy_data;
-            tx_dma_params.dst_addr      = (void*)spi_get_data_addr(SPI->regs);
-            tx_dma_params.irq_priority  = SPI->dma_irq_priority;
-            tx_dma_params.burst_len     = SPI_TX_FIFO_DEPTH - SPI->tx_fifo_threshold;
-
-            if (SPI_DMA_Start(&SPI->dma_cfg->dma_tx, &tx_dma_params) != ARM_DRIVER_OK)
-            {
-                return ARM_DRIVER_ERROR;
-            }
-        }
-
         if (SPI_DMA_Start(&SPI->dma_cfg->dma_rx, &rx_dma_params) != ARM_DRIVER_OK)
         {
             return ARM_DRIVER_ERROR;
@@ -919,7 +894,18 @@ static int32_t ARM_SPI_Receive(SPI_RESOURCES *SPI, void *data, uint32_t num)
         {
             if (SPI->drv_instance == LPSPI_INSTANCE)
             {
-                lpspi_receive(SPI->regs, SPI->transfer.rx_total_cnt);
+#if SPI_BLOCKING_MODE_ENABLE
+                if (SPI->blocking_mode)
+                {
+                    lpspi_receive_blocking(SPI->regs, &SPI->transfer);
+                    SPI->transfer.status = SPI_TRANSFER_STATUS_COMPLETE;
+                    SPI->status.busy = 0;
+                }
+                else
+#endif
+                {
+                    lpspi_receive(SPI->regs, SPI->transfer.rx_total_cnt);
+                }
             }
             else
             {
@@ -1030,6 +1016,12 @@ static int32_t ARM_SPI_Transfer(SPI_RESOURCES *SPI, const void *data_out, void *
             spi_dma_transfer(SPI->regs);
         }
 
+        if (SPI->rx_fifo_threshold > 0)
+        {
+            SPI->rx_fifo_threshold = spi_dma_calc_rx_level(SPI->transfer.rx_total_cnt, SPI->rx_fifo_threshold);
+            spi_set_dma_rx_level(SPI->regs, SPI->rx_fifo_threshold);
+        }
+
         /* Start the DMA engine for sending the data to SPI */
         tx_dma_params.peri_reqno    = (int8_t)SPI->dma_cfg->dma_tx.dma_periph_req;
         tx_dma_params.dir           = ARM_DMA_MEM_TO_DEV;
@@ -1100,7 +1092,18 @@ static int32_t ARM_SPI_Transfer(SPI_RESOURCES *SPI, const void *data_out, void *
         {
             if (SPI->drv_instance == LPSPI_INSTANCE)
             {
-                lpspi_transfer(SPI->regs);
+#if SPI_BLOCKING_MODE_ENABLE
+                if (SPI->blocking_mode)
+                {
+                    lpspi_transfer_blocking(SPI->regs, &SPI->transfer);
+                    SPI->transfer.status = SPI_TRANSFER_STATUS_COMPLETE;
+                    SPI->status.busy = 0;
+                }
+                else
+#endif
+                {
+                    lpspi_transfer(SPI->regs);
+                }
             }
             else
             {
@@ -1667,38 +1670,6 @@ static void SPI_DMACallback(SPI_RESOURCES *SPI, uint32_t event, int8_t peri_num)
 #endif
 
 /**
- * @fn      int32_t ARM_SPI_Control_SlaveSelect(SPI_RESOURCES *SPI, uint32_t device, uint32_t ss_state).
- * @brief   Used to configure spi.
- * @note    none.
- * @param   SPI : Pointer to spi resources structure.
- * @param   device : each bit represent chip selection line.
- * @param   ss_state : Set to active or inactive.
- * @retval  \ref execution_status
- */
-#ifdef RTE_Drivers_SPI_MultiSlave
-static int32_t ARM_SPI_Control_SlaveSelect(SPI_RESOURCES *SPI, uint32_t device, uint32_t ss_state)
-{
-    if (SPI->state.powered == 0)
-    {
-        return ARM_DRIVER_ERROR;
-    }
-
-    if ((device & SPI_SLAVE_SELECT_PIN_MASK) || (ss_state > ARM_SPI_SS_ACTIVE))
-    {
-        return ARM_DRIVER_ERROR_PARAMETER;
-    }
-
-    if (SPI->status.busy == 1)
-    {
-        return ARM_DRIVER_ERROR_BUSY;
-    }
-
-    spi_control_ss(SPI->regs, device, ss_state);
-
-    return ARM_DRIVER_OK;
-}
-#endif
-/**
  * @fn      ARM_SPI_STATUS ARM_SPI_GetStatus(SPI_RESOURCES *SPI)
  * @brief   Used to get spi status.
  * @note    none.
@@ -1852,15 +1823,6 @@ static ARM_SPI_STATUS ARM_SPI0_GetStatus(void)
 {
     return ARM_SPI_GetStatus(&SPI0_RES);
 }
-
-#ifdef RTE_Drivers_SPI_MultiSlave
-    #if SPI_DRIVER == 0
-    static int32_t ARM_SPI0_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-    {
-        return ARM_SPI_Control_SlaveSelect(&SPI0_RES, device, ss_state);
-    }
-    #endif
-#endif
 
 extern ARM_DRIVER_SPI Driver_SPI0;
 ARM_DRIVER_SPI Driver_SPI0 = {
@@ -2020,15 +1982,6 @@ static ARM_SPI_STATUS ARM_SPI1_GetStatus(void)
     return ARM_SPI_GetStatus(&SPI1_RES);
 }
 
-#ifdef RTE_Drivers_SPI_MultiSlave
-    #if SPI_DRIVER == 1
-    static int32_t ARM_SPI1_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-    {
-        return ARM_SPI_Control_SlaveSelect(&SPI1_RES, device, ss_state);
-    }
-    #endif
-#endif
-
 extern ARM_DRIVER_SPI Driver_SPI1;
 ARM_DRIVER_SPI Driver_SPI1 = {
     ARM_SPI_GetVersion,
@@ -2187,15 +2140,6 @@ static ARM_SPI_STATUS ARM_SPI2_GetStatus(void)
     return ARM_SPI_GetStatus(&SPI2_RES);
 }
 
-#ifdef RTE_Drivers_SPI_MultiSlave
-    #if SPI_DRIVER == 2
-    int32_t ARM_SPI2_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-    {
-        return ARM_SPI_Control_SlaveSelect(&SPI2_RES, device, ss_state);
-    }
-    #endif
-#endif
-
 extern ARM_DRIVER_SPI Driver_SPI2;
 ARM_DRIVER_SPI Driver_SPI2 = {
     ARM_SPI_GetVersion,
@@ -2353,15 +2297,6 @@ static ARM_SPI_STATUS ARM_SPI3_GetStatus(void)
     return ARM_SPI_GetStatus(&SPI3_RES);
 }
 
-#ifdef RTE_Drivers_SPI_MultiSlave
-    #if SPI_DRIVER == 3
-    static int32_t ARM_SPI3_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-    {
-        return ARM_SPI_Control_SlaveSelect(&SPI3_RES, device, ss_state);
-    }
-    #endif
-#endif
-
 extern ARM_DRIVER_SPI Driver_SPI3;
 ARM_DRIVER_SPI Driver_SPI3 = {
     ARM_SPI_GetVersion,
@@ -2376,21 +2311,6 @@ ARM_DRIVER_SPI Driver_SPI3 = {
     ARM_SPI3_Control,
     ARM_SPI3_GetStatus
 };
-
-#ifdef RTE_Drivers_SPI_MultiSlave
-void SPI_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-{
-    #if SPI_DRIVER == 0
-       ARM_SPI0_Control_SlaveSelect(device, ss_state);
-    #elif SPI_DRIVER == 1
-       ARM_SPI1_Control_SlaveSelect(device, ss_state);
-    #elif SPI_DRIVER == 2
-       ARM_SPI2_Control_SlaveSelect(device, ss_state);
-    #elif SPI_DRIVER == 3
-       ARM_SPI3_Control_SlaveSelect(device, ss_state);
-    #endif
-}
-#endif
 #endif /* RTE_SPI3 */
 
 /* LPSPI driver instance */
@@ -2447,6 +2367,9 @@ static SPI_RESOURCES LPSPI_RES = {
     .dma_irq_priority       = RTE_LPSPI_DMA_IRQ_PRI,
     .dma_cb                 = LPSPI_DMACallback,
     .dma_cfg                = &LPSPI_DMA_HW_CONFIG
+#endif
+#if SPI_BLOCKING_MODE_ENABLE
+    .blocking_mode          = RTE_LPSPI_BLOCKING_MODE_ENABLE,
 #endif
 #if RTE_LPSPI_USE_MASTER_SS_SW
     .sw_config =
@@ -2529,15 +2452,6 @@ static ARM_SPI_STATUS ARM_LPSPI_GetStatus(void)
 {
     return ARM_SPI_GetStatus(&LPSPI_RES);
 }
-
-#ifdef RTE_Drivers_SPI_MultiSlave
-    #if SPI_DRIVER == 0
-    static int32_t ARM_LPSPI_Control_SlaveSelect(uint32_t device, uint32_t ss_state)
-    {
-        return ARM_SPI_Control_SlaveSelect(&LPSPI_RES, device, ss_state);
-    }
-    #endif
-#endif
 
 extern ARM_DRIVER_SPI Driver_SPILP;
 ARM_DRIVER_SPI Driver_SPILP = {

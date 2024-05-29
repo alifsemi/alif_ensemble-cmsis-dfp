@@ -143,7 +143,7 @@ void vApplicationIdleHook(void)
  *  Allocated in the "camera_frame_buf" section.
  */
 uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] \
-                 __attribute__((section("camera_frame_buf")));
+                 __attribute__((section(".bss.camera_frame_buf")));
 
 /* (optional)
  * if required convert captured image data format to any other image format.
@@ -190,7 +190,7 @@ uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] \
  *  Allocated in the "camera_frame_bayer_to_rgb_buf" section.
  */
 uint8_t bayer_to_rgb_buffer_pool[BAYER_TO_RGB_BUFFER_POOL_SIZE] \
-                __attribute__((section("camera_frame_bayer_to_rgb_buf")));
+                __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf")));
 
 /* Optional:
  *  Camera Image Conversions

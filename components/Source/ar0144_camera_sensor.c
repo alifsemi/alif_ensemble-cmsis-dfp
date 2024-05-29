@@ -707,10 +707,11 @@ static CAMERA_SENSOR_OPERATIONS ar0144_ops =
 */
 static CAMERA_SENSOR_DEVICE ar0144_camera_sensor =
 {
-    .width    = RTE_AR0144_CAMERA_SENSOR_FRAME_WIDTH,
-    .height   = RTE_AR0144_CAMERA_SENSOR_FRAME_HEIGHT,
-    .csi_info = &ar0144_csi_info,
-    .ops      = &ar0144_ops,
+    .interface  = CAMERA_SENSOR_INTERFACE_MIPI,
+    .width      = RTE_AR0144_CAMERA_SENSOR_FRAME_WIDTH,
+    .height     = RTE_AR0144_CAMERA_SENSOR_FRAME_HEIGHT,
+    .csi_info   = &ar0144_csi_info,
+    .ops        = &ar0144_ops,
 };
 
 /* Registering CPI sensor */

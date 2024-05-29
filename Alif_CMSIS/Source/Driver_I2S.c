@@ -515,13 +515,19 @@ static int32_t I2S_PowerControl(ARM_POWER_STATE state, I2S_RESOURCES *I2S)
 static int32_t I2S_Initialize(ARM_SAI_SignalEvent_t cb_event, I2S_RESOURCES *I2S)
 {
     int32_t ret = ARM_DRIVER_OK;
+    bool blocking_mode = false;
 
     if(I2S->state.initialized == 1)
     {
         return ARM_DRIVER_OK;
     }
 
-    if(!cb_event)
+#if I2S_BLOCKING_MODE_ENABLE
+    if(I2S->cfg->blocking_mode)
+        blocking_mode = true;
+#endif
+
+    if(!blocking_mode && !cb_event)
         return ARM_DRIVER_ERROR_PARAMETER;
 
     if(I2S->cfg->wss_len >= I2S_WSS_SCLK_CYCLES_MAX)
@@ -711,7 +717,22 @@ static int32_t I2S_Send(const void *data, uint32_t num, I2S_RESOURCES *I2S)
     else
 #endif
     {
-        i2s_send(I2S->regs);
+#if I2S_BLOCKING_MODE_ENABLE
+        if(I2S->cfg->blocking_mode)
+        {
+            i2s_send_blocking(I2S->regs, &I2S->transfer);
+
+            if(I2S->transfer.status & I2S_TRANSFER_STATUS_TX_COMPLETE)
+            {
+                I2S->drv_status.status_b.tx_busy = 0U;
+                I2S->transfer.status &= ~I2S_TRANSFER_STATUS_TX_COMPLETE;
+            }
+        }
+        else
+#endif
+        {
+            i2s_send(I2S->regs);
+        }
     }
 
     return ARM_DRIVER_OK;
@@ -845,7 +866,28 @@ static int32_t I2S_Receive(void *data, uint32_t num, I2S_RESOURCES *I2S)
     else
 #endif
     {
-        i2s_receive(I2S->regs);
+#if I2S_BLOCKING_MODE_ENABLE
+        if(I2S->cfg->blocking_mode)
+        {
+            i2s_receive_blocking(I2S->regs, &I2S->transfer);
+
+            if(I2S->transfer.status & I2S_TRANSFER_STATUS_RX_COMPLETE)
+            {
+                I2S->drv_status.status_b.rx_busy = 0U;
+                I2S->transfer.status &= ~I2S_TRANSFER_STATUS_RX_COMPLETE;
+            }
+
+            if(I2S->transfer.status & I2S_TRANSFER_STATUS_RX_OVERFLOW)
+            {
+                I2S->transfer.status &= ~I2S_TRANSFER_STATUS_RX_OVERFLOW;
+                I2S->drv_status.status_b.rx_overflow = 1U;
+            }
+        }
+        else
+#endif
+        {
+            i2s_receive(I2S->regs);
+        }
     }
 
     return ARM_DRIVER_OK;
@@ -1393,6 +1435,9 @@ static I2S_CONFIG_INFO I2S0_CONFIG = {
     .rx_fifo_trg_lvl     = RTE_I2S0_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S0_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S0_IRQ_PRI,
+#if RTE_I2S0_BLOCKING_MODE_ENABLE
+    .blocking_mode       = RTE_I2S0_BLOCKING_MODE_ENABLE,
+#endif
 #if RTE_I2S0_DMA_ENABLE
     .dma_enable          = RTE_I2S0_DMA_ENABLE,
     .dma_irq_priority    = RTE_I2S0_DMA_IRQ_PRI,
@@ -1596,6 +1641,9 @@ static I2S_CONFIG_INFO I2S1_CONFIG = {
     .rx_fifo_trg_lvl     = RTE_I2S1_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S1_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S1_IRQ_PRI,
+#if RTE_I2S1_BLOCKING_MODE_ENABLE
+    .blocking_mode       = RTE_I2S1_BLOCKING_MODE_ENABLE,
+#endif
 #if RTE_I2S1_DMA_ENABLE
     .dma_enable          = RTE_I2S1_DMA_ENABLE,
     .dma_irq_priority    = RTE_I2S1_DMA_IRQ_PRI,
@@ -1798,6 +1846,9 @@ static I2S_CONFIG_INFO I2S2_CONFIG = {
     .rx_fifo_trg_lvl     = RTE_I2S2_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S2_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S2_IRQ_PRI,
+#if RTE_I2S2_BLOCKING_MODE_ENABLE
+    .blocking_mode       = RTE_I2S2_BLOCKING_MODE_ENABLE,
+#endif
 #if RTE_I2S2_DMA_ENABLE
     .dma_enable          = RTE_I2S2_DMA_ENABLE,
     .dma_irq_priority    = RTE_I2S2_DMA_IRQ_PRI,
@@ -2001,6 +2052,9 @@ static I2S_CONFIG_INFO I2S3_CONFIG = {
     .rx_fifo_trg_lvl     = RTE_I2S3_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S3_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S3_IRQ_PRI,
+#if RTE_I2S3_BLOCKING_MODE_ENABLE
+    .blocking_mode       = RTE_I2S3_BLOCKING_MODE_ENABLE,
+#endif
 #if RTE_I2S3_DMA_ENABLE
     .dma_enable          = RTE_I2S3_DMA_ENABLE,
     .dma_irq_priority    = RTE_I2S3_DMA_IRQ_PRI,
@@ -2204,6 +2258,9 @@ static I2S_CONFIG_INFO LPI2S_CONFIG = {
     .rx_fifo_trg_lvl     = RTE_LPI2S_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_LPI2S_TX_TRIG_LVL,
     .irq_priority        = RTE_LPI2S_IRQ_PRI,
+#if RTE_LPI2S_BLOCKING_MODE_ENABLE
+    .blocking_mode       = RTE_LPI2S_BLOCKING_MODE_ENABLE,
+#endif
 #if RTE_LPI2S_DMA_ENABLE
     .dma_enable          = RTE_LPI2S_DMA_ENABLE,
     .dma_irq_priority    = RTE_LPI2S_DMA_IRQ_PRI,

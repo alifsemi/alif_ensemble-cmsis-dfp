@@ -90,6 +90,26 @@ static inline void dma_set_crc_mode(dma_config_info_t *dma_cfg,
 }
 
 /**
+  \fn          void dma_set_swap_size(dma_config_info_t *dma_cfg,
+                                      uint8_t            channel_num,
+                                      uint8_t            swap_size)
+  \brief       Set Swap Size
+  \param[in]   dma_cfg  Pointer to DMA Configuration resources
+  \param[in]   channel_num  Channel Number
+  \param[in]   swap_size  Endian Swap Size
+  \return      None
+*/
+static inline void dma_set_swap_size(dma_config_info_t *dma_cfg,
+                                     uint8_t            channel_num,
+                                     uint8_t            swap_size)
+{
+    dma_thread_info_t  *thread_info    = &dma_cfg->channel_thread[channel_num];
+    dma_channel_info_t *channel_info   = &thread_info->channel_info;
+
+    channel_info->desc_info.endian_swap_size = swap_size;
+}
+
+/**
   \fn          uint8_t* dma_get_opcode_buf(dma_config_info_t *dma_cfg,
                                            uint8_t            channel_num)
   \brief       Get the opcode buffer address of the channel

@@ -32,6 +32,15 @@ extern "C"
 */
 int setup_flash_xip(void);
 
+/**
+  \fn         bool flash_xip_enabled(void)
+  \brief      Return the status of xip initialization.
+  \param[in]  none
+  \return     true or false
+ */
+bool flash_xip_enabled(void);
+
+
 #ifdef  __cplusplus
 }
 #endif

@@ -125,6 +125,25 @@ void System_HandleSpuriousWakeup (void)
  */
 }
 
+/* This hook is called automatically by the ARM C library after scatter loading */
+/* We add it to the preinit table for GCC */
+void _platform_pre_stackheap_init(void)
+{
+    /* Synchronise the caches for any copied code */
+    if (!(MEMSYSCTL->MSCR & MEMSYSCTL_MSCR_DCCLEAN_Msk))
+    {
+        SCB_CleanDCache();
+    }
+    SCB_InvalidateICache();
+
+    /* Enable the Counter module for busy loops */
+    sys_busy_loop_init();
+}
+
+#if !defined(__ARMCC_VERSION)
+void (*_do_platform_pre_stackheap_init)() __attribute__((section(".preinit_array"))) = _platform_pre_stackheap_init;
+#endif
+
 /*----------------------------------------------------------------------------
   System initialization function
  *----------------------------------------------------------------------------*/
@@ -211,9 +230,6 @@ void SystemInit (void)
 #endif
 
   SystemCoreClock = SYSTEM_CLOCK;
-
-  /* Enable the Counter module for busy loops */
-  sys_busy_loop_init();
 
   /* Add a feature to bypass the clock gating in the EXPMST0.
    *

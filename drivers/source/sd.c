@@ -32,6 +32,9 @@ const diskio_t SD_Driver =
     sd_state,
     sd_read,
     sd_write,
+#ifdef SDMMC_IRQ_MODE
+    sd_cb,
+#endif
 };
 
 /* Global SD Handle */
@@ -91,6 +94,23 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, uint8_t bus_width, uint8_t dma_mod
 
     hc_set_bus_power(pHsd, (uint8_t)(powerlevel | SDMMC_PC_BUS_PWR_VDD1_Msk));
     hc_set_tout(pHsd, 0xE);
+
+    hc_config_interrupt(pHsd);
+
+#ifdef SDMMC_IRQ_MODE
+    NVIC_ClearPendingIRQ(SDMMC_WAKEUP_IRQ_NUM);
+    NVIC_SetPriority(SDMMC_WAKEUP_IRQ_NUM, RTE_SDC_WAKEUP_IRQ_PRI);
+    NVIC_EnableIRQ(SDMMC_WAKEUP_IRQ_NUM);
+
+    NVIC_ClearPendingIRQ(SDMMC_IRQ_NUM);
+    NVIC_SetPriority(SDMMC_IRQ_NUM, RTE_SDC_IRQ_PRI);
+    NVIC_EnableIRQ(SDMMC_IRQ_NUM);
+
+    /* Card Insertion and Removal State and Signal Enable */
+    pHsd->regs->SDMMC_NORMAL_INT_SIGNAL_EN_R = SDMMC_INTR_CARD_INSRT_Msk | SDMMC_INTR_CARD_REM_Msk;
+
+    pHsd->regs->SDMMC_WUP_CTRL_R = SDMMC_WKUP_CARD_IRQ_Msk | SDMMC_WKUP_CARD_INSRT_Msk | SDMMC_WKUP_CARD_REM_Msk;
+#endif
 
     if(pHsd->dma_mode == SDMMC_HOST_CTRL1_SDMA_MODE)
         hc_config_dma(pHsd, (uint8_t)(SDMMC_HOST_CTRL1_SDMA_MODE | SDMMC_HOST_CTRL1_DMA_SEL_1BIT_MODE));
@@ -297,8 +317,14 @@ SD_DRV_STATUS sd_read(uint32_t sec, uint16_t BlkCnt, volatile unsigned char *Des
     /* Change the Card State from Tran to Data */
     pHsd->state = SD_CARD_STATE_DATA;
 
+#ifdef SDMMC_IRQ_MODE
+
+    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)DestBuff), sec, BlkCnt);
+
+#else
+
 retry:
-    hc_read_setup(pHsd, (uint32_t)LocalToGlobal((const volatile void *)DestBuff), sec, BlkCnt);
+    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)DestBuff), sec, BlkCnt);
 
     if(hc_check_xfer_done(pHsd, timeout_cnt) == SDMMC_HC_STATUS_OK)
         RTSS_InvalidateDCache_by_Addr(DestBuff, BlkCnt * SDMMC_BLK_SIZE_512_Msk);
@@ -310,6 +336,7 @@ retry:
             return SD_DRV_STATUS_RD_ERR;
         goto retry;
     }
+#endif
 
     /* Change the Card State from Data to Tran */
     pHsd->state = SD_CARD_STATE_TRAN;
@@ -351,7 +378,7 @@ SD_DRV_STATUS sd_write(uint32_t sector, uint32_t BlkCnt, volatile unsigned char 
     RTSS_CleanDCache_by_Addr(SrcBuff, BlkCnt * SDMMC_BLK_SIZE_512_Msk);
 
 retry:
-    hc_write_setup(pHsd, (uint32_t)LocalToGlobal((const volatile void *)SrcBuff), sector, BlkCnt);
+    hc_write_setup(pHsd, LocalToGlobal((const volatile void *)SrcBuff), sector, BlkCnt);
 
     if(hc_check_xfer_done(pHsd, timeout_cnt) != SDMMC_HC_STATUS_OK){
         hc_reset(pHsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));

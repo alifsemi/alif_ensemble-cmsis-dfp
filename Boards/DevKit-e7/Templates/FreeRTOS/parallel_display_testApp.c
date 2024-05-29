@@ -116,7 +116,7 @@ void vApplicationIdleHook(void)
 #define PIXEL_BYTES    (2)
 #endif
 
-static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section("lcd_frame_buf"))) = {0};
+static uint8_t lcd_image[DIMAGE_Y][DIMAGE_X][PIXEL_BYTES] __attribute__((section(".bss.lcd_frame_buf")));
 
 /**
   *   @func     : void display_callback(uint32_t event)

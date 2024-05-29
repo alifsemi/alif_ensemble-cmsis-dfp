@@ -102,6 +102,15 @@ typedef struct _PDM_CH_CONFIG {
 }PDM_CH_CONFIG;
 
 /**
+ * @brief: PDM Status
+ */
+typedef struct _ARM_PDM_STATUS {
+    uint32_t rx_busy          : 1;  /* Receiver busy flag             */
+    uint32_t rx_overflow      : 1;  /* Receive data overflow detected */
+    uint32_t reserved         : 30; /* Reserved (must be Zero)        */
+}ARM_PDM_STATUS;
+
+/**
  @brief : PDM Driver Capabilities
  */
 typedef struct _ARM_PDM_CAPABILITIES{
@@ -122,6 +131,7 @@ typedef struct ARM_DRIVER_PDM{
     int32_t                       (*Control)           (uint32_t control, uint32_t arg1, uint32_t arg2);  /* Pointer to PDM_Control : Control Comparator Interface              */
     int32_t                       (*Config)            (PDM_CH_CONFIG *cnfg);                  /* Pointer to PDM Config: Channel configurations specific to each channel        */
     int32_t                       (*Receive)           (void *data, uint32_t num);             /* Pointer to Receive : PDM Receive Configuration                                */
+    ARM_PDM_STATUS                (*GetStatus)         (void);                                 /* Pointer to GetStatus: Get the PDM status                                      */
 }const ARM_DRIVER_PDM;
 
 #endif /* DRIVER_PDM_H_ */

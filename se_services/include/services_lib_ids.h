@@ -89,6 +89,8 @@ enum SERVICE_ID_t {
 	SERVICE_POWER_SET_RUN_REQ_ID,                                       /**< SERVICE_POWER_SET_RUN_REQ_ID               */
 	SERVICE_POWER_GET_OFF_REQ_ID,                                       /**< SERVICE_POWER_GET_OFF_REQ_ID               */
 	SERVICE_POWER_SET_OFF_REQ_ID,                                       /**< SERVICE_POWER_SET_OFF_REQ_ID               */
+	SERVICE_POWER_SETTING_CONFIG_REQ_ID,                                /**< SERVICE_POWER_SETTING_CONFIG_REQ_ID        */
+	SERVICE_POWER_SETTING_GET_REQ_ID,                                   /**< SERVICE_POWER_SETTING_GET_REQ_ID           */
 	SERVICE_POWER_END          = 399,                                   /**< SERVICE_POWER_END                          */
 
   /**

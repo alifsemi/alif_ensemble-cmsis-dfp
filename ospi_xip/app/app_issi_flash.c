@@ -32,6 +32,8 @@
 #include "ospi_xip_aes_key.h"
 #endif
 
+#include "system_utils.h"
+
 #define OSPI_RESET_PORT 15
 #define OSPI_RESET_PIN  7
 
@@ -194,6 +196,7 @@ static int32_t setup_pinmux(void)
  */
 int main ()
 {
+#if OSPI_XIP_SKIP_INITIALIZATION == 0
     int32_t ret;
 
     ret = setup_pinmux();
@@ -236,6 +239,18 @@ int main ()
     {
         while(1);
     }
+#else
+    /*
+     * Wait for the other core to finish setting up OSPI XIP and AES.
+     * This mechanism can be replaced by another 'wait and notify'
+     * synchronization mechanism between the cores as per the application
+     * requirements.
+     */
+    while (flash_xip_enabled() == false)
+    {
+        sys_busy_loop_us(1000);
+    }
+#endif
 
     /* Read the Reset_Handler address from the vector table of the image in OSPI */
     EntryPoint = (pfun)(*(__IO uint32_t *)(OSPI_XIP_IMAGE_ADDRESS + 4));

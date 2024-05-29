@@ -337,10 +337,15 @@ typedef enum
  */
 typedef enum
 {
-    UART_TRANSFER_STATUS_NONE              = 0,  /**< Transfer status none                      */
-    UART_TRANSFER_STATUS_SEND_COMPLETE     = 1,  /**< Transfer status Send completed            */
-    UART_TRANSFER_STATUS_RECEIVE_COMPLETE  = 2,  /**< Transfer status Receive completed         */
-    UART_TRANSFER_STATUS_RX_TIMEOUT        = 3,  /**< Transfer status Receive character timeout */
+    UART_TRANSFER_STATUS_NONE              = 0,           /**< Transfer status none                           */
+    UART_TRANSFER_STATUS_SEND_COMPLETE     = (1UL << 0),  /**< Transfer status Send completed                 */
+    UART_TRANSFER_STATUS_RECEIVE_COMPLETE  = (1UL << 1),  /**< Transfer status Receive completed              */
+    UART_TRANSFER_STATUS_RX_TIMEOUT        = (1UL << 2),  /**< Transfer status Receive character timeout      */
+    UART_TRANSFER_STATUS_ERROR             = (1UL << 3),  /**< Transfer status Error                          */
+    UART_TRANSFER_STATUS_ERROR_RX_OVERRUN  = (1UL << 4),  /**< Transfer status Error: Receive Overrun error   */
+    UART_TRANSFER_STATUS_ERROR_RX_PARITY   = (1UL << 5),  /**< Transfer status Error: Receive Parity  error   */
+    UART_TRANSFER_STATUS_ERROR_RX_FRAMING  = (1UL << 6),  /**< Transfer status Error: Receive Framing error   */
+    UART_TRANSFER_STATUS_ERROR_RX_BREAK    = (1UL << 7),  /**< Transfer status Error: Receive Break Interrupt */
 } UART_TRANSFER_STATUS;
 
 /* UART Transfer Information (Run-Time) */
@@ -619,6 +624,9 @@ static inline void uart_enable_rx_irq (UART_Type *uart)
     /* enable receive_data_available_interrupt bit in
      * ier interrupt enable register */
     uart->UART_IER |= UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE;
+
+    /* also enable receiver line status interrupt. */
+    uart->UART_IER |= UART_IER_ENABLE_RECEIVER_LINE_STATUS;
 }
 
 /**
@@ -634,6 +642,9 @@ static inline void uart_disable_rx_irq (UART_Type *uart)
     /* disable receive_data_available_interrupt bit in
      * ier interrupt enable register */
     uart->UART_IER &= ~UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE;
+
+    /* also disable receiver line status interrupt. */
+    uart->UART_IER &= ~UART_IER_ENABLE_RECEIVER_LINE_STATUS;
 }
 
 /* --------------------------------- RS485 Functions ---------------------------*/

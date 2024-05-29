@@ -26,7 +26,7 @@
 #include "sys_ctrl_canfd.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
-#include "Driver_CAN.h"
+#include "Driver_CAN_EX.h"
 
 #define CANFD_MAX_OBJ_SUPPORTED  2U
 
@@ -51,23 +51,29 @@ typedef struct _CANFD_OBJ_STATUS
 /* CANFD Driver state*/
 typedef struct _CANFD_DRIVER_STATE
 {
-    uint32_t    initialized       :1;           /* Driver Initialized */
-    uint32_t    powered           :1;           /* Driver Powered up  */
+    uint32_t    initialized       :1;           /* Driver Initialized    */
+    uint32_t    standby           :1;           /* Driver in Standby     */
+    uint32_t    powered           :1;           /* Driver Powered up     */
     uint32_t    filter_configured :1;           /* Driver Acceptance filter Configured  */
-    uint32_t    rx_busy           :1;           /* Busy in reception  */
-    uint32_t    tx_busy           :1;           /* Busy in reception  */
-    uint32_t    reserved          :27;          /* Reserved           */
+    uint32_t    rx_busy           :1;           /* Busy in reception     */
+    uint32_t    use_prim_buf      :1;           /* Primary buf is in use */
+    uint32_t    prim_buf_busy     :1;           /* Primary buf is busy   */
+    uint32_t    reserved          :25;          /* Reserved              */
 }CANFD_DRIVER_STATE;
 
 /* Resource structure for CANFD */
 typedef struct _CANFD_RESOURCES
 {
     CANFD_Type                  *regs;                         /* Base address of the current instance of CANFD */
+    CANFD_CNT_Type              *cnt_regs;                     /* Base address of the CANFD Timer counter       */
     ARM_CAN_SignalUnitEvent_t   cb_unit_event;                 /* Call back function                            */
     ARM_CAN_SignalObjectEvent_t cb_obj_event;                  /* Call back function for object event           */
     canfd_transfer_t            data_transfer;                 /* Data transfer information                     */
     CANFD_OP_MODE               op_mode;                       /* canfd operational mode                        */
     CANFD_DRIVER_STATE          state;                         /* CANFD Driver State                            */
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    bool                        blocking_mode;                 /* CANFD blocking mode transfer enable           */
+#endif
     uint8_t                     irq_priority;                  /* Interrupt priority                            */
     IRQn_Type                   irq_num;                       /* Instance IRQ number                           */
     ARM_CAN_STATUS              status;                        /* CANFD instance status                         */

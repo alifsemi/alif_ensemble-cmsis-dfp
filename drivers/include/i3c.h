@@ -118,6 +118,8 @@ typedef struct {                                     /*!< (@ 0x49034000) I3C Str
 /* ref clock frequency 1 GHz to get core-period */
 #define REF_CLK_RATE                      1000000000
 
+#define I3C_MAX_DATA_BUF_SIZE             (0x40U * 4U) /* 64 words */
+
 /* transaction ids for tx and rx, CCC set and get,
  *  and Dynamic Address Assignment. */
 #define I3C_CCC_SET_TID                   0x1
@@ -327,10 +329,10 @@ typedef struct {                                     /*!< (@ 0x49034000) I3C Str
  */
 typedef enum
 {
-  I3C_I2C_SPEED_MODE_FMP_1_MBPS  = 0,   /* Speed: Fast Mode Plus    1 MBPS */
-  I3C_I2C_SPEED_MODE_FM_400_KBPS = 1,   /* Speed: Fast Mode       400 KBPS */
-  I3C_I2C_SPEED_MODE_SS_100_KBPS = 2,   /* Speed: Standard Mode   100 KBPS */
-  I3C_I2C_SPEED_MODE_LIMITED     = 3    /* Speed: Limited                  */
+    I3C_I2C_SPEED_MODE_FMP_1_MBPS  = 0,   /* Speed: Fast Mode Plus    1 MBPS */
+    I3C_I2C_SPEED_MODE_FM_400_KBPS = 1,   /* Speed: Fast Mode       400 KBPS */
+    I3C_I2C_SPEED_MODE_SS_100_KBPS = 2,   /* Speed: Standard Mode   100 KBPS */
+    I3C_I2C_SPEED_MODE_LIMITED     = 3    /* Speed: Limited                  */
 } I3C_I2C_SPEED_MODE;
 
 /**
@@ -338,36 +340,57 @@ typedef enum
 */
 typedef enum
 {
-  I3C_XFER_STATUS_NONE                = 0,           /**< Transfer status none                           */
-  I3C_XFER_STATUS_DONE                = (1UL << 0),  /**< Transfer status done                           */
-  I3C_XFER_STATUS_ERROR               = (1UL << 1),  /**< Transfer status error                          */
-  I3C_XFER_STATUS_MST_TX_DONE         = (1UL << 2),  /**< Transfer status master transmit done           */
-  I3C_XFER_STATUS_MST_RX_DONE         = (1UL << 3),  /**< Transfer status master receive done            */
-  I3C_XFER_STATUS_SLV_TX_DONE         = (1UL << 4),  /**< Transfer status slave transmit done            */
-  I3C_XFER_STATUS_SLV_RX_DONE         = (1UL << 5),  /**< Transfer status slave receive done             */
-  I3C_XFER_STATUS_SLV_DYN_ADDR_ASSGN  = (1UL << 6),  /**< Transfer status slave dynamic address assigned */
-  I3C_XFER_STATUS_CCC_SET_DONE        = (1UL << 7),  /**< Transfer status CCC set done                   */
-  I3C_XFER_STATUS_CCC_GET_DONE        = (1UL << 8),  /**< Transfer status CCC get done                   */
-  I3C_XFER_STATUS_ADDR_ASSIGN_DONE    = (1UL << 9),  /**< Transfer status Address Assign done            */
-  I3C_XFER_STATUS_ERROR_TX            = (1UL << 10), /**< Transfer status error  Master/Slave TX and CCC SET */
-  I3C_XFER_STATUS_ERROR_RX            = (1UL << 11), /**< Transfer status error  Master/Slave RX and CCC GET */
-  I3C_XFER_STATUS_ERROR_ADDR_ASSIGN   = (1UL << 12), /**< Transfer status error  Address Assign */
+    I3C_XFER_STATUS_NONE                = 0,           /**< Transfer status none                           */
+    I3C_XFER_STATUS_DONE                = (1UL << 0),  /**< Transfer status done                           */
+    I3C_XFER_STATUS_ERROR               = (1UL << 1),  /**< Transfer status error                          */
+    I3C_XFER_STATUS_MST_TX_DONE         = (1UL << 2),  /**< Transfer status master transmit done           */
+    I3C_XFER_STATUS_MST_RX_DONE         = (1UL << 3),  /**< Transfer status master receive done            */
+    I3C_XFER_STATUS_SLV_TX_DONE         = (1UL << 4),  /**< Transfer status slave transmit done            */
+    I3C_XFER_STATUS_SLV_RX_DONE         = (1UL << 5),  /**< Transfer status slave receive done             */
+    I3C_XFER_STATUS_SLV_DYN_ADDR_ASSGN  = (1UL << 6),  /**< Transfer status slave dynamic address assigned */
+    I3C_XFER_STATUS_CCC_SET_DONE        = (1UL << 7),  /**< Transfer status CCC set done                   */
+    I3C_XFER_STATUS_CCC_GET_DONE        = (1UL << 8),  /**< Transfer status CCC get done                   */
+    I3C_XFER_STATUS_ADDR_ASSIGN_DONE    = (1UL << 9),  /**< Transfer status Address Assign done            */
+    I3C_XFER_STATUS_ERROR_TX            = (1UL << 10), /**< Transfer status error  Master/Slave TX and CCC SET */
+    I3C_XFER_STATUS_ERROR_RX            = (1UL << 11), /**< Transfer status error  Master/Slave RX and CCC GET */
+    I3C_XFER_STATUS_ERROR_ADDR_ASSIGN   = (1UL << 12), /**< Transfer status error  Address Assign */
 } I3C_XFER_STATUS;
+
+/* brief I3C Transfer types */
+typedef enum _I3C_XFER_TYPE
+{
+    I3C_XFER_TYPE_ADDR_ASSIGN         = 0x1U,
+    I3C_XFER_CCC_SET                  = 0x2U,
+    I3C_XFER_CCC_GET                  = 0x3U,
+    I3C_XFER_TYPE_DATA                = 0x4U
+}I3C_XFER_TYPE;
+
+/* brief I3C Transfer cmd with data type */
+typedef struct _i3c_xfer_cmd_t
+{
+    I3C_XFER_TYPE   cmd_type;           /* xfer command type                          */
+    uint8_t         cmd_id;             /* xfer cpmmand id                            */
+    uint8_t         port_id;            /* Port ID                                    */
+    uint8_t         addr_index;         /* DAT address index                          */
+    uint8_t         addr_depth;         /* DAT address depth                          */
+    uint32_t        cmd_hi;             /* value to be programmed first  into C QUEUE */
+    uint32_t        cmd_lo;             /* value to be programmed second into C QUEUE */
+    uint16_t        data_len;           /* Data length                                */
+}i3c_xfer_cmd_t;
 
 /**
 \brief I3C Device Transfer
 */
-typedef struct _I3C_XFER
+typedef struct _i3c_xfer_t
 {
-  uint32_t                  cmd_hi;  /* value to be programmed first  into C QUEUE */
-  uint32_t                  cmd_lo;  /* value to be programmed second into C QUEUE */
-  uint16_t                  tx_len;  /* len of data to be programmed into TX_PORT  */
-  uint16_t                  rx_len;  /* len of received data                       */
-  const void               *tx_buf;  /* buf address where tx data resides          */
-  void                     *rx_buf;  /* pointer where rx data needs to be kept     */
-  volatile I3C_XFER_STATUS  status;  /* transfer status                            */
-  volatile uint8_t          error;   /* error if any for this transfer             */
-}I3C_XFER;
+  i3c_xfer_cmd_t            xfer_cmd;   /* Transfer command information to low level  */
+  uint16_t                  tx_len;     /* len of data to be programmed into TX_PORT  */
+  uint16_t                  rx_len;     /* len of received data                       */
+  const void               *tx_buf;     /* buf address where tx data resides          */
+  void                     *rx_buf;     /* pointer where rx data needs to be kept     */
+  volatile I3C_XFER_STATUS  status;     /* transfer status                            */
+  volatile uint8_t          error;      /* error if any for this transfer             */
+}i3c_xfer_t;
 
 /**
   \fn          void i3c_dma_enable(I3C_Type *i3c)
@@ -377,7 +400,7 @@ typedef struct _I3C_XFER
 */
 static inline void i3c_dma_enable(I3C_Type *i3c)
 {
-  i3c->I3C_DEVICE_CTRL = i3c->I3C_DEVICE_CTRL | DEV_CTRL_DMA_ENABLE;
+    i3c->I3C_DEVICE_CTRL = i3c->I3C_DEVICE_CTRL | DEV_CTRL_DMA_ENABLE;
 }
 
 /**
@@ -399,7 +422,7 @@ static inline void i3c_dma_disable(I3C_Type *i3c)
 */
 static inline void* i3c_get_dma_tx_addr(I3C_Type *i3c)
 {
-  return ((void *)&(i3c->I3C_TX_DATA_PORT));
+    return ((void *)&(i3c->I3C_TX_DATA_PORT));
 }
 
 /**
@@ -410,7 +433,7 @@ static inline void* i3c_get_dma_tx_addr(I3C_Type *i3c)
 */
 static inline void* i3c_get_dma_rx_addr(I3C_Type *i3c)
 {
-  return ((void *)&(i3c->I3C_RX_DATA_PORT));
+    return ((void *)&(i3c->I3C_RX_DATA_PORT));
 }
 
 /**
@@ -421,34 +444,34 @@ static inline void* i3c_get_dma_rx_addr(I3C_Type *i3c)
 */
 static inline uint8_t i3c_get_tx_empty_buf_thld(I3C_Type *i3c)
 {
-  uint8_t  tx_thld_val  = 0;
-  uint32_t tx_empty_loc = (i3c->I3C_DATA_BUFFER_THLD_CTRL & \
-                           DATA_BUFFER_THLD_CTRL_TX_BUF);
+    uint8_t  tx_thld_val  = 0;
+    uint32_t tx_empty_loc = (i3c->I3C_DATA_BUFFER_THLD_CTRL & \
+                             DATA_BUFFER_THLD_CTRL_TX_BUF);
 
-  /* as per datasheet each location is 4-bytes aligned.*/
-  switch(tx_empty_loc)
-  {
-  case 0:
-    tx_thld_val = 1;
-    break;
-  case 1:
-    tx_thld_val = 4;
-    break;
-  case 2:
-    tx_thld_val = 8;
-    break;
-  case 3:
-    tx_thld_val = 16;
-    break;
-  case 4:
-    tx_thld_val = 32;
-    break;
-  case 5:
-    tx_thld_val = 64;
-    break;
-  }
+    /* as per datasheet each location is 4-bytes aligned.*/
+    switch(tx_empty_loc)
+    {
+        case 0:
+            tx_thld_val = 1;
+            break;
+        case 1:
+            tx_thld_val = 4;
+            break;
+        case 2:
+            tx_thld_val = 8;
+            break;
+        case 3:
+            tx_thld_val = 16;
+            break;
+        case 4:
+            tx_thld_val = 32;
+            break;
+        case 5:
+            tx_thld_val = 64;
+            break;
+    }
 
-  return tx_thld_val;
+    return tx_thld_val;
 }
 
 /**
@@ -459,34 +482,34 @@ static inline uint8_t i3c_get_tx_empty_buf_thld(I3C_Type *i3c)
 */
 static inline uint8_t i3c_get_rx_buf_thld(I3C_Type *i3c)
 {
-  uint8_t  rx_thld_val  = 0;
-  uint32_t rx_empty_loc = ((i3c->I3C_DATA_BUFFER_THLD_CTRL &  \
-                            DATA_BUFFER_THLD_CTRL_RX_BUF) >> 8);
+    uint8_t  rx_thld_val  = 0;
+    uint32_t rx_empty_loc = ((i3c->I3C_DATA_BUFFER_THLD_CTRL &  \
+                              DATA_BUFFER_THLD_CTRL_RX_BUF) >> 8);
 
-  /* as per datasheet each location is 4-bytes aligned.*/
-  switch(rx_empty_loc)
-  {
-  case 0:
-    rx_thld_val = 1;
-    break;
-  case 1:
-    rx_thld_val = 4;
-    break;
-  case 2:
-    rx_thld_val = 8;
-    break;
-  case 3:
-    rx_thld_val = 16;
-    break;
-  case 4:
-    rx_thld_val = 32;
-    break;
-  case 5:
-    rx_thld_val = 64;
-    break;
-  }
+    /* as per datasheet each location is 4-bytes aligned.*/
+    switch(rx_empty_loc)
+    {
+        case 0:
+            rx_thld_val = 1;
+            break;
+        case 1:
+            rx_thld_val = 4;
+            break;
+        case 2:
+            rx_thld_val = 8;
+            break;
+        case 3:
+            rx_thld_val = 16;
+            break;
+        case 4:
+            rx_thld_val = 32;
+            break;
+        case 5:
+            rx_thld_val = 64;
+            break;
+    }
 
-  return rx_thld_val;
+    return rx_thld_val;
 }
 
 /**
@@ -498,8 +521,8 @@ static inline uint8_t i3c_get_rx_buf_thld(I3C_Type *i3c)
 */
 static inline void i3c_resume(I3C_Type *i3c)
 {
-  /* Resume i3c controller */
-  i3c->I3C_DEVICE_CTRL = i3c->I3C_DEVICE_CTRL | DEV_CTRL_RESUME;
+    /* Resume i3c controller */
+    i3c->I3C_DEVICE_CTRL = i3c->I3C_DEVICE_CTRL | DEV_CTRL_RESUME;
 }
 
 /**
@@ -511,8 +534,8 @@ static inline void i3c_resume(I3C_Type *i3c)
 */
 static inline void i3c_clear_xfer_error(I3C_Type *i3c)
 {
-  /* clear i3c interrupt transfer error status. */
-  i3c->I3C_INTR_STATUS = INTR_TRANSFER_ERR_STAT;
+    /* clear i3c interrupt transfer error status. */
+    i3c->I3C_INTR_STATUS = INTR_TRANSFER_ERR_STAT;
 }
 
 /**
@@ -523,7 +546,7 @@ static inline void i3c_clear_xfer_error(I3C_Type *i3c)
 */
 static inline uint32_t i3c_get_dat_addr(I3C_Type *i3c)
 {
-  return (i3c->I3C_DEVICE_ADDR_TABLE_POINTER & 0xFFFF);
+    return (i3c->I3C_DEVICE_ADDR_TABLE_POINTER & 0xFFFF);
 }
 
 /**
@@ -534,7 +557,7 @@ static inline uint32_t i3c_get_dat_addr(I3C_Type *i3c)
 */
 static inline uint32_t i3c_get_dat_depth(I3C_Type *i3c)
 {
-  return (i3c->I3C_DEVICE_ADDR_TABLE_POINTER >> 16);
+    return (i3c->I3C_DEVICE_ADDR_TABLE_POINTER >> 16);
 }
 
 /**
@@ -551,12 +574,12 @@ static inline void i3c_update_dat(I3C_Type *i3c,
                                   uint32_t  pos,
                                   uint32_t  val)
 {
-  uint32_t datp = i3c_get_dat_addr(i3c);
-  uint32_t dat_addr = 0;
+    uint32_t datp = i3c_get_dat_addr(i3c);
+    uint32_t dat_addr = 0;
 
-  /* DAT address = i3c Base + DAT Base + (Pos * 4) */
-  dat_addr = (uint32_t)i3c + datp + (pos << 2);
-  *((volatile uint32_t *) (dat_addr)) = val;
+    /* DAT address = i3c Base + DAT Base + (Pos * 4) */
+    dat_addr = (uint32_t)i3c + datp + (pos << 2);
+    *((volatile uint32_t *) (dat_addr)) = val;
 }
 
 /**
@@ -576,22 +599,22 @@ static inline void i3c_add_slv_to_dat(I3C_Type *i3c,
                                       uint8_t   dyn_addr,
                                       uint8_t   sta_addr)
 {
-  uint32_t val;
+    uint32_t val;
 
-  if(dyn_addr)
-  {
-    /* i3c slave */
-    val = DEV_ADDR_TABLE_DYNAMIC_ADDR(dyn_addr) |
-          DEV_ADDR_TABLE_STATIC_ADDR(sta_addr);
-  }
-  else
-  {
-    /* i2c slave */
-    val = DEV_ADDR_TABLE_STATIC_ADDR(sta_addr) |
-          DEV_ADDR_TABLE_LEGACY_I2C_DEV;
-  }
+    if(dyn_addr)
+    {
+        /* i3c slave */
+        val = DEV_ADDR_TABLE_DYNAMIC_ADDR(dyn_addr) |
+              DEV_ADDR_TABLE_STATIC_ADDR(sta_addr);
+    }
+    else
+    {
+        /* i2c slave */
+        val = DEV_ADDR_TABLE_STATIC_ADDR(sta_addr) |
+              DEV_ADDR_TABLE_LEGACY_I2C_DEV;
+    }
 
-  i3c_update_dat(i3c, pos, val);
+    i3c_update_dat(i3c, pos, val);
 }
 
 /**
@@ -605,133 +628,54 @@ static inline void i3c_add_slv_to_dat(I3C_Type *i3c,
 static inline void i3c_remove_slv_from_dat(I3C_Type *i3c,
                                            uint32_t  pos)
 {
-  i3c_update_dat(i3c, pos, 0);
+    i3c_update_dat(i3c, pos, 0);
 }
 
 /**
-  \fn           void i3c_send_ccc_cmd(I3C_Type *i3c,
-                                      uint32_t  ccc_cmd,
-                                      uint32_t  index)
-  \brief        send ccc command to i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    pos     : DAT Slave index
-  \return       none
-*/
-static inline void i3c_send_ccc_cmd(I3C_Type *i3c,
-                                    uint32_t  ccc_cmd,
-                                    uint32_t  index)
-{
-  /* Issue ccc command */
-  i3c->I3C_COMMAND_QUEUE_PORT =
-        COMMAND_PORT_DEV_INDEX(index)        |
-        COMMAND_PORT_CMD(ccc_cmd)            |
-        COMMAND_PORT_TOC                     |
-        COMMAND_PORT_ROC                     |
-        COMMAND_PORT_DEV_COUNT(1)            |
-        COMMAND_PORT_ADDR_ASSGN_CMD          |
-        COMMAND_PORT_TID(I3C_ADDR_ASSIGN_TID);
-}
-
-/**
-  \fn           void i3c_master_tx(I3C_Type *i3c,
-                                   I3C_XFER *xfer,
-                                   uint32_t  index,
-                                   uint16_t  len)
+  \fn           void i3c_master_tx(I3C_Type *i3c, i3c_xfer_t *xfer)
   \brief        send master transmit command to i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    xfer    : Pointer to i3c transfer structure
-  \param[in]    index   : DAT Slave index
-  \param[in]    len     : Transmit length
+  \param[in]    i3c      : Pointer to i3c register set structure
+  \param[in]    xfer     : Pointer to i3c transfer structure
   \return       none
 */
-void i3c_master_tx(I3C_Type *i3c,
-                   I3C_XFER *xfer,
-                   uint32_t  index,
-                   uint16_t  len);
+void i3c_master_tx(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
-  \fn           void i3c_master_rx(I3C_Type *i3c,
-                                   I3C_XFER *xfer,
-                                   uint32_t  index,
-                                   uint16_t  len)
-  \brief        send master receive command to i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    xfer    : Pointer to i3c transfer structure
-  \param[in]    index   : DAT Slave index
-  \param[in]    len     : Receive length
+  \fn           void i3c_master_rx(I3C_Type *i3c, i3c_xfer_t *xfer)
+  \brief        receive master receive command to i3c bus.
+  \param[in]    i3c       : Pointer to i3c register set structure
+  \param[in]    xfer      : Pointer to i3c transfer structure
   \return       none
 */
-void i3c_master_rx(I3C_Type *i3c,
-                   I3C_XFER *xfer,
-                   uint32_t  index,
-                   uint16_t  len);
+
+void i3c_master_rx(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
-  \fn           void i3c_slave_tx(I3C_Type *i3c,
-                                  I3C_XFER *xfer,
-                                  uint16_t  len)
+  \fn           void i3c_slave_tx(I3C_Type *i3c, i3c_xfer_t *xfer)
   \brief        send slave transmit command to i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    xfer    : Pointer to i3c transfer structure
-  \param[in]    len     : Transmit length
+  \param[in]    i3c      : Pointer to i3c register set structure
+  \param[in]    xfer     : Pointer to i3c transfer structure
   \return       none
 */
-void i3c_slave_tx(I3C_Type *i3c,
-                  I3C_XFER *xfer,
-                  uint16_t  len);
+void i3c_slave_tx(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
-  \fn           void i3c_slave_rx(I3C_Type *i3c,
-                                  I3C_XFER *xfer)
+  \fn           void i3c_slave_rx(I3C_Type *i3c, i3c_xfer_t *xfer)
   \brief        send slave receive command to i3c bus.
   \param[in]    i3c     : Pointer to i3c register set structure
   \param[in]    xfer    : Pointer to i3c transfer structure
   \return       none
 */
-void i3c_slave_rx(I3C_Type *i3c,
-                  I3C_XFER *xfer);
+void i3c_slave_rx(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
-  \fn           void i3c_ccc_set(I3C_Type *i3c,
-                                 I3C_XFER *xfer,
-                                 uint32_t  index,
-                                 uint8_t   cmd_id,
-                                 uint16_t  cmd_len)
-  \brief        send CCC (Common Command Codes) SET command to
-                 i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    xfer    : Pointer to i3c transfer structure
-  \param[in]    index   : DAT Slave index
-  \param[in]    cmd_id  : Command-ID \ref Driver_I3C.h
-  \param[in]    cmd_len : Command length
+  \fn           void i3c_send_xfer_cmd(I3C_Type *i3c, i3c_xfer_t *xfer)
+  \brief        performs master command transfer
+  \param[in]    i3c      : Pointer to i3c register set structure
+  \param[in]    xfer     : Pointer to i3c transfer structure
   \return       none
 */
-void i3c_ccc_set(I3C_Type *i3c,
-                 I3C_XFER *xfer,
-                 uint32_t  index,
-                 uint8_t   cmd_id,
-                 uint16_t  cmd_len);
-
-/**
-  \fn           void i3c_ccc_get(I3C_Type *i3c,
-                                 I3C_XFER *xfer,
-                                 uint32_t  index,
-                                 uint8_t   cmd_id,
-                                 uint16_t  cmd_len)
-  \brief        send CCC (Common Command Codes) GET command to
-                 i3c bus.
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \param[in]    xfer    : Pointer to i3c transfer structure
-  \param[in]    index   : DAT Slave index
-  \param[in]    cmd_id  : Command-ID \ref Driver_I3C.h
-  \param[in]    cmd_len : Command length
-  \return       none
-*/
-void i3c_ccc_get(I3C_Type *i3c,
-                 I3C_XFER *xfer,
-                 uint32_t  index,
-                 uint8_t   cmd_id,
-                 uint16_t  cmd_len);
+void i3c_send_xfer_cmd(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
   \fn           void i3c_clk_cfg(I3C_Type *i3c,
@@ -800,8 +744,7 @@ void i3c_slave_init(I3C_Type *i3c,
                     uint8_t   slv_addr);
 
 /**
-  \fn           void i3c_irq_handler(I3C_Type *i3c,
-                                     I3C_XFER *xfer)
+  \fn           void i3c_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
   \brief        i3c interrupt service routine
   \param[in]    i3c  : Pointer to i3c register
                         set structure
@@ -809,8 +752,7 @@ void i3c_slave_init(I3C_Type *i3c,
                         structure
   \return       none
 */
-void i3c_irq_handler(I3C_Type *i3c,
-                     I3C_XFER *xfer);
+void i3c_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 
 #ifdef __cplusplus

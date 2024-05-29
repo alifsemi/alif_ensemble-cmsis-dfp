@@ -500,11 +500,28 @@ int main(void)
         while(1);
     }
 
+    /*
+     * Note:
+     * This demo uses a specific profile setting that only enables the
+     * items it needs. For example, it only requests the RAM regions and
+     * peripheral power that are relevant for this demo. If you want to adapt
+     * this example for your own use case, you should adjust the profile setting
+     * accordingly. You can either add any additional items that you need, or
+     * remove the request altogether to use the default setting that turns on
+     * almost everything.
+     */
+
 #if defined(M55_HP)
     runp.memory_blocks = SRAM2_MASK | SRAM3_MASK | MRAM_MASK;
 #else
     runp.memory_blocks = SRAM4_1_MASK | SRAM4_2_MASK
                          | SRAM5_1_MASK | SRAM5_2_MASK;
+
+    if(!RTSS_Is_TCM_Addr((const volatile void*)SCB->VTOR))
+    {
+        runp.memory_blocks |= MRAM_MASK;
+    }
+
 #endif
 
     /* Set the new run configuration */
@@ -737,9 +754,16 @@ int main(void)
              * This is just for this test application.
              */
             if(RTSS_Is_TCM_Addr((const volatile void*)SCB->VTOR))
+            {
                 offp.memory_blocks = SRAM4_1_MASK | SRAM4_2_MASK
                                      | SRAM5_1_MASK | SRAM5_2_MASK
                                      | SERAM_MASK;
+            }
+            else
+            {
+                /* Enable SERAM if HE VTOR is in MRAM */
+                offp.memory_blocks |= SERAM_MASK;
+            }
 #else
             /*
              * Retention is not possible with HP-TCM

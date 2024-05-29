@@ -241,6 +241,41 @@ static void DMA_InitDescDefaults(uint8_t channel_num, DMA_RESOURCES *DMA)
 }
 
 /**
+  \fn          int32_t DMA_GetEndianSwapSize(ARM_DMA_ESS_Type swap_size,
+                                             uint8_t *ess)
+  \brief       Get the endian swap size value
+  \param[in]   swap_size  User provided swap size
+  \param[out]  Endian Swap size value
+  \return      /ref execution_status
+*/
+static int32_t DMA_GetEndianSwapSize(ARM_DMA_ESS_Type swap_size, uint8_t *ess)
+{
+    uint8_t val = 0;
+
+    switch(swap_size)
+    {
+    case ESS_SWAP_NONE:
+        val = 0;
+        break;
+    case ESS_SWAP_16BIT:
+        val = 1;
+        break;
+    case ESS_SWAP_32BIT:
+        val = 2;
+        break;
+    case ESS_SWAP_64BIT:
+        val = 3;
+        break;
+    default:
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    *ess = val;
+
+    return ARM_DRIVER_OK;
+}
+
+/**
   \fn          int32_t DMA_CopyDesc(uint8_t         channel_num,
                                     ARM_DMA_PARAMS *params,
                                     DMA_RESOURCES  *DMA)
@@ -646,7 +681,7 @@ static int32_t DMA_Start(DMA_Handle_Type *handle,
         }
 
         ret = dma_generate_opcode(dma_cfg, channel_num);
-        if(ret < 0)
+        if(!ret)
         {
             __enable_irq();
             return ARM_DMA_ERROR_BUFFER;
@@ -722,6 +757,8 @@ static int32_t DMA_Control (DMA_Handle_Type *handle,
 {
     dma_config_info_t  *dma_cfg = &DMA->cfg;
     uint8_t             channel_num;
+    int32_t             ret = ARM_DRIVER_OK;
+    uint8_t             ess = 0;
 
     /* Verify whether the driver is initialized */
     if(!DMA->state.initialized)
@@ -748,6 +785,13 @@ static int32_t DMA_Control (DMA_Handle_Type *handle,
         break;
     case ARM_DMA_CRC_MODE:
         dma_set_crc_mode(dma_cfg, channel_num);
+        break;
+    case ARM_DMA_ENDIAN_SWAP_SIZE:
+        ret = DMA_GetEndianSwapSize(arg, &ess);
+        if(ret)
+            return ret;
+
+        dma_set_swap_size(dma_cfg, channel_num, ess);
         break;
     default:
         return ARM_DRIVER_ERROR_UNSUPPORTED;

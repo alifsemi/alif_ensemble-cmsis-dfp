@@ -30,6 +30,9 @@ extern "C"
 {
 #endif
 
+#define DMA_MAX_BACKWARD_JUMP   256                         /*!< Max Loop backward jump offset */
+#define DMA_MAX_LP_CNT          256                         /*!< Max Loop count                */
+
 /* 8 bit-opcode with variable data payload of 0, 8, 16 or 32bits */
 #define DMA_OP_1BYTE_LEN         1
 #define DMA_OP_2BYTE_LEN         2
@@ -135,9 +138,9 @@ typedef struct _dma_loop_t {
 
 /* DMA Opcode buffer information */
 typedef struct _dma_opcode_buf {
-    uint8_t  *buf;            /*!< Start address of the opcode buffer   */
-    uint16_t off;             /*!< Current Offset from start address    */
-    uint8_t  buf_size;        /*!< Total buffer size                    */
+    uint8_t  *buf;             /*!< Start address of the opcode buffer   */
+    uint32_t  off;             /*!< Current Offset from start address    */
+    uint32_t  buf_size;        /*!< Total buffer size                    */
 } dma_opcode_buf;
 
 /**

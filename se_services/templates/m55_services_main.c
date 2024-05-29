@@ -192,7 +192,7 @@ int main(void)
   SERVICES_print("[SE SERVICES] %s Test harness - STARTS\n", CPU_STRING);
   
   /**
-   * Initialise the MHU and SERVICES Library
+   * Initialize the MHU and SERVICES Library
    */
   mhu_initialize();
   SERVICES_Setup(s_mhu_driver_out.send_message, MAXIMUM_TIMEOUT);

@@ -76,7 +76,15 @@ typedef struct _CANFD_Type
   volatile        uint8_t   CANFD_SRCFG;            /*!< (@ 0x000000D0) Spatial Redundancy Configuration Register                  */
   volatile const  uint8_t   RESERVED4;
   volatile const  uint16_t  RESERVED5;
-}CANFD_Type;                                        /*!< Size = 212 (0xd4)                                                          */
+}CANFD_Type;                                        /*!< Size = 212 (0xd4)                                                         */
+
+/* CANFD register structure */
+typedef struct _CANFD_CNT_Type
+{
+    volatile      uint32_t  CANFD_CNTR_CTRL;        /*!< (@ 0x00000000) Counter control register                                   */
+    volatile      uint32_t  CANFD_CNTR_LOW;         /*!< (@ 0x00000004) Counter Low register                                       */
+    volatile      uint32_t  CANFD_CNTR_HIGH;        /*!< (@ 0x00000008) Counter High register                                      */
+}CANFD_CNT_Type;
 
 /* Hardware related configuration */
 
@@ -88,85 +96,120 @@ typedef struct _CANFD_Type
 #define CANFD_FAST_DATA_FRAME_SIZE_MIN           0U
 #define CANFD_FAST_DATA_FRAME_SIZE_MAX           64U
 #define CANFD_DECREMENT(x, pos)                  (x - pos)
+#define CANFD_TRANSCEIVER_STANDBY_DELAY          3U                /* CANFD transceiver requires 3us to switch from Stdby to Dominant state  */
+
+/* Macros for CANFD specifications */
+#define CANFD_SPEC_NON_ISO                       0U
+#define CANFD_SPEC_ISO                           1U
+
+/* Macros for RBUF overflow mode */
+#define CANFD_RBUF_OVF_MODE_OVERWRITE_OLD_MSG    0U
+#define CANFD_RBUF_OVF_MODE_DISCARD_NEW_MSG      1U
+
+/* Macros for RBUF Storage format */
+#define CANFD_RBUF_STORE_NORMAL_MSG              0U
+#define CANFD_RBUF_STORE_ALL_MSG                 1U
+
+#define CANFD_RBUF_AFWL_MAX                      15U               /* Max AFWL value is 15 */
+
+/* Macros for acpt filter config */
+#define CANFD_ACPT_FILTER_CFG_ALL_FRAMES         0U
+#define CANFD_ACPT_FILTER_CFG_STD_FRAMES         2U
+#define CANFD_ACPT_FILTER_CFG_EXT_FRAMES         3U
+
+/* Macros for Tx buffer to choose */
+#define CANFD_BUF_TYPE_PRIMARY                   0U
+#define CANFD_BUF_TYPE_SECONDARY                 1U
+#define CANFD_SECONDARY_BUF_MODE_FIFO            0U
+#define CANFD_SECONDARY_BUF_MODE_PRIORITY        1U
+
+/* Macros for Timestamp poistion to choose */
+#define CANFD_TIMESTAMP_POSITION_SOF             0U
+#define CANFD_TIMESTAMP_POSITION_EOF             1U
+
+/* Macros for Counter control register */
+#define CANFD_CNTR_CTRL_CNTR_CLEAR               (1U << 2U)
+#define CANFD_CNTR_CTRL_CNTR_STOP                (1U << 1U)
+#define CANFD_CNTR_CTRL_CNTR_START               (1U << 0U)
 
 /* Macros for Configuration and status register */
 #define CANFD_CFG_STAT_RESET                     (1U << 7U)
-#define CANFD_CFG_STAT_LOOPBACK_MODE_EXTERNAL    (1U << 6U)
-#define CANFD_CFG_STAT_LOOPBACK_MODE_INTERNAL    (1U << 5U)
-#define CANFD_CFG_STAT_SINGLE_SHOT_MODE_TX_PTB   (1U << 4U)
-#define CANFD_CFG_STAT_SINGLE_SHOT_MODE_TX_STB   (1U << 3U)
-#define CANFD_CFG_STAT_RACTIVE_STATUS            (1U << 2U)
-#define CANFD_CFG_STAT_TACTIVE_STATUS            (1U << 1U)
-#define CANFD_CFG_STAT_BUS_OFF_STATUS            (1U << 0U)
+#define CANFD_CFG_STAT_LBME                      (1U << 6U)
+#define CANFD_CFG_STAT_LBMI                      (1U << 5U)
+#define CANFD_CFG_STAT_TPSS                      (1U << 4U)
+#define CANFD_CFG_STAT_TSSS                      (1U << 3U)
+#define CANFD_CFG_STAT_RACTIVE                   (1U << 2U)
+#define CANFD_CFG_STAT_TACTIVE                   (1U << 1U)
+#define CANFD_CFG_STAT_BUSOFF                    (1U << 0U)
 
 /* Macros for Command Register */
-#define CANFD_TCMD_TX_BUFFER_SELECT              (1U << 7U)        /* 0-Primary, 1-Secondary */
-#define CANFD_TCMD_LISTEN_ONLY_MODE              (1U << 6U)
-#define CANFD_TCMD_STANDBY_MODE                  (1U << 5U)
-#define CANFD_TCMD_PRIMARY_TX_EN                 (1U << 4U)
-#define CANFD_TCMD_ABORT_PRIMARY_TX              (1U << 3U)
-#define CANFD_TCMD_ONE_FRAME_SEC_TX_EN           (1U << 2U)
-#define CANFD_TCMD_ALL_FRAMES_SEC_TX_EN          (1U << 1U)
-#define CANFD_TCMD_ABORT_SEC_TX                  (1U << 0U)
+#define CANFD_TCMD_TBSEL                         (1U << 7U)        /* 0-Primary, 1-Secondary */
+#define CANFD_TCMD_LOM                           (1U << 6U)
+#define CANFD_TCMD_STBY                          (1U << 5U)
+#define CANFD_TCMD_TPE                           (1U << 4U)
+#define CANFD_TCMD_TPA                           (1U << 3U)
+#define CANFD_TCMD_TSONE                         (1U << 2U)
+#define CANFD_TCMD_TSALL                         (1U << 1U)
+#define CANFD_TCMD_TSA                           (1U << 0U)
 
 /* Macros for Transmit Control Register */
-#define CANFD_TCTRL_ISO_FD                       (1U << 7U)
-#define CANFD_TCTRL_SEC_BUF_NEXT_SLOT            (1U << 6U)
-#define CANFD_TCTRL_SEC_BUF_TX_MODE              (1U << 5U)        /* 0-FIFO, 1-Priority */
-#define CANFD_TCTRL_SEC_BUF_TX_STATUS_Pos        (0U)
-#define CANFD_TCTRL_SEC_BUF_TX_STATUS_Msk        (3U << CANFD_TCTRL_SEC_BUF_TX_STATUS_Pos)
+#define CANFD_TCTRL_FD_ISO                       (1U << 7U)
+#define CANFD_TCTRL_TSNEXT                       (1U << 6U)
+#define CANFD_TCTRL_TSMODE                       (1U << 5U)        /* 0-FIFO, 1-Priority */
+#define CANFD_TCTRL_TSSTAT_Pos                   (0U)
+#define CANFD_TCTRL_TSSTAT_Msk                   (3U << CANFD_TCTRL_TSSTAT_Pos)
+#define CANFD_TCTRL_SEC_BUF_FULL                 (3U)
 
 /* Macros for Reception Control Register */
-#define CANFD_RCTRL_SELF_ACK                     (1U << 7U)
-#define CANFD_RCTRL_RX_BUF_OVF_MODE              (1U << 6U)        /* 0 - Old msg overwritten, 1 - New msg discarded */
-#define CANFD_RCTRL_RX_BUF_OVF_Pos               (5U)
-#define CANFD_RCTRL_RX_BUF_OVF_Msk               (1U << CANFD_RCTRL_RX_BUF_OVF_Pos)
-#define CANFD_RCTRL_RX_BUF_RELEASE               (1U << 4U)
-#define CANFD_RCTRL_RX_BUF_STR_ALL_FRAMES        (1U << 3U)        /* 1 - Stores both proper and error frames */
-#define CANFD_RCTRL_RX_BUF_STATUS_Pos            (0U)
-#define CANFD_RCTRL_RX_BUF_STATUS_Msk            (3U << CANFD_RCTRL_RX_BUF_STATUS_Pos)
+#define CANFD_RCTRL_SACK                         (1U << 7U)
+#define CANFD_RCTRL_ROM                          (1U << 6U)        /* 0 - Old msg overwritten, 1 - New msg discarded */
+#define CANFD_RCTRL_ROV                          (1U << 5U)
+#define CANFD_RCTRL_RREL                         (1U << 4U)
+#define CANFD_RCTRL_RBALL                        (1U << 3U)        /* 0 - Normal frames, 1 - Normal and error frames */
+#define CANFD_RCTRL_RSTAT_Pos                    (0U)
+#define CANFD_RCTRL_RSTAT_Msk                    (3U << CANFD_RCTRL_RSTAT_Pos)
 
 /* Macros for Receive and Transmit Interrupt enable register */
-#define CANFD_RTIE_RX_INTR_EN                    (1U << 7U)
-#define CANFD_RTIE_RX_OVERRUN_INTR_EN            (1U << 6U)
-#define CANFD_RTIE_RBUF_FULL_INTR_EN             (1U << 5U)
-#define CANFD_RTIE_RBUF_ALMST_FULL_INTR_EN       (1U << 4U)
-#define CANFD_RTIE_TX_PRIMARY_INTR_EN            (1U << 3U)
-#define CANFD_RTIE_TX_SEC_INTR_EN                (1U << 2U)
-#define CANFD_RTIE_ERROR_INTR_EN                 (1U << 1U)
-#define CANFD_RTIE_SEC_TBUF_FULL_INTR_FLAG       (1U << 0U)
+#define CANFD_RTIE_RIE                           (1U << 7U)
+#define CANFD_RTIE_ROIE                          (1U << 6U)
+#define CANFD_RTIE_RFIE                          (1U << 5U)
+#define CANFD_RTIE_RAFIE                         (1U << 4U)
+#define CANFD_RTIE_TPIE                          (1U << 3U)
+#define CANFD_RTIE_TSIE                          (1U << 2U)
+#define CANFD_RTIE_EIE                           (1U << 1U)
+#define CANFD_RTIE_TSFF                          (1U << 0U)
 
 /* Macros for Receive and Transmit Interrupt Flag register */
 #define CANFD_RTIF_REG_Msk                       (255U)
-#define CANFD_RTIF_RX_INTR_FLAG                  (1U << 7U)
-#define CANFD_RTIF_RX_OVERRUN_INTR_FLAG          (1U << 6U)
-#define CANFD_RTIF_RBUF_FULL_INTR_FLAG           (1U << 5U)
-#define CANFD_RTIF_RBUF_ALMST_FULL_INTR_FLAG     (1U << 4U)
-#define CANFD_RTIF_TX_PRIMARY_INTR_FLAG          (1U << 3U)
-#define CANFD_RTIF_TX_SEC_INTR_FLAG              (1U << 2U)
-#define CANFD_RTIF_ERROR_INTR_FLAG               (1U << 1U)
-#define CANFD_RTIF_ABORT_INTR_FLAG               (1U << 0U)
+#define CANFD_RTIF_RIF                           (1U << 7U)
+#define CANFD_RTIF_ROIF                          (1U << 6U)
+#define CANFD_RTIF_RFIF                          (1U << 5U)
+#define CANFD_RTIF_RAFIF                         (1U << 4U)
+#define CANFD_RTIF_TPIF                          (1U << 3U)
+#define CANFD_RTIF_TSIF                          (1U << 2U)
+#define CANFD_RTIF_EIF                           (1U << 1U)
+#define CANFD_RTIF_AIF                           (1U << 0U)
 
 /* Macros for Error Interrupt Enable and Flag Register */
 #define CANFD_ERRINT_REG_Msk                     (21U)             /* Mask for Error Flags */
 #define CANFD_ERRINT_EN_Msk                      (42)              /* Mask for Error interrupt enabling */
-#define CANFD_ERRINT_EWARN_LMT_RCHD              (1U << 7U)
-#define CANFD_ERRINT_EPASSIVE_MODE               (1U << 6U)
-#define CANFD_ERRINT_EPASSIVE_INTR_EN            (1U << 5U)
-#define CANFD_ERRINT_EPASSIVE_INTR_FLAG          (1U << 4U)
-#define CANFD_ERRINT_ARBTR_LOST_INTR_EN          (1U << 3U)
-#define CANFD_ERRINT_ARBTR_LOST_INTR_FLAG        (1U << 2U)
-#define CANFD_ERRINT_BUS_ERROR_INTR_EN           (1U << 1U)
-#define CANFD_ERRINT_BUS_ERROR_INTR_FLAG         (1U << 0U)
+#define CANFD_ERRINT_EWARN                       (1U << 7U)
+#define CANFD_ERRINT_EPASS                       (1U << 6U)
+#define CANFD_ERRINT_EPIE                        (1U << 5U)
+#define CANFD_ERRINT_EPIF                        (1U << 4U)
+#define CANFD_ERRINT_ALIE                        (1U << 3U)
+#define CANFD_ERRINT_ALIF                        (1U << 2U)
+#define CANFD_ERRINT_BEIE                        (1U << 1U)
+#define CANFD_ERRINT_BEIF                        (1U << 0U)
 
 /* Macros for Warning Limits Register */
-#define CANFD_LIMIT_ALMST_FULL_WARN_LMT_Pos      (4U)
-#define CANFD_LIMIT_ALMST_FULL_WARN_LMT_Msk      (15U << CANFD_LIMIT_ALMST_FULL_WARN_LMT_Pos) /* Max limit is 8 */
-#define CANFD_LIMIT_ALMST_FULL_WARN_LMT(x)       ((x << CANFD_LIMIT_ALMST_FULL_WARN_LMT_Pos) & (CANFD_LIMIT_ALMST_FULL_WARN_LMT_Msk))
+#define CANFD_LIMIT_AFWL_Pos                     (4U)
+#define CANFD_LIMIT_AFWL_Msk                     (0xFU << CANFD_LIMIT_AFWL_Pos) /* Max limit is 15 */
+#define CANFD_LIMIT_AFWL(x)                      ((x << CANFD_LIMIT_AFWL_Pos) & (CANFD_LIMIT_AFWL_Msk))
 
-#define CANFD_LIMIT_ERR_WARN_LMT_Pos             (0U)
-#define CANFD_LIMIT_ERR_WARN_LMT_Msk             (15U << CANFD_LIMIT_ERR_WARN_LMT_Pos)
-#define CANFD_LIMIT_ERR_WARN_LMT(x)              ((x << CANFD_LIMIT_ERR_WARN_LMT_Pos) & (CANFD_LIMIT_ERR_WARN_LMT_Msk))
+#define CANFD_LIMIT_EWL_Pos                      (0U)
+#define CANFD_LIMIT_EWL_Msk                      (15U << CANFD_LIMIT_EWL_Pos)
+#define CANFD_LIMIT_EWL(x)                       ((x << CANFD_LIMIT_EWL_Pos) & (CANFD_LIMIT_EWL_Msk))
 
 /* Macros for Error and Arbitration Lost Capture Register */
 #define CANFD_EALCAP_KOER_Pos                    (5U)
@@ -182,78 +225,79 @@ typedef struct _CANFD_Type
 #define CANFD_EALCAP_KOER_OTHER                  (6U)
 
 /* Macros for Arbitration Lost Capture Register */
-#define CANFD_EALCAP_ARBTR_LOST_CAPTURE_Pos      (0U)
-#define CANFD_EALCAP_ARBTR_LOST_CAPTURE_Msk      (31U << CANFD_EALCAP_ARBTR_LOST_CAPTURE_Pos)
+#define CANFD_EALCAP_ALC_Pos                     (0U)
+#define CANFD_EALCAP_ALC_Msk                     (31U << CANFD_EALCAP_ALC_Pos)
 
 /* Macros for Transmitter Delay Compensation Register */
-#define CANFD_TDC_TX_DELAY_COMP_EN               (1U << 7U)
-#define CANFD_TDC_SEC_SMPL_PT_OFFSET_Pos         (0U)
-#define CANFD_TDC_SEC_SMPL_PT_OFFSET_Msk         (0x7FU << CANFD_TDC_SEC_SMPL_PT_OFFSET_Pos)
+#define CANFD_TDC_TDCEN                          (1U << 7U)
+#define CANFD_TDC_SSPOFF_Pos                     (0U)
+#define CANFD_TDC_SSPOFF_Msk                     (0x7FU << CANFD_TDC_SSPOFF_Pos)
 
 /* Macros for Acceptance Filter Control Register */
-#define CANFD_ACFCTRL_ACPT_MASK_SEL              (1U << 5U)     /* Acceptance mask, 0- Acceptance code */
-#define CANFD_ACFCTRL_ACPT_FLTR_ADDR_Pos         (0U)
-#define CANFD_ACFCTRL_ACPT_FLTR_ADDR_Msk         (3U << CANFD_ACFCTRL_ACPT_FLTR_ADDR_Pos)
+#define CANFD_ACFCTRL_SELMASK                    (1U << 5U)     /* Acceptance mask, 0- Acceptance code */
+#define CANFD_ACFCTRL_ACFADR_Pos                 (0U)
+#define CANFD_ACFCTRL_ACFADR_Msk                 (0xFU << CANFD_ACFCTRL_ACFADR_Pos)
 
 /* Macros for Acceptance filter Enable Register */
-#define CANFD_ACF_EN_ACPT_FLTR_MAX_Msk           (7U << 0U)
-#define CANFD_ACF_EN_ACPT_FLTR_EN_Msk            (7U << 0U)
+#define CANFD_ACF_EN_0_AE_X_MAX_Msk              (7U << 0U)
 
 /* Macros for Acceptance CODE and MASK Register */
-#define CANFD_ACFX_ACPT_MASK_CODE_Pos            (0U)
-#define CANFD_ACFX_ACPT_MASK_CODE_Msk            (0x1FFFFFFFU << CANFD_ACFX_ACPT_MASK_CODE_Pos)
-#define CANFD_ACFX_ACPT_CODE(x)                  (x & CANFD_ACFX_ACPT_MASK_CODE_Msk)
-#define CANFD_ACFX_ACPT_Msk(x)                   (x & CANFD_ACFX_ACPT_MASK_CODE_Msk)
+#define CANFD_ACF0_3_AMASK_ACODE_X_Pos           (0U)
+#define CANFD_ACF0_3_AMASK_ACODE_X_Msk           (0x1FFFFFFFU << CANFD_ACF0_3_AMASK_ACODE_X_Pos)
+#define CANFD_ACF0_3_ACODE_X(x)                  (x & CANFD_ACF0_3_AMASK_ACODE_X_Msk)
+#define CANFD_ACF0_3_AMASK_X_Msk(x)              (x & CANFD_ACF0_3_AMASK_ACODE_X_Msk)
 
-#define CANFD_ACFX_ACPT_MASK_IDE_BIT_CHK_Pos     (30U)
-#define CANFD_ACFX_ACPT_MASK_IDE_BIT_CHK_EN      (1 << 30U)     /* 1- Accepts either std or ext frame, 0 - accepts both */
-#define CANFD_ACFX_ACPT_MASK_IDE_BIT_VAL_Pos     (29U)
-#define CANFD_ACFX_ACPT_MASK_IDE_BIT_VAL         (1 << 29U)     /* 1 - Accepts only extended frame, 0-Accepts only std frames */
+#define CANFD_ACF_3_MASK_AIDEE                   (1U << 30U)     /* 1- Accepts either std or ext frame, 0 - accepts both */
+#define CANFD_ACF_3_MASK_AIDE_Pos                (29U)
+#define CANFD_ACF_3_MASK_AIDE                    (1U << 29U)     /* 1 - Accepts only extended frame, 0-Accepts only std frames */
+
+/* Macros for Time config Register */
+#define CANFD_TIMECFG_TIMEPOS                    (1U << 1U)      /* 1- Timestamp at EOF, 0- at SOF */
+#define CANFD_TIMECFG_TIMEEN                     (1U << 0U)
 
 /* Macros for Memory Protection Register */
-#define CANFD_MEM_PROT_MEM_ADDR_ERR_INTR_FLAG    (1U << 4U)
-#define CANFD_MEM_PROT_MEM_DATA_ERR_INTR_FLAG    (1U << 3U)
-#define CANFD_MEM_PROT_MEM_DATA_WARN_INTR_FLAG   (1U << 2U)
-#define CANFD_MEM_PROT_MEM_DATA_WARN_INTR_EN     (1U << 1U)
-#define CANFD_MEM_PROT_MEM_PROTECTION_EN         (1U << 0U)
+#define CANFD_MEM_PROT_MAEIF                     (1U << 4U)
+#define CANFD_MEM_PROT_MDEIF                     (1U << 3U)
+#define CANFD_MEM_PROT_MDWIF                     (1U << 2U)
+#define CANFD_MEM_PROT_MDWIE                     (1U << 1U)
+#define CANFD_MEM_PROT_MPEN                      (1U << 0U)
 
 /* Macros for Memory Status Register bit info*/
-#define CANFD_MEM_STAT_HOSTSIDE_MEM_ERR_LOC_Pos  (3U)
-#define CANFD_MEM_STAT_HOSTSIDE_MEM_ERR_LOC_Msk  (3U << CANFD_MEM_STAT_HOSTSIDE_MEM_ERR_LOC_Pos)
-#define CANFD_MEM_STAT_TX_BLOCK_STATUS           (1U << 2U)
-#define CANFD_MEM_STAT_TX_STOP_STATUS            (1U << 1U)
-#define CANFD_MEM_STAT_ACPT_FLTR_ACCEPT          (1U << 0U)    /* 0-Filter enabled, 1-Filter Disabled */
+#define CANFD_MEM_STAT_HELOC_Pos                 (3U)
+#define CANFD_MEM_STAT_HELOC_Msk                 (3U << CANFD_MEM_STAT_HELOC_Pos)
+#define CANFD_MEM_STAT_TXB                       (1U << 2U)
+#define CANFD_MEM_STAT_TXS                       (1U << 1U)
+#define CANFD_MEM_STAT_ACFA                      (1U << 0U)    /* 0-Filter enabled, 1-Filter Disabled */
 
 /* Macros for Memory Error Stimulation 0 Register */
-#define CANFD_MEM_ES0_MEM_ADDR_ERR_EN            (1U << 7U)
-#define CANFD_MEM_ES0_MEM_FIRST_ERR_EN           (1U << 6U)
-#define CANFD_MEM_ES0_MEM_ERR_BIT_POS_1_Msk      (3FU << 0U)
+#define CANFD_MEM_ES_0_MEAEE                     (1U << 7U)
+#define CANFD_MEM_ES_0_ME1EE                     (1U << 6U)
+#define CANFD_MEM_ES_0_MEBP1_Msk                 (3FU << 0U)
 
 /* Macros for Memory Error Stimulation 1 Register */
-#define CANFD_MEM_ES1_MEM_SECOND_ERR_EN          (1U << 6U)
-#define CANFD_MEM_ES1_MEM_ERR_BIT_POS_2_Msk      (3FU << 0U)
+#define CANFD_MEM_ES_1_ME2EE                     (1U << 6U)
+#define CANFD_MEM_ES_1_MEBP2_Msk                 (3FU << 0U)
 
 /* Macros for Memory Error Stimulation 2 Register */
-#define CANFD_MEM_ES2_MEM_ERR_NO_ERR_CNTR        (15U << 4U)
-#define CANFD_MEM_ES2_MEM_ERR_EN_CNTR            (15U << 0U)
+#define CANFD_MEM_ES_2_MENEC                     (15U << 4U)
+#define CANFD_MEM_ES_2_MEEEC                     (15U << 0U)
 
 /* Macros for Memory Error Stimulation 3 Register */
-#define CANFD_MEM_ES3_MEM_ERR_SIDE_Pos           (2U)
-#define CANFD_MEM_ES3_MEM_ERR_SIDE_Msk           (1U << 2U)
-#define CANFD_MEM_ES3_MEM_ERR_SIDE               (1U << 2U)    /* 0-Host side, 1-CAN side */
-#define CANFD_MEM_ES3_MEM_ERR_LOC_Pos            (0U)
-#define CANFD_MEM_ES3_MEM_ERR_LOC_Msk            (3U << 0U)
-#define CANFD_MEM_ES3_MEM_ERR_LOC(x)             (x & CANFD_MEM_ES3_MEM_ERR_LOC_Msk)
+#define CANFD_MEM_ES_3_MES                       (1U << 2U)    /* 0-Host side, 1-CAN side */
+#define CANFD_MEM_ES_3_MEL_Pos                   (0U)
+#define CANFD_MEM_ES_3_MEL_Msk                   (3U << 0U)
+#define CANFD_MEM_ES_3_MEL(x)                    (x & CANFD_MEM_ES_3_MEL_Msk)
 
 
 /* Macros for Spatial Redundancy Configuration Register */
-#define CANFD_SRCFG_ERR_EN_CANFD_CLK_DOMAIN      (1U << 4U)    /* 0-No error stimulation, 1-Error stimulation */
-#define CANFD_SRCFG_ERR_EN_CANFD_HOST_CLK_DOMAIN (1U << 3U)    /* 0-No error stimulation, 1-Error stimulation */
-#define CANFD_SRCFG_ERR_INTR_FLAG                (1U << 2U)
-#define CANFD_SRCFG_INSTANCE_SEL                 (1U << 1U)
-#define CANFD_SRCFG_EN                           (1U << 0U)
+#define CANFD_SRCFG_SREEC                        (1U << 4U)    /* 0-No error stimulation, 1-Error stimulation */
+#define CANFD_SRCFG_SREEH                        (1U << 3U)    /* 0-No error stimulation, 1-Error stimulation */
+#define CANFD_SRCFG_SRIEF                        (1U << 2U)
+#define CANFD_SRCFG_SRISEL                       (1U << 1U)
+#define CANFD_SRCFG_SREN                         (1U << 0U)
 
 /* Macros for CAN Msg access */
+#define CANFD_MSG_TTSEN                          (1U << 31U)
 #define CANFD_MSG_ESI_Pos                        (31U)
 #define CANFD_MSG_ESI_Msk                        (1U << CANFD_MSG_ESI_Pos)
 #define CANFD_MSG_ESI(x)                         (x << 31U)
@@ -282,7 +326,8 @@ typedef struct _CANFD_Type
 /* Macros for Interrupt events */
 #define CANFD_TX_ABORT_EVENT                     (1U << 0U)
 #define CANFD_ERROR_EVENT                        (1U << 1U)
-#define CANFD_TX_COMPLETE_EVENT                  (1U << 3U)
+#define CANFD_SECONDARY_BUF_TX_COMPLETE_EVENT    (1U << 2U)
+#define CANFD_PRIMARY_BUF_TX_COMPLETE_EVENT      (1U << 3U)
 #define CANFD_RBUF_ALMOST_FULL_EVENT             (1U << 4U)
 #define CANFD_RBUF_FULL_EVENT                    (1U << 5U)
 #define CANFD_RBUF_OVERRUN_EVENT                 (1U << 6U)
@@ -326,6 +371,15 @@ typedef enum _CANFD_ACPT_FLTR_STATUS
     CANFD_ACPT_FLTR_STATUS_OCCUPIED     = 0x2
 }CANFD_ACPT_FLTR_STATUS;
 
+/* CANFD Acceptance filter structure */
+typedef struct _canfd_acpt_fltr_t
+{
+    CANFD_ACPT_FLTR_OP  op_code;
+    uint32_t            ac_code;
+    uint32_t            ac_mask;
+    uint8_t             filter;
+    uint8_t             frame_type;
+}canfd_acpt_fltr_t;
 
 /* CANFD Transmit Buffer Registers' structure:
  * for Hardware register access */
@@ -345,6 +399,7 @@ typedef volatile const struct _rbuf_regs_t
     uint8_t     status;
     uint8_t     reserved[2U];
     uint8_t     data[CANFD_FAST_DATA_FRAME_SIZE_MAX];     /* Maximum payload size is 64 bytes */
+    uint32_t    rx_timestamp[2U];
 }rbuf_regs_t;
 
 /* Current tx info */
@@ -357,7 +412,8 @@ typedef struct _canfd_tx_info_t
   uint32_t brs              : 1;        /* Flexible data-rate format with bitrate switch       */
   uint32_t esi              : 1;        /* Flexible data-rate format error state indicator     */
   uint32_t dlc              : 4;        /* Data length code                                    */
-  uint32_t reserved         : 23;
+  uint32_t buf_type         : 1;        /* Tx Buffer type (Primary/Secondary)                  */
+  uint32_t reserved         : 22;
 }canfd_tx_info_t;
 
 /* Current Rx info */
@@ -372,17 +428,18 @@ typedef struct _canfd_rx_info_t
   uint32_t dlc              : 4;        /* Data length code                                    */
   uint32_t status           : 8;        /* KOER and a bit to show LBMI msg                     */
   uint32_t reserved         : 15;
+  uint32_t timestamp[2U];               /* Rx Timestamp                                        */
 }canfd_rx_info_t;
 
 /* CANFD Driver Data Transfer info */
 typedef struct _canfd_transfer_t
 {
-    const    uint8_t                *tx_ptr;      /* Pointer to Tx buffer                        */
-    uint8_t                         *rx_ptr;      /* Pointer to Rx buffer                        */
-    volatile uint8_t                tx_count;     /* Current Transmission completed data count   */
-    volatile uint8_t                rx_count;     /* Current Reception completed data count      */
-    canfd_tx_info_t                 tx_header;    /* Tx Data header                              */
-    canfd_rx_info_t                 rx_header;    /* Rx Data header                              */
+    const    uint8_t    *tx_ptr;        /* Pointer to Tx buffer                        */
+    uint8_t             *rx_ptr;        /* Pointer to Rx buffer                        */
+    volatile uint8_t    tx_count;       /* Current Transmission completed data count   */
+    volatile uint8_t    rx_count;       /* Current Reception completed data count      */
+    canfd_tx_info_t     tx_header;      /* Tx Data header                              */
+    canfd_rx_info_t     rx_header;      /* Rx Data header                              */
 }canfd_transfer_t;
 
 /**
@@ -398,6 +455,123 @@ static inline void canfd_reset(CANFD_Type* canfd)
 }
 
 /**
+  \fn          static inline void canfd_set_specification(CANFD_Type* canfd,
+  \                                                       const uint8_t spec)
+  \brief       Sets CANFD mode.
+  \param[in]   canfd : Pointer to the CANFD register map
+  \param[in]   spec  : Specification type (ISO/Non-ISO)
+  \return      none
+*/
+static inline void canfd_set_specification(CANFD_Type* canfd,
+                                           const uint8_t spec)
+{
+    if(spec == CANFD_SPEC_NON_ISO)
+    {
+        /* Set NON-ISO mode*/
+        canfd->CANFD_TCTRL &= (~CANFD_TCTRL_FD_ISO);
+    }
+    else
+    {
+        /* Set ISO mode*/
+        canfd->CANFD_TCTRL |= CANFD_TCTRL_FD_ISO;
+    }
+}
+
+/**
+  \fn          static inline void canfd_enable_timestamp(CANFD_Type* canfd,
+  \                                                      const uint8_t position)
+  \brief       Enables the CANFD Timestamp
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \param[in]   position : SOF/EOF
+  \return      None
+*/
+static inline void canfd_enable_timestamp(CANFD_Type* canfd,
+                                          const uint8_t position)
+{
+    if(position == CANFD_TIMESTAMP_POSITION_EOF)
+    {
+        /* Enables timestamp at EOF */
+        canfd->CANFD_TIMECFG = (CANFD_TIMECFG_TIMEEN | CANFD_TIMECFG_TIMEPOS);
+    }
+    else
+    {
+        /* Enables timestamp at SOF */
+        canfd->CANFD_TIMECFG = CANFD_TIMECFG_TIMEEN;
+    }
+}
+
+/**
+  \fn          static inline void canfd_disable_timestamp(CANFD_Type* canfd)
+  \brief       Disables the CANFD Timestamp
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \return      None
+*/
+static inline void canfd_disable_timestamp(CANFD_Type* canfd)
+{
+    canfd->CANFD_TIMECFG &= ~CANFD_TIMECFG_TIMEEN;
+}
+
+/**
+  \fn          static inline uint32_t canfd_get_tx_timestamp(CANFD_Type* canfd)
+  \brief       Gets the latest CANFD Tx msg's Timestamp
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \return      Tx Timestamp
+*/
+static inline uint32_t canfd_get_tx_timestamp(CANFD_Type* canfd)
+{
+    /* Returns Tx message timestamp */
+    return (uint32_t)canfd->CANFD_TTS;
+}
+
+/**
+  \fn          static inline void canfd_counter_set(CANFD_CNT_Type* canfd_cntr,
+  \                                                 const uint32_t value)
+  \brief       Sets the CANFD low timer counter
+  \param[in]   canfd_cntr : Pointer to the CANFD counter map
+  \param[in]   value      : Countet value
+  \return      None
+*/
+static inline void canfd_counter_set(CANFD_CNT_Type* canfd_cntr,
+                                     const uint32_t value)
+{
+    canfd_cntr->CANFD_CNTR_CTRL = CANFD_CNTR_CTRL_CNTR_STOP;
+    canfd_cntr->CANFD_CNTR_LOW  = value;
+}
+
+/**
+  \fn          static inline void canfd_counter_start(CANFD_CNT_Type* canfd_cntr)
+  \brief       Starts the CANFD timer counter
+  \param[in]   canfd_cntr : Pointer to the CANFD counter map
+  \return      None
+*/
+static inline void canfd_counter_start(CANFD_CNT_Type* canfd_cntr)
+{
+    canfd_cntr->CANFD_CNTR_CTRL = CANFD_CNTR_CTRL_CNTR_START;
+}
+
+/**
+  \fn          static inline void canfd_counter_stop(CANFD_CNT_Type* canfd_cntr)
+  \brief       Stops the CANFD timer counter
+  \param[in]   canfd_cntr : Pointer to the CANFD counter map
+  \return      None
+*/
+static inline void canfd_counter_stop(CANFD_CNT_Type* canfd_cntr)
+{
+    canfd_cntr->CANFD_CNTR_CTRL = CANFD_CNTR_CTRL_CNTR_STOP;
+}
+
+/**
+  \fn          static inline void canfd_counter_clear(CANFD_CNT_Type* canfd_cntr)
+  \brief       Clears the CANFD timer counter
+  \param[in]   canfd_cntr : Pointer to the CANFD counter map
+  \return      None
+*/
+static inline void canfd_counter_clear(CANFD_CNT_Type* canfd_cntr)
+{
+    canfd_cntr->CANFD_CNTR_CTRL = CANFD_CNTR_CTRL_CNTR_CLEAR;
+}
+
+/**
   \fn          static inline CANFD_BUS_STATUS canfd_get_bus_status(CANFD_Type* canfd)
   \brief       Fetches the current bus status
   \param[in]   canfd : Pointer to the CANFD register map
@@ -406,7 +580,7 @@ static inline void canfd_reset(CANFD_Type* canfd)
 static inline CANFD_BUS_STATUS canfd_get_bus_status(CANFD_Type* canfd)
 {
     /* Returns current bus status*/
-    if(canfd->CANFD_CFG_STAT & CANFD_CFG_STAT_BUS_OFF_STATUS)
+    if(canfd->CANFD_CFG_STAT & CANFD_CFG_STAT_BUSOFF)
     {
         return CANFD_BUS_STATUS_OFF;
     }
@@ -417,14 +591,92 @@ static inline CANFD_BUS_STATUS canfd_get_bus_status(CANFD_Type* canfd)
 }
 
 /**
-  \fn          static inline bool canfd_tx_active(CANFD_Type* canfd)
-  \brief       Fetches the msg transmission status
+  \fn          static inline void canfd_select_tx_buf(CANFD_Type* canfd,
+  \                                                   const uint8_t buf_type)
+  \brief       Selects the requested buffer for next transmission
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \param[in]   buf_type : Tx Buffer type
+  \return      None
+*/
+static inline void canfd_select_tx_buf(CANFD_Type* canfd,
+                                       const uint8_t buf_type)
+{
+    if(buf_type != CANFD_BUF_TYPE_PRIMARY)
+    {
+        /* Secondary buffer is selected for next msg tx */
+        canfd->CANFD_TCMD |= CANFD_TCMD_TBSEL;
+    }
+    else
+    {
+        /* Primary buffer is selected for next msg tx */
+        canfd->CANFD_TCMD &= ~CANFD_TCMD_TBSEL;
+    }
+}
+
+/**
+  \fn          static inline bool canfd_ptb_tx_active(CANFD_Type* canfd)
+  \brief       Fetches the Primary Trasmit buffer Tx status
   \param[in]   canfd :  Pointer to the CANFD register map
   \return      transmission status - Active/Inactive
 */
-static inline bool canfd_tx_active(CANFD_Type* canfd)
+static inline bool canfd_ptb_tx_active(CANFD_Type* canfd)
 {
-    return ((canfd->CANFD_TCMD & CANFD_TCMD_PRIMARY_TX_EN) != 0);
+    return ((canfd->CANFD_TCMD & CANFD_TCMD_TPE) != 0);
+}
+
+/**
+  \fn          static inline bool canfd_stb_tx_active(CANFD_Type* canfd)
+  \brief       Fetches the Secondary Trasmit buffer Tx status
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \return      transmission status - Active/Inactive
+*/
+static inline bool canfd_stb_tx_active(CANFD_Type* canfd)
+{
+    return (((canfd->CANFD_TCMD & CANFD_TCMD_TSONE)  != 0) ||
+            ((canfd->CANFD_TCMD & CANFD_TCMD_TSALL) != 0));
+}
+
+/**
+  \fn          static inline bool canfd_stb_free(CANFD_Type* canfd)
+  \brief       Fetches the Secondary Trasmit buffer Free status
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \return      Buffer status - Free/Full
+*/
+static inline bool canfd_stb_free(CANFD_Type* canfd)
+{
+    return ((canfd->CANFD_TCTRL & CANFD_TCTRL_TSSTAT_Msk) !=
+             CANFD_TCTRL_SEC_BUF_FULL);
+}
+
+/**
+  \fn          static inline bool canfd_stb_empty(CANFD_Type* canfd)
+  \brief       Fetches the Secondary Trasmit buffer empty status
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \return      Buffer status - Empty/Non_empty
+*/
+static inline bool canfd_stb_empty(CANFD_Type* canfd)
+{
+    return ((canfd->CANFD_TCTRL & CANFD_TCTRL_TSSTAT_Msk) == 0);
+}
+
+/**
+  \fn          static inline void canfd_set_stb_mode(CANFD_Type* canfd,
+  \                                                  const uint8_t mode)
+  \brief       Sets Secondary Trasmit buffer mode
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \param[in]   mode  :  Fifo/Priority mode
+  \return      None
+*/
+static inline void canfd_set_stb_mode(CANFD_Type* canfd, const uint8_t mode)
+{
+    if(mode == CANFD_SECONDARY_BUF_MODE_PRIORITY)
+    {
+        canfd->CANFD_TCTRL |= CANFD_TCTRL_TSMODE;
+    }
+    else
+    {
+        canfd->CANFD_TCTRL &= (~CANFD_TCTRL_TSMODE);
+    }
 }
 
 /**
@@ -435,8 +687,8 @@ static inline bool canfd_tx_active(CANFD_Type* canfd)
 */
 static inline bool canfd_comm_active(CANFD_Type* canfd)
 {
-    return (canfd->CANFD_CFG_STAT & (CANFD_CFG_STAT_TACTIVE_STATUS |
-                                     CANFD_CFG_STAT_RACTIVE_STATUS));
+    return (canfd->CANFD_CFG_STAT & (CANFD_CFG_STAT_TACTIVE |
+                                     CANFD_CFG_STAT_RACTIVE));
 }
 
 /**
@@ -462,15 +714,25 @@ static inline uint8_t canfd_get_rx_error_count(CANFD_Type* canfd)
 }
 
 /**
-  \fn          static inline void canfd_abort_tx(CANFD_Type* canfd)
+  \fn          static inline void canfd_abort_tx(CANFD_Type* canfd,
+  \                                              const uint8_t buf_type)
   \brief       Abort the current message transmission
-  \param[in]   canfd   : Pointer to the CANFD register map
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \param[in]   buf_type : Tx Buffer type
   \return      none
 */
-static inline void canfd_abort_tx(CANFD_Type* canfd)
+static inline void canfd_abort_tx(CANFD_Type* canfd, const uint8_t buf_type)
 {
-    /* Aborts current primary buffer transmission */
-    canfd->CANFD_TCMD |= CANFD_TCMD_ABORT_PRIMARY_TX;
+    if(buf_type != CANFD_BUF_TYPE_PRIMARY)
+    {
+        /* Aborts Secondary buffer transmission */
+        canfd->CANFD_TCMD |= CANFD_TCMD_TSA;
+    }
+    else
+    {
+        /* Aborts Primary buffer transmission */
+        canfd->CANFD_TCMD |= CANFD_TCMD_TPA;
+    }
 }
 
 /**
@@ -481,7 +743,7 @@ static inline void canfd_abort_tx(CANFD_Type* canfd)
 */
 static inline bool canfd_error_passive_mode(CANFD_Type* canfd)
 {
-    return ((canfd->CANFD_ERRINT & CANFD_ERRINT_EPASSIVE_MODE) != 0);
+    return ((canfd->CANFD_ERRINT & CANFD_ERRINT_EPASS) != 0);
 }
 
 /**
@@ -492,7 +754,69 @@ static inline bool canfd_error_passive_mode(CANFD_Type* canfd)
 */
 static inline bool canfd_err_warn_limit_reached(CANFD_Type* canfd)
 {
-    return ((canfd->CANFD_ERRINT & CANFD_ERRINT_EWARN_LMT_RCHD) != 0);
+    return ((canfd->CANFD_ERRINT & CANFD_ERRINT_EWARN) != 0);
+}
+
+/**
+  \fn          static inline void canfd_set_rbuf_overflow_mode(CANFD_Type* canfd,
+  \                                                            const uint8_t mode)
+  \brief       Sets CANFD RBUF overflow mode.
+  \param[in]   canfd : Pointer to the CANFD register map
+  \param[in]   mode  : rx buffer overflow mode
+  \return      none
+*/
+static inline void canfd_set_rbuf_overflow_mode(CANFD_Type* canfd,
+                                                const uint8_t mode)
+{
+    if(mode == CANFD_RBUF_OVF_MODE_OVERWRITE_OLD_MSG)
+    {
+        /* Configures to overwrite old msg */
+        canfd->CANFD_RCTRL &= (~CANFD_RCTRL_ROM);
+    }
+    else
+    {
+        /* Configures to discard new msg*/
+        canfd->CANFD_RCTRL |= CANFD_RCTRL_ROM;
+    }
+}
+
+/**
+  \fn          static inline void canfd_set_rbuf_storage_format(CANFD_Type* canfd,
+  \                                                             const uint8_t format)
+  \brief       Sets CANFD RBUF storage format
+  \param[in]   canfd   : Pointer to the CANFD register map
+  \param[in]   format  : Rbuf Storage format
+  \return      none
+*/
+static inline void canfd_set_rbuf_storage_format(CANFD_Type* canfd,
+                                                 const uint8_t format)
+{
+    if(format == CANFD_RBUF_STORE_NORMAL_MSG)
+    {
+        /* Configures to store normal msgs */
+        canfd->CANFD_RCTRL &= (~CANFD_RCTRL_RBALL);
+    }
+    else
+    {
+        /* Configures to store all msgs including error ones*/
+        canfd->CANFD_RCTRL |= CANFD_RCTRL_RBALL;
+    }
+}
+
+/**
+  \fn          static inline void canfd_set_rbuf_almost_full_warn_limit(CANFD_Type* canfd,
+  \                                                                     const uint8_t val)
+  \brief       Sets Rbuf almost full warning limit (AFWL)
+  \param[in]   canfd : Pointer to the CANFD register map
+  \param[in]   val   : AFWL value
+  \return      none
+*/
+static inline void canfd_set_rbuf_almost_full_warn_limit(CANFD_Type* canfd,
+                                                         const uint8_t val)
+{
+    /* Clears and sets new AFWL value */
+    canfd->CANFD_LIMIT &= ~CANFD_LIMIT_AFWL_Msk;
+    canfd->CANFD_LIMIT |= CANFD_LIMIT_AFWL(val);
 }
 
 /**
@@ -503,7 +827,7 @@ static inline bool canfd_err_warn_limit_reached(CANFD_Type* canfd)
 */
 static inline bool canfd_rx_msg_available(CANFD_Type* canfd)
 {
-    return ((canfd->CANFD_RCTRL & CANFD_RCTRL_RX_BUF_STATUS_Msk)!= 0);
+    return ((canfd->CANFD_RCTRL & CANFD_RCTRL_RSTAT_Msk)!= 0);
 }
 
 /**
@@ -515,7 +839,7 @@ static inline bool canfd_rx_msg_available(CANFD_Type* canfd)
 static inline void canfd_reset_acpt_fltrs(CANFD_Type* canfd)
 {
     /* Disable filter */
-    canfd->CANFD_ACF_EN_0 &= ~CANFD_ACF_EN_ACPT_FLTR_MAX_Msk;
+    canfd->CANFD_ACF_EN_0 &= ~CANFD_ACF_EN_0_AE_X_MAX_Msk;
 }
 
 /**
@@ -526,7 +850,7 @@ static inline void canfd_reset_acpt_fltrs(CANFD_Type* canfd)
 */
 static inline bool canfd_acpt_fltr_configured(CANFD_Type* canfd)
 {
-   return ((canfd->CANFD_ACF_EN_0 & CANFD_ACF_EN_ACPT_FLTR_MAX_Msk) != 0);
+   return ((canfd->CANFD_ACF_EN_0 & CANFD_ACF_EN_0_AE_X_MAX_Msk) != 0);
 }
 
 /**
@@ -553,8 +877,8 @@ static inline void canfd_disable_acpt_fltr(CANFD_Type* canfd,
 static inline void canfd_enable_tx_interrupts(CANFD_Type* canfd)
 {
     /* Enables CANFD Tx interrupts */
-    canfd->CANFD_RTIE     |= (CANFD_RTIE_TX_PRIMARY_INTR_EN      |
-                              CANFD_RTIE_TX_SEC_INTR_EN);
+    canfd->CANFD_RTIE     |= (CANFD_RTIE_TPIE      |
+                              CANFD_RTIE_TSIE);
 }
 
 /**
@@ -566,8 +890,8 @@ static inline void canfd_enable_tx_interrupts(CANFD_Type* canfd)
 static inline void canfd_disable_tx_interrupts(CANFD_Type* canfd)
 {
     /* Disables CANFD Tx interrupts */
-    canfd->CANFD_RTIE     &= ~(CANFD_RTIE_TX_PRIMARY_INTR_EN     |
-                               CANFD_RTIE_TX_SEC_INTR_EN);
+    canfd->CANFD_RTIE     &= ~(CANFD_RTIE_TPIE     |
+                               CANFD_RTIE_TSIE);
 }
 
 /**
@@ -579,10 +903,10 @@ static inline void canfd_disable_tx_interrupts(CANFD_Type* canfd)
 static inline void canfd_enable_rx_interrupts(CANFD_Type* canfd)
 {
     /* Enables CANFD Rx interrupts */
-    canfd->CANFD_RTIE     |= (CANFD_RTIE_RX_INTR_EN              |
-                              CANFD_RTIE_RX_OVERRUN_INTR_EN      |
-                              CANFD_RTIE_RBUF_FULL_INTR_EN       |
-                              CANFD_RTIE_RBUF_ALMST_FULL_INTR_EN);
+    canfd->CANFD_RTIE     |= (CANFD_RTIE_RIE        |
+                              CANFD_RTIE_ROIE       |
+                              CANFD_RTIE_RFIE       |
+                              CANFD_RTIE_RAFIE);
 }
 
 /**
@@ -594,10 +918,10 @@ static inline void canfd_enable_rx_interrupts(CANFD_Type* canfd)
 static inline void canfd_disable_rx_interrupts(CANFD_Type* canfd)
 {
     /* Enables CANFD Rx interrupts */
-    canfd->CANFD_RTIE     &= ~(CANFD_RTIE_RX_INTR_EN             |
-                              CANFD_RTIE_RX_OVERRUN_INTR_EN      |
-                              CANFD_RTIE_RBUF_FULL_INTR_EN       |
-                              CANFD_RTIE_RBUF_ALMST_FULL_INTR_EN);
+    canfd->CANFD_RTIE     &= ~(CANFD_RTIE_RIE       |
+                               CANFD_RTIE_ROIE      |
+                               CANFD_RTIE_RFIE      |
+                               CANFD_RTIE_RAFIE);
 }
 
 
@@ -610,11 +934,11 @@ static inline void canfd_disable_rx_interrupts(CANFD_Type* canfd)
 static inline void canfd_enable_error_interrupts(CANFD_Type* canfd)
 {
     /* Enables error interrupts */
-    canfd->CANFD_RTIE     |= CANFD_RTIE_ERROR_INTR_EN;
+    canfd->CANFD_RTIE     |= CANFD_RTIE_EIE;
 
-    canfd->CANFD_ERRINT   |= (CANFD_ERRINT_EPASSIVE_INTR_EN      |
-                              CANFD_ERRINT_ARBTR_LOST_INTR_EN    |
-                              CANFD_ERRINT_BUS_ERROR_INTR_EN);
+    canfd->CANFD_ERRINT   |= (CANFD_ERRINT_EPIE     |
+                              CANFD_ERRINT_ALIE     |
+                              CANFD_ERRINT_BEIE);
 }
 
 /**
@@ -626,11 +950,11 @@ static inline void canfd_enable_error_interrupts(CANFD_Type* canfd)
 static inline void canfd_disable_error_interrupts(CANFD_Type* canfd)
 {
     /* Enables error interrupts */
-    canfd->CANFD_RTIE     &= ~CANFD_RTIE_ERROR_INTR_EN;
+    canfd->CANFD_RTIE     &= ~CANFD_RTIE_EIE;
 
-    canfd->CANFD_ERRINT   &= ~(CANFD_ERRINT_EPASSIVE_INTR_EN     |
-                              CANFD_ERRINT_ARBTR_LOST_INTR_EN    |
-                              CANFD_ERRINT_BUS_ERROR_INTR_EN);
+    canfd->CANFD_ERRINT   &= ~(CANFD_ERRINT_EPIE    |
+                               CANFD_ERRINT_ALIE    |
+                               CANFD_ERRINT_BEIE);
 }
 
 /**
@@ -647,6 +971,30 @@ static inline void canfd_clear_interrupts(CANFD_Type* canfd)
 }
 
 /**
+  \fn          static inline void canfd_enable_standby_mode(CANFD_Type* canfd)
+  \brief       Enables Standby Mode.
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \return      none
+*/
+static inline void canfd_enable_standby_mode(CANFD_Type* canfd)
+{
+    /* Enables Transceiver Standby mode */
+    canfd->CANFD_TCMD |= CANFD_TCMD_STBY;
+}
+
+/**
+  \fn          static inline void canfd_disable_standby_mode(CANFD_Type* canfd)
+  \brief       Disables Standby Mode.
+  \param[in]   canfd :  Pointer to the CANFD register map
+  \return      none
+*/
+static inline void canfd_disable_standby_mode(CANFD_Type* canfd)
+{
+    /* Disables Transceiver Standby mode */
+    canfd->CANFD_TCMD &= (~CANFD_TCMD_STBY);
+}
+
+/**
   \fn          static inline void canfd_enable_normal_mode(CANFD_Type* canfd)
   \brief       Enables Normal Mode operation.
   \param[in]   canfd :  Pointer to the CANFD register map
@@ -655,17 +1003,12 @@ static inline void canfd_clear_interrupts(CANFD_Type* canfd)
 static inline void canfd_enable_normal_mode(CANFD_Type* canfd)
 {
     /* Disables the CANFD reset, Internal and External loopback*/
-    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET                     |
-                               CANFD_CFG_STAT_LOOPBACK_MODE_INTERNAL    |
-                               CANFD_CFG_STAT_LOOPBACK_MODE_EXTERNAL);
+    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET     |
+                               CANFD_CFG_STAT_LBMI      |
+                               CANFD_CFG_STAT_LBME);
 
     /* Disables Listen only mode */
-    canfd->CANFD_TCMD     &= ~CANFD_TCMD_LISTEN_ONLY_MODE;
-
-    /* Enables CANFD Rx, Tx and error interrupts */
-    canfd_enable_tx_interrupts(canfd);
-    canfd_enable_rx_interrupts(canfd);
-    canfd_enable_error_interrupts(canfd);
+    canfd->CANFD_TCMD     &= ~CANFD_TCMD_LOM;
 }
 
 /**
@@ -677,20 +1020,15 @@ static inline void canfd_enable_normal_mode(CANFD_Type* canfd)
 static inline void canfd_enable_external_loop_back_mode(CANFD_Type* canfd)
 {
     /* Disables the CANFD reset, Internal and External loopback*/
-    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET                     |
-                               CANFD_CFG_STAT_LOOPBACK_MODE_INTERNAL);
+    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET     |
+                               CANFD_CFG_STAT_LBMI);
 
     /* Disables Listen only mode */
-    canfd->CANFD_TCMD     &= ~CANFD_TCMD_LISTEN_ONLY_MODE;
-
-    /* Enables CANFD Rx, Tx and error interrupts */
-    canfd_enable_tx_interrupts(canfd);
-    canfd_enable_rx_interrupts(canfd);
-    canfd_enable_error_interrupts(canfd);
+    canfd->CANFD_TCMD     &= ~CANFD_TCMD_LOM;
 
     /* Enables external loopback with Self ACK */
-    canfd->CANFD_CFG_STAT |= CANFD_CFG_STAT_LOOPBACK_MODE_EXTERNAL;
-    canfd->CANFD_RCTRL    |= CANFD_RCTRL_SELF_ACK;
+    canfd->CANFD_CFG_STAT |= CANFD_CFG_STAT_LBME;
+    canfd->CANFD_RCTRL    |= CANFD_RCTRL_SACK;
 }
 
 /**
@@ -702,19 +1040,14 @@ static inline void canfd_enable_external_loop_back_mode(CANFD_Type* canfd)
 static inline void canfd_enable_internal_loop_back_mode(CANFD_Type* canfd)
 {
     /* Disables the CANFD reset, Internal and External loopback*/
-    canfd->CANFD_CFG_STAT  &= ~(CANFD_CFG_STAT_RESET                    |
-                                CANFD_CFG_STAT_LOOPBACK_MODE_EXTERNAL);
+    canfd->CANFD_CFG_STAT  &= ~(CANFD_CFG_STAT_RESET    |
+                                CANFD_CFG_STAT_LBME);
 
     /* Disables Listen only mode */
-    canfd->CANFD_TCMD      &= ~CANFD_TCMD_LISTEN_ONLY_MODE;
-
-    /* Enables CANFD Rx, Tx and error interrupts */
-    canfd_enable_tx_interrupts(canfd);
-    canfd_enable_rx_interrupts(canfd);
-    canfd_enable_error_interrupts(canfd);
+    canfd->CANFD_TCMD      &= ~CANFD_TCMD_LOM;
 
     /* Enables internal loopback with */
-    canfd->CANFD_CFG_STAT  |= CANFD_CFG_STAT_LOOPBACK_MODE_INTERNAL;
+    canfd->CANFD_CFG_STAT  |= CANFD_CFG_STAT_LBMI;
 }
 
 /**
@@ -726,19 +1059,15 @@ static inline void canfd_enable_internal_loop_back_mode(CANFD_Type* canfd)
 static inline void canfd_enable_listen_only_mode(CANFD_Type* canfd)
 {
     /* Disables the CANFD reset, Internal and External loopback*/
-    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET                     |
-                               CANFD_CFG_STAT_LOOPBACK_MODE_INTERNAL    |
-                               CANFD_CFG_STAT_LOOPBACK_MODE_EXTERNAL);
+    canfd->CANFD_CFG_STAT &= ~(CANFD_CFG_STAT_RESET     |
+                               CANFD_CFG_STAT_LBMI      |
+                               CANFD_CFG_STAT_LBME);
 
     /* Disables CANFD Tx interrupts */
     canfd_disable_tx_interrupts(canfd);
 
-    /* Enables CANFD Rx and error interrupts */
-    canfd_enable_rx_interrupts(canfd);
-    canfd_enable_error_interrupts(canfd);
-
     /* Enables Listen only mode */
-    canfd->CANFD_TCMD   |= CANFD_TCMD_LISTEN_ONLY_MODE;
+    canfd->CANFD_TCMD     |= CANFD_TCMD_LOM;
 }
 
 /**
@@ -771,21 +1100,13 @@ void canfd_set_fd_bit_time(CANFD_Type* canfd,
 
 /**
   \fn          void canfd_enable_acpt_fltr(CANFD_Type* canfd,
-  \                                        const uint8_t filter,
-  \                                        const uint32_t ac_code,
-  \                                        uint32_t ac_mask,
-  \                                        const CANFD_ACPT_FLTR_OP op_code
+  \                                        canfd_acpt_fltr_t filter_config
   \brief       Configures and enables the particular acceptance filter.
-  \param[in]   canfd   : Pointer to the CANFD register map
-  \param[in]   filter  : Acceptance filter number
-  \param[in]   ac_code : Acceptance code
-  \param[in]   ac_mask : Acceptance mask
-  \param[in]   op_code : Acceptance filter operation code
+  \param[in]   canfd          : Pointer to the CANFD register map
+  \param[in]   filter_config  : Filter configuration
   \return      none
 */
-void canfd_enable_acpt_fltr(CANFD_Type* canfd, const uint8_t filter,
-                            const uint32_t ac_code, uint32_t ac_mask,
-                            const CANFD_ACPT_FLTR_OP op_code);
+void canfd_enable_acpt_fltr(CANFD_Type* canfd, canfd_acpt_fltr_t filter_config);
 
 /**
   \fn          CANFD_ACPT_FLTR_STATUS canfd_get_acpt_fltr_status(CANFD_Type* canfd,
@@ -800,30 +1121,28 @@ CANFD_ACPT_FLTR_STATUS canfd_get_acpt_fltr_status(CANFD_Type* canfd,
 
 /**
   \fn          void canfd_get_acpt_fltr_data(CANFD_Type* canfd,
-  \                                          const uint8_t filter,
-  \                                          uint32_t *ac_code,
-  \                                          uint32_t *ac_mask,
-  \                                          const CANFD_ACPT_FLTR_OP op_code)
+  \                                          canfd_acpt_fltr_t *filter_config)
   \brief       Retrieves the acceptance filter data.
-  \param[in]   canfd   : Pointer to the CANFD register map
-  \param[in]   filter  : Acceptance filter number
-  \param[in]   ac_code : Acceptance code
-  \param[in]   ac_mask : Acceptance mask
-  \param[in]   op_code : Acceptance filter operation code
+  \param[in]   canfd          : Pointer to the CANFD register map
+  \param[in]   filter_config  : Filter configuration
   \return      none
 */
-void canfd_get_acpt_fltr_data(CANFD_Type* canfd, const uint8_t filter,
-                              uint32_t *ac_code, uint32_t *ac_mask,
-                              const CANFD_ACPT_FLTR_OP op_code);
+void canfd_get_acpt_fltr_data(CANFD_Type* canfd,
+                              canfd_acpt_fltr_t *filter_config);
 
 /**
-  \fn          void canfd_setup_tx_retrans(CANFD_Type* canfd, const bool enable)
+  \fn          void canfd_setup_tx_retrans(CANFD_Type* canfd,
+  \                                        const uint8_t buf_type,
+  \                                        const bool enable)
   \brief       Enables/Disables the Tx msg retransmission
-  \param[in]   canfd  : Pointer to the CANFD register map
-  \param[in]   enable : Command to enable/disable msg retransmission
+  \param[in]   canfd    : Pointer to the CANFD register map
+  \param[in]   buf_type : Bufer type
+  \param[in]   enable   : Command to enable/disable msg retransmission
   \return      none
 */
-void canfd_setup_tx_retrans(CANFD_Type* canfd, const bool enable);
+void canfd_setup_tx_retrans(CANFD_Type* canfd,
+                            const uint8_t buf_type,
+                            const bool enable);
 
 /**
   \fn          void canfd_setup_tx_delay_comp(CANFD_Type* canfd,
@@ -858,12 +1177,15 @@ void canfd_set_err_warn_limit(CANFD_Type* canfd, const uint8_t ewl);
 CANFD_MSG_ERROR canfd_get_last_error_code(CANFD_Type* canfd);
 
 /**
-  \fn          void canfd_send(CANFD_Type* canfd, canfd_tx_info_t tx_header,
-  \                            const uint8_t *data, const uint8_t size)
+  \fn          void canfd_send(CANFD_Type* canfd,
+  \                            const canfd_tx_info_t tx_header,
+  \                            const uint8_t *data,
+  \                            const uint8_t size)
   \brief       Prepares and transmits the message
   \param[in]   canfd      : Pointer to the CANFD register map
   \param[in]   tx_header  : Header of tx message
   \param[in]   data       : Message payload
+  \param[in]   size       : payload size
   \return      none
 */
 void canfd_send(CANFD_Type* canfd, const canfd_tx_info_t tx_header,
@@ -878,6 +1200,31 @@ void canfd_send(CANFD_Type* canfd, const canfd_tx_info_t tx_header,
   \return      none
 */
 void canfd_receive(CANFD_Type* canfd, canfd_transfer_t *dest_data);
+
+/**
+  \fn          void canfd_send_blocking(CANFD_Type* canfd,
+  \                                     const canfd_tx_info_t tx_header,
+  \                                     const uint8_t *data,
+  \                                     const uint8_t size)
+  \brief       Prepares and transmits the message in blocking mode
+  \param[in]   canfd      : Pointer to the CANFD register map
+  \param[in]   tx_header  : Header of tx message
+  \param[in]   data       : Message payload
+  \param[in]   size       : payload size
+  \return      none
+*/
+void canfd_send_blocking(CANFD_Type* canfd, const canfd_tx_info_t tx_header,
+                         const uint8_t *data, const uint8_t size);
+
+/**
+  \fn          void canfd_receive_blocking(CANFD_Type* canfd,
+  \                                        canfd_data_transfer_t *dest_data))
+  \brief       Fetches the data from Rx buffer in blocking mode
+  \param[in]   canfd      : Pointer to the CANFD register map
+  \param[in]   dest_data  : Destination Data pointer
+  \return      none
+*/
+void canfd_receive_blocking(CANFD_Type* canfd, canfd_transfer_t *dest_data);
 
 /**
   \fn          void canfd_clear_interrupt(CANFD_Type* canfd, const uint32_t event)

@@ -1881,10 +1881,11 @@ static CAMERA_SENSOR_OPERATIONS arx3a0_ops =
 */
 static CAMERA_SENSOR_DEVICE arx3a0_camera_sensor =
 {
-    .width    = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
-    .height   = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
-    .csi_info = &arx3a0_csi_info,
-    .ops      = &arx3a0_ops,
+    .interface  = CAMERA_SENSOR_INTERFACE_MIPI,
+    .width      = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+    .height     = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
+    .csi_info   = &arx3a0_csi_info,
+    .ops        = &arx3a0_ops,
 };
 
 /* Registering CPI sensor */

@@ -75,7 +75,7 @@ static int32_t se_services_wait_ms(uint32_t wait_time_ms)
   @param[in]    fmt formatted string
   @return       0
  */
-static int32_t se_services_print(const char * fmt, ...)
+static int se_services_print(const char * fmt, ...)
 {
 #if SE_SERVICES_DEBUG
   va_list args;

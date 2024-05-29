@@ -337,6 +337,18 @@ static void PDMx_DMACallback(uint32_t event, int8_t peri_num, PDM_RESOURCES *PDM
 #endif
 
 /**
+ * @fn      ARM_PDM_STATUS PDMx_GetStatus(PDM_RESOURCES *PDM)
+ * @brief   CMSIS-Driver PDM get status
+ * @note    none.
+ * @param   PDM    : Pointer to PDM resources structure
+ * @retval  ARM_PDM_STATUS
+ */
+static ARM_PDM_STATUS PDMx_GetStatus(PDM_RESOURCES *PDM)
+{
+    return PDM->status;
+}
+
+/**
 @fn          int32_t PDMx_Initialize(ARM_PDM_SignalEvent_t cb_event, PDM_RESOURCES *PDM)
 @brief       Initialize the PDM interface
 @param[in]   PDM : Pointer to PDM resources
@@ -751,6 +763,8 @@ static int32_t PDMx_Receive(void *data, uint32_t num, PDM_RESOURCES *PDM)
     PDM->transfer.total_cnt  = num;
     PDM->transfer.buf        = data;
     PDM->transfer.curr_cnt   = 0;
+    PDM->status.rx_busy      = 1;
+    PDM->status.rx_overflow  = 0;
 
 #if PDM_DMA_ENABLE
     if(PDM->dma_enable)
@@ -814,10 +828,37 @@ static int32_t PDMx_Receive(void *data, uint32_t num, PDM_RESOURCES *PDM)
     else
 #endif
     {
-        /* Enable irq */
-        pdm_enable_irq(PDM->regs);
-    }
+#if PDM_BLOCKING_MODE_ENABLE
 
+        /* Check if blocking mode (polling) is enabled */
+        if(PDM->blocking_mode)
+        {
+            pdm_transfer_t *transfer = &(PDM->transfer);
+
+            /* Block execution until PDM receives all PCM samples */
+            pdm_receive_blocking(PDM->regs, transfer);
+
+            /* Check for error detection status */
+            if(transfer->status == PDM_ERROR_DETECT)
+            {
+                PDM->status.rx_overflow = 1U;
+                transfer->status  = PDM_CAPTURE_STATUS_NONE;
+            }
+
+            /* Check for capture complete status */
+            if(transfer->status == PDM_CAPTURE_STATUS_COMPLETE)
+            {
+                PDM->status.rx_busy = 0U;
+                transfer->status  = PDM_CAPTURE_STATUS_NONE;
+            }
+        }
+        else
+#endif
+        {
+            /* Enable irq */
+            pdm_enable_irq(PDM->regs);
+        }
+    }
     return ARM_DRIVER_OK;
 }
 
@@ -849,6 +890,7 @@ static PDM_RESOURCES PDM = {
     .state                 = {0},
     .instance              = PDM_INSTANCE_PDM0,
     .fifo_watermark        = RTE_PDM_FIFO_WATERMARK,
+    .status                = {0},
     .error_irq             = (IRQn_Type)PDM_ERROR_IRQ_IRQn,
     .warning_irq           = (IRQn_Type)PDM_WARN_IRQ_IRQn,
     .audio_detect_irq      = (IRQn_Type)PDM_AUDIO_DET_IRQ_IRQn,
@@ -860,6 +902,9 @@ static PDM_RESOURCES PDM = {
     .dma_cfg               = &PDM0_DMA_HW_CONFIG,
     .dma_enable            = RTE_PDM_DMA_ENABLE,
     .dma_irq_priority      = RTE_PDM_DMA_IRQ_PRIORITY,
+#endif
+#if PDM_BLOCKING_MODE_ENABLE
+    .blocking_mode         = RTE_PDM_BLOCKING_MODE_ENABLE
 #endif
 };
 
@@ -917,6 +962,12 @@ void PDM_AUDIO_DET_IRQHandler (void)
     PDM_AUDIO_DETECT_IRQ_handler(&PDM);
 }
 
+/* Function Name: PDM_GetStatus */
+static ARM_PDM_STATUS PDM_GetStatus(void)
+{
+    return PDMx_GetStatus(&PDM);
+}
+
 #if RTE_PDM_DMA_ENABLE
 void PDM_DMACallback(uint32_t event, int8_t peri_num)
 {
@@ -933,7 +984,8 @@ ARM_DRIVER_PDM Driver_PDM = {
     PDM_PowerControl,
     PDM_Control,
     PDM_Channel_Config,
-    PDM_Receive
+    PDM_Receive,
+    PDM_GetStatus
 };
 #endif /* RTE_PDM */
 
@@ -971,8 +1023,11 @@ static PDM_RESOURCES LPPDM  = {
 #if RTE_LPPDM_DMA_ENABLE
     .dma_cb                = LPPDM_DMACallback,
     .dma_cfg               = &LPPDM_DMA_HW_CONFIG,
-    .dma_enable            = RTE_LPPDM_SELECT_DMA0,
+    .dma_enable            = RTE_LPPDM_DMA_ENABLE,
     .dma_irq_priority      = RTE_LPPDM_DMA_IRQ_PRIORITY,
+#endif
+#if PDM_BLOCKING_MODE_ENABLE
+    .blocking_mode         = RTE_LPPDM_BLOCKING_MODE_ENABLE
 #endif
 };
 
@@ -1018,6 +1073,12 @@ void LPPDM_IRQHandler (void)
     PDM_WARNING_IRQ_handler(&LPPDM);
 }
 
+/* Function Name: LPPDM_GetStatus */
+static ARM_PDM_STATUS LPPDM_GetStatus(void)
+{
+    return PDMx_GetStatus(&LPPDM);
+}
+
 #if RTE_LPPDM_DMA_ENABLE
 void LPPDM_DMACallback(uint32_t event, int8_t peri_num)
 {
@@ -1034,6 +1095,7 @@ ARM_DRIVER_PDM Driver_LPPDM = {
     LPPDM_PowerControl,
     LPPDM_Control,
     LPPDM_Channel_Config,
-    LPPDM_Receive
+    LPPDM_Receive,
+    LPPDM_GetStatus
 };
 #endif /* RTE_LPPDM */

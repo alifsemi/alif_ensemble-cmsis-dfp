@@ -529,6 +529,206 @@ void spi_transfer_blocking(SPI_Type *spi, spi_transfer_t *transfer)
 }
 
 /**
+  \fn          void lpspi_send_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+  \brief       Execute a blocking SPI send described by the transfer structure.
+  \param[in]   lpspi     Pointer to the LPSPI register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      none
+*/
+void lpspi_send_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+{
+    uint32_t curr_fifo_level, tx_count, tx_data;
+    uint32_t index;
+
+    lpspi_set_tmod(lpspi, SPI_TMOD_TX);
+
+    while (transfer->tx_current_cnt < transfer->tx_total_cnt)
+    {
+        /* wait for a free FIFO location */
+        while ((lpspi->SPI_SR & SPI_SR_TFNF) == 0)
+        {
+        }
+
+        curr_fifo_level = lpspi->SPI_TXFLR;
+
+        if (transfer->tx_total_cnt >= (transfer->tx_current_cnt + SPI_TX_FIFO_DEPTH - curr_fifo_level))
+        {
+            tx_count = SPI_TX_FIFO_DEPTH - curr_fifo_level;
+        }
+        else
+        {
+            tx_count = (transfer->tx_total_cnt - transfer->tx_current_cnt);
+        }
+
+        for (index = 0; index < tx_count; index++)
+        {
+            if (transfer->tx_buff == NULL)
+            {
+                if (transfer->tx_default_enable)
+                {
+                    tx_data = transfer->tx_default_val;
+                }
+            }
+            else
+            {
+                if (transfer->frame_size > 16)
+                {
+                    tx_data = (uint32_t) (transfer->tx_buff[0] | (transfer->tx_buff[1] << 8) |
+                                         (transfer->tx_buff[2] << 16) | (transfer->tx_buff[3] << 24));
+                    transfer->tx_buff = transfer->tx_buff + 4U;
+                }
+                else if (transfer->frame_size > 8)
+                {
+                    tx_data = (uint32_t)(transfer->tx_buff[0] | (transfer->tx_buff[1] << 8));
+                    transfer->tx_buff = transfer->tx_buff + 2;
+                }
+                else
+                {
+                    tx_data = transfer->tx_buff[0];
+                    transfer->tx_buff = transfer->tx_buff + 1;
+                }
+            }
+
+            lpspi->SPI_DR[0] = tx_data;
+            transfer->tx_current_cnt++;
+        }
+    }
+
+    while (spi_busy(lpspi))
+    {
+
+    }
+}
+
+/**
+  \fn          void lpspi_receive_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+  \brief       Execute a blocking SPI receive described by the transfer structure.
+  \param[in]   lpspi     Pointer to the LPSPI register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      none
+*/
+void lpspi_receive_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+{
+    uint32_t rx_count;
+    uint32_t index;
+
+    lpspi_set_tmod(lpspi, SPI_TMOD_RX);
+
+    if (transfer->is_master)
+    {
+        spi_disable(lpspi);
+        lpspi->SPI_CTRLR1 = transfer->rx_total_cnt - 1;
+        spi_enable(lpspi);
+
+        /* Initiate the receive operation by writing a dummy byte to the FIFO */
+        lpspi->SPI_DR[0] = 0x0;
+    }
+
+    while (transfer->rx_current_cnt < transfer->rx_total_cnt)
+    {
+        /* Wait for data in the Rx FIFO */
+        while ((lpspi->SPI_SR & SPI_SR_RFNE) == 0)
+        {
+        }
+
+        rx_count = lpspi->SPI_RXFLR;
+
+        for (index = 0; index < rx_count; index++)
+        {
+            if (transfer->frame_size > 16)
+            {
+                *((uint32_t *) transfer->rx_buff) = lpspi->SPI_DR[0];
+                transfer->rx_buff = ((uint32_t *)transfer->rx_buff) + 1U;
+            }
+            else if (transfer->frame_size > 8)
+            {
+                *((uint16_t *) transfer->rx_buff) = (uint16_t) (lpspi->SPI_DR[0]);
+                transfer->rx_buff = ((uint16_t *)transfer->rx_buff) + 1U;
+            }
+            else
+            {
+                *((uint8_t *) transfer->rx_buff) = (uint8_t) (lpspi->SPI_DR[0]);
+                transfer->rx_buff = ((uint8_t *)transfer->rx_buff) + 1U;
+            }
+            transfer->rx_current_cnt++;
+        }
+    }
+}
+
+/**
+  \fn          void lpspi_transfer_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+  \brief       Execute a blocking SPI transfer described by the transfer structure
+  \param[in]   lpspi     Pointer to the LPSPI register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      none
+*/
+void lpspi_transfer_blocking(SPI_Type *lpspi, spi_transfer_t *transfer)
+{
+    uint32_t tx_data;
+
+    spi_set_tmod(lpspi, SPI_TMOD_TX_AND_RX);
+
+    while (transfer->tx_current_cnt < transfer->tx_total_cnt)
+    {
+        /* Wait for space in the FIFO */
+        while ((lpspi->SPI_SR & SPI_SR_TFNF) == 0)
+        {
+        }
+
+        if (transfer->tx_buff == NULL)
+        {
+            if (transfer->tx_default_enable)
+            {
+                tx_data = transfer->tx_default_val;
+            }
+        }
+        else
+        {
+            if (transfer->frame_size > 16)
+            {
+                tx_data = (uint32_t) (transfer->tx_buff[0] | (transfer->tx_buff[1] << 8) |
+                                     (transfer->tx_buff[2] << 16) | (transfer->tx_buff[3] << 24));
+                transfer->tx_buff = transfer->tx_buff + 4U;
+            }
+            else if (transfer->frame_size > 8)
+            {
+                tx_data = (uint32_t)(transfer->tx_buff[0] | (transfer->tx_buff[1] << 8));
+                transfer->tx_buff = transfer->tx_buff + 2;
+            }
+            else
+            {
+                tx_data = transfer->tx_buff[0];
+                transfer->tx_buff = transfer->tx_buff + 1;
+            }
+        }
+
+        lpspi->SPI_DR[0] = tx_data;
+        transfer->tx_current_cnt++;
+
+        /* wait for data in the Rx FIFO */
+        while ((lpspi->SPI_SR & SPI_SR_RFNE) == 0)
+        {
+        }
+
+        if (transfer->frame_size > 16)
+        {
+            *((uint32_t *) transfer->rx_buff) = lpspi->SPI_DR[0];
+            transfer->rx_buff = ((uint32_t *)transfer->rx_buff) + 1U;
+        }
+        else if (transfer->frame_size > 8)
+        {
+            *((uint16_t *) transfer->rx_buff) = (uint16_t) (lpspi->SPI_DR[0]);
+            transfer->rx_buff = ((uint16_t *)transfer->rx_buff) + 1U;
+        }
+        else
+        {
+            *((uint8_t *) transfer->rx_buff) = (uint8_t) (lpspi->SPI_DR[0]);
+            transfer->rx_buff = ((uint8_t *)transfer->rx_buff) + 1U;
+        }
+    }
+}
+
+/**
   \fn          void spi_mw_transmit(SPI_Type *spi, bool is_slave)
   \brief       config microwire in transmit mode
   \param[in]   spi       Pointer to the SPI register map
@@ -824,6 +1024,27 @@ void lpspi_set_sste(SPI_Type *lpspi, bool enable)
 }
 
 /**
+  \fn          uint32_t spi_dma_calc_rx_level(uint32_t total_cnt, uint8_t fifo_threshold)
+  \brief       Calculate SPI DMA receive data level
+  \param[in]   fifo_threshold  receive fifo threshold value
+  \param[in]   total_cnt  total number of data count
+  \return      final value after calculation
+*/
+uint32_t spi_dma_calc_rx_level(uint32_t total_cnt, uint8_t fifo_threshold)
+{
+    uint32_t temp;
+
+    while (fifo_threshold > 0)
+    {
+        temp = total_cnt % fifo_threshold;
+        total_cnt = fifo_threshold;
+        fifo_threshold = temp;
+    }
+
+    return (total_cnt - 1) ;
+}
+
+/**
   \fn          void spi_dma_send(SPI_Type *spi)
   \brief       Prepare the SPI instance for DMA send
   \param[in]   spi        Pointer to the SPI register map
@@ -862,11 +1083,8 @@ void spi_dma_receive(SPI_Type *spi, spi_transfer_t *transfer)
 
     if (transfer->is_master)
     {
-        /* Enable the TX DMA interface of SPI */
-        spi_enable_tx_dma(spi);
-
-        spi->SPI_IMR |= (SPI_IMR_TX_FIFO_OVER_FLOW_INTERRUPT_MASK |
-                        SPI_IMR_MULTI_MASTER_CONTENTION_INTERRUPT_MASK);
+        /* Initiate the receive operation by writing a dummy byte to the FIFO */
+        spi->SPI_DR[0] = 0x0;
     }
 }
 
@@ -921,17 +1139,14 @@ void lpspi_dma_receive(SPI_Type *lpspi, uint32_t total_cnt)
     lpspi->SPI_CTRLR1 = total_cnt - 1;
     spi_enable(lpspi);
 
-    /* Enable the TX DMA interface of LPSPI */
-    spi_enable_tx_dma(lpspi);
-
-    lpspi->SPI_IMR |= (SPI_IMR_TX_FIFO_OVER_FLOW_INTERRUPT_MASK |
-                      SPI_IMR_MULTI_MASTER_CONTENTION_INTERRUPT_MASK);
-
     /* Enable the RX DMA interface of LPSPI */
     spi_enable_rx_dma(lpspi);
 
     lpspi->SPI_IMR |= (SPI_IMR_RX_FIFO_UNDER_FLOW_INTERRUPT_MASK |
                       SPI_IMR_RX_FIFO_OVER_FLOW_INTERRUPT_MASK);
+
+    /* Initiate the receive operation by writing a dummy byte to the FIFO */
+    lpspi->SPI_DR[0] = 0x0;
 }
 
 /**

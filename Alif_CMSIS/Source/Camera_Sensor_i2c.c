@@ -317,7 +317,7 @@ int32_t camera_sensor_i2c_write(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   ret = drv_i2c->MasterTransmit(i2c->cam_sensor_slave_addr, tx_data, data_len, STOP);
   if(ret != ARM_DRIVER_OK)
   {
-    goto error_poweroff;
+    return ARM_DRIVER_ERROR;
   }
 
   /* timeout in millisecond. */
@@ -339,7 +339,7 @@ int32_t camera_sensor_i2c_write(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   /* i3c module failed to respond? power off and de-init i2c driver and return error. */
   if(!CB_XferCompletionFlag)
   {
-    goto error_poweroff;
+    return ARM_DRIVER_ERROR;
   }
 
   /* return error, if received transfer error. */
@@ -350,23 +350,192 @@ int32_t camera_sensor_i2c_write(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
 
   /* received transfer success. */
   return ARM_DRIVER_OK;
+}
 
-error_poweroff:
-  /* Power off I2C driver */
-  ret = drv_i2c->PowerControl(ARM_POWER_OFF);
-  if(ret != ARM_DRIVER_OK)
+/**
+  \fn           int32_t camera_sensor_i2c_write_burst(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
+                                                      uint32_t                        reg_addr,
+                                                      void                           *reg_values,
+                                                      CAMERA_SENSOR_I2C_REG_SIZE      reg_size,
+                                                      uint32_t                        burst_len)
+  \brief        write values to Camera Sensor slave device register using i2c.
+                 this function will
+                  - fill data as per Camera Sensor slave device supported
+                     register address type: 8-bit/16-bit.
+                  - as Camera Sensor slave device supports Big endian mode:
+                     - convert data from Little Endian to Big Endian
+                       (only required if Camera Sensor slave device supports
+                        - 16-bit register addressing or
+                        - register size is >8-bit.)
+                  - transmit data to already attached Camera Sensor slave i2c device.
+  \param[in]    i2c        : Pointer to Camera Sensor slave device i2c configurations structure
+                              \ref CAMERA_SENSOR_SLAVE_I2C_CONFIG
+  \param[in]    reg_addr   : register address of Camera Sensor slave device
+  \param[in]    reg_values : register values
+  \param[in]    reg_size   : register size \ref CAMERA_SENSOR_I2C_REG_SIZE
+  \param[in]    burst_len  : Burst length
+  \return       \ref execution_status
+*/
+int32_t camera_sensor_i2c_write_burst(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
+                                      uint32_t                        reg_addr,
+                                      void                           *reg_values,
+                                      CAMERA_SENSOR_I2C_REG_SIZE      reg_size,
+                                      uint32_t                        burst_len)
+{
+  uint8_t addr_low  = reg_addr & 0xFF;
+  uint8_t addr_high = (reg_addr >> 8) & 0xFF;
+
+  ARM_DRIVER_I2C *drv_i2c = i2c->drv_i2c;
+
+  uint8_t  i = 0;
+  uint32_t temp = 0;
+  uint32_t timeout = 0;
+  int32_t  ret   = 0;
+  CAMERA_SENSOR_I2C_REG_ADDR_TYPE reg_addr_len  = i2c->cam_sensor_slave_reg_addr_type;
+
+  /* supports only 8-bit/16-bit Camera Sensor slave register address type. */
+  if( (reg_addr_len != CAMERA_SENSOR_I2C_REG_ADDR_TYPE_8BIT) && \
+      (reg_addr_len != CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT) )
   {
-    return ret;
+    return ARM_DRIVER_ERROR_PARAMETER;
   }
 
-  /* Un-initialize I2C driver */
-  ret = drv_i2c->Uninitialize();
-  if(ret != ARM_DRIVER_OK)
+  /* total data length is register address len + (register size * burst length) */
+  uint8_t data_len = ((reg_size * burst_len) + reg_addr_len);
+
+  if(data_len > CAMERA_SENSOR_MAX_BURST_SIZE)
   {
-    return ret;
+    return ARM_DRIVER_ERROR_PARAMETER;
   }
 
-  return ARM_DRIVER_ERROR;
+  uint8_t tx_data[CAMERA_SENSOR_MAX_BURST_SIZE];
+
+  /* To write to any Camera Sensor slave register address:
+   *
+   * 1.) As Camera Sensor slave device supports Big endian mode,
+   *      first convert input data from Little endian to Big endian.
+   *      (only required if Camera Sensor slave device supports
+   *        - 16-bit register addressing or
+   *        - register size is >8-bit.)
+   *
+   * 2.) Then Transmit data to i2c TX FIFO as shown below:
+   *      register address         +  register value
+   *      (base on type 8/16 bit)     (base on register size 8/16/32 bit)
+   */
+
+  /*
+   * @Note: Convert data from Little Endian to Big Endian
+   *         (only required if Camera Sensor slave device supports
+   *          - 16-bit register addressing or
+   *          - register size is >8-bit.)
+   *
+   *   How much data(register address + actual data) user has to Transmit/Receive ?
+   *   it depends on Slave's register address location bytes.
+   *   Generally, Camera Slave supports     16-bit(2 Byte) register address and (8/16/32 bit) data
+   *   Others Accelerometer/EEPROM supports  8-bit(1 Byte) register address and (8/16/32 bit) data
+   *
+   *   First LSB[7-0] will be added to TX FIFO and first transmitted on the i2c bus;
+   *   remaining bytes will be added in LSB -> MSB order.
+   *
+   *   For Slave who supports 16-bit(2 Byte) register address and data:
+   *   Register Address[15:8] : Needs to be Transmit First  to the i2c
+   *   Register Address[07:0] : Needs to be Transmit Second to the i2c
+   *
+   *   That means,
+   *
+   *   While transmitting to i2c TX FIFO,
+   *   MSB of TX data needs to be added first to the i2c TX FIFO.
+   *
+   *   While receiving from i2c RX FIFO,
+   *   First MSB will be received from i3c RX FIFO.
+   *
+   *   START          I2C FIFO           END
+   *   MSB                               LSB
+   *   24-31 bit | 16-23 bit | 8-15 bit | 0-7 bit
+   *
+   *   So, USER has to modify(we have already done it below for you!)
+   *   Transmit/Receive data (Little Endian <-> Big Endian and vice versa)
+   *   before sending/after receiving to/from i2c TX/RX FIFO.
+   */
+
+  /* if Camera Sensor slave supports 8-bit register address type. */
+  if(reg_addr_len == CAMERA_SENSOR_I2C_REG_ADDR_TYPE_8BIT)
+  {
+    /* @Note: 8-bit Register Address Type is not yet tested
+     *        with any 8-bit supported Camera Sensor slave device.
+     */
+    tx_data[0] = addr_low;
+  }
+
+  /* if Camera Sensor slave supports 16-bit register address type. */
+  if(reg_addr_len == CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT)
+  {
+    tx_data[0] = addr_high;
+    tx_data[1] = addr_low;
+  }
+
+  /* For Transmit, Convert input data from Little Endian to Big Endian. */
+  i = reg_addr_len;
+  for(int reg_idx = 0; reg_idx < burst_len; reg_idx++)
+  {
+      if(reg_size == CAMERA_SENSOR_I2C_REG_SIZE_8BIT)
+      {
+          tx_data[i++] = (*((uint8_t *)reg_values + reg_idx));
+      }
+      else if(reg_size == CAMERA_SENSOR_I2C_REG_SIZE_16BIT)
+      {
+          tx_data[i++] = ((*((uint16_t *)reg_values + reg_idx) >> 8) & 0xff);
+          tx_data[i++] = (*((uint16_t *)reg_values + reg_idx) & 0xff);
+      }
+      else if(reg_size == CAMERA_SENSOR_I2C_REG_SIZE_32BIT)
+      {
+          tx_data[i++] = ((*((uint32_t *)reg_values + reg_idx) >> 24) & 0xff);
+          tx_data[i++] = ((*((uint32_t *)reg_values + reg_idx) >> 16) & 0xff);
+          tx_data[i++] = ((*((uint32_t *)reg_values + reg_idx) >> 8) & 0xff);
+          tx_data[i++] = (*((uint32_t *)reg_values + reg_idx) & 0xff);
+      }
+  }
+
+  /* clear i2c callback completion flag. */
+  CB_XferCompletionFlag = 0;
+
+  /* Transmit data to i2C TX FIFO. */
+  ret = drv_i2c->MasterTransmit(i2c->cam_sensor_slave_addr, tx_data, data_len, STOP);
+  if(ret != ARM_DRIVER_OK)
+  {
+    return ARM_DRIVER_ERROR;
+  }
+
+  /* timeout in millisecond. */
+  timeout = 100;
+
+  /* wait for i2c callback within timeout. */
+  while(timeout--)
+  {
+    /* received callback? */
+    if(CB_XferCompletionFlag)
+    {
+      break;
+    }
+
+    /* sleep or wait for millisecond depending on RTOS availability. */
+    DELAY_mSEC(1);
+  }
+
+  /* i3c module failed to respond? power off and de-init i2c driver and return error. */
+  if(!CB_XferCompletionFlag)
+  {
+    return ARM_DRIVER_ERROR;
+  }
+
+  /* return error, if received transfer error. */
+  if(CB_XferCompletionFlag == CB_XferErr)
+  {
+    return ARM_DRIVER_ERROR;
+  }
+
+  /* received transfer success. */
+  return ARM_DRIVER_OK;
 }
 
 /**
@@ -521,7 +690,7 @@ int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   ret = drv_i2c->MasterTransmit(i2c->cam_sensor_slave_addr, tx_data, data_len, STOP);
   if(ret != ARM_DRIVER_OK)
   {
-    goto error_poweroff;
+    return ARM_DRIVER_ERROR;
   }
 
   /* timeout in millisecond. */
@@ -543,7 +712,7 @@ int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   /* i3c module failed to respond? power off and de-init i2c driver and return error. */
   if(!CB_XferCompletionFlag)
   {
-    goto error_poweroff;
+    return ARM_DRIVER_ERROR;
   }
 
   /* return error, if received transfer error. */
@@ -564,7 +733,7 @@ int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   ret = drv_i2c->MasterReceive(i2c->cam_sensor_slave_addr, rx_data, data_len, 0x00);
   if(ret != ARM_DRIVER_OK)
   {
-    goto error_poweroff;
+      return ARM_DRIVER_ERROR;
   }
 
   /* timeout in millisecond. */
@@ -586,7 +755,7 @@ int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   /* i3c module failed to respond? power off and de-init i2c driver and return error. */
   if(!CB_XferCompletionFlag)
   {
-    goto error_poweroff;
+    return ARM_DRIVER_ERROR;
   }
 
   /* return error, if received transfer error. */
@@ -609,23 +778,6 @@ int32_t camera_sensor_i2c_read(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   *reg_value = temp;
 
   return ARM_DRIVER_OK;
-
-error_poweroff:
-  /* Power off I2C peripheral */
-  ret = drv_i2c->PowerControl(ARM_POWER_OFF);
-  if(ret != ARM_DRIVER_OK)
-  {
-    return ret;
-  }
-
-  /* Un-initialize I2C driver */
-  ret = drv_i2c->Uninitialize();
-  if(ret != ARM_DRIVER_OK)
-  {
-    return ret;
-  }
-
-  return ARM_DRIVER_ERROR;
 }
 
 /************************ (C) COPYRIGHT ALIF SEMICONDUCTOR *****END OF FILE****/

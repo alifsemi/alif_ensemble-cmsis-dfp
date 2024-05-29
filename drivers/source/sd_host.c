@@ -26,8 +26,53 @@
 #ifdef SDMMC_PRINTF_DEBUG
 #include "stdio.h"
 #endif
-
+extern sd_handle_t Hsd;
 static adma2_desc_t adma_desc_tbl[32] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(32)));
+
+static volatile uint8_t CardInserted = 0;
+static volatile uint16_t nis,eis,cc;
+
+#ifdef SDMMC_IRQ_MODE
+void SDMMC_IRQHandler(void){
+
+    /* get the current interrupt status */
+    eis = Hsd.regs->SDMMC_ERROR_INT_STAT_R;
+    nis = Hsd.regs->SDMMC_NORMAL_INT_STAT_R;
+
+    if(eis)
+        hc_reset(&Hsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));
+
+    /* clear the current interrupt status */
+
+    while(Hsd.regs->SDMMC_ERROR_INT_STAT_R)
+    {
+        eis = Hsd.regs->SDMMC_ERROR_INT_STAT_R;
+        Hsd.regs->SDMMC_ERROR_INT_STAT_R = eis;
+    }
+
+    while(Hsd.regs->SDMMC_NORMAL_INT_STAT_R)
+    {
+        nis = Hsd.regs->SDMMC_NORMAL_INT_STAT_R;
+        Hsd.regs->SDMMC_NORMAL_INT_STAT_R = nis;
+    }
+
+    switch(nis){
+        case SDMMC_INTR_CC_Msk:
+            cc = 1;
+            break;
+        case SDMMC_INTR_TC_Msk:
+        case (SDMMC_INTR_CC_Msk | SDMMC_INTR_TC_Msk):
+            cc = 1;
+            SD_Driver.disk_cb(SDMMC_HC_STATUS_OK);
+            break;
+    }
+
+}
+
+void SDMMC_WAKEUP_IRQHandler(void){
+}
+
+#endif
 
 /**
   \fn          static uint8_t get_cmd_rsp_type(uint8_t Cmd)
@@ -122,8 +167,9 @@ SDMMC_HC_STATUS hc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd){
 
     cmd = (pCmd->cmdidx <<  SDMMC_CMD_IDX_Pos) | ( rsp_type );
 
-    pHsd->regs->SDMMC_NORMAL_INT_STAT_R = SDMMC_NORM_INTR_ALL_Msk;
     pHsd->regs->SDMMC_ERROR_INT_STAT_R = SDMMC_ERROR_INTR_ALL_Msk;
+    pHsd->regs->SDMMC_NORMAL_INT_STAT_R = SDMMC_NORM_INTR_ALL_Msk;
+    cc = 0;
 
     hc_check_bus_idle(pHsd);
 
@@ -137,16 +183,20 @@ SDMMC_HC_STATUS hc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd){
     pHsd->regs->SDMMC_ARGUMENT_R   = pCmd->arg;
     pHsd->regs->SDMMC_CMD_R        = cmd;
 
-    /* Wait for Command to be completed */
-    while( (!(pHsd->regs->SDMMC_NORMAL_INT_STAT_R & SDMMC_INTR_CC_Msk)) && timeout_cnt-- );
-
-#ifdef SDMMC_PRINTF_DEBUG
-    printf("CMD: 0x%04x, ARG: 0x%08x, XFER: 0x%04x Resp01: %08x, Resp23: %08x, Resp45: %08x, Resp67: %08x\n",
-            cmd,pCmd->arg,pCmd->xfer_mode,pHsd->regs->SDMMC_RESP01_R,pHsd->regs->SDMMC_RESP23_R,pHsd->regs->SDMMC_RESP45_R,pHsd->regs->SDMMC_RESP67_R);
+#ifndef SDMMC_IRQ_MODE
+    cc = pHsd->regs->SDMMC_NORMAL_INT_STAT_R & SDMMC_INTR_CC_Msk;
 #endif
 
-    if(timeout_cnt == SDMMC_MAX_TIMEOUT_16)
+    while( timeout_cnt-- && (!cc) );
+
+#ifdef SDMMC_PRINTF_DEBUG
+    printf("CMD: 0x%04x, ARG: 0x%08x, XFER: 0x%04x Resp01: %08x, Resp23: %08x, Resp45: %08x, Resp67: %08x cc:%d\n",
+            cmd,pCmd->arg,pCmd->xfer_mode,pHsd->regs->SDMMC_RESP01_R,pHsd->regs->SDMMC_RESP23_R,pHsd->regs->SDMMC_RESP45_R,pHsd->regs->SDMMC_RESP67_R,cc);
+#endif
+
+    if( (timeout_cnt == SDMMC_MAX_TIMEOUT_16) || eis ){
         return SDMMC_HC_STATUS_ERR;
+    }
 
     return SDMMC_HC_STATUS_OK;
 }
@@ -403,6 +453,14 @@ SDMMC_HC_STATUS hc_identify_card(sd_handle_t *pHsd){
             status = SDMMC_HC_STATUS_ERR;
     }
 
+    pHsd->regs->SDMMC_NORMAL_INT_SIGNAL_EN_R = SDMMC_INTR_CC_Msk | SDMMC_INTR_TC_Msk | SDMMC_INTR_DMA_Msk |
+                                                SDMMC_INTR_BWR_Msk | SDMMC_INTR_BRR_Msk | SDMMC_INTR_CARD_INSRT_Msk |
+                                                SDMMC_INTR_CARD_REM_Msk;
+
+    pHsd->regs->SDMMC_NORMAL_INT_STAT_EN_R = SDMMC_INTR_CC_Msk | SDMMC_INTR_TC_Msk | SDMMC_INTR_DMA_Msk |
+                                              SDMMC_INTR_BWR_Msk | SDMMC_INTR_BRR_Msk | SDMMC_INTR_CARD_INSRT_Msk |
+                                              SDMMC_INTR_CARD_REM_Msk;
+
     return status;
 }
 
@@ -636,7 +694,6 @@ SDMMC_HC_STATUS hc_switch_1v8(sd_handle_t *pHsd){
     if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
         sd_error_handler();
     }
-
 
     clk = pHsd->regs->SDMMC_CLK_CTRL_R;
     clk &= ~(SDMMC_CLK_EN_Msk | SDMMC_INTERNAL_CLK_EN_Msk);
@@ -905,7 +962,7 @@ SDMMC_HC_STATUS hc_dma_config(sd_handle_t *pHsd, uint32_t buff, uint32_t sector,
     }
 
     else
-        pHsd->regs->SDMMC_ADMA_SA_LOW_R = (uint32_t)LocalToGlobal((const volatile void *)buff);
+        pHsd->regs->SDMMC_ADMA_SA_LOW_R = (uint32_t)LocalToGlobal((const volatile void*)buff);
 
     return SDMMC_HC_STATUS_OK;
 }
@@ -1002,7 +1059,10 @@ SDMMC_HC_STATUS hc_check_xfer_done(sd_handle_t *pHsd, uint32_t timeout_cnt){
 
     /* check for transfer active state */
     while(timeout_cnt){
-        dma_irq = pHsd->regs->SDMMC_NORMAL_INT_STAT_R;
+#ifndef SDMMC_IRQ_MODE
+        nis = pHsd->regs->SDMMC_NORMAL_INT_STAT_R;
+#endif
+        dma_irq = nis;
         pstate = pHsd->regs->SDMMC_PSTATE_REG;
 
         pstate = pstate & XFER_ACTIVE_Msk;

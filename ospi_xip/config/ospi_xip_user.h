@@ -82,6 +82,24 @@ extern "C"
 
 #define OSPI_XIP_ENABLE_AES_DECRYPTION           0
 
+/**
+  \def OSPI_XIP_SKIP_INITIALIZATION
+  \brief Skip OSPI/AES initialization. Can be set to either 0(disable) or 1(enable).
+*/
+
+//   <o OSPI_XIP_SKIP_INITIALIZATION> Skip OSPI/AES initialization
+//      <0=>  Do not skip OSPI/AES initialization
+//      <1=>  Skip OSPI/AES initialization
+//   <i> Skip OSPI/AES initialization
+
+#define OSPI_XIP_SKIP_INITIALIZATION             0
+
+//   <o> Number of flash wait cycles
+//   <i> Defines the number of wait(dummy) cycles needed for flash read operations.
+//   <i> Default:16
+
+#define OSPI_XIP_FLASH_WAIT_CYCLES               16
+
 // </h>
 //------------- <<< end of configuration section >>> ---------------------------
 

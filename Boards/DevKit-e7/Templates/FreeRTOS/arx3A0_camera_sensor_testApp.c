@@ -124,7 +124,7 @@ void vApplicationIdleHook(void)
  *  Allocated in the "camera_frame_buf" section.
  */
 uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] \
-        __attribute__((section("camera_frame_buf")));
+        __attribute__((section(".bss.camera_frame_buf")));
 
 /* (optional)
  * if required convert captured image data format to any other image format.
@@ -172,7 +172,7 @@ uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] \
  *  Allocated in the "camera_frame_bayer_to_rgb_buf" section.
  */
 uint8_t bayer_to_rgb_buffer_pool[BAYER_TO_RGB_BUFFER_POOL_SIZE] \
-        __attribute__((section("camera_frame_bayer_to_rgb_buf")));
+        __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf")));
 
 /* Optional:
  *  Camera Image Conversions
@@ -489,6 +489,17 @@ void camera_demo_thread_entry(void *pvParameters)
         printf("\r\nSE: get_run_cfg error = %d\n", error_code);
         goto error_disable_hfosc_clk;
     }
+
+    /*
+     * Note:
+     * This demo uses a specific profile setting that only enables the
+     * items it needs. For example, it only requests the RAM regions and
+     * peripheral power that are relevant for this demo. If you want to adapt
+     * this example for your own use case, you should adjust the profile setting
+     * accordingly. You can either add any additional items that you need, or
+     * remove the request altogether to use the default setting that turns on
+     * almost everything.
+     */
 
     runp.memory_blocks = MRAM_MASK | SRAM0_MASK;
 

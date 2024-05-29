@@ -111,38 +111,6 @@ static void canfd_transmit_message(const CANFD_FRAME msg_type);
 static void canfd_check_error(void);
 
 /**
- * @fn      static int32_t pinmux_config(void)
- * @brief   CANFD Rx and Tx pinmux configuration.
- * @note    none
- * @param   none
- * @retval  execution status.
- */
-static int32_t pinmux_config(void)
-{
-    int32_t ret_val = 0U;
-
-    /* pinmux configurations for CANFD pins */
-    ret_val = pinconf_set(PORT_7, PIN_0, PINMUX_ALTERNATE_FUNCTION_7,
-                         (PADCTRL_READ_ENABLE | PADCTRL_SCHMITT_TRIGGER_ENABLE |
-                          PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
-    if(ret_val)
-    {
-        printf("ERROR: Failed to configure PINMUX for CANFD Rx \r\n");
-        return ret_val;
-    }
-
-    ret_val = pinconf_set(PORT_7, PIN_1, PINMUX_ALTERNATE_FUNCTION_7,
-                         (PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA |
-                          PADCTRL_SCHMITT_TRIGGER_ENABLE));
-    if(ret_val)
-    {
-        printf("ERROR: Failed to configure PINMUX for CANFD Tx \r\n");
-        return ret_val;
-    }
-    return ret_val;
-}
-
-/**
  * @fn      static void cb_unit_event(uint32_t event)
  * @brief   CANFD Callback function for events
  * @note    none
@@ -245,7 +213,6 @@ static void canfd_lbi_demo_thread_entry(void)
 
     printf("*** CANFD Internal Loopback Demo app is starting ***\n");
 
-    ret_val = pinmux_config();
     if(ret_val != ARM_DRIVER_OK)
     {
         printf("Error in pin-mux configuration\n");

@@ -32,6 +32,7 @@
 #include "FreeRTOSConfig.h"
 #include "task.h"
 #include "RTE_Components.h"
+#include "system_utils.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
 #endif  /* RTE_Compiler_IO_STDOUT */

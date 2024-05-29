@@ -29,10 +29,11 @@
 #define CANFD_CLK_SRC_160MHZ_CLK            160000000U                       /* 160 MHz  */
 #define CANFD_MAX_CLK_SPEED                 (CANFD_CLK_SRC_160MHZ_CLK / 2U)  /* 80 MHz   */
 
-#define CANFD_FD_EN                         (1U << 20U)
-#define CANFD_CLK_SEL_Pos                   (16U)
-#define CANFD_CLK_EN                        (1U << 12U)
-#define CANFD_CLK_DIVISOR_Pos               (0U)
+/* Macros for Clock control register */
+#define CANFD_CTRL_FD_ENA                   (1U << 20U)
+#define CANFD_CTRL_CLK_SEL_Pos              (16U)
+#define CANFD_CTRL_CKEN                     (1U << 12U)
+#define CANFD_CKDIV_Pos                     (0U)
 
 /**
   \fn          static inline void canfd_clock_enable(const bool clk_sel,
@@ -46,9 +47,9 @@ static inline void canfd_clock_enable(const bool clk_sel,
                                       const uint8_t clk_div)
 {
     /* Enables clock for CANFD module */
-    CLKCTL_PER_SLV->CANFD_CTRL = (CANFD_CLK_EN                       |
-                                  (clk_sel << CANFD_CLK_SEL_Pos)     |
-                                  (clk_div << CANFD_CLK_DIVISOR_Pos));
+    CLKCTL_PER_SLV->CANFD_CTRL = (CANFD_CTRL_CKEN                       |
+                                  (clk_sel << CANFD_CTRL_CLK_SEL_Pos)   |
+                                  (clk_div << CANFD_CKDIV_Pos));
 }
 
 /**
@@ -60,7 +61,7 @@ static inline void canfd_clock_enable(const bool clk_sel,
 static inline void canfd_clock_disable(void)
 {
     /* Disables clock for CANFD module */
-    CLKCTL_PER_SLV->CANFD_CTRL &= ~CANFD_CLK_EN;
+    CLKCTL_PER_SLV->CANFD_CTRL &= ~CANFD_CTRL_CKEN;
 }
 
 /**
@@ -73,11 +74,11 @@ static inline void canfd_setup_fd_mode(const bool enable)
 {
     if(enable)
     {
-        CLKCTL_PER_SLV->CANFD_CTRL |= CANFD_FD_EN;
+        CLKCTL_PER_SLV->CANFD_CTRL |= CANFD_CTRL_FD_ENA;
     }
     else
     {
-        CLKCTL_PER_SLV->CANFD_CTRL &= ~CANFD_FD_EN;
+        CLKCTL_PER_SLV->CANFD_CTRL &= ~CANFD_CTRL_FD_ENA;
     }
 }
 
@@ -89,7 +90,7 @@ static inline void canfd_setup_fd_mode(const bool enable)
 */
 static inline bool canfd_in_fd_mode(void)
 {
-    return (CLKCTL_PER_SLV->CANFD_CTRL & (CANFD_FD_EN));
+    return (CLKCTL_PER_SLV->CANFD_CTRL & (CANFD_CTRL_FD_ENA));
 }
 
 #endif /* SYS_CTRL_CANFD_H_ */

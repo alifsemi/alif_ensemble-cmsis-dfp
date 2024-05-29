@@ -131,9 +131,6 @@ typedef struct {                                /*!< (@ 0x00000000) DMA Structur
 #define DMA_MAX_BURST_LEN    16                 /*!< Max 16 xfers are supported */
 #define DMA_MAX_BURST_SIZE   8                  /*!< Max 8bytes(DATA_WIDTH/8) */
 #define DMA_MAX_BUFF_DEPTH   128                /*!< 32lines * 4bytes for each FIFO */
-#define DMA_MAX_LP_CNT       256                /*!< Max Loop count */
-#define DMA_NUM_LP_REGS      2                  /*!< Max Loop registers */
-#define DMA_MAX_BACKWARD_JUMP   256             /*!< Max Loop count */
 
 #define DMA_IRQ_ABORT_OFFSET 32                 /*!< Abort irq offset */
 
@@ -351,7 +348,7 @@ static inline uint32_t dma_get_channel_dest_addr(DMA_Type *dma,
 */
 static inline bool dma_debug_is_busy(DMA_Type *dma)
 {
-    return (dma->DMA_DBGCMD & DMA_DBGSTATUS_DBGSTATUS_Msk);
+    return (dma->DMA_DBGSTATUS & DMA_DBGSTATUS_DBGSTATUS_Msk);
 }
 
 /**

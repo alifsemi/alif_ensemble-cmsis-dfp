@@ -134,6 +134,11 @@ static int32_t CSI2_Initialize (ARM_MIPI_CSI2_SignalEvent_t cb_event,
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
+    if(camera_sensor->interface != CAMERA_SENSOR_INTERFACE_MIPI)
+    {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
     csi_info = camera_sensor->csi_info;
 
     /* Get Data type related informations */
@@ -175,17 +180,16 @@ static int32_t CSI2_Initialize (ARM_MIPI_CSI2_SignalEvent_t cb_event,
         frame_info->hbp_time = 0;
         /* The last transmitted pixel is already needs to be available in memory to avoid underflow. For this,
          * the time to transmit the last pixel in PPI must be lesser than the time to transmit the
-         * last pixel in IPI. So increasing IPI hline timing 20% then camera active line timing by adjusting
-         * IPI hsd timing.
-         * (Time to transmit last pixel in IPI) = (Time to transmit last pixel in PPI) * 1.2
+         * last pixel in IPI.
+         * (Time to transmit last pixel in IPI) > (Time to transmit last pixel in PPI)
          * ((ipi_hsa_time + ipi_hbp_time + ipi_hsd_time + Cycles_to_transmit_data) * Pixel_clk_per)
-         *                       = ((Bytes_to_transmit / Number_of_lanes) * Rxbyteclk_per) * 1.2
+         *                       > ((Bytes_to_transmit / Number_of_lanes) * Rxbyteclk_per)
          */
-        frame_info->hsd_time = (uint32_t)(((cpi_data_mode_settings[index].bpp *
-                                            camera_sensor->width * 4 * pixclock * 1.2f) /
-                                            (8 * csi_info->frequency)) - (camera_sensor->width + frame_info->hsa_time));
+        frame_info->hsd_time = (uint32_t)((((cpi_data_mode_settings[index].bpp *
+                                             camera_sensor->width * 4 * pixclock) /
+                                             (8 * csi_info->frequency)) - (camera_sensor->width + frame_info->hsa_time)) + 1);
 
-        frame_info->hactive_time = camera_sensor->width;
+        frame_info->hactive_time = 0;
         frame_info->vsa_line = 0;
         frame_info->vbp_line = 0;
         frame_info->vfp_line = 0;
@@ -205,7 +209,6 @@ static int32_t CSI2_Initialize (ARM_MIPI_CSI2_SignalEvent_t cb_event,
     }
 
     /* CPI config information */
-    cpi_info.interface = CPI_INTERFACE_MIPI_CSI;
     cpi_info.vsync_wait = CPI_WAIT_VSYNC_ENABLE;
     cpi_info.vsync_mode = CPI_CAPTURE_DATA_ENABLE_IF_HSYNC_HIGH;
     cpi_info.pixelclk_pol = CPI_SIG_POLARITY_INVERT_DISABLE;
@@ -542,7 +545,7 @@ static int32_t CSI2_ConfigureIPI (CSI_RESOURCES *CSI2)
     }
     else
     {
-    	csi_set_ipi_mem_flush_manual(CSI2->regs);
+        csi_set_ipi_mem_flush_manual(CSI2->regs);
     }
 
     csi_set_ipi_vc_id(CSI2->regs, CSI2->vc_id);

@@ -58,11 +58,15 @@ static ARM_DRIVER_USART *USARTdrv = &ARM_Driver_USART_(UART);
 
 void myUART_Thread_entry();
 
-#define UART_CB_TX_EVENT          1U << 0
-#define UART_CB_RX_EVENT          1U << 1
-#define UART_CB_RX_TIMEOUT        1U << 2
-volatile uint32_t event_flags_uart;
+#define UART_CB_TX_EVENT           (1U << 0)
+#define UART_CB_RX_EVENT           (1U << 1)
+#define UART_CB_RX_TIMEOUT         (1U << 2)
+#define UART_CB_RX_BREAK           (1U << 3)
+#define UART_CB_RX_FRAMING_ERROR   (1U << 4)
+#define UART_CB_RX_PARITY_ERROR    (1U << 5)
+#define UART_CB_RX_OVERFLOW        (1U << 6)
 
+volatile uint32_t event_flags_uart;
 
 /**
  * @function    int hardware_init(void)
@@ -107,6 +111,30 @@ void myUART_callback(uint32_t event)
     {
         /* Receive Success with rx timeout */
         event_flags_uart |= UART_CB_RX_TIMEOUT;
+    }
+
+    if (event & ARM_USART_EVENT_RX_BREAK)
+    {
+        /* Receive Break */
+        event_flags_uart |= UART_CB_RX_BREAK;
+    }
+
+    if (event & ARM_USART_EVENT_RX_FRAMING_ERROR)
+    {
+        /* Receive Framing Error */
+        event_flags_uart |= UART_CB_RX_FRAMING_ERROR;
+    }
+
+    if (event & ARM_USART_EVENT_RX_PARITY_ERROR)
+    {
+        /* Receive Parity Error */
+        event_flags_uart |= UART_CB_RX_PARITY_ERROR;
+    }
+
+    if (event & ARM_USART_EVENT_RX_OVERFLOW)
+    {
+        /* Receive Overflow */
+        event_flags_uart |= UART_CB_RX_OVERFLOW;
     }
 }
 
@@ -217,6 +245,7 @@ void myUART_Thread_entry()
     {
         /* Get byte from UART - clear event flag before UART call */
         event_flags_uart &= ~(UART_CB_RX_EVENT | UART_CB_RX_TIMEOUT);
+
         ret = USARTdrv->Receive(&cmd, 1);
         if(ret != ARM_DRIVER_OK)
         {
@@ -225,7 +254,37 @@ void myUART_Thread_entry()
         }
 
         /* wait for event flag after UART call */
-        while(!(event_flags_uart & (UART_CB_RX_EVENT | UART_CB_RX_TIMEOUT)));
+        while(!(event_flags_uart & (UART_CB_RX_EVENT | UART_CB_RX_TIMEOUT | UART_CB_RX_BREAK)));
+
+        /* check for any RX error. */
+        if (event_flags_uart & (UART_CB_RX_BREAK | UART_CB_RX_FRAMING_ERROR | \
+                                UART_CB_RX_PARITY_ERROR | UART_CB_RX_OVERFLOW))
+        {
+            /* clear error flags. */
+            if (event_flags_uart & (UART_CB_RX_BREAK))
+            {
+                printf("\r\n RX Break sequence detected.\r\n");
+                event_flags_uart = event_flags_uart & (~(UART_CB_RX_BREAK));
+            }
+
+            if (event_flags_uart & (UART_CB_RX_FRAMING_ERROR))
+            {
+                printf("\r\n RX Framing Error.\r\n");
+                event_flags_uart = event_flags_uart & (~(UART_CB_RX_FRAMING_ERROR));
+            }
+
+            if (event_flags_uart & (UART_CB_RX_PARITY_ERROR))
+            {
+                printf("\r\n RX Parity Error.\r\n");
+                event_flags_uart = event_flags_uart & (~(UART_CB_RX_PARITY_ERROR));
+            }
+
+            if (event_flags_uart & (UART_CB_RX_OVERFLOW))
+            {
+                printf("\r\n RX Overflow Error.\r\n");
+                event_flags_uart = event_flags_uart & (~(UART_CB_RX_OVERFLOW));
+            }
+        }
 
         if (event_flags_uart & (UART_CB_RX_EVENT))
         {
@@ -289,7 +348,7 @@ int main()
         }
     }
     #endif
-    hardware_init();
+
     myUART_Thread_entry();
 }
 

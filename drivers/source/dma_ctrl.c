@@ -105,6 +105,15 @@ void dma_copy_desc_info(dma_config_info_t *dma_cfg,
     channel_desc_info->src_blen    = desc_info->src_blen;
     channel_desc_info->dst_blen    = desc_info->dst_blen;
     channel_desc_info->periph_num  = desc_info->periph_num;
+
+    if(channel_desc_info->direction == DMA_TRANSFER_MEM_TO_DEV)
+    {
+        channel_desc_info->dst_cache_ctrl = 0x0;
+    }
+    else if(channel_desc_info->direction == DMA_TRANSFER_DEV_TO_MEM)
+    {
+        channel_desc_info->src_cache_ctrl = 0x0;
+    }
 }
 
 /**

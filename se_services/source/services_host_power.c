@@ -465,3 +465,69 @@ SERVICES_power_ldo_voltage_control(uint32_t services_handle,
 
   return ret;
 }
+
+/**
+ * @fn  uint32_t SERVICES_power_setting_configure(uint32_t services_handle,
+ *                                                power_setting_t setting_type,
+ *                                                uint32_t value,
+ *                                                uint32_t *error_code)
+ * @brief Configure a power-related setting
+ * @param services_handle
+ * @param setting_type      Setting type
+ * @param value             Setting value
+ * @param error_code        Service error code
+ * @return                  Transport layer error code
+ */
+uint32_t SERVICES_power_setting_configure(uint32_t services_handle,
+                                          power_setting_t setting_type,
+                                          uint32_t value,
+                                          uint32_t *error_code)
+{
+  power_setting_svc_t * p_svc =
+      (power_setting_svc_t *)
+      SERVICES_prepare_packet_buffer(sizeof(power_setting_svc_t));
+
+  p_svc->send_setting_type = setting_type;
+  p_svc->value = value;
+
+  uint32_t ret = SERVICES_send_request(services_handle,
+      SERVICE_POWER_SETTING_CONFIG_REQ_ID, DEFAULT_TIMEOUT);
+
+  *error_code = p_svc->resp_error_code;
+  return ret;
+}
+
+/**
+ * @fn  uint32_t SERVICES_power_setting_get(uint32_t services_handle,
+ *                                          power_setting_t setting_type,
+ *                                          uint32_t *value,
+ *                                          uint32_t *error_code)
+ * @brief Get a power-related setting
+ * @param services_handle
+ * @param setting_type      Setting type
+ * @param value             Setting value
+ * @param error_code        Service error code
+ * @return                  Transport layer error code
+ */
+uint32_t SERVICES_power_setting_get(uint32_t services_handle,
+                                    power_setting_t setting_type,
+                                    uint32_t *value,
+                                    uint32_t *error_code)
+{
+  power_setting_svc_t * p_svc =
+      (power_setting_svc_t *)
+      SERVICES_prepare_packet_buffer(sizeof(power_setting_svc_t));
+
+  p_svc->send_setting_type = setting_type;
+
+  uint32_t ret = SERVICES_send_request(services_handle,
+      SERVICE_POWER_SETTING_GET_REQ_ID, DEFAULT_TIMEOUT);
+
+  if (SERVICES_REQ_SUCCESS == ret)
+  {
+    *value = p_svc->value;
+  }
+
+  *error_code = p_svc->resp_error_code;
+  return ret;
+}

@@ -30,6 +30,7 @@ extern "C" {
  ******************************************************************************/
 /**
  * Version   JIRA         Description
+ * 0.0.47                 Add Power setting Get/Configure API
  * 0.0.46                 Adding UPDATE STOC Service and test
  * 0.0.45                 Adding STOP, STANDBY Cycle tests
  *                        Adding SES update Service
@@ -91,7 +92,7 @@ extern "C" {
  * 0.0.2    SE-708        First re-factoring
  * 0.0.1                  First implementation
  */
-#define SE_SERVICES_VERSION_STRING                 "0.0.46"
+#define SE_SERVICES_VERSION_STRING                 "0.0.47"
 
 #define IMAGE_NAME_LENGTH                          8
 #define VERSION_RESPONSE_LENGTH                    80
@@ -806,6 +807,14 @@ typedef struct {
 	uint32_t send_image_size;
 	uint32_t resp_error_code;
 } update_stoc_svc_t;
+
+// Power Get/Configure API
+typedef struct {
+    service_header_t header;
+    volatile uint32_t send_setting_type;
+    volatile uint32_t value;
+    volatile uint32_t resp_error_code;
+} power_setting_svc_t;
 
 /*******************************************************************************
  *  G L O B A L   D E F I N E S

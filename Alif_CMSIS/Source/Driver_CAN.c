@@ -25,6 +25,7 @@
 #if !(RTE_CANFD)
     #error "CANFD is not enabled in RTE_Device.h"
 #endif
+
 #if !defined (RTE_Drivers_CANFD)
 #error "CANFD is not enabled in RTE_Components.h"
 #endif
@@ -350,8 +351,18 @@ static int32_t ARM_CAN_Initialize(CANFD_RESOURCES* CANFD,
         return ARM_DRIVER_OK;
     }
 
-    /* If callback functions are not present then sends Error parameter */
-    if((cb_unit_event == NULL) || (cb_object_event == NULL))
+    bool blocking_mode = false;
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    if(CANFD->blocking_mode)
+    {
+        blocking_mode = true;
+    }
+#endif
+
+    /* If callback functions are null in non-blocking mode,
+     * then sends Error parameter */
+    if((!blocking_mode) &&
+       ((cb_unit_event == NULL) || (cb_object_event == NULL)))
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -428,17 +439,34 @@ static int32_t ARM_CAN_PowerControl(CANFD_RESOURCES* CANFD,
         return ARM_DRIVER_ERROR;
     }
 
+    bool blocking_mode = false;
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    if(CANFD->blocking_mode)
+    {
+        blocking_mode = true;
+    }
+#endif
+
     switch(state)
     {
         case ARM_POWER_OFF:
             /* If already powered OFF returns OK*/
             if(CANFD->state.powered == 0x0U)
             {
-               return ARM_DRIVER_OK;
+                return ARM_DRIVER_OK;
             }
-            /* Clears Pending IRQs and disables it. Disables CANFD clock */
-            NVIC_ClearPendingIRQ(CANFD->irq_num);
-            NVIC_DisableIRQ(CANFD->irq_num);
+
+            /* Enables Standby mode if in already */
+            canfd_enable_standby_mode(CANFD->regs);
+            CANFD->state.standby = 0x1U;
+
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Clears Pending IRQs and disables it. Disables CANFD clock */
+                NVIC_ClearPendingIRQ(CANFD->irq_num);
+                NVIC_DisableIRQ(CANFD->irq_num);
+            }
 
             /* Resets CANFD */
             canfd_reset(CANFD->regs);
@@ -451,13 +479,18 @@ static int32_t ARM_CAN_PowerControl(CANFD_RESOURCES* CANFD,
             /* If already powered ON returns OK*/
             if(CANFD->state.powered == 0x1U)
             {
-               return ARM_DRIVER_OK;
+                return ARM_DRIVER_OK;
             }
-            /* Clears Pending IRQs, sets priority and enables it.
-             * Enables CANFD clock */
-            NVIC_ClearPendingIRQ(CANFD->irq_num);
-            NVIC_SetPriority(CANFD->irq_num, CANFD->irq_priority);
-            NVIC_EnableIRQ(CANFD->irq_num);
+
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Clears Pending IRQs, sets priority and enables it.
+                 * Enables CANFD clock */
+                NVIC_ClearPendingIRQ(CANFD->irq_num);
+                NVIC_SetPriority(CANFD->irq_num, CANFD->irq_priority);
+                NVIC_EnableIRQ(CANFD->irq_num);
+            }
 
             /* Enable CANFD Clock */
             canfd_clock_enable(RTE_CANFD_CLK_SOURCE, CANFD_CLK_DIVISOR);
@@ -468,10 +501,38 @@ static int32_t ARM_CAN_PowerControl(CANFD_RESOURCES* CANFD,
             canfd_disable_error_interrupts(CANFD->regs);
             canfd_clear_interrupts(CANFD->regs);
 
+            /* Disables Standby mode */
+            canfd_disable_standby_mode(CANFD->regs);
+
+            /* Wait for the CANFD Transceiver to get switch from
+             * Standy mode to normal state */
+            sys_busy_loop_us(CANFD_TRANSCEIVER_STANDBY_DELAY);
+
+            CANFD->state.standby = 0x0U;
             CANFD->state.powered = 0x1U;
             break;
         case ARM_POWER_LOW:
-            /* Power Low mode is unsupported */
+            /* If the system is Powered ON already,
+             * then only Power it low. Else error */
+            if(CANFD->state.powered == 0x1U)
+            {
+                /* If Tx from Primary or secondary is active, then
+                 * return an error busy */
+                if((canfd_stb_tx_active(CANFD->regs)) ||
+                   (canfd_ptb_tx_active(CANFD->regs)))
+                {
+                    return ARM_DRIVER_ERROR_BUSY;
+                }
+                /* Enables Standby mode*/
+                canfd_enable_standby_mode(CANFD->regs);
+
+                CANFD->state.standby = 0x1U;
+            }
+            else
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+            break;
         default:
             return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
@@ -493,6 +554,14 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
         return ARM_DRIVER_ERROR;
     }
 
+    bool blocking_mode = false;
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    if(CANFD->blocking_mode)
+    {
+        blocking_mode = true;
+    }
+#endif
+
     switch(mode)
     {
         case ARM_CAN_MODE_INITIALIZATION:
@@ -507,7 +576,6 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
 
             CANFD->status.unit_state = ARM_CAN_UNIT_STATE_INACTIVE;
             CANFD->op_mode           = CANFD_OP_MODE_INIT;
-            CANFD->cb_unit_event(ARM_CAN_EVENT_UNIT_INACTIVE);
             break;
 
         case ARM_CAN_MODE_NORMAL:
@@ -517,12 +585,20 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
                 return ARM_DRIVER_OK;
             }
 
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Enables CANFD Rx, Tx and error interrupts */
+                canfd_enable_tx_interrupts(CANFD->regs);
+                canfd_enable_rx_interrupts(CANFD->regs);
+                canfd_enable_error_interrupts(CANFD->regs);
+            }
+
             /* Enables Normal mode */
             canfd_enable_normal_mode(CANFD->regs);
 
             CANFD->status.unit_state = ARM_CAN_UNIT_STATE_ACTIVE;
             CANFD->op_mode           = CANFD_OP_MODE_NORMAL;
-            CANFD->cb_unit_event(ARM_CAN_EVENT_UNIT_ACTIVE);
             break;
 
         case ARM_CAN_MODE_MONITOR:
@@ -533,18 +609,25 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
             }
 
             /* If Tx from Primary or secondary is active, then
-             * return an error */
-            if(canfd_tx_active(CANFD->regs) == true)
+             * return an error busy */
+            if((canfd_stb_tx_active(CANFD->regs)) ||
+               (canfd_ptb_tx_active(CANFD->regs)))
             {
-                return ARM_DRIVER_ERROR;
+                return ARM_DRIVER_ERROR_BUSY;
             }
 
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Enables CANFD Rx and error interrupts */
+                canfd_enable_rx_interrupts(CANFD->regs);
+                canfd_enable_error_interrupts(CANFD->regs);
+            }
             /* Enables Listen Only Mode */
             canfd_enable_listen_only_mode(CANFD->regs);
 
             CANFD->status.unit_state = ARM_CAN_UNIT_STATE_ACTIVE;
             CANFD->op_mode           = CANFD_OP_MODE_MONITOR;
-            CANFD->cb_unit_event(ARM_CAN_EVENT_UNIT_ACTIVE);
             break;
 
         case ARM_CAN_MODE_LOOPBACK_INTERNAL:
@@ -560,12 +643,19 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
                 return ARM_DRIVER_ERROR;
             }
 
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Enables CANFD Rx, Tx and error interrupts */
+                canfd_enable_tx_interrupts(CANFD->regs);
+                canfd_enable_rx_interrupts(CANFD->regs);
+                canfd_enable_error_interrupts(CANFD->regs);
+            }
             /* Enables Internal Loopback Mode */
             canfd_enable_internal_loop_back_mode(CANFD->regs);
 
             CANFD->status.unit_state = ARM_CAN_UNIT_STATE_ACTIVE;
             CANFD->op_mode           = CANFD_OP_MODE_LOOPBACK_INTERNAL;
-            CANFD->cb_unit_event(ARM_CAN_EVENT_UNIT_ACTIVE);
             break;
 
         case ARM_CAN_MODE_LOOPBACK_EXTERNAL:
@@ -581,12 +671,19 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
                 return ARM_DRIVER_ERROR;
             }
 
-            /* Enables Internal Loopback Mode */
+            /* Perform below steps if not blocking mode */
+            if(!blocking_mode)
+            {
+                /* Enables CANFD Rx, Tx and error interrupts */
+                canfd_enable_tx_interrupts(CANFD->regs);
+                canfd_enable_rx_interrupts(CANFD->regs);
+                canfd_enable_error_interrupts(CANFD->regs);
+            }
+            /* Enables External Loopback Mode */
             canfd_enable_external_loop_back_mode(CANFD->regs);
 
             CANFD->status.unit_state = ARM_CAN_UNIT_STATE_ACTIVE;
             CANFD->op_mode           = CANFD_OP_MODE_LOOPBACK_EXTERNAL;
-            CANFD->cb_unit_event(ARM_CAN_EVENT_UNIT_ACTIVE);
             break;
 
         case ARM_CAN_MODE_RESTRICTED:
@@ -597,8 +694,9 @@ static int32_t ARM_CAN_SetMode(CANFD_RESOURCES* CANFD, ARM_CAN_MODE mode)
 
     if(CANFD->op_mode != CANFD_OP_MODE_INIT)
     {
-        /* Sets the CAN Error warning state */
+        /* Sets the CAN Error and Rx buf almost full warning limits */
         canfd_set_err_warn_limit(CANFD->regs, CANFD_ERROR_WARNING_LIMIT);
+        canfd_set_rbuf_almost_full_warn_limit(CANFD->regs, CANFD_RBUF_AFWL_MAX);
     }
     return ARM_DRIVER_OK;
 }
@@ -623,8 +721,7 @@ static int32_t ARM_CAN_ObjectSetFilter(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
 {
     uint8_t  filter_num            = 0x0U;
     bool     filter_avail          = false;
-    uint32_t acceptance_code       = 0x0U;
-    uint32_t acceptance_mask       = 0x0U;
+    canfd_acpt_fltr_t filter_cfg   = {0x0U};
 
     if(CANFD->state.powered == 0x0U)
     {
@@ -659,10 +756,27 @@ static int32_t ARM_CAN_ObjectSetFilter(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
                 if(canfd_get_acpt_fltr_status(CANFD->regs, filter_num) ==
                                               CANFD_ACPT_FLTR_STATUS_FREE)
                 {
+                    if((id & ARM_CAN_OBJECT_FILTER_EXT_FRAMES) ==
+                        ARM_CAN_OBJECT_FILTER_EXT_FRAMES)
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_EXT_FRAMES;
+                    }
+                    else if(id & ARM_CAN_OBJECT_FILTER_STD_FRAMES)
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_STD_FRAMES;
+                    }
+                    else
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_ALL_FRAMES;
+                    }
+
+                    filter_cfg.ac_code    = ARM_CAN_OBJECT_ID(id);
+                    filter_cfg.ac_mask    = 0x0U;
+                    filter_cfg.op_code    = CANFD_ACPT_FLTR_OP_ADD_EXACT_ID;
+                    filter_cfg.filter     = filter_num;
+
                     /* If the filter is available, then stores the values*/
-                    canfd_enable_acpt_fltr(CANFD->regs, filter_num, id,
-                                           0x0U,
-                                           CANFD_ACPT_FLTR_OP_ADD_EXACT_ID);
+                    canfd_enable_acpt_fltr(CANFD->regs, filter_cfg);
                     filter_avail = true;
                     break;
                 }
@@ -673,10 +787,10 @@ static int32_t ARM_CAN_ObjectSetFilter(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
             for(filter_num = 0x0U; filter_num < CANFD_MAX_ACCEPTANCE_FILTERS;
                 filter_num++)
             {
-                canfd_get_acpt_fltr_data(CANFD->regs, filter_num,
-                                         &acceptance_code, &acceptance_mask,
-                                         CANFD_ACPT_FLTR_OP_REMOVE_EXACT_ID);
-                if((acceptance_code == id) && (acceptance_mask == 0x0U))
+                filter_cfg.filter  = filter_num;
+                filter_cfg.op_code = CANFD_ACPT_FLTR_OP_REMOVE_EXACT_ID;
+                canfd_get_acpt_fltr_data(CANFD->regs, &filter_cfg);
+                if((filter_cfg.ac_code == id) && (filter_cfg.ac_mask == 0x0U))
                 {
                     /* If the filter is found with the same ID and
                      *  mask as requested,
@@ -701,9 +815,26 @@ static int32_t ARM_CAN_ObjectSetFilter(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
                 if(canfd_get_acpt_fltr_status(CANFD->regs, filter_num) ==
                                               CANFD_ACPT_FLTR_STATUS_FREE)
                 {
+                    if((id & ARM_CAN_OBJECT_FILTER_EXT_FRAMES) ==
+                        ARM_CAN_OBJECT_FILTER_EXT_FRAMES)
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_EXT_FRAMES;
+                    }
+                    else if(id & ARM_CAN_OBJECT_FILTER_STD_FRAMES)
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_STD_FRAMES;
+                    }
+                    else
+                    {
+                        filter_cfg.frame_type = CANFD_ACPT_FILTER_CFG_ALL_FRAMES;
+                    }
+
+                    filter_cfg.ac_code    = ARM_CAN_OBJECT_ID(id);
+                    filter_cfg.ac_mask    = arg;
+                    filter_cfg.op_code    = CANFD_ACPT_FLTR_OP_ADD_MASKABLE_ID;
+                    filter_cfg.filter     = filter_num;
                     /* If the filter is available, then configures the values*/
-                    canfd_enable_acpt_fltr(CANFD->regs, filter_num, id, arg,
-                                           CANFD_ACPT_FLTR_OP_ADD_MASKABLE_ID);
+                    canfd_enable_acpt_fltr(CANFD->regs, filter_cfg);
                     filter_avail = true;
                     break;
                 }
@@ -714,11 +845,10 @@ static int32_t ARM_CAN_ObjectSetFilter(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
             for(filter_num = 0x0U; filter_num < CANFD_MAX_ACCEPTANCE_FILTERS;
                 filter_num++)
             {
-                canfd_get_acpt_fltr_data(CANFD->regs, filter_num,
-                                         &acceptance_code,
-                                         &acceptance_mask,
-                                         CANFD_ACPT_FLTR_OP_REMOVE_MASKABLE_ID);
-                if((acceptance_code == id) && (acceptance_mask == arg))
+                filter_cfg.filter  = filter_num;
+                filter_cfg.op_code = CANFD_ACPT_FLTR_OP_REMOVE_MASKABLE_ID;
+                canfd_get_acpt_fltr_data(CANFD->regs, &filter_cfg);
+                if((filter_cfg.ac_code == id) && (filter_cfg.ac_mask == arg))
                 {
                     /* If the filter is found with the same ID and
                      *  mask as requested,
@@ -837,6 +967,16 @@ static int32_t ARM_CAN_MessageSend(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
         return ARM_DRIVER_ERROR;
     }
 
+    /* Come out of standby mode before starting transmission */
+    if(CANFD->state.standby == 0x1U)
+    {
+        canfd_disable_standby_mode(CANFD->regs);
+        CANFD->state.standby = 0x0U;
+        /* Wait for the CANFD Transceiver to get switch from
+         * Standy mode to normal state */
+        sys_busy_loop_us(CANFD_TRANSCEIVER_STANDBY_DELAY);
+    }
+
     /* If the object is not configured for Transmission */
     if((CANFD->objs[ARM_CAN_OBJ_TX - 0x1U].obj_id != obj_idx)     ||
        (CANFD->objs[ARM_CAN_OBJ_TX - 0x1U].state != ARM_CAN_OBJ_TX))
@@ -852,10 +992,32 @@ static int32_t ARM_CAN_MessageSend(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
         return ARM_DRIVER_ERROR;
     }
 
-    /* If message transmission is busy then returns error */
-    if(CANFD->state.tx_busy)
+    memset(&CANFD->data_transfer.tx_header, 0x0, sizeof(canfd_tx_info_t));
+
+    /* Perform below if primary Tx buf chosen */
+    if(CANFD->state.use_prim_buf)
     {
-        return ARM_DRIVER_ERROR_BUSY;
+        if(CANFD->state.prim_buf_busy)
+        {
+            return ARM_DRIVER_ERROR_BUSY;
+        }
+        else
+        {
+            CANFD->data_transfer.tx_header.buf_type = CANFD_BUF_TYPE_PRIMARY;
+            CANFD->state.prim_buf_busy              = true;
+        }
+    }
+    else
+    {
+        /* Perform below if secondary Tx buf chosen */
+        if(canfd_stb_free(CANFD->regs))
+        {
+            CANFD->data_transfer.tx_header.buf_type = CANFD_BUF_TYPE_SECONDARY;
+        }
+        else
+        {
+            return ARM_DRIVER_ERROR_BUSY;
+        }
     }
 
     if((msg_info->brs == 0x1U) && (msg_info->rtr == 0x1U))
@@ -889,11 +1051,6 @@ static int32_t ARM_CAN_MessageSend(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
         return ARM_DRIVER_ERROR;
     }
 
-    /* Sets the status to transmission busy */
-    CANFD->state.tx_busy = true;
-
-    memset(&CANFD->data_transfer.tx_header, 0x0, sizeof(canfd_tx_info_t));
-
     /* Stores the message id based on message frame ID type */
     CANFD->data_transfer.tx_header.frame_type   =
                                    (msg_info->id  >> ARM_CAN_ID_IDE_Pos);
@@ -914,7 +1071,27 @@ static int32_t ARM_CAN_MessageSend(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
     CANFD->data_transfer.tx_header.rtr    = msg_info->rtr;
 
     /* Invokes the low level functions to prepare and send the message */
-    canfd_send(CANFD->regs, CANFD->data_transfer.tx_header, data, size);
+    canfd_select_tx_buf(CANFD->regs,
+                        CANFD->data_transfer.tx_header.buf_type);
+
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    if(CANFD->blocking_mode)
+    {
+        /* Invokes blocking mode send function */
+        canfd_send_blocking(CANFD->regs, CANFD->data_transfer.tx_header, data, size);
+        if(CANFD->state.prim_buf_busy)
+        {
+            CANFD->state.use_prim_buf  = 0x0U;
+            CANFD->state.prim_buf_busy = 0x0U;
+        }
+
+    }
+    else
+#endif
+    {
+        /* Invokes interrupt mode send function */
+        canfd_send(CANFD->regs, CANFD->data_transfer.tx_header, data, size);
+    }
 
     return ARM_DRIVER_OK;
 }
@@ -969,7 +1146,18 @@ static int32_t ARM_CAN_MessageRead(CANFD_RESOURCES* CANFD, uint32_t obj_idx,
     CANFD->data_transfer.rx_count   = size;
     CANFD->data_transfer.rx_ptr     = data;
 
-    canfd_receive(CANFD->regs, &CANFD->data_transfer);
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    if(CANFD->blocking_mode)
+    {
+        /* Invokes blocking mode receive function */
+        canfd_receive_blocking(CANFD->regs, &CANFD->data_transfer);
+    }
+    else
+#endif
+    {
+        /* Invokes interrupt mode send function */
+        canfd_receive(CANFD->regs, &CANFD->data_transfer);
+    }
 
     msg_info->id                    = (CANFD->data_transfer.rx_header.id |
                                       (CANFD->data_transfer.rx_header.frame_type
@@ -1015,13 +1203,15 @@ static int32_t ARM_CAN_Control(CANFD_RESOURCES* CANFD,
             break;
 
         case ARM_CAN_ABORT_MESSAGE_SEND:
-            /* Aborts the current data transmission */
-            canfd_abort_tx(CANFD->regs);
+            /* Aborts the current data Tx of Secondary buf */
+            canfd_abort_tx(CANFD->regs, CANFD_BUF_TYPE_SECONDARY);
             break;
 
         case ARM_CAN_CONTROL_RETRANSMISSION:
-            /* Configures msg retransmission feature */
-            canfd_setup_tx_retrans(CANFD->regs, (bool)arg);
+            /* Configures secondary buffers msg retransmission feature */
+            canfd_setup_tx_retrans(CANFD->regs,
+                                   CANFD_BUF_TYPE_SECONDARY,
+                                   (bool)arg);
             break;
 
         case ARM_CAN_SET_TRANSCEIVER_DELAY:
@@ -1039,6 +1229,159 @@ static int32_t ARM_CAN_Control(CANFD_RESOURCES* CANFD,
             canfd_setup_tx_delay_comp(CANFD->regs, (uint8_t)arg, ENABLE);
             break;
 
+        case ARM_CAN_SET_SPECIFICATION:
+            /* If operation mode is other than INIT then its an error*/
+            if(CANFD->op_mode != CANFD_OP_MODE_INIT)
+            {
+                return ARM_DRIVER_ERROR;
+            }
+
+            if(arg == ARM_CAN_SPECIFICATION_NON_ISO)
+            {
+                /* Sets NON-ISO mode */
+                canfd_set_specification(CANFD->regs, CANFD_SPEC_NON_ISO);
+            }
+            else
+            {
+                /* Sets ISO mode */
+                canfd_set_specification(CANFD->regs, CANFD_SPEC_ISO);
+            }
+            break;
+
+        case ARM_CAN_SET_RBUF_OVERFLOW_MODE:
+            if(arg == ARM_CAN_RBUF_OVERWRITE_OLD_MSG)
+            {
+                /* Configures to overwrite old msg */
+                canfd_set_rbuf_overflow_mode(CANFD->regs,
+                                             CANFD_RBUF_OVF_MODE_OVERWRITE_OLD_MSG);
+            }
+            else
+            {
+                /* Configures to discard new msg*/
+                canfd_set_rbuf_overflow_mode(CANFD->regs,
+                                             CANFD_RBUF_OVF_MODE_DISCARD_NEW_MSG);
+            }
+            break;
+
+        case ARM_CAN_SET_RBUF_STORAGE_FORMAT:
+            if(arg == ARM_CAN_RBUF_STORAGE_NORMAL_MSG)
+            {
+                /* Configures to store normal msg */
+                canfd_set_rbuf_storage_format(CANFD->regs,
+                                              CANFD_RBUF_STORE_NORMAL_MSG);
+            }
+            else
+            {
+                /* Configures to store normal and error msgs */
+                canfd_set_rbuf_storage_format(CANFD->regs,
+                                              CANFD_RBUF_STORE_ALL_MSG);
+            }
+            break;
+
+        case ARM_CAN_SET_RBUF_ALMOST_FULL_WARN_LIMIT:
+            if(arg > CANFD_RBUF_AFWL_MAX)
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+            /* Sets Rbuf almost full warning limit */
+            canfd_set_rbuf_almost_full_warn_limit(CANFD->regs, arg);
+            break;
+
+        case ARM_CAN_SET_TRANSMISSION_MODE:
+            /* Checks if the Secondary buffer is empty
+             * If true, then only perform below operation*/
+            if(canfd_stb_empty(CANFD->regs))
+            {
+                if(arg == ARM_CAN_SET_TRANSMISSION_MODE_FIFO)
+                {
+                    canfd_set_stb_mode(CANFD->regs,
+                                       CANFD_SECONDARY_BUF_MODE_FIFO);
+                }
+                else
+                {
+                    canfd_set_stb_mode(CANFD->regs,
+                                       CANFD_SECONDARY_BUF_MODE_PRIORITY);
+                }
+            }
+            else
+            {
+                return ARM_DRIVER_ERROR_BUSY;
+            }
+            break;
+
+        case ARM_CAN_SET_PRIMARY_TBUF:
+            /* Sets prim in_use flag if requested */
+            CANFD->state.use_prim_buf = 0x1U;
+            break;
+
+        case ARM_CAN_ABORT_PRIMARY_TBUF_MESSAGE_SEND:
+            /* Aborts the current data Tx of Primary buf */
+            canfd_abort_tx(CANFD->regs, CANFD_BUF_TYPE_PRIMARY);
+            break;
+
+        case ARM_CAN_CONTROL_PRIMARY_TBUF_RETRANSMISSION:
+            /* Configures primary buffers msg retransmission feature */
+            canfd_setup_tx_retrans(CANFD->regs,
+                                   CANFD_BUF_TYPE_PRIMARY,
+                                   (bool)arg);
+            break;
+
+        case ARM_CAN_SET_TIMER_COUNTER:
+            /* Sets the counter*/
+            canfd_counter_set(CANFD->cnt_regs, arg);
+            break;
+
+        case ARM_CAN_CONTROL_TIMER_COUNTER:
+            if(arg == ARM_CAN_TIMER_COUNTER_START)
+            {
+                /* Starts the counter*/
+                canfd_counter_start(CANFD->cnt_regs);
+            }
+            else if(arg == ARM_CAN_TIMER_COUNTER_STOP)
+            {
+                /* Stops the counter*/
+                canfd_counter_stop(CANFD->cnt_regs);
+            }
+            else if(arg == ARM_CAN_TIMER_COUNTER_CLEAR)
+            {
+                /* Clears the counter*/
+                canfd_counter_clear(CANFD->cnt_regs);
+            }
+            else
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+            break;
+
+        case ARM_CAN_ENABLE_TIMESTAMP:
+            if(arg == CAN_TIMESTAMP_POSITION_EOF)
+            {
+                /* Enables msg timestamp at end of frame*/
+                canfd_enable_timestamp(CANFD->regs, CANFD_TIMESTAMP_POSITION_EOF);
+            }
+            else
+            {
+                /* Enables msg timestamp at start of frame*/
+                canfd_enable_timestamp(CANFD->regs, CANFD_TIMESTAMP_POSITION_SOF);
+            }
+            break;
+
+        case ARM_CAN_GET_TX_TIMESTAMP:
+            if(!arg)
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+            *((uint32_t*)arg) = canfd_get_tx_timestamp(CANFD->regs);
+            break;
+
+        case ARM_CAN_GET_RX_TIMESTAMP:
+            if(!arg)
+            {
+                return ARM_DRIVER_ERROR_PARAMETER;
+            }
+            *((uint32_t*)arg) = CANFD->data_transfer.rx_header.timestamp[0U];
+            break;
+
         default:
             return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
@@ -1049,11 +1392,15 @@ static int32_t ARM_CAN_Control(CANFD_RESOURCES* CANFD,
 static CANFD_RESOURCES CANFD_RES =
 {
     .regs                        = (CANFD_Type*)CANFD_BASE,
+    .cnt_regs                    = (CANFD_CNT_Type*)CANFD_CNT_BASE,
     .cb_unit_event               = NULL,
     .cb_obj_event                = NULL,
     .data_transfer               = {0x0U},
     .op_mode                     = CANFD_OP_MODE_NONE,
     .state                       = {0x0U},
+#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    .blocking_mode               = true,
+#endif
     .irq_priority                = RTE_CANFD_IRQ_PRIORITY,
     .irq_num                     = CANFD_IRQ_IRQn,
     .fd_mode                     = false
@@ -1140,6 +1487,12 @@ void CANFD_IRQHandler(void)
     CANFD_RES.status.unit_state      = ARM_CAN_UNIT_STATE_ACTIVE;
     CANFD_RES.status.last_error_code = ARM_CAN_LEC_NO_ERROR;
 
+    /* If the device is in Standby mode, come out of it */
+    if(CANFD_RES.state.standby)
+    {
+        CANFD_RES.state.standby = 0x0U;
+    }
+
     /* Invokes low level function to check the IRQ */
     irq_event = canfd_irq_handler(CANFD_RES.regs);
 
@@ -1153,6 +1506,15 @@ void CANFD_IRQHandler(void)
                      CANFD_RBUF_ALMOST_FULL_EVENT|
                      CANFD_RBUF_AVAILABLE_EVENT);
     }
+    else if(irq_event & CANFD_RBUF_ALMOST_FULL_EVENT)
+    {
+       /* If the Rx buffer is almost full then performs below operation */
+       CANFD_RES.cb_obj_event(CANFD_RES.objs[ARM_CAN_OBJ_RX - 0x1U].obj_id,
+                              ARM_CAN_EVENT_RBUF_ALMOST_FULL);
+       irq_event = (CANFD_RBUF_AVAILABLE_EVENT  |
+                    CANFD_RBUF_FULL_EVENT       |
+                    CANFD_RBUF_ALMOST_FULL_EVENT);
+    }
     else if(irq_event & CANFD_RBUF_AVAILABLE_EVENT)
     {
         /* If the Rx msg available then performs below operation */
@@ -1162,15 +1524,29 @@ void CANFD_IRQHandler(void)
                      CANFD_RBUF_FULL_EVENT       |
                      CANFD_RBUF_ALMOST_FULL_EVENT);
     }
-    else if(irq_event & CANFD_TX_COMPLETE_EVENT)
+    else if(irq_event & CANFD_SECONDARY_BUF_TX_COMPLETE_EVENT)
     {
-        /* If the Tx interrupt is occurred then performs below operation */
-        CANFD_RES.state.tx_busy = false;
+        /* If the Secondary buf Tx interrupt is occurred
+         * then performs below operation */
         CANFD_RES.cb_obj_event(CANFD_RES.objs[ARM_CAN_OBJ_TX - 0x1U].obj_id,
                                ARM_CAN_EVENT_SEND_COMPLETE);
-        irq_event = CANFD_TX_COMPLETE_EVENT;
+        irq_event = CANFD_SECONDARY_BUF_TX_COMPLETE_EVENT;
     }
-
+    else if(irq_event & CANFD_PRIMARY_BUF_TX_COMPLETE_EVENT)
+    {
+        /* If the Secondary buf Tx interrupt is occurred
+         * then performs below operation */
+        CANFD_RES.state.use_prim_buf  = 0x0U;
+        CANFD_RES.state.prim_buf_busy = 0x0U;
+        CANFD_RES.cb_obj_event(CANFD_RES.objs[ARM_CAN_OBJ_TX - 0x1U].obj_id,
+                               ARM_CAN_EVENT_PRIMARY_TBUF_SEND_COMPLETE);
+        irq_event = CANFD_PRIMARY_BUF_TX_COMPLETE_EVENT;
+    }
+    else if(irq_event & CANFD_ARBTR_LOST_EVENT)
+    {
+        /* If arbitration lost then perform below operation*/
+        CANFD_RES.cb_unit_event((uint32_t)ARM_CAN_EVENT_ARBITRATION_LOST);
+    }
     else if(irq_event & CANFD_ERROR_PASSIVE_EVENT)
     {
         if(canfd_error_passive_mode(CANFD_RES.regs) == true)
@@ -1185,7 +1561,6 @@ void CANFD_IRQHandler(void)
             CANFD_RES.cb_unit_event((uint32_t)ARM_CAN_EVENT_UNIT_ACTIVE);
         }
     }
-
     else if(irq_event & CANFD_ERROR_EVENT)
     {
         if(canfd_get_bus_status(CANFD_RES.regs) == CANFD_BUS_STATUS_OFF)
@@ -1200,7 +1575,6 @@ void CANFD_IRQHandler(void)
             CANFD_RES.cb_unit_event((uint32_t)ARM_CAN_EVENT_UNIT_WARNING);
         }
     }
-
     else if(irq_event & CANFD_BUS_ERROR_EVENT)
     {
         /* invokes warning event */
@@ -1227,5 +1601,5 @@ ARM_DRIVER_CAN Driver_CANFD = {
     ARM_CANx_MessageSend,
     ARM_CANx_MessageRead,
     ARM_CANx_Control,
-    ARM_CANx_GetStatus,
+    ARM_CANx_GetStatus
 };

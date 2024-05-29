@@ -91,6 +91,8 @@ static uint32_t test_services_ldo_voltage(char *p_test_name,
 static uint32_t test_services_get_bus_frequencies(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_get_eui(char *p_test_name, uint32_t services_handle);
 
+static uint32_t test_services_bor_en(char *p_test_name, uint32_t services_handle);
+
 /*******************************************************************************
  *  M A C R O   D E F I N E S
  ******************************************************************************/
@@ -223,6 +225,7 @@ static services_test_t s_tests[] =
     { test_services_ldo_voltage,             "LDO voltage control    "     , false},  /*51*/
     { test_services_get_bus_frequencies,     "Get BUS frequencies    "     , false},  /*52*/
     { test_services_get_eui,                 "Get EUI-48/EUI-64 extensions", false},  /*53*/
+    { test_services_bor_en,                  "BOR_EN control",               false},  /*54*/
 };
 
 static SERVICES_toc_data_t     toc_info;    /*!< Global to test harness */
@@ -1869,6 +1872,49 @@ static uint32_t test_services_get_eui(char *p_test_name, uint32_t services_handl
 }
 
 /**
+ * @brief Test the BOR_EN coontrol
+ */
+static uint32_t test_services_bor_en(char *p_test_name, uint32_t services_handle)
+{
+  uint32_t error_code = SERVICES_REQ_SUCCESS;
+  uint32_t service_error_code;
+
+  uint32_t bor_en = 0;
+  error_code = SERVICES_power_setting_get(services_handle,
+                                          POWER_SETTING_BOR_EN,
+                                          &bor_en,
+                                          &service_error_code);
+  PRINT_TEST_RESULT;
+
+  TEST_print(services_handle, "Current BOR_EN: %d\n", bor_en);
+  bor_en = !bor_en;
+  error_code = SERVICES_power_setting_configure(services_handle,
+                                                POWER_SETTING_BOR_EN,
+                                                bor_en,
+                                                &service_error_code);
+  PRINT_TEST_RESULT;
+
+  error_code = SERVICES_power_setting_get(services_handle,
+                                          POWER_SETTING_BOR_EN,
+                                          &bor_en,
+                                          &service_error_code);
+
+  PRINT_TEST_RESULT;
+  TEST_print(services_handle, "New BOR_EN: %d\n", bor_en);
+
+  // restore the original BOR_EN
+  TEST_print(services_handle, "Restore original BOR_EN\n");
+  bor_en = !bor_en;
+  error_code = SERVICES_power_setting_configure(services_handle,
+                                                POWER_SETTING_BOR_EN,
+                                                bor_en,
+                                                &service_error_code);
+  PRINT_TEST_RESULT;
+
+  return error_code;
+}
+
+/**
  * @fn    void setup_tests(void)
  * @brief enable/disable individual tests based on configuration
  */
@@ -1925,12 +1971,6 @@ static void setup_tests(void)
  */
 void SERVICES_test_guts(uint32_t services_handle)
 {
-  uint32_t service_error_code = SERVICES_REQ_SUCCESS;
-
-  /* Disable tracing output for services */
-  SERVICES_system_set_services_debug(services_handle, false,
-                                     &service_error_code);
-
   /* A32 calls SERVICES_test_guts() directly from main() */
   setup_tests();
 
@@ -1970,18 +2010,7 @@ void SERVICES_test_guts(uint32_t services_handle)
  */
 void SERVICES_test(uint32_t services_handle)
 {
-  int retry_count;
-
-  /* keep sending heartbeat services requests until one succeeds */
-  retry_count = SERVICES_synchronize_with_se(services_handle);
-  if (retry_count < 0)
-  {
-    TEST_print(services_handle, "SERVICES_synchronize_with_se() FAILED after %d heartbeat attempts\n", -retry_count);
-  }
-  else
-  {
-    TEST_print(services_handle, "SERVICES_synchronize_with_se() returned %d\n", retry_count);
-  }
+  TEST_init(services_handle);
 
   SERVICES_test_guts(services_handle);
 }
