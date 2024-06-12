@@ -11,7 +11,7 @@
 /**
  * @file mhu_sender.c
  * @brief MHU sender driver
- * @ingroup host-services
+ * @ingroup host_services
  * @par
  */
 #include "stddef.h"

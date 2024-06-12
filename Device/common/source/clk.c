@@ -54,6 +54,11 @@ uint32_t SystemAPBClock = SYST_PCLK;
 uint32_t SystemREFClock = SYST_REFCLK;
 
 /*----------------------------------------------------------------------------
+  System HFOSC Clock Variable(HFOSC_CLK)
+ *----------------------------------------------------------------------------*/
+uint32_t SystemHFOSCClock = HFOSC_CLK;
+
+/*----------------------------------------------------------------------------
   Get System AXI Clock function
  *----------------------------------------------------------------------------*/
 uint32_t GetSystemAXIClock (void)
@@ -83,4 +88,12 @@ uint32_t GetSystemAPBClock (void)
 uint32_t GetSystemREFClock (void)
 {
   return SystemREFClock;
+}
+
+/*----------------------------------------------------------------------------
+  Get System HFOSC Clock function
+ *----------------------------------------------------------------------------*/
+uint32_t GetSystemHFOSClock (void)
+{
+  return SystemHFOSCClock;
 }

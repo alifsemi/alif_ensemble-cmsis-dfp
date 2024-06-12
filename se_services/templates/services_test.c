@@ -29,6 +29,7 @@
 #include "services_lib_interface.h"
 #endif
 
+void test_crypto(uint32_t services_handle);
 
 /* forward tests */
 static uint32_t test_services_heartbeat(char *p_test_name, uint32_t services_handle);
@@ -301,6 +302,69 @@ char *flags_to_string(uint32_t flags, char flag_string[])
 
   flag_string[FLAG_STRING_END] = '\0';
   return (char *)&flag_string[0]; /*!< return string back to printing */
+}
+
+/**
+ * @fn     static uint32_t digit_count(uint32_t digits)
+ * @brief  Count up the number of digits
+ * @param  digits
+ * @return the number of digits
+ */
+static uint32_t digit_count(uint32_t digits)
+{
+  uint32_t count = 0;
+
+  do
+  {
+    digits /= 10;
+    count = count + 1;
+  } while (digits != 0);
+
+  return count;
+}
+
+/**
+ * @brief
+ *
+ * @param major
+ * @param minor
+ * @param patch
+ * @return
+ */
+static char *version_string_pack(uint32_t major, uint32_t minor, uint32_t patch)
+{
+  static char version_string[12] = {0}; /* formatted */
+  uint32_t major_length;        /* length of characters */
+  uint32_t minor_length;        /* length of characters */
+  uint32_t patch_length;        /* length of characters */
+
+  major_length = digit_count(major);
+  minor_length = digit_count(minor);
+  patch_length = digit_count(patch);
+
+  sprintf(version_string, "%*d.%*d.%*d",
+          (int)major_length, (int)major,
+          (int)minor_length, (int)minor,
+          (int)patch_length, (int)patch);
+
+  return (char *)&version_string[0];
+}
+
+/**
+ * @brief
+ *
+ * @param dest
+ * @param src
+ * @param num_bytes
+ */
+static void format_and_print(char *dest, uint8_t *src, int num_bytes)
+{
+  int next_pos = 0;
+
+  for (int i=0; i < num_bytes; i++)
+  {
+    next_pos += sprintf((char *)(dest+next_pos), "%X", src[i]);
+  }
 }
 
 /**
@@ -582,31 +646,32 @@ static uint32_t test_services_gettoc_data(char *p_test_name,
              service_error_code);
 
   TEST_print(services_handle,
-             "+-------------------------------------------------------------------------------+\n");
+             "+---------------------------------------------------------------------------------+\n");
   TEST_print(services_handle,
-             "|   Name   |    CPU   |Load Address|Boot Address|Image Size|Version|    Flags   |\n");
+             "|   Name   |    CPU   |Load Address|Boot Address|Image Size| Version |    Flags   |\n");
   TEST_print(services_handle,
-             "+-------------------------------------------------------------------------------+\n");
+             "+---------------------------------------------------------------------------------+\n");
 
   for (each_toc = 0; each_toc < toc_info.number_of_toc_entries ; each_toc++)
   {
     char flags_string[FLAG_STRING_SIZE] = {0}; /* Flags as string   */
 
     TEST_print(services_handle,
-               "| %8s |  %6s  | 0x%08X | 0x%08X | %8d | %d.%d.%d | %10s |\n",
+               "| %8s |  %6s  | 0x%08X | 0x%08X | %8d | %6s  | %10s |\n",
                toc_info.toc_entry[each_toc].image_identifier,
                CPUID_to_string(toc_info.toc_entry[each_toc].cpu),
                toc_info.toc_entry[each_toc].load_address,
                toc_info.toc_entry[each_toc].boot_address,
                toc_info.toc_entry[each_toc].image_size,
-               ((toc_info.toc_entry[each_toc].version >> 24) & 0x0F),
-               ((toc_info.toc_entry[each_toc].version >> 16) & 0x0F),
-               ((toc_info.toc_entry[each_toc].version >>  8) & 0x0F),
+               version_string_pack(
+                   (toc_info.toc_entry[each_toc].version >> 24) & 0xFF,
+                   (toc_info.toc_entry[each_toc].version >> 16) & 0xFF,
+                   (toc_info.toc_entry[each_toc].version >>  8) & 0xFF),
                flags_to_string(toc_info.toc_entry[each_toc].flags,
                                flags_string));
   }
   TEST_print(services_handle,
-             "+-------------------------------------------------------------------------------+\n");
+             "+---------------------------------------------------------------------------------+\n");
 
   return error_code;
 }
@@ -621,6 +686,8 @@ static uint32_t test_services_gettoc_data(char *p_test_name,
 static uint32_t test_services_gettoc_via_name_m55_he(char *p_test_name,
                                                      uint32_t services_handle)
 {
+  uint32_t error_code = SERVICES_REQ_SUCCESS;
+
 #if CPU != A32
   uint32_t error_code = SERVICES_REQ_SUCCESS;
   uint32_t service_error_code;
@@ -638,8 +705,9 @@ static uint32_t test_services_gettoc_via_name_m55_he(char *p_test_name,
 #else
   (void)(p_test_name);
   (void)(services_handle);
-  return SERVICES_RESP_UNKNOWN_COMMAND;
+  error_code = SERVICES_RESP_UNKNOWN_COMMAND;
 #endif // #if CPU != A32
+  return error_code;
 }
 
 /**
@@ -652,8 +720,9 @@ static uint32_t test_services_gettoc_via_name_m55_he(char *p_test_name,
 static uint32_t test_services_gettoc_via_name_m55_hp(char *p_test_name,
                                                      uint32_t services_handle)
 {
-#if CPU != A32
   uint32_t error_code = SERVICES_REQ_SUCCESS;
+
+#if CPU != A32
   uint32_t service_error_code;
 
   error_code = SERVICES_system_get_toc_via_name(services_handle,
@@ -665,12 +734,13 @@ static uint32_t test_services_gettoc_via_name_m55_hp(char *p_test_name,
              SERVICES_error_to_string(error_code),
              service_error_code);
 
-  return error_code;
 #else
   (void)(p_test_name);
   (void)(services_handle);
-  return SERVICES_RESP_UNKNOWN_COMMAND;
+
+  error_code = SERVICES_RESP_UNKNOWN_COMMAND;
 #endif // #if CPU != A32
+  return error_code;
 }
 
 /**
@@ -864,16 +934,6 @@ static uint32_t test_services_get_socid(char *p_test_name,
              service_error_code);
 
   return error_code;
-}
-
-static void format_and_print(char *dest, uint8_t *src, int num_bytes)
-{
-  int next_pos = 0;
-
-  for (int i=0; i < num_bytes; i++)
-  {
-    next_pos += sprintf((char *)(dest+next_pos), "%X", src[i]);
-  }
 }
 
 static uint32_t test_services_get_device_data(char *p_test_name,
@@ -2018,4 +2078,5 @@ void SERVICES_test(uint32_t services_handle)
   TEST_init(services_handle);
 
   SERVICES_test_guts(services_handle);
+  test_crypto(services_handle);
 }

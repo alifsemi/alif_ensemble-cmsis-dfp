@@ -76,10 +76,6 @@ uint32_t SERVICES_get_run_cfg(uint32_t services_handle, run_profile_t *pp,
   pp->phy_pwr_gating    = p_svc->resp_phy_pwr_gating;
   pp->power_domains     = p_svc->resp_power_domains;
   pp->vdd_ioflex_3V3    = p_svc->resp_vdd_ioflex_3V3;
-  pp->wakeup_events     = p_svc->resp_wakeup_events;
-  pp->ewic_cfg          = p_svc->resp_ewic_cfg;
-  pp->vtor_address      = p_svc->resp_vtor_address;
-  pp->vtor_address_ns   = p_svc->resp_vtor_address_ns;
 
   return srv_error_code;  /* Return */
 }
@@ -115,10 +111,6 @@ uint32_t SERVICES_set_run_cfg(uint32_t services_handle, run_profile_t *pp,
   p_svc->send_phy_pwr_gating   = pp->phy_pwr_gating; /*typedef */
   p_svc->send_power_domains    = pp->power_domains;
   p_svc->send_vdd_ioflex_3V3   = pp->vdd_ioflex_3V3;
-  p_svc->send_wakeup_events    = pp->wakeup_events;
-  p_svc->send_ewic_cfg         = pp->ewic_cfg;
-  p_svc->send_vtor_address     = pp->vtor_address;
-  p_svc->send_vtor_address_ns  = pp->vtor_address_ns;
 
   srv_error_code = SERVICES_send_request(services_handle,
                                          SERVICE_POWER_SET_RUN_REQ_ID,
@@ -259,7 +251,7 @@ uint32_t SERVICES_power_memory_req(uint32_t services_handle,
  * @brief Function to configure EWIC source
  * @param services_handle
  * @param ewic_source
- * @param value
+ * @param power_profile
  * @return
  */
 uint32_t SERVICES_power_ewic_config(uint32_t services_handle,
@@ -280,8 +272,8 @@ uint32_t SERVICES_power_ewic_config(uint32_t services_handle,
 /**
  * @brief Function to configure VBAT wake up source
  * @param services_handle
- * @param ewic_source
- * @param value
+ * @param vbat_wakeup_source
+ * @param power_profile
  * @return
  */
 uint32_t SERVICES_power_wakeup_config(uint32_t services_handle,
@@ -327,7 +319,8 @@ SERVICES_power_mem_retention_config(uint32_t services_handle,
 /**
  * @brief Function to request m55-he VTOR value save for wake up
  * @param services_handle
- * @param vtor_addr
+ * @param ns_vtor_addr
+ * @param se_vtor_addr
  * @param power_profile
  * @return
  */
@@ -353,7 +346,8 @@ SERVICES_power_m55_he_vtor_save(uint32_t services_handle,
 /**
  * @brief Function to request m55-hp VTOR value save for wake up
  * @param services_handle
- * @param vtor_addr
+ * @param ns_vtor_addr
+ * @param se_vtor_addr
  * @param power_profile
  * @return
  */
@@ -379,8 +373,8 @@ SERVICES_power_m55_hp_vtor_save(uint32_t services_handle,
 /**
  * @brief Function to request standby mode
  * @param services_handle
- * @param sram_mem_retention
- * @param power_profile
+ * @param host_cpu_clus_pwr_req
+ * @param bsys_pwr_req
  * @param error_code
  * @return
  */

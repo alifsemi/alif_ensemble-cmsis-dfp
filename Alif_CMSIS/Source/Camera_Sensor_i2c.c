@@ -388,7 +388,6 @@ int32_t camera_sensor_i2c_write_burst(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
   ARM_DRIVER_I2C *drv_i2c = i2c->drv_i2c;
 
   uint8_t  i = 0;
-  uint32_t temp = 0;
   uint32_t timeout = 0;
   int32_t  ret   = 0;
   CAMERA_SENSOR_I2C_REG_ADDR_TYPE reg_addr_len  = i2c->cam_sensor_slave_reg_addr_type;
@@ -476,7 +475,7 @@ int32_t camera_sensor_i2c_write_burst(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c,
 
   /* For Transmit, Convert input data from Little Endian to Big Endian. */
   i = reg_addr_len;
-  for(int reg_idx = 0; reg_idx < burst_len; reg_idx++)
+  for(uint32_t reg_idx = 0; reg_idx < burst_len; reg_idx++)
   {
       if(reg_size == CAMERA_SENSOR_I2C_REG_SIZE_8BIT)
       {

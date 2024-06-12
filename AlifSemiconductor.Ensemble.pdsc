@@ -12,7 +12,7 @@
   -->
 
   <releases>
-    <release version="1.2.0-rc2" date="2024-05-29">
+    <release version="1.2.0-rc3" date="2024-06-11">
       - updated 1.2.0 release
     </release>
     <release version="1.1.3" date="2024-05-13">
@@ -1016,7 +1016,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/TSENS_testapp.c" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_testapp.c" attr="template" select="I2S FreeRTOS Demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
         
 	<!--  LWIP templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd Demo"/>
@@ -1154,7 +1154,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/TSENS_testapp.c" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS FreeRTOS Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_testapp.c" attr="template" select="I2S FreeRTOS Demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/FreeRTOS/i2s_samples.h" attr="template" select="I2S FreeRTOS Demo"/>
 	<!--  LWIP templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/fs.c" attr="template" select="LWIP httpd Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/lwip/httpd/httpd.c" attr="template" select="LWIP httpd Demo"/>
@@ -1753,7 +1753,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.0.94" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.96.0" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -1775,10 +1775,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.0.94" condition="SE SERVICES SRC">
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.96.0" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.0.94.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.96.0.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
@@ -1798,6 +1798,7 @@
         <file category="header" name="se_services/templates/services_lib_interface.h" attr="template" select="SE Services Example"/>
         <file category="source" name="se_services/templates/services_lib_interface.c" attr="template" select="SE Services Example"/>
         <file category="source" name="se_services/templates/services_test.c" attr="template" select="SE Services Example"/>
+        <file category="source" name="se_services/templates/services_test_crypto.c" attr="template" select="SE Services Example"/>
       </files>
     </component>
 

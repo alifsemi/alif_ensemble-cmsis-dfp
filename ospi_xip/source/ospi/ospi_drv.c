@@ -45,6 +45,17 @@ static void ospi_xip_enable(ospi_flash_cfg_t *ospi_cfg)
 }
 
 /**
+  \fn        bool ospi_xip_enabled(ospi_flash_cfg_t *ospi_cfg)
+  \brief     Returns the status of XIP initialization
+  \param[in] ospi_cfg : OSPI configuration structure
+  \return    true or false
+*/
+bool ospi_xip_enabled(ospi_flash_cfg_t *ospi_cfg)
+{
+    return (ospi_cfg->aes_regs->aes_control & AES_CONTROL_XIP_EN) == AES_CONTROL_XIP_EN;
+}
+
+/**
   \fn        void ospi_setup_read(ospi_flash_cfg_t *ospi_cfg, uint32_t addr_len, uint32_t read_len, uint32_t wait_cycles)
   \brief     Set up for Flash read operation
   \param[in] ospi_cfg : OSPI configuration structure

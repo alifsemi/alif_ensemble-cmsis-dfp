@@ -189,6 +189,9 @@ void cdc_set_layer_cfg (CDC_Type *const cdc, const CDC_LAYER layer, const cdc_la
             break;
         case CDC_PIXEL_FORMAT_AL44:
         case CDC_PIXEL_FORMAT_AL8:
+            fb_length = (((info->line_length_in_pixels * 1) << 16) |
+                         ((info->line_length_in_pixels * 1) + BUS_WIDTH));
+            break;
         default:
             return ;
     }

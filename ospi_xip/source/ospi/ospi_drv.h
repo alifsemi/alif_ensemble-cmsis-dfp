@@ -25,6 +25,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ospi_private.h"
 
 typedef struct {
@@ -51,6 +52,7 @@ void ospi_setup_write(ospi_flash_cfg_t *ospi_cfg, uint32_t addr_len);
 void ospi_setup_write_sdr(ospi_flash_cfg_t *ospi_cfg, uint32_t addr_len);
 void ospi_setup_read(ospi_flash_cfg_t *ospi_cfg, uint32_t addr_len, uint32_t read_len, uint32_t wait_cycles);
 void ospi_xip_exit(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t wrap_command);
+bool ospi_xip_enabled(ospi_flash_cfg_t *ospi_cfg);
 
 #ifdef  __cplusplus
 }

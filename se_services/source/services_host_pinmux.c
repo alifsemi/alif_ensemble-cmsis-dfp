@@ -47,11 +47,12 @@
  * @param port_number
  * @param pin_number
  * @param config_data
+ * @param error_code
  * @return
  */
-uint32_t SERVICES_pinmux(uint32_t services_handle, 
-                         uint8_t port_number, 
-                         uint8_t pin_number, 
+uint32_t SERVICES_pinmux(uint32_t services_handle,
+                         uint8_t port_number,
+                         uint8_t pin_number,
                          uint8_t config_data,
                          uint32_t * error_code)
 {

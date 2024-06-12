@@ -414,7 +414,7 @@ static int32_t ARM_USART_PowerControl (ARM_POWER_STATE   state,
                     select_uart_clock_hfosc_clk(uart->instance);
 
                     /* update peripheral clock frequency. */
-                    uart->clk = (uint32_t)HFOSC_CLK;
+                    uart->clk = GetSystemHFOSClock();
                 }
 
                 if (uart->clk_source == UART_CLK_SOURCE_SYST_PCLK)

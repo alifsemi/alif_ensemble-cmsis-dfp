@@ -119,7 +119,6 @@ void SERVICES_Setup(MHU_send_message_t send_message, uint32_t timeout)
 /**
  * @fn    void TEST_print(uint32_t services_handle, char * fmt, ...)
  * @param services_handle
- * @param buffer_size
  * @param fmt
  */
 void TEST_print(uint32_t services_handle, char *fmt, ...)

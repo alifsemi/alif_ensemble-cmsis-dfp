@@ -48,13 +48,14 @@
 /**
  * @fn      uint32_t SERVICES_system_get_toc_version(uint32_t * toc_version)
  * @brief   get the TOC
- * @param   services_handle
- * @param   toc_version
+ * @param services_handle
+ * @param toc_version
+ * @param error_code
  * @return
  */
 uint32_t SERVICES_system_get_toc_version(uint32_t services_handle, 
-                                         uint32_t * toc_version,
-                                         uint32_t * error_code)
+                                         uint32_t *toc_version,
+                                         uint32_t *error_code)
 {
   get_toc_version_svc_t * p_svc = (get_toc_version_svc_t *)
       SERVICES_prepare_packet_buffer(sizeof(get_toc_version_svc_t));
@@ -77,8 +78,8 @@ uint32_t SERVICES_system_get_toc_version(uint32_t services_handle,
  * @return
  */
 uint32_t SERVICES_system_get_toc_number(uint32_t services_handle, 
-                                        uint32_t * toc_number,
-                                        uint32_t * error_code)
+                                        uint32_t *toc_number,
+                                        uint32_t *error_code)
 {
   get_toc_number_svc_t * p_svc = (get_toc_number_svc_t *)
       SERVICES_prepare_packet_buffer(sizeof(get_toc_number_svc_t));
@@ -94,25 +95,30 @@ uint32_t SERVICES_system_get_toc_number(uint32_t services_handle,
 
 /**
  * @brief   get toc info via name
- * @param   services_handle
- * @param   cpu_name
+ * @param services_handle
+ * @param cpu_name
+ * @param error_code
  * @return
+ * @note    function is deprecated
  */
 uint32_t SERVICES_system_get_toc_via_name(uint32_t services_handle, 
-                                          const uint8_t * cpu_name,
-                                          uint32_t * error_code)
+                                          const uint8_t *cpu_name,
+                                          uint32_t *error_code)
 {
   UNUSED(services_handle);
   UNUSED(cpu_name);
-  *error_code = 0;
+
+  *error_code = SERVICES_RESP_UNKNOWN_COMMAND;
+
   return SERVICE_SUCCESS;
 }
 
 /**
  * @brief     get toc info via cpuid
- * @param     services_handle
- * @param[in] cpuid
- * @param     toc_info
+ * @param services_handle
+ * @param cpuid
+ * @param toc_info
+ * @param error_code
  * @return
  */
 uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle,
@@ -145,7 +151,6 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle,
     {
       if (cpuid == p_svc->resp_toc_entry.cpu)
       {
-
         memcpy(&toc_info->toc_entry[toc_info->number_of_toc_entries],
                &p_svc->resp_toc_entry,
                sizeof(get_toc_entry_t));
@@ -166,7 +171,7 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle,
  */
 uint32_t SERVICES_system_get_toc_data (uint32_t services_handle,
                                        SERVICES_toc_data_t *toc_info,
-                                       uint32_t * error_code)
+                                       uint32_t *error_code)
 {
   uint32_t toc_number = 0;
   uint32_t return_code = SERVICES_system_get_toc_number(services_handle,
@@ -209,8 +214,8 @@ uint32_t SERVICES_system_get_toc_data (uint32_t services_handle,
  * @return
  */
 uint32_t SERVICES_system_get_device_part_number(uint32_t services_handle, 
-                                                uint32_t * device_part_number,
-                                                uint32_t * error_code)
+                                                uint32_t *device_part_number,
+                                                uint32_t *error_code)
 {
   get_device_part_svc_t * p_svc = (get_device_part_svc_t *)
       SERVICES_prepare_packet_buffer(sizeof(get_device_part_svc_t));
@@ -259,7 +264,7 @@ uint32_t SERVICES_system_set_services_debug (uint32_t services_handle,
 #if 0
 uint32_t SERVICES_system_get_otp_data (uint32_t services_handle,
                                        SERVICES_otp_data_t *device_info,
-                                       uint32_t * error_code)
+                                       uint32_t *error_code)
 {
   get_otp_data_t *p_svc = (get_otp_data_t *)
       SERVICES_prepare_packet_buffer(sizeof(get_otp_data_t));
@@ -280,7 +285,7 @@ uint32_t SERVICES_system_get_otp_data (uint32_t services_handle,
 #endif
 
 /**
- * @brief
+ * @brief  Get device_data
  *
  * @param services_handle
  * @param device_info
@@ -289,7 +294,7 @@ uint32_t SERVICES_system_get_otp_data (uint32_t services_handle,
  */
 uint32_t SERVICES_system_get_device_data(uint32_t services_handle,
                                          SERVICES_version_data_t *device_info,
-                                         uint32_t * error_code)
+                                         uint32_t *error_code)
 {
   get_device_revision_data_t *p_svc = (get_device_revision_data_t *)
       SERVICES_prepare_packet_buffer(sizeof(get_device_revision_data_t));
@@ -436,8 +441,10 @@ void init_test_mgf_data(uint8_t * p_data_in)
 
 /**
  * @brief   Pack manufacturing data into 40 bits for EUI-64
+ * @param p_data_in
+ * @param p_data_out
  */
-static void get_eui64_extension(uint8_t * p_data_in, uint8_t * p_data_out)
+static void get_eui64_extension(uint8_t *p_data_in, uint8_t *p_data_out)
 {
   mfg_data_t * p_mfg_data = (mfg_data_t *)p_data_in;
 
@@ -467,6 +474,8 @@ static void get_eui64_extension(uint8_t * p_data_in, uint8_t * p_data_out)
 
 /**
  * @brief   Pack manufacturing data into 24 bits for EUI-48
+ * @param p_data_in
+ * @param p_data_out
  */
 static void get_eui48_extension(uint8_t * p_data_in, uint8_t * p_data_out)
 {
@@ -493,8 +502,8 @@ static void get_eui48_extension(uint8_t * p_data_in, uint8_t * p_data_out)
  * @fn    uint32_t SERVICES_system_get_eui_extension(
  *                                uint32_t services_handle,
  *                                bool is_eui48,
- *                                uint8_t * eui_extension,
-                                  uint32_t * error_code)
+ *                                uint8_t *eui_extension,
+ *                                uint32_t *error_code)
  *
  * @param services_handle
  * @param is_eui48       Specify whether EUI-48 or EUI-64 extension is requested
@@ -504,8 +513,8 @@ static void get_eui48_extension(uint8_t * p_data_in, uint8_t * p_data_out)
  */
 uint32_t SERVICES_system_get_eui_extension(uint32_t services_handle,
                                            bool is_eui48,
-                                           uint8_t * eui_extension,
-                                           uint32_t * error_code)
+                                           uint8_t *eui_extension,
+                                           uint32_t *error_code)
 {
   SERVICES_version_data_t device_data;
   uint32_t ret = SERVICES_system_get_device_data(services_handle,

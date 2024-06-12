@@ -298,10 +298,6 @@ typedef struct {
 	uint32_t ip_clock_gating;       /* IP Clock Gating */
 	uint32_t phy_pwr_gating;        /* PHY Power Gating */
 	ioflex_mode_t vdd_ioflex_3V3;   /* Enable 3.3V GPIOs */
-	uint32_t wakeup_events;         /* Wakeup            */
-	uint32_t ewic_cfg;              /* EWIC settings     */
-	uint32_t vtor_address;          /* Vector address    */
-	uint32_t vtor_address_ns;       /* Vector address ns */
 } run_profile_t;
 
 typedef struct {
@@ -311,7 +307,6 @@ typedef struct {
 	lfclock_t aon_clk_src;          /* LFRC/LFXO */
 	hfclock_t stby_clk_src;         /* HFRC/HFXO/PLL */
 	scaled_clk_freq_t stby_clk_freq; /* Selected automatically in SoC Standby mode */
-	uint32_t __unused__;             /* Unused, leaving the field for 'binary compatibility' */
 	uint32_t memory_blocks;          /* Memories blocks to be retained/powered */
 	uint32_t ip_clock_gating;        /* IP Clock Gating */
 	uint32_t phy_pwr_gating;         /* PHY Power Gating */

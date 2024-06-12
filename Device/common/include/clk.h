@@ -129,6 +129,10 @@ extern uint32_t SystemAPBClock;
 */
 extern uint32_t SystemREFClock;
 
+/**
+  \brief System HFOSC Clock Frequency (HFOSC Clock)
+*/
+extern uint32_t SystemHFOSCClock;
 
 /**
   \brief  Get System AXI Clock value.
@@ -157,5 +161,12 @@ uint32_t GetSystemAPBClock(void);
    returns the currently configured REF clock value.
  */
 uint32_t GetSystemREFClock(void);
+
+/**
+  \brief  Get System HFOSC Clock value.
+
+   returns the currently configured HFOSC clock value.
+ */
+uint32_t GetSystemHFOSClock(void);
 
 #endif /* CLK_H_ */

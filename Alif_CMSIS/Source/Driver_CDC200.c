@@ -346,11 +346,6 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
     {
         case CDC200_CONFIGURE_DISPLAY:
         {
-            if (arg == NULL)
-            {
-                return ARM_DRIVER_ERROR_PARAMETER;
-            }
-
             cdc_cfg_info_t cdc_info;
             cdc_layer_info_t layer_info;
 
@@ -433,10 +428,6 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
 
         case CDC200_FRAMEBUF_UPDATE:
         {
-            if (arg == NULL)
-            {
-                return ARM_DRIVER_ERROR_PARAMETER;
-            }
 
             /*Update the buffer start address for new buffer content*/
             cdc_set_layer_fb_addr (cdc->regs, CDC_LAYER_1, CDC_SHADOW_RELOAD_IMR, LocalToGlobal((void*)arg));
@@ -463,11 +454,6 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
 
         case CDC200_CONFIGURE_LAYER:
         {
-            if (arg == NULL)
-            {
-                return ARM_DRIVER_ERROR_PARAMETER;
-            }
-
             ARM_CDC200_LAYER_INFO *cdc200_layer_info = (ARM_CDC200_LAYER_INFO *)arg;
             cdc_layer_info_t layer_info;
 
@@ -514,10 +500,6 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
 
         case CDC200_CONFIGURE_LAYER_WINDOW:
         {
-            if (arg == NULL)
-            {
-                return ARM_DRIVER_ERROR_PARAMETER;
-            }
             ARM_CDC200_LAYER_INFO *cdc200_layer_info = (ARM_CDC200_LAYER_INFO *)arg;
             cdc_window_info_t win_info;
 
@@ -547,10 +529,6 @@ static int32_t CDC200_control (uint32_t control, uint32_t arg,
 
         case CDC200_CONFIGURE_LAYER_BLENDING:
         {
-            if (arg == NULL)
-            {
-                return ARM_DRIVER_ERROR_PARAMETER;
-            }
             ARM_CDC200_LAYER_INFO *cdc200_layer_info = (ARM_CDC200_LAYER_INFO *)arg;
 
             /* Configure Layer Blending*/

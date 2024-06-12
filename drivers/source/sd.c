@@ -32,9 +32,7 @@ const diskio_t SD_Driver =
     sd_state,
     sd_read,
     sd_write,
-#ifdef SDMMC_IRQ_MODE
-    sd_cb,
-#endif
+    NULL
 };
 
 /* Global SD Handle */
@@ -56,7 +54,7 @@ SD_DRV_STATUS sd_error_handler(){
   \param[in]    SD Global Handle pointer
   \return       sd driver status
   */
-SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, uint8_t bus_width, uint8_t dma_mode){
+SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 
     uint8_t powerlevel;
 
@@ -66,8 +64,9 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, uint8_t bus_width, uint8_t dma_mod
     /* set some default values */
     pHsd->regs      = SDMMC;
     pHsd->state     = SD_CARD_STATE_INIT;
-    pHsd->bus_width = bus_width;
-    pHsd->dma_mode  = dma_mode;
+    pHsd->bus_width = p_sd_param->bus_width;
+    pHsd->dma_mode  = p_sd_param->dma_mode;
+    pHsd->sd_param.app_callback = p_sd_param->app_callback;
 
     /* Get the Host Controller version */
     pHsd->hc_version = *((volatile uint16_t *)(SDMMC_HC_VERSION_REG)) & SDMMC_HC_VERSION_REG_Msk;
@@ -132,7 +131,7 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, uint8_t bus_width, uint8_t dma_mod
   \param[in]    sd global handle pointer
   \return       sd driver status
   */
-SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd){
+SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 
     uint16_t reg;
 
@@ -233,20 +232,19 @@ SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd){
   \param[in]    device ID
   \return       sd driver status
   */
-SD_DRV_STATUS sd_init(uint8_t devId, uint8_t bus_width, uint8_t dma_mode)
-{
-    ARG_UNUSED(devId);
+SD_DRV_STATUS sd_init(sd_param_t *p_sd_param){
+
     SD_DRV_STATUS errcode = SD_DRV_STATUS_OK;
 
     /* Initialize Host controller */
-    errcode = sd_host_init(&Hsd, bus_width, dma_mode);
+    errcode = sd_host_init(&Hsd, p_sd_param);
 
     if(errcode != SD_DRV_STATUS_OK){
         return SD_DRV_STATUS_HOST_INIT_ERR;
     }
 
     /* Initialize SD Memory/Combo Card */
-    errcode = sd_card_init(&Hsd);
+    errcode = sd_card_init(&Hsd, p_sd_param);
 
     if(errcode != SD_DRV_STATUS_OK)
         return SD_DRV_STATUS_CARD_INIT_ERR;
@@ -294,24 +292,24 @@ SD_CARD_STATE sd_state(sd_handle_t *pHsd){
 }
 
 /**
-  \fn           SD_DRV_STATUS SD_read(uint32_t sec, uint32_t BlkCnt, volatile unsigned char * DestBuff)
+  \fn           SD_DRV_STATUS SD_read(uint32_t sec, uint32_t blk_cnt, volatile unsigned char * dest_buff)
   \brief        read sd sector
   \param[in]    sec - input sector number to read
-  \param[in]    BlkCnt - number of block to read
-  \param[in]    DestBuff - Destination buffer pointer
+  \param[in]    blk_cnt - number of block to read
+  \param[in]    dest_buff - Destination buffer pointer
   \return       sd driver status
   */
-SD_DRV_STATUS sd_read(uint32_t sec, uint16_t BlkCnt, volatile unsigned char *DestBuff){
+SD_DRV_STATUS sd_read(uint32_t sec, uint16_t blk_cnt, volatile unsigned char *dest_buff){
 
     sd_handle_t *pHsd =  &Hsd;
-    uint32_t timeout_cnt = 2000 * BlkCnt;
-    uint8_t retryCnt = 1;
+    uint32_t timeout_cnt = 2000 * blk_cnt;
+    uint8_t retry_cnt = 1;
 
-    if(DestBuff == NULL)
+    if(dest_buff == NULL)
         return SD_DRV_STATUS_RD_ERR;
 
 #ifdef SDMMC_PRINTF_DEBUG
-    printf("SD READ Dest Buff: 0x%p Sec: %u, Block Count: %u\n",DestBuff,sec,BlkCnt);
+    printf("SD READ Dest Buff: 0x%p Sec: %u, Block Count: %u\n",dest_buff,sec,blk_cnt);
 #endif
 
     /* Change the Card State from Tran to Data */
@@ -319,15 +317,17 @@ SD_DRV_STATUS sd_read(uint32_t sec, uint16_t BlkCnt, volatile unsigned char *Des
 
 #ifdef SDMMC_IRQ_MODE
 
-    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)DestBuff), sec, BlkCnt);
+    (void) timeout_cnt;
+    (void) retry_cnt;
+    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)dest_buff), sec, blk_cnt);
 
 #else
 
 retry:
-    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)DestBuff), sec, BlkCnt);
+    hc_read_setup(pHsd, LocalToGlobal((const volatile void *)dest_buff), sec, blk_cnt);
 
     if(hc_check_xfer_done(pHsd, timeout_cnt) == SDMMC_HC_STATUS_OK)
-        RTSS_InvalidateDCache_by_Addr(DestBuff, BlkCnt * SDMMC_BLK_SIZE_512_Msk);
+        RTSS_InvalidateDCache_by_Addr(dest_buff, blk_cnt * SDMMC_BLK_SIZE_512_Msk);
     else{
         /* Soft reset Host controller cmd and data lines */
         hc_reset(pHsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));
@@ -343,9 +343,9 @@ retry:
 
 #ifdef SDMMC_PRINT_SEC_DATA
     int j = 0;
-    int *p = DestBuff;
+    int *p = dest_buff;
 
-    while(j<(128*BlkCnt)){
+    while(j<(128*blk_cnt)){
         printf("0x%08x: %08x %08x %08x %08x\n",j*4, p[j+0], p[j+1], p[j+2], p[j+3]);
         j += 4;
     }
@@ -355,30 +355,30 @@ retry:
 }
 
 /**
-  \fn           SD_DRV_STATUS SD_write(uint32_t sec, uint32_t BlkCnt, volatile unsigned char * SrcBuff)
+  \fn           SD_DRV_STATUS SD_write(uint32_t sec, uint32_t blk_cnt, volatile unsigned char * src_buff)
   \brief        Write sd sector
   \param[in]    sector - input sector number to write
-  \param[in]    BlkCnt - number of block to write
-  \param[in]    SrcBuff - Source buffer pointer
+  \param[in]    blk_cnt - number of block to write
+  \param[in]    src_buff - Source buffer pointer
   \return       sd driver status
   */
-SD_DRV_STATUS sd_write(uint32_t sector, uint32_t BlkCnt, volatile unsigned char *SrcBuff){
+SD_DRV_STATUS sd_write(uint32_t sector, uint32_t blk_cnt, volatile unsigned char *src_buff){
 
     sd_handle_t *pHsd =  &Hsd;
-    int timeout_cnt = 2000 * BlkCnt;
+    int timeout_cnt = 2000 * blk_cnt;
     uint8_t retryCnt=1;
-    if(SrcBuff == NULL)
+    if(src_buff == NULL)
         return SD_DRV_STATUS_WR_ERR;
 
 #ifdef SDMMC_PRINTF_DEBUG
-    printf("SD WRITE Src Buff: 0x%p Sec: %d, Block Count: %d\n",SrcBuff,sector,BlkCnt);
+    printf("SD WRITE Src Buff: 0x%p Sec: %d, Block Count: %d\n",src_buff,sector,blk_cnt);
 #endif
 
     /* Clean the DCache */
-    RTSS_CleanDCache_by_Addr(SrcBuff, BlkCnt * SDMMC_BLK_SIZE_512_Msk);
+    RTSS_CleanDCache_by_Addr(src_buff, blk_cnt * SDMMC_BLK_SIZE_512_Msk);
 
 retry:
-    hc_write_setup(pHsd, LocalToGlobal((const volatile void *)SrcBuff), sector, BlkCnt);
+    hc_write_setup(pHsd, LocalToGlobal((const volatile void *)src_buff), sector, blk_cnt);
 
     if(hc_check_xfer_done(pHsd, timeout_cnt) != SDMMC_HC_STATUS_OK){
         hc_reset(pHsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));
@@ -390,9 +390,9 @@ retry:
 
 #ifdef SDMMC_PRINT_SEC_DATA
     int j = 0;
-    int *p = SrcBuff;
+    int *p = src_buff;
 
-    while(j<(128*BlkCnt)){
+    while(j<(128*blk_cnt)){
         printf("0x%08x: %08x %08x %08x %08x\n",j*4, p[j+0], p[j+1], p[j+2], p[j+3]);
         j += 4;
     }

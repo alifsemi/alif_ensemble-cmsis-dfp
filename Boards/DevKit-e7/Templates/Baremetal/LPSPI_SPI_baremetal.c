@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include "Driver_SPI.h"
 #include "pinconf.h"
+#include "Driver_GPIO.h"
 #include "RTE_Components.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
@@ -40,6 +41,7 @@
 
 #define  LPSPI          LP   /* LPSPI instance */
 #define  SPI0           0    /* SPI0 instance */
+#define  GPIO7          7    /* GPIO instance to config flexio Port 4 pins */
 
 volatile uint8_t lpspi_cb_status = 0;
 volatile uint8_t spi0_cb_status = 0;
@@ -49,6 +51,9 @@ ARM_DRIVER_SPI *ptrLPSPI = &ARM_Driver_SPI_(LPSPI);
 
 extern ARM_DRIVER_SPI ARM_Driver_SPI_(SPI0);
 ARM_DRIVER_SPI *ptrSPI0 = &ARM_Driver_SPI_(SPI0);
+
+extern  ARM_DRIVER_GPIO ARM_Driver_GPIO_(GPIO7);
+ARM_DRIVER_GPIO *gpioDrv7 = &ARM_Driver_GPIO_(GPIO7);
 
 /**
  * @fn      static int32_t pinmux_config(void)
@@ -159,6 +164,7 @@ void lpspi_spi0_transfer(void)
     uint32_t lpspi_tx_buff, spi0_rx_buff = 0;
     int32_t ret = ARM_DRIVER_OK;
     uint32_t lpspi_control, spi0_control;
+    uint32_t arg = ARM_GPIO_FLEXIO_VOLT_1V8;
 #if DATA_TRANSFER_TYPE
     uint32_t spi0_tx_buff, lpspi_rx_buff = 0;
 #endif
@@ -178,6 +184,20 @@ void lpspi_spi0_transfer(void)
     {
         printf("Error in pinmux configuration\n");
         return;
+    }
+
+    /* config any of the LPSPI pins (flexio) to 1.8V */
+    ret = gpioDrv7->Initialize(PIN_4, NULL);
+    if ((ret != ARM_DRIVER_OK)) {
+        printf("ERROR: Failed to power off \n");
+    }
+    ret = gpioDrv7->PowerControl(PIN_4, ARM_POWER_FULL);
+    if ((ret != ARM_DRIVER_OK)) {
+        printf("ERROR: Failed to power off \n");
+    }
+    ret = gpioDrv7->Control(PIN_4, ARM_GPIO_CONFIG_FLEXIO, &arg);
+    if ((ret != ARM_DRIVER_OK)) {
+        printf("ERROR: Failed to power off \n");
     }
 
     /* LPSPI Configuration as master */

@@ -114,6 +114,9 @@ static int issi_flash_probe (ospi_flash_cfg_t *ospi_cfg)
         /* Set wrap configuration to 32 bytes */
         issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x07, WRAP_32_BYTE);
 
+        /* Set the wait cycles needed for read operations */
+        issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x01, ospi_cfg->wait_cycles);
+
         /* Switch the flash to Octal DDR mode */
         issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x00, OCTAL_DDR_DQS);
 
@@ -133,6 +136,24 @@ static int flash_xip_init(ospi_flash_cfg_t *ospi_cfg)
 {
     ospi_xip_enter(ospi_cfg, ISSI_DDR_OCTAL_IO_FAST_READ, ISSI_DDR_OCTAL_IO_FAST_READ);
     return 0;
+}
+
+
+/**
+  \fn         bool flash_xip_enabled(void)
+  \brief      Return the status of xip initialization
+  \param[in]  none
+  \return     true or false
+ */
+bool flash_xip_enabled(void)
+{
+    ospi_flash_cfg_t *ospi_cfg = &ospi_flash_config;
+#if OSPI_XIP_INSTANCE == OSPI0
+    ospi_cfg->aes_base = (aes_regs_t *) AES0_BASE;
+#else
+    ospi_cfg->aes_regs = (aes_regs_t *) AES1_BASE;
+#endif
+    return ospi_xip_enabled(ospi_cfg);
 }
 
 /**
@@ -159,7 +180,7 @@ int setup_flash_xip(void)
     ospi_cfg->addrlen = ADDR_LENGTH_32_BITS;
     ospi_cfg->ospi_clock = OSPI_CLOCK;
     ospi_cfg->ddr_en = 0;
-    ospi_cfg->wait_cycles = DEFAULT_WAIT_CYCLES_ISSI;
+    ospi_cfg->wait_cycles = OSPI_XIP_FLASH_WAIT_CYCLES;
 
     ospi_init(ospi_cfg);
 

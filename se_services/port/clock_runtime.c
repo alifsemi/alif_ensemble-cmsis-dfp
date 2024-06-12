@@ -22,6 +22,67 @@
 #include <RTE_Components.h>
 #include CMSIS_device_header
 
+#ifndef MHZ
+#define  MHZ            ( 1000000UL)
+#endif
+
+static uint32_t clock_frequency_enum_to_value(clock_frequency_t freq_t)
+{
+    uint32_t clk = 0;
+
+    switch (freq_t)
+    {
+    case CLOCK_FREQUENCY_800MHZ:
+        clk = 800*MHZ;
+        break;
+    case CLOCK_FREQUENCY_400MHZ:
+        clk = 400*MHZ;
+        break;
+    case CLOCK_FREQUENCY_300MHZ:
+        clk = 300*MHZ;
+        break;
+    case CLOCK_FREQUENCY_200MHZ:
+        clk = 200*MHZ;
+        break;
+    case CLOCK_FREQUENCY_160MHZ:
+        clk = 160*MHZ;
+        break;
+    case CLOCK_FREQUENCY_120MHZ:
+        clk = 120*MHZ;
+        break;
+    case CLOCK_FREQUENCY_80MHZ:
+        clk = 80*MHZ;
+        break;
+    case CLOCK_FREQUENCY_60MHZ:
+        clk = 60*MHZ;
+        break;
+    case CLOCK_FREQUENCY_100MHZ:
+        clk = 100*MHZ;
+        break;
+    case CLOCK_FREQUENCY_50MHZ:
+        clk = 50*MHZ;
+        break;
+    case CLOCK_FREQUENCY_20MHZ:
+        clk = 20*MHZ;
+        break;
+    case CLOCK_FREQUENCY_10MHZ:
+        clk = 10*MHZ;
+        break;
+    case CLOCK_FREQUENCY_76_8_RC_MHZ:
+    case CLOCK_FREQUENCY_76_8_XO_MHZ:
+        clk = 76800000;
+        break;
+    case CLOCK_FREQUENCY_38_4_RC_MHZ:
+    case CLOCK_FREQUENCY_38_4_XO_MHZ:
+        clk = 38400000;
+        break;
+    default:
+        break;
+    }
+
+    return clk;
+}
+
 /**
   \fn          int32_t system_update_clock_values(void)
   \brief       Update system clock values retrieved from SE services
@@ -42,7 +103,7 @@ int32_t system_update_clock_values(void)
     {
         return -1;
     }
-    SystemCoreClock = runp.cpu_clk_freq;
+    SystemCoreClock = clock_frequency_enum_to_value(runp.cpu_clk_freq);
 
     error_code = SERVICES_clocks_get_apb_frequency(se_services_s_handle,
                                                    &frequency,

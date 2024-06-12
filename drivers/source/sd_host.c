@@ -63,7 +63,8 @@ void SDMMC_IRQHandler(void){
         case SDMMC_INTR_TC_Msk:
         case (SDMMC_INTR_CC_Msk | SDMMC_INTR_TC_Msk):
             cc = 1;
-            SD_Driver.disk_cb(SDMMC_HC_STATUS_OK);
+            if(Hsd.sd_param.app_callback)
+                Hsd.sd_param.app_callback(SDMMC_HC_STATUS_OK);
             break;
     }
 

@@ -49,10 +49,15 @@
 /**
  * @fn      uint32_t SERVICES_update_stoc(uint32_t services_handle,
  *                                        uint32_t image_address,
- *                                        uint32_t image_address,
+ *                                        uint32_t image_size,
  *                                        uint32_t *error_code)
  *
  * @brief   Update the whole STOC
+ * @param services_handle
+ * @param image_address
+ * @param image_size
+ * @param error_code
+ * @return
  */
 uint32_t SERVICES_update_stoc(uint32_t services_handle,
                               uint32_t image_address,

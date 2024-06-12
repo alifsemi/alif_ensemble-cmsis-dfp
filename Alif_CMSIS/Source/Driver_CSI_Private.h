@@ -38,6 +38,7 @@ extern "C"
 
 /*Helper macro*/
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define MAX(a, b, c) ((a) <= (b) ? ((b) <= (c) ? (c) : (b)) : ((a) <= (c) ? (c) : (a)))
 
 /** \brief CSI IPI frame info */
 typedef struct _CSI_FRAME_INFO

@@ -30,6 +30,8 @@ extern "C" {
  ******************************************************************************/
 /**
  * Version   JIRA         Description
+ * 0.49.0                 Deprecating SERVICES_system_get_toc_via_name
+ * 0.48.0                 Switch to external CMSIS source builds
  * 0.0.47                 Add Power setting Get/Configure API
  * 0.0.46                 Adding UPDATE STOC Service and test
  * 0.0.45                 Adding STOP, STANDBY Cycle tests
@@ -92,7 +94,10 @@ extern "C" {
  * 0.0.2    SE-708        First re-factoring
  * 0.0.1                  First implementation
  */
-#define SE_SERVICES_VERSION_STRING                 "0.0.47"
+#define SE_SERVICES_VERSION_STRING                 "0.49.0"
+#define SE_SERVICES_VERSION_MAJOR                  0
+#define SE_SERVICES_VERSION_MINOR                  49
+#define SE_SERVICES_VERSION_PATCH                  0
 
 #define IMAGE_NAME_LENGTH                          8
 #define VERSION_RESPONSE_LENGTH                    80
@@ -507,6 +512,26 @@ typedef struct {
 } get_toc_number_svc_t;
 
 /**
+ * @struct get_toc_via_name_svc_t
+ * Get TOC via Name
+ */
+typedef struct {
+  service_header_t   header;
+  volatile  uint8_t  send_name[IMAGE_NAME_LENGTH];
+  volatile uint32_t  resp_error_code;
+} get_toc_via_name_t;
+
+/**
+ * @struct get_toc_via_cpuid_svc_t
+ * Get TOC via CPU ID
+ */
+typedef struct {
+  service_header_t   header;
+  volatile uint32_t  send_cpuid;
+  volatile uint32_t  resp_error_code;
+} get_toc_via_cpuid_t;
+
+/**
  * @struct get_toc_entry_t
  * @brief  one toc record
  */
@@ -810,10 +835,10 @@ typedef struct {
 
 // Power Get/Configure API
 typedef struct {
-    service_header_t header;
-    volatile uint32_t send_setting_type;
-    volatile uint32_t value;
-    volatile uint32_t resp_error_code;
+	service_header_t header;
+	volatile uint32_t send_setting_type;
+	volatile uint32_t value;
+	volatile uint32_t resp_error_code;
 } power_setting_svc_t;
 
 /*******************************************************************************

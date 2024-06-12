@@ -91,6 +91,19 @@ typedef struct _sd_cmd_t{
     uint8_t data_present;   /*!< SD Command uses Data lines */
 }sd_cmd_t;
 
+
+/**
+ * @brief SD Default init Parameters
+ */
+typedef struct _sd_param_t{
+    uint8_t dev_id;                     /*!< SD Device ID                               */
+    uint8_t clock_id;                   /*!< SD Clock id 0: 12.5MHz 1: 25MHz 2: 50MHz   */
+    uint8_t bus_width;                  /*!< SD Bus Width 0: 1 Bit 1: 4Bit              */
+    uint8_t dma_mode;                   /*!< SD DMA Mode 0: SDMA 1: ADMA2               */
+    uint8_t operation_mode;             /*!< SD operation mode 0: Polling 1: Interrupt  */
+    void (*app_callback)(uint32_t);     /*!< SD Application Callback function pointer   */
+}sd_param_t;
+
 /**
  * @brief  Global SD Handle Information Structure definition
  */
@@ -108,13 +121,14 @@ typedef struct _sd_handle_t{
     uint16_t                hc_version;     /*!< Host controller version                */
     uint8_t                 bus_width;      /*!< 1Bit, 4Bit, 8Bit Mode                  */
     uint8_t                 dma_mode;       /*!< SDMA, ADMA2, and ADMA3 Mode            */
+    sd_param_t              sd_param;       /*!< SD Default Config Parameters           */
 }sd_handle_t;
 
 /**
  * @brief  Disk IO Driver structure definition
  */
 typedef struct _diskio_t{
-    SD_DRV_STATUS (*disk_initialize)    (uint8_t, uint8_t, uint8_t);                /*!< Initialize Disk Drive      */
+    SD_DRV_STATUS (*disk_initialize)    (sd_param_t *);                             /*!< Initialize Disk Drive      */
     SD_DRV_STATUS (*disk_uninitialize)  (uint8_t);                                  /*!< Un-initialize Disk Drive   */
     SD_CARD_STATE (*disk_status)        (sd_handle_t *);                            /*!< Get Disk Status            */
     SD_DRV_STATUS (*disk_read)          (uint32_t, uint16_t, volatile uint8_t *);   /*!< Read Sector(s)             */
@@ -128,12 +142,12 @@ extern const diskio_t SD_Driver;
 
 /* SD Driver function forward declaration */
 SD_CARD_STATE sd_state(sd_handle_t *);
-SD_DRV_STATUS sd_init(uint8_t, uint8_t, uint8_t);
+SD_DRV_STATUS sd_init(sd_param_t *);
 SD_DRV_STATUS sd_uninit(uint8_t);
 SD_DRV_STATUS sd_io_init(sd_handle_t *);
 SD_DRV_STATUS sdio_read_cia(uint8_t *pcia, uint8_t fn, uint8_t offset);
-SD_DRV_STATUS sd_host_init(sd_handle_t *, uint8_t, uint8_t);
-SD_DRV_STATUS sd_card_init(sd_handle_t *);
+SD_DRV_STATUS sd_host_init(sd_handle_t *, sd_param_t *);
+SD_DRV_STATUS sd_card_init(sd_handle_t *, sd_param_t *);
 SD_DRV_STATUS sd_write(uint32_t, uint32_t, volatile unsigned char *);
 SD_DRV_STATUS sd_read(uint32_t, uint16_t, volatile unsigned char *);
 SD_DRV_STATUS sd_error_handler();

@@ -31,7 +31,7 @@
 
 /* Enable the DMA controller to test */
 //#define TEST_DMA0
-#if (M55_HP)
+#if defined (M55_HP)
 #define TEST_DMA1
 #endif
 #if defined (M55_HE)
@@ -163,12 +163,14 @@ static void dma_memcpy_task(void)
     extern ARM_DRIVER_DMA ARM_Driver_DMA_(DMA2);
     extern ARM_DRIVER_DMA ARM_Driver_DMA_(DMA0);
 
-#ifdef TEST_DMA0
+#if defined(TEST_DMA0)
     dma_drv = &ARM_Driver_DMA_(DMA0);
 #elif defined(TEST_DMA1)
     dma_drv = &ARM_Driver_DMA_(DMA1);
-#else //DMA2
+#elif defined(TEST_DMA2)
     dma_drv = &ARM_Driver_DMA_(DMA2);
+#else
+    #error Select the DMA
 #endif
 
     /* Verify the DMA API version for compatibility*/

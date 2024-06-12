@@ -1,4 +1,3 @@
-
 /**
  * @file services_lib_api.h
  *
@@ -218,10 +217,10 @@ typedef int (*print_msg_t)(const char *fmt, ...);
  *  @enum SERVICES_cpuid_t
  */
 typedef enum {
-	HOST_CPU_0   = 0,                /**< A32_0 CPU               */
-	HOST_CPU_1   = 1,                /**< A32_1 CPU               */
-	EXTSYS_0     = 2,                /**< M55 HP CPU or other CPU */
-	EXTSYS_1     = 3,                /**< M55 HE CPU              */
+	HOST_CPU_0   = 0,                /**< A32_0 CPU               *//**< HOST_CPU_0 */
+	HOST_CPU_1   = 1,                /**< A32_1 CPU               *//**< HOST_CPU_1 */
+	EXTSYS_0     = 2,                /**< M55 HP CPU or other CPU *//**< EXTSYS_0 */
+	EXTSYS_1     = 3,                /**< M55 HE CPU              *//**< EXTSYS_1 */
 } SERVICES_cpuid_t;
 
 /**
@@ -265,7 +264,7 @@ typedef struct {
 } SERVICES_toc_data_t;
 
 /**
- * @struct Power profiles
+ * @struct services_power_profile_t
  */
 typedef enum {
 	OFF_PROFILE = 0,               /**< OFF_PROFILE           */
@@ -349,7 +348,7 @@ typedef struct {
 } net_proc_boot_args_t;
 
 typedef enum {
-  POWER_SETTING_BOR_EN
+	POWER_SETTING_BOR_EN
 } power_setting_t;
 
 /*******************************************************************************
@@ -388,9 +387,8 @@ uint32_t SERVICES_cryptocell_get_rnd(uint32_t services_handle,
 				     int32_t *error_code);
 
 uint32_t SERVICES_cryptocell_get_lcs(uint32_t services_handle,
-				     uint32_t *lcs_state,
-				     int32_t *error_code);
-
+					uint32_t *lcs_state,
+					int32_t *error_code);
 // MbedTLS macros and APIs
 uint32_t SERVICES_cryptocell_mbedtls_hardware_poll(uint32_t services_handle,
 						   uint32_t *error_code,
@@ -398,7 +396,6 @@ uint32_t SERVICES_cryptocell_mbedtls_hardware_poll(uint32_t services_handle,
 						   uint32_t output,
 						   uint32_t len,
 						   uint32_t olen);
-
 uint32_t SERVICES_cryptocell_mbedtls_aes_init(uint32_t services_handle,
 					      uint32_t *error_code,
 					      uint32_t ctx);
@@ -417,7 +414,6 @@ uint32_t SERVICES_cryptocell_mbedtls_aes_crypt(uint32_t services_handle,
 					       uint32_t iv,
 					       uint32_t input,
 					       uint32_t output);
-
 uint32_t SERVICES_cryptocell_mbedtls_sha_starts(uint32_t services_handle,
 						uint32_t *error_code,
 						uint32_t ctx,
@@ -600,7 +596,6 @@ SERVICES_power_dcdc_voltage_control(uint32_t services_handle,
 				    uint32_t dcdc_vout_trim,
 				    uint32_t *error_code);
 
-
 uint32_t
 SERVICES_power_ldo_voltage_control(uint32_t services_handle,
 				   uint32_t ret_ldo_voltage,
@@ -608,14 +603,13 @@ SERVICES_power_ldo_voltage_control(uint32_t services_handle,
 				   uint32_t *error_code);
 
 uint32_t SERVICES_power_setting_configure(uint32_t services_handle,
-                                          power_setting_t setting_type,
-                                          uint32_t value,
-                                          uint32_t *error_code);
+					  power_setting_t setting_type,
+					  uint32_t value,
+					  uint32_t *error_code);
 uint32_t SERVICES_power_setting_get(uint32_t services_handle,
-                                    power_setting_t setting_type,
-                                    uint32_t *value,
-                                    uint32_t *error_code);
-
+				    power_setting_t setting_type,
+				    uint32_t *value,
+				    uint32_t *error_code);
 
 // Clocks services
 uint32_t SERVICES_clocks_select_osc_source(uint32_t services_handle, oscillator_source_t source, oscillator_target_t target, uint32_t *error_code);

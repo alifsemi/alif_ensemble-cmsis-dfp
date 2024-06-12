@@ -197,15 +197,14 @@ uint32_t SERVICES_send_msg(uint32_t services_handle, uint32_t services_data)
  * @brief Send services request to MHU
  * @param services_handle
  * @param service_id
- * @param service_data
  * @param service_timeout
  * @return
  */
-uint32_t SERVICES_send_request(uint32_t services_handle, 
-                               uint16_t service_id, 
+uint32_t SERVICES_send_request(uint32_t services_handle,
+                               uint16_t service_id,
                                uint32_t service_timeout)
 {
-  s_services_host.fn_print_msg("[SERVICESLIB] Send service request 0x%x\n", 
+  s_services_host.fn_print_msg("[SERVICESLIB] Send service request 0x%x\n",
                                service_id);
 
   s_new_msg_received = false;

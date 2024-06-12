@@ -49,8 +49,9 @@
 
 /**
  * @brief  EXTSys0 Boot
- *
+ * @param services_handle
  * @param boot_args
+ * @param error_code
  * @return
  */
 uint32_t SERVICES_Boot_Net_Proc(uint32_t services_handle,
