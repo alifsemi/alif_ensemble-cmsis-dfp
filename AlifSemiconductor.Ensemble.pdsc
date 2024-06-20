@@ -12,8 +12,8 @@
   -->
 
   <releases>
-    <release version="1.2.0-rc3" date="2024-06-11">
-      - updated 1.2.0 release
+    <release version="1.2.0" date="2024-06-19">
+      - update to 1.2.0 release
     </release>
     <release version="1.1.3" date="2024-05-13">
       - Fix FLM file format issue
@@ -968,7 +968,6 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART4_Baremetal.c" attr="template" select="UART4 Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Utimer_Baremetal.c" attr="template" select="UTIMER Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/WDT_Baremetal.c" attr="template" select="WDT Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_wifi_baremetal.c" attr="template" select="WiFi Baremetal Demo"/>
 
 	<!--  FreeRTOS templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/ADC_testApp.c" attr="template" select="ADC FreeRTOS Demo"/>
@@ -1103,7 +1102,6 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/UART4_Baremetal.c" attr="template" select="UART4 Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Utimer_Baremetal.c" attr="template" select="UTIMER Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/WDT_Baremetal.c" attr="template" select="WDT Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_wifi_baremetal.c" attr="template" select="WiFi Baremetal Demo"/>
 
 	<!--  FreeRTOS templates -->
         <file category="source" name="Boards/DevKit-e7/Templates/FreeRTOS/ADC_testApp.c" attr="template" select="ADC FreeRTOS Demo"/>
@@ -1842,25 +1840,6 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="WE310F5 WiFI" Cversion="1.1.0" condition="WE310F5 WIFI Driver">
-      <description>SP based (WE310F5) WIFI Driver for Alif Semiconductor SOC</description>
-      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
-        #define RTE_Drivers_WE310F5 1   /* Driver ILI6122 LCD panel*/
-      </RTE_Components_h>
-      <files>
-        <file category="header" name="components/Include/WiFi_utils.h"/>
-        <file category="header" name="components/Include/WiFi_we310f5.h"/>
-        <file category="header" name="components/Include/WiFi_we310f5_HW_Config.h"/>
-        <file category="source" name="components/Source/WiFi_utils.c"/>                                                    
-        <file category="source" name="components/Source/WiFi_we310f5.c"/>
-        <file category="source" name="components/Source/WiFi_we310f5_HW.c"/>
-        <file category="source" name="components/Source/we310f5.c"/>
-        <file category="header" name="components/Source/we310f5.h"/>
-        <file category="source" name="components/Source/we310f5_SPI.c"/>
-        <file category="header" name="components/Source/we310f5_SPI.h"/>
-	   </files>
-    </component>
-   
   </components>
 
 </package>
