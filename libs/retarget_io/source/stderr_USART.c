@@ -20,16 +20,16 @@
  ******************************************************************************/
 
 #include "RTE_Components.h"
-#if defined(RTE_Compiler_IO_STDOUT)
-#include "retarget_stdout.h"
-#endif  /* RTE_Compiler_IO_STDOUT */
+#if defined(RTE_CMSIS_Compiler_STDERR)
+#include "retarget_stderr.h"
+#endif  /* RTE_CMSIS_Compiler_STDERR */
 #include CMSIS_device_header
 
 //-------- <<< Use Configuration Wizard in Context Menu >>> --------------------
 
 // <h>STDERR USART Interface
 
-#if defined(RTE_Compiler_IO_STDERR_User)
+#if defined(RTE_CMSIS_Compiler_STDERR_Custom)
 
 /* UART Includes */
 #include "retarget_config.h"
@@ -144,4 +144,4 @@ int stderr_putchar (int ch)
     while (USARTdrv->GetTxCount() != 1);
     return (ch);
 }
-#endif /* defined(RTE_Compiler_IO_STDERR_User) */
+#endif /* defined(RTE_CMSIS_Compiler_STDERR_Custom) */

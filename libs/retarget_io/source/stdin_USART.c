@@ -19,9 +19,9 @@
  * @Note     None
  ******************************************************************************/
 
-#if defined(RTE_Compiler_IO_STDIN)
+#if defined(RTE_CMSIS_Compiler_STDIN)
 #include "retarget_stdin.h"
-#endif  /* RTE_Compiler_IO_STDIN */
+#endif  /* RTE_CMSIS_Compiler_STDIN */
 #include <RTE_Components.h>
 #include CMSIS_device_header
 
@@ -29,7 +29,7 @@
 
 // <h>STDIN USART Interface
 
-#if defined(RTE_Compiler_IO_STDIN_User)
+#if defined(RTE_CMSIS_Compiler_STDIN_Custom)
 
 /* UART Includes */
 #include "retarget_config.h"
@@ -141,4 +141,4 @@ int stdin_getchar(void)
     while (USARTdrv->GetRxCount() != 1);
     return (buf[0]);
 }
-#endif  /* defined(RTE_Compiler_IO_STDIN_User)  */
+#endif  /* defined(RTE_CMSIS_Compiler_STDIN_Custom)  */
