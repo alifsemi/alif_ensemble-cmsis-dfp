@@ -31,6 +31,7 @@ extern "C" {
 /**
  * Version   JIRA         Description
  * 0.49.0                 Deprecating SERVICES_system_get_toc_via_name
+ * 0.49.1                 Updated examples for ALIF Update Package support.
  * 0.48.0                 Switch to external CMSIS source builds
  * 0.0.47                 Add Power setting Get/Configure API
  * 0.0.46                 Adding UPDATE STOC Service and test
@@ -152,10 +153,6 @@ typedef struct {
 	volatile uint32_t send_ip_clock_gating;
 	volatile uint32_t send_phy_pwr_gating;
 	volatile uint32_t send_vdd_ioflex_3V3;
-	volatile uint32_t send_wakeup_events;
-	volatile uint32_t send_ewic_cfg;
-	volatile uint32_t send_vtor_address;
-	volatile uint32_t send_vtor_address_ns;
 	volatile int      resp_error_code;
 } aipm_set_run_profile_svc_t;
 
@@ -172,10 +169,6 @@ typedef struct {
 	volatile uint32_t resp_ip_clock_gating;
 	volatile uint32_t resp_phy_pwr_gating;
 	volatile uint32_t resp_vdd_ioflex_3V3;
-	volatile uint32_t resp_wakeup_events;
-	volatile uint32_t resp_ewic_cfg;
-	volatile uint32_t resp_vtor_address;
-	volatile uint32_t resp_vtor_address_ns;
 	volatile int      resp_error_code;
 } aipm_get_run_profile_svc_t;
 
