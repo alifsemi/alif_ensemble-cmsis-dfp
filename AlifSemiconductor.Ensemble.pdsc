@@ -1176,6 +1176,17 @@
 <!-- Add HE CM55 ENDS -->
 
 <!-- Driver components  -->
+    <component Cclass="CMSIS Driver" Cgroup="GPIO" Cversion="1.0.0" Capiversion="1.0.0" condition="Ensemble CMSIS_Driver">
+      <description>GPIO driver for Alif Semiconductor SOC</description>
+      <RTE_Components_h>
+        #define RTE_Drivers_GPIO0   1           /* Driver GPIO0 */
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Alif_CMSIS/Source/Driver_GPIO.c"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_GPIO_Private.h"/>
+      </files>
+    </component>
+
     <component Cclass="CMSIS Driver" Cgroup="USART" Cversion="1.1.0" condition="Ensemble CMSIS_Driver">
       <description>UART Driver for Alif Semiconductor SOC</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->

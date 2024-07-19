@@ -1,101 +1,207 @@
-/* Copyright (C) 2023 Alif Semiconductor - All Rights Reserved.
- * Use, distribution and modification of this code is permitted under the
- * terms stated in the Alif Semiconductor Software License Agreement
+/*
+ * Copyright (c) 2024 ARM Limited. All rights reserved.
  *
- * You should have received a copy of the Alif Semiconductor Software
- * License Agreement with this file. If not, please write to:
- * contact@alifsemi.com, or visit: https://alifsemi.com/license
+ * SPDX-License-Identifier: Apache-2.0
  *
+ * Licensed under the Apache License, Version 2.0 (the License); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * $Date:        16. July 2024
+ * $Revision:    V1.0
+ *
+ * Project:      GPIO Driver for Alif Semiconductor Ensemble
  */
 
-/**************************************************************************//**
- * @file     Driver_GPIO_Private.h
- * @author   Girish BN, Manoj A Murudi
- * @email    girish.bn@alifsemi.com, manoj.murudi@alifsemi.com
- * @version  V1.0.0
- * @date     29-March-2023
- * @brief    Header file for GPIO.
- * @bug      None.
- * @Note	 None
- ******************************************************************************/
-
 #ifndef DRIVER_GPIO_PRIVATE_H_
-
 #define DRIVER_GPIO_PRIVATE_H_
+
+#include "RTE_Components.h"
+#include CMSIS_device_header
+
+#include "Driver_GPIO.h"
 
 #ifdef  __cplusplus
 extern "C"
 {
 #endif
 
-#include "RTE_Device.h"
-#include "RTE_Components.h"
-#include CMSIS_device_header
+// Pin mapping
+#define GPIO_PIN(port, pin) ((8U * port) + (pin))
 
-#include "Driver_GPIO.h"
-#include "gpio.h"
+#define GPIO_P0(n)          (  0U + (n))
+#define GPIO_P1(n)          (  8U + (n))
+#define GPIO_P2(n)          ( 16U + (n))
+#define GPIO_P3(n)          ( 24U + (n))
+#define GPIO_P4(n)          ( 32U + (n))
+#define GPIO_P5(n)          ( 40U + (n))
+#define GPIO_P7(n)          ( 48U + (n))
+#define GPIO_P8(n)          ( 56U + (n))
+#define GPIO_P9(n)          ( 64U + (n))
+#define GPIO_P10(n)         ( 72U + (n))
+#define GPIO_P11(n)         ( 80U + (n))
+#define GPIO_P12(n)         ( 88U + (n))
+#define GPIO_P13(n)         (104U + (n))
+#define GPIO_P15(n)         (112U + (n))
 
-#define GPIO_PORT_MAX_PIN_NUMBER                0x8U     /* Number of pins in each port */
+// GPIOx IRQ Handlers
+extern void GPIO0_IRQ0Handler (void);
+extern void GPIO0_IRQ1Handler (void);
+extern void GPIO0_IRQ2Handler (void);
+extern void GPIO0_IRQ3Handler (void);
+extern void GPIO0_IRQ4Handler (void);
+extern void GPIO0_IRQ5Handler (void);
+extern void GPIO0_IRQ6Handler (void);
+extern void GPIO0_IRQ7Handler (void);
 
-#define ARM_GPIO_BIT_IRQ_POLARITY_Pos           0U       ///< bits - 0
-#define ARM_GPIO_BIT_IRQ_POLARITY_Msk           (1U << ARM_GPIO_BIT_IRQ_POLARITY_Pos)
-#define ARM_GPIO_BIT_IRQ_POLARITY(x)            (((x)& ARM_GPIO_BIT_IRQ_POLARITY_Msk) >> ARM_GPIO_BIT_IRQ_POLARITY_Pos)
+extern void GPIO1_IRQ0Handler (void);
+extern void GPIO1_IRQ1Handler (void);
+extern void GPIO1_IRQ2Handler (void);
+extern void GPIO1_IRQ3Handler (void);
+extern void GPIO1_IRQ4Handler (void);
+extern void GPIO1_IRQ5Handler (void);
+extern void GPIO1_IRQ6Handler (void);
+extern void GPIO1_IRQ7Handler (void);
 
-#define ARM_GPIO_BIT_IRQ_BOTH_EDGE_Pos          1U       ///< bits - 1
-#define ARM_GPIO_BIT_IRQ_BOTH_EDGE_Msk          (1U << ARM_GPIO_BIT_IRQ_BOTH_EDGE_Pos)
-#define ARM_GPIO_BIT_IRQ_BOTH_EDGE(x)           (((x)& ARM_GPIO_BIT_IRQ_BOTH_EDGE_Msk) >> ARM_GPIO_BIT_IRQ_BOTH_EDGE_Pos)
+extern void GPIO2_IRQ0Handler (void);
+extern void GPIO2_IRQ1Handler (void);
+extern void GPIO2_IRQ2Handler (void);
+extern void GPIO2_IRQ3Handler (void);
+extern void GPIO2_IRQ4Handler (void);
+extern void GPIO2_IRQ5Handler (void);
+extern void GPIO2_IRQ6Handler (void);
+extern void GPIO2_IRQ7Handler (void);
 
-#define ARM_GPIO_BIT_IRQ_SENSITIVE_Pos          2U       ///< bits - 2
-#define ARM_GPIO_BIT_IRQ_SENSITIVE_Msk          (1U << ARM_GPIO_BIT_IRQ_SENSITIVE_Pos)
-#define ARM_GPIO_BIT_IRQ_SENSITIVE(x)           (((x)& ARM_GPIO_BIT_IRQ_SENSITIVE_Msk) >> ARM_GPIO_BIT_IRQ_SENSITIVE_Pos)
+extern void GPIO3_IRQ0Handler (void);
+extern void GPIO3_IRQ1Handler (void);
+extern void GPIO3_IRQ2Handler (void);
+extern void GPIO3_IRQ3Handler (void);
+extern void GPIO3_IRQ4Handler (void);
+extern void GPIO3_IRQ5Handler (void);
+extern void GPIO3_IRQ6Handler (void);
+extern void GPIO3_IRQ7Handler (void);
 
-/**
- * enum GPIO_INSTANCE.
- * GPIO instances.
- */
-typedef enum _GPIO_INSTANCE
-{
-    GPIO0_INSTANCE,
-    GPIO1_INSTANCE,
-    GPIO2_INSTANCE,
-    GPIO3_INSTANCE,
-    GPIO4_INSTANCE,
-    GPIO5_INSTANCE,
-    GPIO6_INSTANCE,
-    GPIO7_INSTANCE,
-    GPIO8_INSTANCE,
-    GPIO9_INSTANCE,
-    GPIO10_INSTANCE,
-    GPIO11_INSTANCE,
-    GPIO12_INSTANCE,
-    GPIO13_INSTANCE,
-    GPIO14_INSTANCE,
-    LPGPIO_INSTANCE
-} GPIO_INSTANCE;
+extern void GPIO4_IRQ0Handler (void);
+extern void GPIO4_IRQ1Handler (void);
+extern void GPIO4_IRQ2Handler (void);
+extern void GPIO4_IRQ3Handler (void);
+extern void GPIO4_IRQ4Handler (void);
+extern void GPIO4_IRQ5Handler (void);
+extern void GPIO4_IRQ6Handler (void);
+extern void GPIO4_IRQ7Handler (void);
 
-typedef struct _GPIO_DRV_STATE {
-    uint32_t initialized : 1; /* Driver Initialized*/
-    uint32_t powered     : 1; /* Driver powered */
-    uint32_t reserved    : 30;/* Reserved */
-} GPIO_DRV_STATE;
+extern void GPIO5_IRQ0Handler (void);
+extern void GPIO5_IRQ1Handler (void);
+extern void GPIO5_IRQ2Handler (void);
+extern void GPIO5_IRQ3Handler (void);
+extern void GPIO5_IRQ4Handler (void);
+extern void GPIO5_IRQ5Handler (void);
+extern void GPIO5_IRQ6Handler (void);
+extern void GPIO5_IRQ7Handler (void);
 
-/**
-  * @brief GPIO Resources
-  */
-typedef struct _GPIO_RESOURCES {
-    GPIO_Type           *reg_base;                               /**< GPIO PORT Base Address>**/
-    IRQn_Type           IRQ_base_num;                            /**< GPIO PORT IRQ base Num>**/
-    uint16_t            db_clkdiv;                               /**< GPIO PORT debounce clk divisor: only for GPIO 0-14 >**/
-    GPIO_DRV_STATE      state;                                   /**< GPIO PORT status flag >**/
-    uint8_t             IRQ_priority[GPIO_PORT_MAX_PIN_NUMBER];  /**< GPIO PIN IRQ priority >**/
-    GPIO_INSTANCE       gpio_id;                                 /**< GPIO instance >*/
-    ARM_GPIO_SignalEvent_t cb_event[GPIO_PORT_MAX_PIN_NUMBER];   /**< GPIO Call back function >*/
-} GPIO_RESOURCES;
+extern void GPIO6_IRQ0Handler (void);
+extern void GPIO6_IRQ1Handler (void);
+extern void GPIO6_IRQ2Handler (void);
+extern void GPIO6_IRQ3Handler (void);
+extern void GPIO6_IRQ4Handler (void);
+extern void GPIO6_IRQ5Handler (void);
+extern void GPIO6_IRQ6Handler (void);
+extern void GPIO6_IRQ7Handler (void);
+
+extern void GPIO7_IRQ0Handler (void);
+extern void GPIO7_IRQ1Handler (void);
+extern void GPIO7_IRQ2Handler (void);
+extern void GPIO7_IRQ3Handler (void);
+extern void GPIO7_IRQ4Handler (void);
+extern void GPIO7_IRQ5Handler (void);
+extern void GPIO7_IRQ6Handler (void);
+extern void GPIO7_IRQ7Handler (void);
+
+extern void GPIO8_IRQ0Handler (void);
+extern void GPIO8_IRQ1Handler (void);
+extern void GPIO8_IRQ2Handler (void);
+extern void GPIO8_IRQ3Handler (void);
+extern void GPIO8_IRQ4Handler (void);
+extern void GPIO8_IRQ5Handler (void);
+extern void GPIO8_IRQ6Handler (void);
+extern void GPIO8_IRQ7Handler (void);
+
+extern void GPIO9_IRQ0Handler (void);
+extern void GPIO9_IRQ1Handler (void);
+extern void GPIO9_IRQ2Handler (void);
+extern void GPIO9_IRQ3Handler (void);
+extern void GPIO9_IRQ4Handler (void);
+extern void GPIO9_IRQ5Handler (void);
+extern void GPIO9_IRQ6Handler (void);
+extern void GPIO9_IRQ7Handler (void);
+
+extern void GPIO10_IRQ0Handler (void);
+extern void GPIO10_IRQ1Handler (void);
+extern void GPIO10_IRQ2Handler (void);
+extern void GPIO10_IRQ3Handler (void);
+extern void GPIO10_IRQ4Handler (void);
+extern void GPIO10_IRQ5Handler (void);
+extern void GPIO10_IRQ6Handler (void);
+extern void GPIO10_IRQ7Handler (void);
+
+extern void GPIO11_IRQ0Handler (void);
+extern void GPIO11_IRQ1Handler (void);
+extern void GPIO11_IRQ2Handler (void);
+extern void GPIO11_IRQ3Handler (void);
+extern void GPIO11_IRQ4Handler (void);
+extern void GPIO11_IRQ5Handler (void);
+extern void GPIO11_IRQ6Handler (void);
+extern void GPIO11_IRQ7Handler (void);
+
+extern void GPIO12_IRQ0Handler (void);
+extern void GPIO12_IRQ1Handler (void);
+extern void GPIO12_IRQ2Handler (void);
+extern void GPIO12_IRQ3Handler (void);
+extern void GPIO12_IRQ4Handler (void);
+extern void GPIO12_IRQ5Handler (void);
+extern void GPIO12_IRQ6Handler (void);
+extern void GPIO12_IRQ7Handler (void);
+
+extern void GPIO13_IRQ0Handler (void);
+extern void GPIO13_IRQ1Handler (void);
+extern void GPIO13_IRQ2Handler (void);
+extern void GPIO13_IRQ3Handler (void);
+extern void GPIO13_IRQ4Handler (void);
+extern void GPIO13_IRQ5Handler (void);
+extern void GPIO13_IRQ6Handler (void);
+extern void GPIO13_IRQ7Handler (void);
+
+extern void GPIO14_IRQ0Handler (void);
+extern void GPIO14_IRQ1Handler (void);
+extern void GPIO14_IRQ2Handler (void);
+extern void GPIO14_IRQ3Handler (void);
+extern void GPIO14_IRQ4Handler (void);
+extern void GPIO14_IRQ5Handler (void);
+extern void GPIO14_IRQ6Handler (void);
+extern void GPIO14_IRQ7Handler (void);
+
+extern void LPGPIO_IRQ0Handler (void);
+extern void LPGPIO_IRQ1Handler (void);
+extern void LPGPIO_IRQ2Handler (void);
+extern void LPGPIO_IRQ3Handler (void);
+extern void LPGPIO_IRQ4Handler (void);
+extern void LPGPIO_IRQ5Handler (void);
+extern void LPGPIO_IRQ6Handler (void);
+extern void LPGPIO_IRQ7Handler (void);
+
+// GPIO0 Driver access structure
+extern ARM_DRIVER_GPIO Driver_GPIO0;
 
 #ifdef  __cplusplus
 }
 #endif
 
 #endif /* DRIVER_GPIO_PRIVATE_H_ */
-
-/************************ (C) COPYRIGHT ALIF SEMICONDUCTOR *****END OF FILE****/
