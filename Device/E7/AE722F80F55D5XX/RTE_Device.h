@@ -6818,17 +6818,18 @@
 
 // <o> DAC converts two's complement to unsigned binary data
 //    <0=> DISABLE(input will be positive)
-//    DAC_out = (DAC_Input / 2^12) * Vref
-//    DAC input = 4000 ==> DAC_out = (4000 / 4096) * 1.8v ==> 1.757v
-//    2^12 represents DAC supports 12 bit resolution.
-
 //    <1=> ENABLE (Input can be positive or negative)
-//    if DAC input = 0xFFFF FFFF FFFF FFFF (in decimal: -1),
-//    DAC_IN(0-11bits) ==> 0xFFF(dac_input = 4095).
-//    if dac_input > 2047 then,
-//    DAC_out = ((dac_input - 2047) / 2^12) *vref
-//    if dac_input < 2047 then,
-//    DAC_out = ((dac_input + 2047) / 2^12) *vref
+// <i> Enable:
+// <i> DAC_out = (DAC_Input / 2^12) * Vref
+// <i> DAC input = 4000 ==> DAC_out = (4000 / 4096) * 1.8v ==> 1.757v
+// <i> 2^12 represents DAC supports 12 bit resolution.
+// <i> Disable:
+// <i> if DAC input = 0xFFFF FFFF FFFF FFFF (in decimal: -1),
+// <i> DAC_IN(0-11bits) ==> 0xFFF(dac_input = 4095).
+// <i> if dac_input > 2047 then,
+// <i> DAC_out = ((dac_input - 2047) / 2^12) *vref
+// <i> if dac_input < 2047 then,
+// <i> DAC_out = ((dac_input + 2047) / 2^12) *vref
 
 // <i> Default: DISABLE
 #define RTE_DAC0_TWOSCOMP_EN        0
@@ -6848,17 +6849,18 @@
 
 // <o> DAC converts two's complement to unsigned binary data
 //    <0=> DISABLE(input will be positive)
-//    DAC_out = (DAC_Input / 2^12) * Vref
-//    DAC input = 4000 ==> DAC_out = (4000 / 4096) * 1.8v ==> 1.757v
-//    2^12 represents DAC supports 12 bit resolution.
-
 //    <1=> ENABLE (Input can be positive or negative)
-//    if DAC input = 0xFFFF FFFF FFFF FFFF (in decimal: -1),
-//    DAC_IN(0-11bits) ==> 0xFFF(dac_input = 4095).
-//    if dac_input > 2047 then,
-//    DAC_out = ((dac_input - 2047) / 2^12) *vref
-//    if dac_input < 2047 then,
-//    DAC_out = ((dac_input + 2047) / 2^12) *vref
+// <i> Enable:
+// <i> DAC_out = (DAC_Input / 2^12) * Vref
+// <i> DAC input = 4000 ==> DAC_out = (4000 / 4096) * 1.8v ==> 1.757v
+// <i> 2^12 represents DAC supports 12 bit resolution.
+// <i> Disable:
+// <i> if DAC input = 0xFFFF FFFF FFFF FFFF (in decimal: -1),
+// <i> DAC_IN(0-11bits) ==> 0xFFF(dac_input = 4095).
+// <i> if dac_input > 2047 then,
+// <i> DAC_out = ((dac_input - 2047) / 2^12) *vref
+// <i> if dac_input < 2047 then,
+// <i> DAC_out = ((dac_input + 2047) / 2^12) *vref
 
 // <i> Default: DISABLE
 #define RTE_DAC1_TWOSCOMP_EN        0
