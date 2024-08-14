@@ -64,8 +64,11 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
     /* set some default values */
     pHsd->regs      = SDMMC;
     pHsd->state     = SD_CARD_STATE_INIT;
-    pHsd->bus_width = p_sd_param->bus_width;
-    pHsd->dma_mode  = p_sd_param->dma_mode;
+
+    pHsd->sd_param.dev_id       = p_sd_param->dev_id;
+    pHsd->sd_param.clock_id     = p_sd_param->clock_id;
+    pHsd->sd_param.bus_width    = p_sd_param->bus_width;
+    pHsd->sd_param.dma_mode     = p_sd_param->dma_mode;
     pHsd->sd_param.app_callback = p_sd_param->app_callback;
 
     /* Get the Host Controller version */
@@ -111,11 +114,11 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
     pHsd->regs->SDMMC_WUP_CTRL_R = SDMMC_WKUP_CARD_IRQ_Msk | SDMMC_WKUP_CARD_INSRT_Msk | SDMMC_WKUP_CARD_REM_Msk;
 #endif
 
-    if(pHsd->dma_mode == SDMMC_HOST_CTRL1_SDMA_MODE)
+    if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_SDMA_MODE)
         hc_config_dma(pHsd, (uint8_t)(SDMMC_HOST_CTRL1_SDMA_MODE | SDMMC_HOST_CTRL1_DMA_SEL_1BIT_MODE));
-    else if(pHsd->dma_mode == SDMMC_HOST_CTRL1_ADMA2_MODE)
+    else if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_ADMA2_MODE)
         hc_config_dma(pHsd, (uint8_t)(SDMMC_HOST_CTRL1_ADMA32_MODE_Msk | SDMMC_HOST_CTRL1_DMA_SEL_1BIT_MODE));
-    else if(pHsd->dma_mode == SDMMC_HOST_CTRL1_ADMA3_MODE)
+    else if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_ADMA3_MODE)
         /* TODO: ADMA3 mode, switching to default ADMA2 mode */
         hc_config_dma(pHsd, (uint8_t)(SDMMC_HOST_CTRL1_ADMA32_MODE_Msk | SDMMC_HOST_CTRL1_DMA_SEL_1BIT_MODE));
     else
@@ -134,6 +137,12 @@ SD_DRV_STATUS sd_host_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 
     uint16_t reg;
+    const uint32_t clk_div_tbl[4] = {
+                                        SDMMC_CLK_12_5MHz_DIV,
+                                        SDMMC_CLK_25MHz_DIV,
+                                        SDMMC_CLK_50MHz_DIV,
+                                        SDMMC_CLK_100MHz_DIV
+                                    };
 
     /* Default settings */
     pHsd->sd_card.cardtype   = SDMMC_CARD_SDHC;
@@ -173,7 +182,10 @@ SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 
     /* Get the card operating condition */
     if(hc_get_card_opcond(pHsd) != SDMMC_HC_STATUS_OK){
-        return SD_DRV_STATUS_CARD_INIT_ERR;
+        if(hc_get_emmc_card_opcond(pHsd) != SDMMC_HC_STATUS_OK)
+            return SD_DRV_STATUS_CARD_INIT_ERR; // No Valid Card Found
+        else
+            pHsd->sd_card.cardtype = SDMMC_CARD_MMC;
     }
 
     if(!(pHsd->sd_card.sdio_mode)){
@@ -208,7 +220,7 @@ SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
 
     if(!(pHsd->sd_card.sdio_mode)){
 
-        if(pHsd->bus_width == SDMMC_4_BIT_MODE){
+        if(pHsd->sd_param.bus_width == SDMMC_4_BIT_MODE){
             if(hc_set_bus_width(pHsd, SDMMC_HOST_CTRL1_4_BIT_WIDTH) != SDMMC_HC_STATUS_OK){
                 return SD_DRV_STATUS_CARD_INIT_ERR;
             }
@@ -219,8 +231,15 @@ SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param){
         }
     }
 
-    reg = SDMMC_OP_CLK_DIVSOR_Msk | SDMMC_CLK_GEN_SEL_Msk | SDMMC_PLL_EN_Msk |
+    /* Check Configured running clock */
+    if(p_sd_param->clock_id < 4)
+        reg = clk_div_tbl[p_sd_param->clock_id];
+    else
+        reg = SDMMC_CLK_50MHz_DIV;  /* Switch default to 50MHz */
+
+    reg = (reg << SDMMC_FREQ_SEL_Pos) | SDMMC_CLK_GEN_SEL_Msk | SDMMC_PLL_EN_Msk |
           SDMMC_CLK_EN_Msk | SDMMC_INTERNAL_CLK_EN_Msk;
+
     hc_set_clk_freq(pHsd, reg);
 
     return SD_DRV_STATUS_OK;
@@ -266,7 +285,7 @@ SD_DRV_STATUS sd_uninit(uint8_t devId)
     sd_handle_t *pHsd           = &Hsd;
     pHsd->sd_cmd.cmdidx         = CMD7;
     pHsd->sd_cmd.data_present   = 0;
-    pHsd->sd_cmd.arg            = 0xFFFF0000; //any other RCA to perform card de-selection
+    pHsd->sd_cmd.arg            = 0x00000000; //any other RCA to perform card de-selection
 
     if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
         sd_error_handler();
@@ -345,6 +364,8 @@ retry:
     int j = 0;
     int *p = dest_buff;
 
+    RTSS_InvalidateDCache_by_Addr(dest_buff, blk_cnt*512);
+
     while(j<(128*blk_cnt)){
         printf("0x%08x: %08x %08x %08x %08x\n",j*4, p[j+0], p[j+1], p[j+2], p[j+3]);
         j += 4;
@@ -400,4 +421,5 @@ retry:
 
     return SD_DRV_STATUS_OK;
 }
+
 

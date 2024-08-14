@@ -27,9 +27,8 @@
 #include "stdio.h"
 #endif
 extern sd_handle_t Hsd;
-static adma2_desc_t adma_desc_tbl[32] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(32)));
+static adma2_desc_t adma_desc_tbl[32] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(512)));
 
-static volatile uint8_t CardInserted = 0;
 static volatile uint16_t nis,eis,cc;
 
 #ifdef SDMMC_IRQ_MODE
@@ -39,11 +38,7 @@ void SDMMC_IRQHandler(void){
     eis = Hsd.regs->SDMMC_ERROR_INT_STAT_R;
     nis = Hsd.regs->SDMMC_NORMAL_INT_STAT_R;
 
-    if(eis)
-        hc_reset(&Hsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));
-
     /* clear the current interrupt status */
-
     while(Hsd.regs->SDMMC_ERROR_INT_STAT_R)
     {
         eis = Hsd.regs->SDMMC_ERROR_INT_STAT_R;
@@ -55,6 +50,9 @@ void SDMMC_IRQHandler(void){
         nis = Hsd.regs->SDMMC_NORMAL_INT_STAT_R;
         Hsd.regs->SDMMC_NORMAL_INT_STAT_R = nis;
     }
+
+    if(eis)
+        hc_reset(&Hsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk));
 
     switch(nis){
         case SDMMC_INTR_CC_Msk:
@@ -162,12 +160,13 @@ static uint8_t hc_get_cmd_rsp_type(uint8_t Cmd){
 SDMMC_HC_STATUS hc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd){
 
     uint16_t cmd, timeout_cnt = SDMMC_MAX_TIMEOUT_16;
-    uint8_t rsp_type;
+    uint8_t rsp_type, retry_cnt=1;
 
     rsp_type = hc_get_cmd_rsp_type(pCmd->cmdidx);
 
     cmd = (pCmd->cmdidx <<  SDMMC_CMD_IDX_Pos) | ( rsp_type );
 
+RETRY:
     pHsd->regs->SDMMC_ERROR_INT_STAT_R = SDMMC_ERROR_INTR_ALL_Msk;
     pHsd->regs->SDMMC_NORMAL_INT_STAT_R = SDMMC_NORM_INTR_ALL_Msk;
     cc = 0;
@@ -191,12 +190,17 @@ SDMMC_HC_STATUS hc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd){
     while( timeout_cnt-- && (!cc) );
 
 #ifdef SDMMC_PRINTF_DEBUG
-    printf("CMD: 0x%04x, ARG: 0x%08x, XFER: 0x%04x Resp01: %08x, Resp23: %08x, Resp45: %08x, Resp67: %08x cc:%d\n",
-            cmd,pCmd->arg,pCmd->xfer_mode,pHsd->regs->SDMMC_RESP01_R,pHsd->regs->SDMMC_RESP23_R,pHsd->regs->SDMMC_RESP45_R,pHsd->regs->SDMMC_RESP67_R,cc);
+    printf("CMD: 0x%04x, ARG: 0x%08x XFER: 0x%04x RSP01: 0x%08x RSP23: 0x%08x RSP45: 0x%08x RSP67: 0x%08x PSTATE: 0x%08x cc:%d\n",
+            cmd,pCmd->arg,pCmd->xfer_mode,pHsd->regs->SDMMC_RESP01_R,pHsd->regs->SDMMC_RESP23_R,
+            pHsd->regs->SDMMC_RESP45_R,pHsd->regs->SDMMC_RESP67_R,pHsd->regs->SDMMC_PSTATE_REG, cc);
 #endif
 
     if( (timeout_cnt == SDMMC_MAX_TIMEOUT_16) || eis ){
-        return SDMMC_HC_STATUS_ERR;
+
+        if(!retry_cnt--)
+            return SDMMC_HC_STATUS_ERR;
+        else
+            goto RETRY;
     }
 
     return SDMMC_HC_STATUS_OK;
@@ -365,12 +369,15 @@ SDMMC_HC_STATUS hc_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth){
 
     pHsd->regs->SDMMC_HOST_CTRL1_R = regs;
 
-    /* just to indicate SD Card that the next cmd is APP CMD */
-    pHsd->sd_cmd.cmdidx       = CMD55;
-    pHsd->sd_cmd.arg          = pHsd->sd_card.relcardadd;
+    /* just to indicate Card that the next cmd is APP CMD if not MMC/eMMC Card */
+    if(pHsd->sd_card.cardtype != SDMMC_CARD_MMC){
 
-    if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
-        sd_error_handler();
+        pHsd->sd_cmd.cmdidx       = CMD55;
+        pHsd->sd_cmd.arg          = pHsd->sd_card.relcardadd;
+
+        if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
+            sd_error_handler();
+        }
     }
 
     /* Send ACMD6 to change Bus width */
@@ -415,7 +422,7 @@ SDMMC_HC_STATUS hc_identify_card(sd_handle_t *pHsd){
     uint32_t isCardPresent = 0, timeout = 0xFFFFU;
     SDMMC_HC_STATUS status;
 
-    hc_reset(pHsd, SDMMC_SW_RST_ALL_Msk); // reset CMD and DATA Line
+    hc_reset(pHsd, (uint8_t)(SDMMC_SW_RST_DAT_Msk | SDMMC_SW_RST_CMD_Msk)); // reset CMD and DATA Line
 
 #ifdef SDMMC_PRINTF_DEBUG
     printf("Waiting for SD Card to be inserted...\n");
@@ -481,7 +488,7 @@ SDMMC_HC_STATUS hc_get_card_ifcond(sd_handle_t *pHsd){
     pHsd->sd_cmd.cmdidx       = CMD8;
     pHsd->sd_cmd.arg          = SDMMC_CMD8_VOL_PATTERN;
     if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
-        return SDMMC_HC_STATUS_ERR;
+        sd_error_handler();
     }
 
     resp_ifcond = pHsd->regs->SDMMC_RESP01_R;
@@ -499,6 +506,50 @@ SDMMC_HC_STATUS hc_get_card_ifcond(sd_handle_t *pHsd){
     }
 
     return SDMMC_HC_STATUS_OK;
+}
+
+/**
+  \fn           SDMMC_HC_STATUS hc_get_eemc_card_opcond(sd_handle_t *pHsd)
+  \brief        Get eMMC Card operating voltage condition
+  \param[in]    Global sd Handle pointer
+  \return       Host controller driver status
+  */
+SDMMC_HC_STATUS hc_get_emmc_card_opcond(sd_handle_t *pHsd){
+
+    uint32_t resp_OPcond;
+    uint32_t timeout = 0xFFFFU;
+    uint32_t switch1v8 = 0;
+    uint32_t ocr;
+
+    hc_power_cycle(pHsd);
+
+    hc_reset(pHsd, SDMMC_SW_RST_CMD_Msk | SDMMC_SW_RST_DAT_Msk);
+    hc_go_idle(pHsd);
+    hc_get_card_ifcond(pHsd);
+
+    do{
+
+        pHsd->sd_cmd.cmdidx       = CMD1;
+        pHsd->sd_cmd.arg          = (SDMMC_CMD41_HCS | SDMMC_CMD41_3V3);// | SD_OCR_S18R);
+        if(hc_send_cmd(pHsd, &pHsd->sd_cmd) != SDMMC_HC_STATUS_OK){
+            sd_error_handler();
+        }
+
+        resp_OPcond = pHsd->regs->SDMMC_RESP01_R;
+        switch1v8 = resp_OPcond & SDMMC_CMD41_S18A;
+        resp_OPcond = pHsd->regs->SDMMC_RESP01_R;
+        resp_OPcond = resp_OPcond & SDMMC_OCR_READY;
+    }while( (!resp_OPcond) && (timeout--));
+
+    if(timeout == SDMMC_MAX_TIMEOUT_32)
+        return SDMMC_HC_STATUS_ERR;
+
+    /* UHS-I Specific Initializations */
+    if(switch1v8)
+        hc_switch_1v8(pHsd);
+
+    return SDMMC_HC_STATUS_OK;
+
 }
 
 /**
@@ -567,6 +618,11 @@ SDMMC_HC_STATUS hc_get_card_opcond(sd_handle_t *pHsd){
     if(timeout == SDMMC_MAX_TIMEOUT_32)
         return SDMMC_HC_STATUS_ERR;
 
+    if(!(pHsd->regs->SDMMC_RESP01_R & SDMMC_CMD41_HCS)) {
+        pHsd->sd_card.cardversion = SDMMC_CARD_SDSC;
+        pHsd->sd_card.cardtype = SDMMC_CARD_SDSC;
+    }
+
     /* UHS-I Specific Initializations */
     if(switch1v8)
         hc_switch_1v8(pHsd);
@@ -628,6 +684,8 @@ SDMMC_HC_STATUS hc_get_card_csd(sd_handle_t *pHsd){
         device_size = (device_size + 1U) * mult;
         device_size =  device_size * blk_len;
         pHsd->sd_card.sectorcount = (device_size/SDMMC_BLK_SIZE_512_Msk);
+        pHsd->sd_card.sectorsize = blk_len;
+        pHsd->sd_card.logblocksize = blk_len;
     }else if(((pHsd->csd[3] & CSD_STRUCT_Msk) >> 22U) == 1U){
         c_size = ((pHsd->csd[1] & CSD_V2_C_SIZE_Msk) >> 8U);
 
@@ -931,10 +989,13 @@ SDMMC_HC_STATUS hc_set_blk_cnt(sd_handle_t *pHsd, uint32_t BlkCnt){
 SDMMC_HC_STATUS hc_dma_config(sd_handle_t *pHsd, uint32_t buff, uint32_t sector, uint16_t blk_cnt){
 
     ARG_UNUSED(sector);
-    hc_set_blk_cnt(pHsd, blk_cnt);
+
+    if((pHsd->sd_card.cardtype != SDMMC_CARD_SDSC) && (blk_cnt > 1)){
+        hc_set_blk_cnt(pHsd, blk_cnt);
+    }
 
     /* Configure DMA buffer */
-    if(pHsd->dma_mode == SDMMC_HOST_CTRL1_ADMA2_MODE){
+    if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_ADMA2_MODE){
 
         uint32_t desc_num = 0;
         uint32_t total_desc = 0, bytes_per_desc;
@@ -959,6 +1020,7 @@ SDMMC_HC_STATUS hc_dma_config(sd_handle_t *pHsd, uint32_t buff, uint32_t sector,
         printf("ADMA Desc: 0x%x, addr: 0x%x, Len: 0x%x, Attr: 0x%x\n",(uint32_t)&adma_desc_tbl[0],adma_desc_tbl[0].addr,adma_desc_tbl[0].len,adma_desc_tbl[0].attr);
 #endif
 
+        RTSS_CleanDCache_by_Addr(&adma_desc_tbl[0], sizeof(adma_desc_tbl));
         pHsd->regs->SDMMC_ADMA_SA_LOW_R = (uint32_t)LocalToGlobal((&adma_desc_tbl[0]));
     }
 
@@ -982,6 +1044,9 @@ SDMMC_HC_STATUS hc_read_setup(sd_handle_t *pHsd, uint32_t buff, uint32_t sector,
     hc_dma_config(pHsd, buff, sector, BlkCnt);
 
     pHsd->sd_cmd.arg              = sector;
+    if(pHsd->sd_card.cardtype == SDMMC_CARD_SDSC)
+        pHsd->sd_cmd.arg <<= 9;
+
     pHsd->sd_cmd.data_present     = 1;
 
     if(BlkCnt == 1){
@@ -993,9 +1058,10 @@ SDMMC_HC_STATUS hc_read_setup(sd_handle_t *pHsd, uint32_t buff, uint32_t sector,
         pHsd->sd_cmd.xfer_mode    = SDMMC_XFER_MODE_DATA_XFER_RD_Msk | SDMMC_XFER_MODE_MULTI_BLK_SEL_Msk |
                                     (SDMMC_XFER_MODE_AUTO_CMD12 << SDMMC_XFER_MODE_AUTO_CMD_EN_Pos) |
                                     SDMMC_XFER_MODE_DMA_EN_Msk;
-#ifndef SDMMC_ADMA2_MODE
-        pHsd->sd_cmd.xfer_mode |= SDMMC_XFER_MODE_BLK_CNT_Msk;
-#endif
+
+        if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_SDMA_MODE)
+            pHsd->sd_cmd.xfer_mode |= SDMMC_XFER_MODE_BLK_CNT_Msk;
+
     }
 
     pHsd->regs->SDMMC_HOST_CTRL1_R |= 1; //led caution on
@@ -1023,6 +1089,9 @@ SDMMC_HC_STATUS hc_write_setup(sd_handle_t *pHsd, uint32_t buff, uint32_t sector
     hc_dma_config(pHsd, buff, sector, BlkCnt);
 
     pHsd->sd_cmd.arg              = sector;
+    if(pHsd->sd_card.cardtype == SDMMC_CARD_SDSC)
+        pHsd->sd_cmd.arg <<= 9;
+
     pHsd->sd_cmd.data_present     = 1;
 
     if(BlkCnt == 1){
@@ -1032,9 +1101,10 @@ SDMMC_HC_STATUS hc_write_setup(sd_handle_t *pHsd, uint32_t buff, uint32_t sector
         pHsd->sd_cmd.cmdidx       = CMD25;
         pHsd->sd_cmd.xfer_mode    = SDMMC_XFER_MODE_DATA_XFER_WR_Msk | SDMMC_XFER_MODE_MULTI_BLK_SEL_Msk |
                                     SDMMC_XFER_MODE_BLK_CNT_Msk | SDMMC_XFER_MODE_DMA_EN_Msk;
-#ifndef SDMMC_ADMA2_MODE
-        pHsd->sd_cmd.xfer_mode |= SDMMC_XFER_MODE_BLK_CNT_Msk;
-#endif
+
+        if(pHsd->sd_param.dma_mode == SDMMC_HOST_CTRL1_SDMA_MODE)
+            pHsd->sd_cmd.xfer_mode |= SDMMC_XFER_MODE_BLK_CNT_Msk;
+
     }
 
     pHsd->regs->SDMMC_HOST_CTRL1_R |= SDMMC_HOST_CTRL1_LED_ON; //led caution on
@@ -1234,4 +1304,5 @@ SDMMC_HC_STATUS hc_io_rw_extended(sd_handle_t *pHsd, uint32_t rwFlag, uint32_t f
     exit:
         return status;
 }
+
 

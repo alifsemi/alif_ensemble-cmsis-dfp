@@ -154,7 +154,7 @@ typedef struct _adma2_desc_t{
 
 /* Software Reset Register */
 #define SDMMC_SW_RST_ALL_Pos                    0U
-#define SDMMC_SW_RST_ALL_Msk                    (0U << SDMMC_SW_RST_ALL_Pos)
+#define SDMMC_SW_RST_ALL_Msk                    (1U << SDMMC_SW_RST_ALL_Pos)
 #define SDMMC_SW_RST_CMD_Pos                    1U
 #define SDMMC_SW_RST_CMD_Msk                    (1U << SDMMC_SW_RST_CMD_Pos)
 #define SDMMC_SW_RST_DAT_Pos                    2U
@@ -302,29 +302,12 @@ typedef struct _adma2_desc_t{
 #define SDMMC_CLK_1_5MHz_DIV                    0x40U
 #define SDMMC_CLK_3MHz_DIV                      0x20U
 #define SDMMC_CLK_6MHz_DIV                      0x10U
-#define SDMMC_CLK_12_5MHz_DIV                   0x8U
-#define SDMMC_CLK_25MHz_DIV                     0x4U
-#define SDMMC_CLK_50MHz_DIV                     0x2U
-#define SDMMC_CLK_100MHz_DIV                    0x1U
+#define SDMMC_CLK_12_5MHz_DIV                   0x4U
+#define SDMMC_CLK_25MHz_DIV                     0x2U
+#define SDMMC_CLK_50MHz_DIV                     0x1U
+#define SDMMC_CLK_100MHz_DIV                    0x0U
 #define SDMMC_INIT_FREQ                         SDMMC_CLK_400KHz_DIV
-
-#define SD_RUNNING_CLOCK_12_5MHz                0U
-#define SD_RUNNING_CLOCK_25MHz                  1U
-#define SD_RUNNING_CLOCK_50MHz                  2U
-
-#if (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_12_5MHz)
-    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_12_5MHz_DIV
-#elif  (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_25MHz)
-    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_25MHz_DIV
-#elif  (RTE_SDC_CLOCK_SELECT == SD_RUNNING_CLOCK_50MHz)
-    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_50MHz_DIV
-#else
-    #warning "Inavlid SD Clock selection, switching to default 25MHz...\n"
-    #define SDMMC_OP_FREQ_SEL                       SDMMC_CLK_25MHz_DIV
-#endif
-
 #define SDMMC_INIT_CLK_DIVSOR_Msk               (SDMMC_INIT_FREQ)
-#define SDMMC_OP_CLK_DIVSOR_Msk                 (SDMMC_OP_FREQ_SEL << SDMMC_FREQ_SEL_Pos)
 
 /* Host Capabilities */
 #define SDMMC_HOST_SD_CAP_VOLT_3V3_Msk          0x01000000U /*!< 3.3V support */

@@ -12,6 +12,11 @@
   -->
 
   <releases>
+     <release version="1.2.2" date="2024-08-13">
+      - update SD Driver for various fixes
+      - Add emmc init sequence 
+      - Low Capacity SD card support
+    </release>
     <release version="1.2.1" date="2024-06-27">
       - update SE services to 1.97.0
     </release>
