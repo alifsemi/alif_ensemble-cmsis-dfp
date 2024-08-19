@@ -119,8 +119,6 @@ typedef struct _sd_handle_t{
     uint32_t                scr[2];         /*!< SD card Configuration Register         */
     SD_CARD_STATE           state;          /*!< SD card State                          */
     uint16_t                hc_version;     /*!< Host controller version                */
-    uint8_t                 bus_width;      /*!< 1Bit, 4Bit, 8Bit Mode                  */
-    uint8_t                 dma_mode;       /*!< SDMA, ADMA2, and ADMA3 Mode            */
     sd_param_t              sd_param;       /*!< SD Default Config Parameters           */
 }sd_handle_t;
 
