@@ -29,7 +29,7 @@
 /* CSI includes */
 #include "Driver_MIPI_CSI2.h"
 #include "csi.h"
-#include "DPHY_init.h"
+#include "DPHY_CSI2.h"
 #include "sys_ctrl_csi.h"
 #include "Driver_CSI_Private.h"
 #include "Camera_Sensor.h"

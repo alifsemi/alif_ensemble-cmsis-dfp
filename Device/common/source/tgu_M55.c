@@ -17,12 +17,15 @@
 #endif
 
 #include "tgu_M55.h"
+#include "tcm_partition.h"
 
 /*
  * Array of NS memory regions. Add new regions to this list.
+ * The start and end address of the non-secure region in updated
+ * from the linker scripts.
  */
 static const struct mem_region ns_regions[] __STARTUP_RO_DATA_ATTRIBUTE = {
-    {NS_REGION_0_BASE, NS_REGION_0_END, DTCM},
+    {(uint32_t)&ns_region_0_start, (uint32_t)&ns_region_0_end - 1, DTCM},
     };
 
 /*----------------------------------------------------------------------------

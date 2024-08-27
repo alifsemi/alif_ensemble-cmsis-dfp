@@ -109,7 +109,7 @@ void vApplicationIdleHook(void)
 #define I3C_SLAVE_ADDRESS             (0X48)
 
 /* receive data from i3c */
-uint8_t rx_data[4] = {0x00};
+uint8_t __ALIGNED(4) rx_data[4] = {0x00};
 
 uint32_t tx_cnt = 0;
 uint32_t rx_cnt = 0;
@@ -246,6 +246,13 @@ void i3c_slave_loopback_thread(void *pvParameters)
     printf("\r\n i3c version api:0x%X driver:0x%X \r\n",
                            version.api, version.drv);
 
+    if((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U))        ||
+       (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    {
+        printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
+        return;
+    }
+
     /* Initialize i3c hardware pins using PinMux Driver. */
     ret = hardware_init();
     if(ret != 0)
@@ -373,8 +380,10 @@ int main(void)
    SystemCoreClockUpdate();
 
    /* Create application main thread */
-   BaseType_t xReturned = xTaskCreate(i3c_slave_loopback_thread, "i3c_slave_loopback_thread",
-                                      256, NULL,configMAX_PRIORITIES-1, &i3c_xHandle);
+   BaseType_t xReturned = xTaskCreate(i3c_slave_loopback_thread,
+                                      "i3c_slave_loopback_thread",
+                                      STACK_SIZE, NULL,
+                                      configMAX_PRIORITIES-1, &i3c_xHandle);
    if (xReturned != pdPASS)
    {
       vTaskDelete(i3c_xHandle);

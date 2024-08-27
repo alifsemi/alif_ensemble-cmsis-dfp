@@ -510,7 +510,7 @@ int main(void)
      * remove the request altogether to use the default setting that turns on
      * almost everything.
      */
-
+    runp.power_domains = PD_SYST_MASK | PD_SSE700_AON_MASK;
 #if defined(M55_HP)
     runp.memory_blocks = SRAM2_MASK | SRAM3_MASK | MRAM_MASK;
 #else

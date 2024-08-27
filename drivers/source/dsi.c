@@ -50,22 +50,42 @@ void dsi_dcs_cmd_short_write(DSI_Type *dsi, uint8_t cmd, uint8_t vc_id)
 /**
   \fn          void dsi_dcs_long_write(DSI_Type *dsi, uint8_t cmd, uint32_t data, uint8_t vc_id)
   \brief       Perform dsi DCS Short write.
-  \param[in]   cmd is DCS command info.
-  \param[in]   data of four bytes to send.
+  \param[in]   data pointer to data buffer.
+  \param[in]   len data buffer length.
   \param[in]   vc_id virtual channel ID.
   \return      none.
 */
-void dsi_dcs_long_write(DSI_Type *dsi, uint8_t cmd, uint32_t data, uint8_t vc_id)
+void dsi_dcs_long_write(DSI_Type *dsi, uint8_t* data, uint32_t len, uint8_t vc_id)
 {
-    dsi->DSI_GEN_PLD_DATA = (cmd << DSI_GEN_PLD_B1) | (cmd << DSI_GEN_PLD_B2)  | \
-                            ((data << DSI_GEN_PLD_B3) & DSI_GEN_PLD_B3_MASK)   | \
-                            ((data >> 8) << DSI_GEN_PLD_B4);
+    if (DSI_GEN_PAYLOAD_FIFO_SIZE < len)
+    {
+        return;
+    }
 
-    dsi->DSI_GEN_PLD_DATA = ((data >> 16) << DSI_GEN_PLD_B1) | ((data >> 24) << DSI_GEN_PLD_B2);
+    uint32_t payload_data,bytes_to_copy;
+    uint32_t data_len = len;
 
-    dsi->DSI_GEN_HDR = (DSI_DCS_LONG_WRITE_DATA_TYPE << DSI_GEN_DT) | (vc_id << DSI_GEN_VC) | \
-                       (DSI_DCS_LONG_WRITE_DATA_LEN << DSI_GEN_WC_LSBYTE);
+    while (data_len)
+    {
+        payload_data = 0;
+        bytes_to_copy = (data_len < DSI_PAYLOAD_FIFO_SLOT_DEPTH) ? data_len : DSI_PAYLOAD_FIFO_SLOT_DEPTH;
+
+        for (uint32_t i = 0; i < bytes_to_copy; i++)
+        {
+            payload_data |= ((uint32_t)data[i] << (i * 8));
+        }
+
+        dsi->DSI_GEN_PLD_DATA = payload_data;
+
+        data += bytes_to_copy;
+        data_len -= bytes_to_copy;
+    }
+
+    dsi->DSI_GEN_HDR = (DSI_DCS_LONG_WRITE_DATA_TYPE << DSI_GEN_DT) |
+                       ((vc_id & DSI_GEN_VC_MASK) << DSI_GEN_VC) |
+                       (len << DSI_GEN_WC_LSBYTE);
 }
+
 
 /**
   \fn          DSI_LANE_STOPSTATE dsi_get_lane_stopstate_status(DSI_Type *dsi, DSI_LANE lane)

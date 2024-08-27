@@ -509,7 +509,7 @@ SDMMC_HC_STATUS hc_get_card_ifcond(sd_handle_t *pHsd){
 }
 
 /**
-  \fn           SDMMC_HC_STATUS hc_get_eemc_card_opcond(sd_handle_t *pHsd)
+  \fn           SDMMC_HC_STATUS hc_get_emmc_card_opcond(sd_handle_t *pHsd)
   \brief        Get eMMC Card operating voltage condition
   \param[in]    Global sd Handle pointer
   \return       Host controller driver status
@@ -990,7 +990,7 @@ SDMMC_HC_STATUS hc_dma_config(sd_handle_t *pHsd, uint32_t buff, uint32_t sector,
 
     ARG_UNUSED(sector);
 
-    if((pHsd->sd_card.cardtype != SDMMC_CARD_SDSC) && (blk_cnt > 1)){
+    if((pHsd->sd_card.cardtype != SDMMC_CARD_SDSC)){
         hc_set_blk_cnt(pHsd, blk_cnt);
     }
 

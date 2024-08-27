@@ -39,6 +39,10 @@
  *         attributes for the regions.
  *         Set this function as weak, so that User can
  *         override from application.
+ * @note   This function will be invoked much early in the boot process
+ *         and before the scatterload. User must ensure that this function
+ *         is included in the primary load region.
+ *         region.
  * @param  None
  * @retval None
  */
@@ -155,6 +159,9 @@ void MPU_Clear_All_Regions(void)
  *         from the table. Once it is loaded, MPU is enabled.
  *         Set this function as weak, so that User can
  *         override from application.
+ * @note   This function will be invoked much early in the boot process
+ *         and before the scatterload. User must ensure that this function
+ *         is included in the primary load region.
  * @param  None
  * @retval None
  */

@@ -11,8 +11,6 @@
 #ifndef APP_MAP_H
 #define APP_MAP_H
 
-#include "global_map.h"
-
 /* Max size of applications for each core;
  * User shall adjust this based on app need.
  */
@@ -32,9 +30,9 @@
  */
 
 #if BOOT_FROM_OSPI_FLASH
-#define _APP_ADDRESS_HE                  (OSPI1_XIP_BASE)
+#define _APP_ADDRESS_HE                  (0xC0000000)
 #else
-#define _APP_ADDRESS_HE                  (MRAM_BASE)
+#define _APP_ADDRESS_HE                  (0x80000000)
 #endif
 
 #define _APP_ADDRESS_HP                  (_APP_ADDRESS_HE + _APP_MAX_SIZE_HE)

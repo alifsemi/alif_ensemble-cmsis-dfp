@@ -48,6 +48,7 @@
 #include "pinconf.h"
 #include "Driver_GPIO.h"
 
+#include "RTE_Device.h"
 #include "RTE_Components.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
@@ -230,10 +231,10 @@ void mix_bus_i2c_i3c_demo_entry()
      */
 
     /* transmit data to i3c */
-    uint8_t tx_data[4] = {0};
+    uint8_t __ALIGNED(4) tx_data[4] = {0};
 
     /* receive data from i3c */
-    uint8_t rx_data[4] = {0};
+    uint8_t __ALIGNED(4) rx_data[4] = {0};
 
     /* receive data used for comparison. */
     uint8_t cmp_rx_data = 0;
@@ -248,16 +249,23 @@ void mix_bus_i2c_i3c_demo_entry()
     ARM_DRIVER_VERSION version;
 
     /* I3C CCC (Common Command Codes) */
-    I3C_CMD i3c_cmd;
+    ARM_I3C_CMD i3c_cmd;
     uint8_t i3c_cmd_tx_data[4] = {0x0F};
     uint8_t i3c_cmd_rx_data[4] = {0};
 
-    printf("\r\n \t\t >>> mix bus i2c and i3c communication demo starting up!!! <<< \r\n");
+    printf("\r\n>> mix bus i2c and i3c communication demo starting up <<\r\n");
 
     /* Get i3c driver version. */
     version = I3Cdrv->GetVersion();
-    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",  \
-                           version.api, version.drv);
+    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",
+            version.api, version.drv);
+
+    if((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U))       ||
+       (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    {
+        printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
+        return;
+    }
 
     /* Initialize i3c hardware pins using PinMux Driver. */
     ret = hardware_init();
@@ -268,7 +276,11 @@ void mix_bus_i2c_i3c_demo_entry()
     }
 
     /* Initialize I3C driver */
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+    ret = I3Cdrv->Initialize(NULL);
+#else
     ret = I3Cdrv->Initialize(I3C_callback);
+#endif
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Initialize failed.\r\n");
@@ -280,6 +292,14 @@ void mix_bus_i2c_i3c_demo_entry()
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Power Up failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Initialize I3C master */
+    ret = I3Cdrv->Control(I3C_MASTER_INIT, NULL);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Init control failed.\r\n");
         goto error_uninitialize;
     }
 
@@ -297,33 +317,79 @@ void mix_bus_i2c_i3c_demo_entry()
         goto error_poweroff;
     }
 
+    /* Reject Hot-Join request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Hot Join control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Master request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Request control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Slave Interrupt request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_SIR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Slave Interrupt Request control failed.\r\n");
+        goto error_uninitialize;
+    }
+
     /* Delay for 1000 micro second.
      *  @Note: Minor delay is required if prints are disable.
      */
     sys_busy_loop_us(1000);
 
     /* Assign Dynamic Address for Accelerometer */
-    printf("\r\n >> i3c: Get dynamic addr for static addr:0x%X.\r\n",I3C_ACCERO_ADDR);
+    printf("\r\n >> i3c: Get dynamic addr for static addr:0x%X.\r\n",
+            I3C_ACCERO_ADDR);
 
     /* clear callback event flag. */
     cb_event_flag = 0;
 
-    ret = I3Cdrv->MasterAssignDA(&slave_addr[0], I3C_ACCERO_ADDR);
+    i3c_cmd.rw            = 0U;
+    i3c_cmd.cmd_id        = I3C_CCC_SETDASA;
+    i3c_cmd.len           = 1U;
+    /* Assign Slave's Static address */
+    i3c_cmd.addr          = I3C_ACCERO_ADDR;
+    i3c_cmd.data          = NULL;
+    i3c_cmd.def_byte      = 0U;
+
+    ret = I3Cdrv->MasterAssignDA(&i3c_cmd);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C MasterAssignDA failed.\r\n");
         goto error_poweroff;
     }
 
-    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) || (cb_event_flag == I3C_CB_EVENT_ERROR)));
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
+    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) ||
+            (cb_event_flag == I3C_CB_EVENT_ERROR)));
 
     if(cb_event_flag == I3C_CB_EVENT_ERROR)
     {
         printf("\nError: I3C MasterAssignDA failed\n");
     }
+#endif
 
-    printf("\r\n >> i3c: Received dyn_addr:0x%X for static addr:0x%X. \r\n",   \
-                                 slave_addr[0],I3C_ACCERO_ADDR);
+    /* Get assigned dynamic address for the static address */
+    ret = I3Cdrv->GetSlaveDynAddr(I3C_ACCERO_ADDR, &slave_addr[0]);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: I3C Failed to get Dynamic Address.\r\n");
+        goto error_poweroff;
+    }
+    else
+    {
+        printf("\r\n >> i3c: Rcvd dyn_addr:0x%X for static addr:0x%X\r\n",
+                slave_addr[0],I3C_ACCERO_ADDR);
+    }
 
     /* Delay for n micro second. */
     sys_busy_loop_us(1000);
@@ -333,7 +399,8 @@ void mix_bus_i2c_i3c_demo_entry()
 
     /* demo for I3C CCC (Common Command Codes) APIs */
 
-    /* write I3C_CCC_SETMWL (Set Max Write Length) command to Accelerometer slave */
+    /* write I3C_CCC_SETMWL (Set Max Write Length)
+     * command to Accelerometer slave */
     i3c_cmd.rw     = 0;
     i3c_cmd.cmd_id = I3C_CCC_SETMWL(false);
     i3c_cmd.len    = 1;
@@ -347,12 +414,15 @@ void mix_bus_i2c_i3c_demo_entry()
         goto error_detach;
     }
 
-    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) || (cb_event_flag == I3C_CB_EVENT_ERROR)));
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
+    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) ||
+            (cb_event_flag == I3C_CB_EVENT_ERROR)));
 
     if(cb_event_flag == I3C_CB_EVENT_ERROR)
     {
         printf("\nError: I3C MasterSendCommand failed\n");
     }
+#endif
 
     /* clear callback event flag. */
     cb_event_flag = 0;
@@ -360,7 +430,8 @@ void mix_bus_i2c_i3c_demo_entry()
     /* Delay for 1000 micro second. */
     sys_busy_loop_us(1000);
 
-    /* read I3C_CCC_GETMWL (Get Max Write Length) command from Accelerometer slave */
+    /* read I3C_CCC_GETMWL (Get Max Write Length) command
+     * from Accelerometer slave */
     i3c_cmd.rw     = 1;
     i3c_cmd.cmd_id = I3C_CCC_GETMWL;
     i3c_cmd.len    = 1;
@@ -374,30 +445,34 @@ void mix_bus_i2c_i3c_demo_entry()
         goto error_detach;
     }
 
-    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) || (cb_event_flag == I3C_CB_EVENT_ERROR)));
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
+    while(!((cb_event_flag == I3C_CB_EVENT_SUCCESS) ||
+            (cb_event_flag == I3C_CB_EVENT_ERROR)));
 
     if(cb_event_flag == I3C_CB_EVENT_ERROR)
     {
         printf("\nError: I3C MasterSendCommand failed\n");
     }
+#endif
 
     /* compare tx and rx command data for Accelerometer slave */
     if( memcmp(i3c_cmd_rx_data, i3c_cmd_tx_data, 1) == 0 )
     {
-        printf("\r\n \t\t >> i3c Accelerometer SendCommand Success.\r\n");
+        printf("\r\n>> i3c Accelerometer SendCommand Success.\r\n");
     }
     else
     {
-        printf("\r\n \t\t >> i3c Accelerometer SendCommand failed.\r\n");
+        printf("\r\n>> i3c Accelerometer SendCommand failed.\r\n");
     }
 
     /* Delay for 1000 micro second. */
     sys_busy_loop_us(1000);
 
     /* Attach i2c BMI slave using static address */
-    printf("\r\n >> i2c: Attaching i2c BMI slave addr:0x%X to i3c...\r\n",slave_addr[1]);
+    printf("\r\n >> Attaching i2c BMI slave addr: 0x%X to i3c...\r\n",
+            slave_addr[1]);
 
-    ret = I3Cdrv->AttachI2Cdev(slave_addr[1]);
+    ret = I3Cdrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[1]);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Attach I2C device failed.\r\n");
@@ -456,9 +531,9 @@ void mix_bus_i2c_i3c_demo_entry()
              */
             len = 1;
 
-            printf("\r\n ------------------------------------------------------------ \r\n");
-            printf("\r\n >> i=%d TX slave addr:0x%X reg_addr:[0]0x%X \r\n",  \
-                                 i, slave_addr[i], slave_reg_addr[i]);
+            printf("\r\n -------------------------------------------- \r\n");
+            printf("\r\n >> i=%d TX slave addr:0x%X reg_addr:[0]0x%X \r\n",
+                    i, slave_addr[i], slave_reg_addr[i]);
 
             /* Delay for 1000 micro second. */
             sys_busy_loop_us(1000);
@@ -478,6 +553,10 @@ void mix_bus_i2c_i3c_demo_entry()
                 goto error_detach;
             }
 
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+            printf("\r\n>> i=%d TX Success: Got ACK from slave :0x%X\r\n",
+                    i, slave_addr[i]);
+#else
             /* wait till any event success/error comes in isr callback */
             retry_cnt = 1000;
             while (retry_cnt)
@@ -488,15 +567,15 @@ void mix_bus_i2c_i3c_demo_entry()
 
                 if(cb_event_flag == I3C_CB_EVENT_SUCCESS)
                 {
-                    printf("\r\n \t\t >> i=%d TX Success: Got ACK from slave addr:0x%X.\r\n",  \
-                                                   i, slave_addr[i]);
+                    printf("\r\n>> i=%d TX Success: Got ACK from slave :0x%X\r\n",
+                            i, slave_addr[i]);
                     break;
                 }
                 if(cb_event_flag == I3C_CB_EVENT_ERROR)
                 {
                     /* TX Error: Got NACK from slave */
-                    printf("\r\n \t\t >> i=%d TX Error: Got NACK from slave addr:0x%X \r\n",  \
-                                                   i, slave_addr[i]);
+                    printf("\r\n>> i=%d TX Error: Got NACK from slave:0x%X\r\n",
+                            i, slave_addr[i]);
                     break;
                 }
             }
@@ -506,7 +585,7 @@ void mix_bus_i2c_i3c_demo_entry()
                 printf("Error: event retry_cnt \r\n");
                 goto error_detach;
             }
-
+#endif
             /* RX */
             printf("\r\n\r\n >> i=%d RX slave addr:0x%X \r\n",i, slave_addr[i]);
 
@@ -546,7 +625,28 @@ void mix_bus_i2c_i3c_demo_entry()
                 printf("\r\n Error: I3C Master Receive failed. \r\n");
                 goto error_detach;;
             }
+#if RTE_I3C_BLOCKING_MODE_ENABLE
 
+            cmp_rx_data = rx_data[0];
+
+            if(slave_addr[i] == I2C_BMI_ADDR)
+            {
+                /* BMI read: gives 2 bytes of dummy data[0][1] + LSB[2] */
+                cmp_rx_data = rx_data[2];
+            }
+
+            /* RX Success: Got ACK from slave */
+            printf("\r\n>> i=%d RX Success: Got ACK from slave addr:0x%X.\r\n",
+                    i, slave_addr[i]);
+
+            printf("\r\n>> i=%d RX rcvd data from slv: [0]0x%X.", i,cmp_rx_data);
+            printf("\t\t Actual data:0x%X\r\n",actual_rx_data[i]);
+
+            if(cmp_rx_data == actual_rx_data[i])
+            {
+                printf("\r\n>> i=%d RX rcvd Data from slave is VALID\r\n",i);
+            }
+#else
             /* wait till any event success/error comes in isr callback */
             retry_cnt =1000;
             while (retry_cnt)
@@ -566,19 +666,20 @@ void mix_bus_i2c_i3c_demo_entry()
                     }
 
                     /* RX Success: Got ACK from slave */
-                    printf("\r\n \t\t >> i=%d RX Success: Got ACK from slave addr:0x%X.\r\n",  \
-                                                   i, slave_addr[i]);
+                    printf("\r\n>> i=%d RX Success: Got ACK from slv:0x%X\r\n",
+                            i, slave_addr[i]);
 
-                    printf("\r\n \t\t >> i=%d RX Received Data from slave:[0]0x%X. actual data:0x%X\r\n",  \
-                                                   i,cmp_rx_data,actual_rx_data[i]);
+                    printf("\r\n>> i=%d Rcvd data from slave: [0]0x%X.",
+                            i,cmp_rx_data);
+                    printf("\t\t Actual data:0x%X\r\n", actual_rx_data[i]);
 
                     if(cmp_rx_data == actual_rx_data[i])
                     {
-                        printf("\r\n \t\t >> i=%d RX Received Data from slave is VALID.\r\n",i);
+                        printf("\r\n>> i=%d RX rcvd VALID data \r\n",i);
                     }
                     else
                     {
-                        printf("\r\n \t\t >> i=%d RX Received Data from slave is INVALID.\r\n",i);
+                        printf("\r\n >> i=%d RX rcvd INVALID data\r\n",i);
                     }
 
                     break;
@@ -587,8 +688,8 @@ void mix_bus_i2c_i3c_demo_entry()
                 if(cb_event_flag == I3C_CB_EVENT_ERROR)
                 {
                     /* RX Error: Got NACK from slave */
-                    printf("\r\n \t\t >> i=%d RX Error: Got NACK from slave addr:0x%X \r\n",  \
-                                                   i, slave_addr[i]);
+                    printf("\r\n>> i=%d RX Error: Got NACK from slave:0x%X \r\n",
+                            i, slave_addr[i]);
                     break;
                 }
             }
@@ -598,8 +699,8 @@ void mix_bus_i2c_i3c_demo_entry()
                 printf("Error: event retry_cnt \r\n");
                 goto error_detach;
             }
-
-            printf("\r\n ---------------------------XXX------------------------------ \r\n");
+#endif
+            printf("\r\n -----------------XXX----------------- \r\n");
         }
     }
 
@@ -609,7 +710,7 @@ error_detach:
     /* Detach all attached i2c/i3c slave device. */
     for(i=0; i<TOTAL_SLAVE; i++)
     {
-        printf("\r\n i=%d detaching i2c or i3c slave addr:0x%X from i3c.\r\n",i, slave_addr[i]);
+        printf("\r\n i=%d detaching slave:0x%X from i3c.\r\n",i, slave_addr[i]);
         ret = I3Cdrv->Detachdev(slave_addr[i]);
         if(ret != ARM_DRIVER_OK)
         {

@@ -35,7 +35,6 @@ extern "C"
 #include "lptimer.h"
 #include "sys_ctrl_lptimer.h"
 
-#define LPTIMER_MAX_CHANNEL_NUMBER                          0x4U
 #define LPTIMER_CHANNEL_0                                   0x0U
 #define LPTIMER_CHANNEL_1                                   0x1U
 #define LPTIMER_CHANNEL_2                                   0x2U
@@ -66,7 +65,8 @@ typedef struct _LPTIMER_CHANNEL_INFO {
 /** \brief Resources for a LPTIMER instance. */
 typedef struct _LPTIMER_RESOURCES {
     LPTIMER_Type *regs;                                       /**< LPTIMER Register address >*/
-    LPTIMER_CHANNEL_INFO ch_info[LPTIMER_MAX_CHANNEL_NUMBER]; /**< Pointer to Info structure of LPTIMER>*/
+    uint8_t max_channels;                                     /**< number of channels >*/
+    LPTIMER_CHANNEL_INFO ch_info[DEVICE_FEATURE_LPTIMER_MAX_CHANNELS];   /**< Pointer to Info structure of LPTIMER>*/
 } LPTIMER_RESOURCES;
 
 #ifdef  __cplusplus

@@ -53,6 +53,12 @@ typedef struct
     uint8_t data;
 }LCD_Page_cmd;
 
+/* command set selection */
+uint8_t page0_cmdsel[] = {0xFF, 0xFF, 0x98, 0x06, 0x04, 0x00};
+uint8_t page1_cmdsel[] = {0xFF, 0xFF, 0x98, 0x06, 0x04, 0x01};
+uint8_t page5_cmdsel[] = {0xFF, 0xFF, 0x98, 0x06, 0x04, 0x05};
+uint8_t page6_cmdsel[] = {0xFF, 0xFF, 0x98, 0x06, 0x04, 0x06};
+uint8_t page7_cmdsel[] = {0xFF, 0xFF, 0x98, 0x06, 0x04, 0x07};
 
 #if RTE_ILI9806E_PANEL_E43RB_FW405_EN
 /*Commands for Page 1*/
@@ -352,7 +358,7 @@ static int32_t ILI9806E_BL_LED_Control(uint8_t state)
 static void ILI9806E_Configure(void)
 {
     /*Change to Page 1 CMD*/
-    DSI_DCS_Long_Write(0xFF, 0x01040698);
+    DSI_DCS_Long_Write(page1_cmdsel, ARRAY_SIZE(page1_cmdsel));
 
     for(uint32_t i = 0; i < ARRAY_SIZE(page1_cfg); i++)
     {
@@ -360,7 +366,7 @@ static void ILI9806E_Configure(void)
     }
 
     /*Change to Page 6 CMD*/
-    DSI_DCS_Long_Write(0xFF, 0x06040698);
+    DSI_DCS_Long_Write(page6_cmdsel, ARRAY_SIZE(page6_cmdsel));
 
     for(uint32_t i = 0; i < ARRAY_SIZE(page6_cfg); i++)
     {
@@ -369,7 +375,7 @@ static void ILI9806E_Configure(void)
 
 #if RTE_ILI9806E_PANEL_E43RB_FW405_EN
     /*Change to Page 7 CMD*/
-    DSI_DCS_Long_Write(0xFF, 0x07040698);
+    DSI_DCS_Long_Write(page7_cmdsel, ARRAY_SIZE(page7_cmdsel));
 
     for(uint32_t i = 0; i < ARRAY_SIZE(page7_cfg); i++)
     {
@@ -379,7 +385,7 @@ static void ILI9806E_Configure(void)
 
 #if RTE_ILI9806E_PANEL_E43GB_MW405_EN || RTE_ILI9806E_PANEL_E50RA_MW550_EN
     /*Change to Page 5 CMD*/
-    DSI_DCS_Long_Write(0xFF, 0x05040698);
+    DSI_DCS_Long_Write(page5_cmdsel, ARRAY_SIZE(page5_cmdsel));
 
     for(uint32_t i = 0; i < ARRAY_SIZE(page5_cfg); i++)
     {
@@ -388,7 +394,7 @@ static void ILI9806E_Configure(void)
 #endif
 
     /*Change to Page 0 CMD*/
-    DSI_DCS_Long_Write(0xFF, 0x00040698);
+    DSI_DCS_Long_Write(page0_cmdsel, ARRAY_SIZE(page0_cmdsel));
 
     for(uint32_t i = 0; i < ARRAY_SIZE(page0_cfg); i++)
     {

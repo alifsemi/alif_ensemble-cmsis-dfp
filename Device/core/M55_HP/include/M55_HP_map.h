@@ -29,11 +29,6 @@
 #define DTCM_SIZE                   (SRAM3_SIZE) /* 1MB */
 #define DTCM_GLOBAL_BASE            (SRAM3_BASE)
 
-/* NS REGIONs, should be 16KB aligned */
-#define NS_REGION_0_BASE            (0x200E4000)
-#define NS_REGION_0_END             (0x200FBFFF)
-#define NS_REGION_0_SIZE            (NS_REGION_0_END - NS_REGION_0_BASE + 1) /* 96K */
-
 /* Local Peripherals */
 
 #define MHU_A32_M55HP_0_RX_BASE     0x40000000UL

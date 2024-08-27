@@ -191,6 +191,7 @@ static int32_t ARM_I3C_I2C_MasterTransmit (uint32_t        addr,
                                            bool            xfer_pending)
 {
     int32_t ret, detach_ret;
+    ARM_I3C_DEVICE_TYPE dev_type = ARM_I3C_DEVICE_TYPE_I2C;
 
     /* Currently this feature is not supported */
     (void) xfer_pending;
@@ -198,7 +199,7 @@ static int32_t ARM_I3C_I2C_MasterTransmit (uint32_t        addr,
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret = Driver_I3C.AttachI2Cdev (addr);
+    ret = Driver_I3C.AttachSlvDev(dev_type, addr);
     if (ret != ARM_DRIVER_OK)
     {
         return ret;
@@ -234,6 +235,7 @@ static int32_t ARM_I3C_I2C_MasterReceive (uint32_t   addr,
                                           bool       xfer_pending)
 {
     int32_t ret, detach_ret;
+    ARM_I3C_DEVICE_TYPE dev_type = ARM_I3C_DEVICE_TYPE_I2C;
 
     /* Currently this feature is not supported */
     (void) xfer_pending;
@@ -241,7 +243,7 @@ static int32_t ARM_I3C_I2C_MasterReceive (uint32_t   addr,
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret = Driver_I3C.AttachI2Cdev (addr);
+    ret = Driver_I3C.AttachSlvDev(dev_type, addr);
     if (ret != ARM_DRIVER_OK)
     {
         return ret;
@@ -331,7 +333,10 @@ static int32_t ARM_I3C_I2C_Control (uint32_t   control,
             if (speed == ARM_DRIVER_ERROR_UNSUPPORTED)
                 return ARM_DRIVER_ERROR_UNSUPPORTED;
 
+            ret = Driver_I3C.Control (I3C_MASTER_INIT, 0);
             ret = Driver_I3C.Control (I3C_MASTER_SET_BUS_MODE, speed);
+            ret = Driver_I3C.Control (I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
+            ret = Driver_I3C.Control (I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
             break;
         case ARM_I2C_BUS_CLEAR:
             return ARM_DRIVER_ERROR_UNSUPPORTED;

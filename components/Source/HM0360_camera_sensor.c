@@ -28,6 +28,13 @@
 
 #if (RTE_HM0360_CAMERA_SENSOR_ENABLE)
 
+/* I2C Instance */
+#if(RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE == 4)
+#define CAMERA_SENSOR_I2C_INSTANCE                           I3C
+#else
+#define CAMERA_SENSOR_I2C_INSTANCE                           RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE
+#endif
+
 /* Wrapper function for i2c read
  *  read register value from HM0360 Camera Sensor registers
  *   using i2c read API \ref camera_sensor_i2c_read
@@ -87,7 +94,7 @@ extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_HM0360_CAMERA_SENSOR_XSLEEP_GPIO_POR
 static ARM_DRIVER_GPIO *GPIO_Driver_CAM_XSLP = &ARM_Driver_GPIO_(RTE_HM0360_CAMERA_SENSOR_XSLEEP_GPIO_PORT);
 
 /* I2C Driver Instance */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE);
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(CAMERA_SENSOR_I2C_INSTANCE);
 
 /**
 \brief HM0360 Camera Sensor slave i2c Configuration
@@ -95,7 +102,7 @@ extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE);
 */
 static CAMERA_SENSOR_SLAVE_I2C_CONFIG hm0360_camera_sensor_i2c_cnfg =
 {
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE),
+    .drv_i2c                        = &ARM_Driver_I2C_(CAMERA_SENSOR_I2C_INSTANCE),
     .bus_speed                      = ARM_I2C_BUS_SPEED_FAST,
     .cam_sensor_slave_addr          = HM0360_CAMERA_SENSOR_SLAVE_ADDR,
     .cam_sensor_slave_reg_addr_type = CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT,

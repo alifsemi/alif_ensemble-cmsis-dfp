@@ -24,6 +24,7 @@
 #include "Camera_Sensor.h"
 #include "Camera_Sensor_i2c.h"
 #include "Driver_Common.h"
+#include "Driver_CPI.h"
 
 #if ((RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE || RTE_MT9M114_CAMERA_SENSOR_CPI_ENABLE \
       || RTE_MT9M114_CAMERA_SENSOR_LPCPI_ENABLE) && !(RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE \
@@ -59,6 +60,11 @@
 #define MT9M114_CAM_OUTPUT_FORMAT_REGISTER_BAYER_FORMAT_RAWR10       (0 << 10)
 #define MT9M114_CAM_OUTPUT_FORMAT_REGISTER_BAYER_FORMAT_RAWR8        (3 << 10)
 #define MT9M114_CAM_OUTPUT_FORMAT_REGISTER_FORMAT_RGB_565RGB         (0 << 12)
+
+/*MT9M114 camera sensor AE control register*/
+#define MT9M114_AE_TRACK_ALGO_REGISTER                               0xA804
+#define MT9M114_AE_ENABLE                                            0x00FF
+#define MT9M114_AE_DISABLE                                           0x0000
 
 /* MT9M114 Camera Sensor System Manager registers */
 #define MT9M114_SYSMGR_NEXT_STATE                             0xDC00
@@ -153,6 +159,35 @@ static const MT9M114_REG mt9m114_cam_resolution_VGA_640x480[] =
 #endif
 
 #if(RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE)
+
+#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 0)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 728
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  1288
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x2B
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 1)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 720
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  1280
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x2A
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 2)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 720
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  1280
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x22
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 3)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 480
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  640
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x22
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 4)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 240
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  320
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x22
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 5)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT 320
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH  320
+#define MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE 0x22
+#else
+#error Unsupported resolution
+#endif
+
 /**
   \brief MT9M114 Camera Sensor Resolution VGA 1280x720
   - Image Timing :
@@ -336,44 +371,170 @@ static const uint16_t sensor_patch_reg_burst[][24] =
 
 };
 
-static const MT9M114_REG mt9m114_init_720p[] = {
-    { 0x301A, 0x0230,    2 }, // RESET_REGISTER
-    { 0x098E, 0x0000,    2 }, // LOGICAL_ADDRESS_ACCESS
-    { 0xC97E, 0x01,      1 }, // cam_sysctl_pll_enable = 1
-    { 0xC980, 0x0225,    2 }, // cam_sysctl_pll_divider_m_n = 549
-    { 0xC982, 0x0700,    2 }, // cam_sysctl_pll_divider_p = 1792
-    { 0x098E, 0 ,        1 }, // set XDMA to logical addressing
-    { 0xC800, 0x007C,    2 }, // cam_sensor_cfg_y_addr_start = 124
-    { 0xC802, 0x0004,    2 }, // cam_sensor_cfg_x_addr_start = 4
-    { 0xC804, 0x0353,    2 }, // cam_sensor_cfg_y_addr_end = 851
-    { 0xC806, 0x050B,    2 }, // cam_sensor_cfg_x_addr_end = 1291
-    { 0xC808, 0x2349340, 4 }, // cam_sensor_cfg_pixclk = 37000000
-    { 0xC80C, 0x0001,    2 }, // cam_sensor_cfg_row_speed = 1
-    { 0xC80E, 0x00DB,    2 }, // cam_sensor_cfg_fine_integ_time_min = 219
-    { 0xC810, 0x05AD,    2 }, // cam_sensor_cfg_fine_integ_time_max = 1453
-    { 0xC812, 0x02FE,    2 }, // cam_sensor_cfg_frame_length_lines = 766
-    { 0xC814, 0x0650,    2 }, // cam_sensor_cfg_line_length_pck = 1616
-    { 0xC816, 0x0060,    2 }, // cam_sensor_cfg_fine_correction = 96
-    { 0xC818, 0x02D3,    2 }, // cam_sensor_cfg_cpipe_last_row = 723
-    { 0xC834, 0x0000,    2 }, // cam_sensor_control_read_mode = 0
-    { 0xC854, 0x0000,    2 }, // cam_crop_window_xoffset = 0
-    { 0xC856, 0x0000,    2 }, // cam_crop_window_yoffset = 0
-    { 0xC858, 0x0500,    2 }, // cam_crop_window_width = 1280
-    { 0xC85A, 0x02D0,    2 }, // cam_crop_window_height = 720
-    { 0xC85C, 0x03,      1 }, // cam_crop_cropmode = 3
-    { 0xC868, 0x0500,    2 }, // cam_output_width = 1280
-    { 0xC86A, 0x02D0,    2 }, // cam_output_height = 720
-    { 0xC88C, 0x1e00,    2 }, // cam_aet_max_frame_rate = 7680
-    { 0xC88E, 0x0F00,    2 }, // cam_aet_min_frame_rate = 3840
-    { 0xC914, 0x0000,    2 }, // cam_stat_awb_clip_window_xstart = 0
-    { 0xC916, 0x0000,    2 }, // cam_stat_awb_clip_window_ystart = 0
-    { 0xC918, 0x04FF,    2 }, // cam_stat_awb_clip_window_xend = 1279
-    { 0xC91A, 0x02CF,    2 }, // cam_stat_awb_clip_window_yend = 719
-    { 0xC91C, 0x0000,    2 }, // cam_stat_ae_initial_window_xstart = 0
-    { 0xC91E, 0x0000,    2 }, // cam_stat_ae_initial_window_ystart = 0
-    { 0xC920, 0x00FF,    2 }, // cam_stat_ae_initial_window_xend = 255
-    { 0xC922, 0x008F,    2 }, // cam_stat_ae_initial_window_yend = 143
-    { 0xE801, 0x00,      1 }, // AUTO_BINNING_MODE
+static const MT9M114_REG mt9m114_cfg_resolution[] = {
+
+#if ((MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT == 720) || (MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT == 728))
+    { 0x301A, 0x0230,    2 },    // RESET_REGISTER
+    { 0x98E, 0x1000,     2 },    // LOGICAL_ADDRESS_ACCESS
+    { 0xC97E, 0x01,      1 },    // cam_sysctl_pll_enable = 1
+    { 0xC980, 0x0120,    2 },    // cam_sysctl_pll_divider_m_n = 288
+    { 0xC982, 0x0700,    2 },    // cam_sysctl_pll_divider_p = 1792
+    { 0xC984, 0x8000,    2 },    // cam_port_output_control = 32768
+    { 0xC800, 0x007C,    2 },    // cam_sensor_cfg_y_addr_start = 124
+    { 0xC802, 0x0004,    2 },    // cam_sensor_cfg_x_addr_start = 4
+    { 0xC804, 0x0353,    2 },    // cam_sensor_cfg_y_addr_end = 851
+    { 0xC806, 0x050B,    2 },    // cam_sensor_cfg_x_addr_end = 1291
+    { 0xC808, 0x2DC6C00, 4 },    // cam_sensor_cfg_pixclk = 48000000
+    { 0xC80C, 0x0001,    2 },    // cam_sensor_cfg_row_speed = 1
+    { 0xC80E, 0x00DB,    2 },    // cam_sensor_cfg_fine_integ_time_min = 219
+    { 0xC810, 0x05BD,    2 },    // cam_sensor_cfg_fine_integ_time_max = 1469
+    { 0xC812, 0x03E8,    2 },    // cam_sensor_cfg_frame_length_lines = 1000
+    { 0xC814, 0x0640,    2 },    // cam_sensor_cfg_line_length_pck = 1600
+    { 0xC816, 0x0060,    2 },    // cam_sensor_cfg_fine_correction = 96
+    { 0xC818, 0x02D3,    2 },    // cam_sensor_cfg_cpipe_last_row = 723
+    { 0xC826, 0x0020,    2 },    // cam_sensor_cfg_reg_0_data = 32
+    { 0xC834, 0x0000,    2 },    // cam_sensor_control_read_mode = 0
+    { 0xC854, 0x0000,    2 },    // cam_crop_window_xoffset = 0
+    { 0xC856, 0x0000,    2 },    // cam_crop_window_yoffset = 0
+    { 0xC858, 0x0500,    2 },    // cam_crop_window_width = 1280
+    { 0xC85A, 0x02D0,    2 },    // cam_crop_window_height = 720
+    { 0xC85C, 0x03,      1 },    // cam_crop_cropmode = 3
+    { 0xC868, 0x0500,    2 },    // cam_output_width = 1280
+    { 0xC86A, 0x02D0,    2 },    // cam_output_height = 720
+    { 0xC878, 0x0C,      1 },    // cam_aet_aemode = C
+    { 0xC88C, 0x1E00,    2 },    // cam_aet_max_frame_rate = 7680
+    { 0xC88E, 0x1E00,    2 },    // cam_aet_min_frame_rate = 7680
+    { 0xC914, 0x0000,    2 },    // cam_stat_awb_clip_window_xstart = 0
+    { 0xC916, 0x0000,    2 },    // cam_stat_awb_clip_window_ystart = 0
+    { 0xC918, 0x04FF,    2 },    // cam_stat_awb_clip_window_xend = 1279
+    { 0xC91A, 0x02CF,    2 },    // cam_stat_awb_clip_window_yend = 719
+    { 0xC91C, 0x0000,    2 },    // cam_stat_ae_initial_window_xstart = 0
+    { 0xC91E, 0x0000,    2 },    // cam_stat_ae_initial_window_ystart = 0
+    { 0xC920, 0x00FF,    2 },    // cam_stat_ae_initial_window_xend = 255
+    { 0xC922, 0x008F,    2 },    // cam_stat_ae_initial_window_yend = 143
+    { 0xE801, 0x00,      1 },    // AUTO_BINNING_MODE
+
+#elif (MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT == 480)
+    { 0x301A, 0x0230,    2 },    // RESET_REGISTER
+    { 0x98E, 0x1000,     2 },    // LOGICAL_ADDRESS_ACCESS
+    { 0xC97E, 0x01,      1 },    // cam_sysctl_pll_enable = 1
+    { 0xC980, 0x0120,    2 },    // cam_sysctl_pll_divider_m_n = 288
+    { 0xC982, 0x0700,    2 },    // cam_sysctl_pll_divider_p = 1792
+    { 0xC984, 0x8000,    2 },    // cam_port_output_control = 32768
+    { 0xC800, 0x0004,    2 },    // cam_sensor_cfg_y_addr_start = 4
+    { 0xC802, 0x0004,    2 },    // cam_sensor_cfg_x_addr_start = 4
+    { 0xC804, 0x03CB,    2 },    // cam_sensor_cfg_y_addr_end = 971
+    { 0xC806, 0x050B,    2 },    // cam_sensor_cfg_x_addr_end = 1291
+    { 0xC808, 0x2DC6C00, 4 },    // cam_sensor_cfg_pixclk = 48000000
+    { 0xC80C, 0x0001,    2 },    // cam_sensor_cfg_row_speed = 1
+    { 0xC80E, 0x00DB,    2 },    // cam_sensor_cfg_fine_integ_time_min = 219
+    { 0xC810, 0x05B3,    2 },    // cam_sensor_cfg_fine_integ_time_max = 1459
+    { 0xC812, 0x03EE,    2 },    // cam_sensor_cfg_frame_length_lines = 1006
+    { 0xC814, 0x0636,    2 },    // cam_sensor_cfg_line_length_pck = 1590
+    { 0xC816, 0x0060,    2 },    // cam_sensor_cfg_fine_correction = 96
+    { 0xC818, 0x03C3,    2 },    // cam_sensor_cfg_cpipe_last_row = 963
+    { 0xC826, 0x0020,    2 },    // cam_sensor_cfg_reg_0_data = 32
+    { 0xC834, 0x0000,    2 },    // cam_sensor_control_read_mode = 0
+    { 0xC854, 0x0000,    2 },    // cam_crop_window_xoffset = 0
+    { 0xC856, 0x0000,    2 },    // cam_crop_window_yoffset = 0
+    { 0xC858, 0x0500,    2 },    // cam_crop_window_width = 1280
+    { 0xC85A, 0x03C0,    2 },    // cam_crop_window_height = 960
+    { 0xC85C, 0x03,      1 },    // cam_crop_cropmode = 3
+    { 0xC868, 0x0280,    2 },    // cam_output_width = 640
+    { 0xC86A, 0x01E0,    2 },    // cam_output_height = 480
+    { 0xC878, 0x0C,      1 },    // cam_aet_aemode = C
+    { 0xC88C, 0x1E02,    2 },    // cam_aet_max_frame_rate = 7682
+    { 0xC88E, 0x1E02,    2 },    // cam_aet_min_frame_rate = 7682
+    { 0xC914, 0x0000,    2 },    // cam_stat_awb_clip_window_xstart = 0
+    { 0xC916, 0x0000,    2 },    // cam_stat_awb_clip_window_ystart = 0
+    { 0xC918, 0x027F,    2 },    // cam_stat_awb_clip_window_xend = 639
+    { 0xC91A, 0x01DF,    2 },    // cam_stat_awb_clip_window_yend = 479
+    { 0xC91C, 0x0000,    2 },    // cam_stat_ae_initial_window_xstart = 0
+    { 0xC91E, 0x0000,    2 },    // cam_stat_ae_initial_window_ystart = 0
+    { 0xC920, 0x007F,    2 },    // cam_stat_ae_initial_window_xend = 127
+    { 0xC922, 0x005F,    2 },    // cam_stat_ae_initial_window_yend = 95
+
+#elif (MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT == 240)
+    { 0x301A, 0x0230,    2 },    // RESET_REGISTER
+    { 0x98E, 0x1000,     2 },    // LOGICAL_ADDRESS_ACCESS
+    { 0xC97E, 0x01,      1 },    // cam_sysctl_pll_enable = 1
+    { 0xC980, 0x0120,    2 },    // cam_sysctl_pll_divider_m_n = 288
+    { 0xC982, 0x0700,    2 },    // cam_sysctl_pll_divider_p = 1792
+    { 0xC984, 0x8000,    2 },    // cam_port_output_control = 32768
+    { 0xC800, 0x0004,    2 },    // cam_sensor_cfg_y_addr_start = 4
+    { 0xC802, 0x0004,    2 },    // cam_sensor_cfg_x_addr_start = 4
+    { 0xC804, 0x03CB,    2 },    // cam_sensor_cfg_y_addr_end = 971
+    { 0xC806, 0x050B,    2 },    // cam_sensor_cfg_x_addr_end = 1291
+    { 0xC808, 0x2DC6C00, 4 },    // cam_sensor_cfg_pixclk = 48000000
+    { 0xC80C, 0x0001,    2 },    // cam_sensor_cfg_row_speed = 1
+    { 0xC80E, 0x00DB,    2 },    // cam_sensor_cfg_fine_integ_time_min = 219
+    { 0xC810, 0x05B3,    2 },    // cam_sensor_cfg_fine_integ_time_max = 1459
+    { 0xC812, 0x03EE,    2 },    // cam_sensor_cfg_frame_length_lines = 1006
+    { 0xC814, 0x0636,    2 },    // cam_sensor_cfg_line_length_pck = 1590
+    { 0xC816, 0x0060,    2 },    // cam_sensor_cfg_fine_correction = 96
+    { 0xC818, 0x03C3,    2 },    // cam_sensor_cfg_cpipe_last_row = 963
+    { 0xC826, 0x0020,    2 },    // cam_sensor_cfg_reg_0_data = 32
+    { 0xC834, 0x0000,    2 },    // cam_sensor_control_read_mode = 0
+    { 0xC854, 0x0000,    2 },    // cam_crop_window_xoffset = 0
+    { 0xC856, 0x0000,    2 },    // cam_crop_window_yoffset = 0
+    { 0xC858, 0x0500,    2 },    // cam_crop_window_width = 1280
+    { 0xC85A, 0x03C0,    2 },    // cam_crop_window_height = 960
+    { 0xC85C, 0x03,      1 },    // cam_crop_cropmode = 3
+    { 0xC868, 0x0140,    2 },    // cam_output_width = 320
+    { 0xC86A, 0x00F0,    2 },    // cam_output_height = 240
+    { 0xC878, 0x0C,      1 },    // cam_aet_aemode = C
+    { 0xC88C, 0x1E02,    2 },    // cam_aet_max_frame_rate = 7682
+    { 0xC88E, 0x1E02,    2 },    // cam_aet_min_frame_rate = 7682
+    { 0xC914, 0x0000,    2 },    // cam_stat_awb_clip_window_xstart = 0
+    { 0xC916, 0x0000,    2 },    // cam_stat_awb_clip_window_ystart = 0
+    { 0xC918, 0x013F,    2 },    // cam_stat_awb_clip_window_xend = 319
+    { 0xC91A, 0x00EF,    2 },    // cam_stat_awb_clip_window_yend = 239
+    { 0xC91C, 0x0000,    2 },    // cam_stat_ae_initial_window_xstart = 0
+    { 0xC91E, 0x0000,    2 },    // cam_stat_ae_initial_window_ystart = 0
+    { 0xC920, 0x003F,    2 },    // cam_stat_ae_initial_window_xend = 63
+    { 0xC922, 0x002F,    2 },    // cam_stat_ae_initial_window_yend = 47
+
+#elif (MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT == 320)
+    { 0x301A, 0x0230,    2 },    // RESET_REGISTER
+    { 0x98E, 0x1000,     2 },    // LOGICAL_ADDRESS_ACCESS
+    { 0xC97E, 0x01,      1 },    // cam_sysctl_pll_enable = 1
+    { 0xC980, 0x0120,    2 },    // cam_sysctl_pll_divider_m_n = 288
+    { 0xC982, 0x0700,    2 },    // cam_sysctl_pll_divider_p = 1792
+    { 0xC984, 0x8000,    2 },    // cam_port_output_control = 32768
+    { 0xC800, 0x0004,    2 },    // cam_sensor_cfg_y_addr_start = 4
+    { 0xC802, 0x0004,    2 },    // cam_sensor_cfg_x_addr_start = 4
+    { 0xC804, 0x03CB,    2 },    // cam_sensor_cfg_y_addr_end = 971
+    { 0xC806, 0x050B,    2 },    // cam_sensor_cfg_x_addr_end = 1291
+    { 0xC808, 0x2DC6C00, 4 },    // cam_sensor_cfg_pixclk = 48000000
+    { 0xC80C, 0x0001,    2 },    // cam_sensor_cfg_row_speed = 1
+    { 0xC80E, 0x00DB,    2 },    // cam_sensor_cfg_fine_integ_time_min = 219
+    { 0xC810, 0x05B3,    2 },    // cam_sensor_cfg_fine_integ_time_max = 1459
+    { 0xC812, 0x03EE,    2 },    // cam_sensor_cfg_frame_length_lines = 1006
+    { 0xC814, 0x0636,    2 },    // cam_sensor_cfg_line_length_pck = 1590
+    { 0xC816, 0x0060,    2 },    // cam_sensor_cfg_fine_correction = 96
+    { 0xC818, 0x03C3,    2 },    // cam_sensor_cfg_cpipe_last_row = 963
+    { 0xC826, 0x0020,    2 },    // cam_sensor_cfg_reg_0_data = 32
+    { 0xC834, 0x0000,    2 },    // cam_sensor_control_read_mode = 0
+    { 0xC854, 0x0000,    2 },    // cam_crop_window_xoffset = 0
+    { 0xC856, 0x0000,    2 },    // cam_crop_window_yoffset = 0
+    { 0xC858, 0x0500,    2 },    // cam_crop_window_width = 1280
+    { 0xC85A, 0x03C0,    2 },    // cam_crop_window_height = 960
+    { 0xC85C, 0x03,      1 },    // cam_crop_cropmode = 3
+    { 0xC868, 0x0140,    2 },    // cam_output_width = 320
+    { 0xC86A, 0x0140,    2 },    // cam_output_height = 320
+    { 0xC878, 0x0C,      1 },    // cam_aet_aemode = C
+    { 0xC88C, 0x1E02,    2 },    // cam_aet_max_frame_rate = 7682
+    { 0xC88E, 0x1E02,    2 },    // cam_aet_min_frame_rate = 7682
+    { 0xC914, 0x0000,    2 },    // cam_stat_awb_clip_window_xstart = 0
+    { 0xC916, 0x0000,    2 },    // cam_stat_awb_clip_window_ystart = 0
+    { 0xC918, 0x013F,    2 },    // cam_stat_awb_clip_window_xend = 319
+    { 0xC91A, 0x013F,    2 },    // cam_stat_awb_clip_window_yend = 319
+    { 0xC91C, 0x0000,    2 },    // cam_stat_ae_initial_window_xstart = 0
+    { 0xC91E, 0x0000,    2 },    // cam_stat_ae_initial_window_ystart = 0
+    { 0xC920, 0x003F,    2 },    // cam_stat_ae_initial_window_xend = 63
+    { 0xC922, 0x003F,    2 },    // cam_stat_ae_initial_window_yend = 63
+#endif
+
 };
 
 static const MT9M114_REG mt9m114_init_sensor_optimization[] = {
@@ -571,7 +732,7 @@ static ARM_DRIVER_GPIO *GPIO_Driver_CAM_PWR =
   */
 static void MT9M114_Sensor_Enable_Clk_Src(void)
 {
-    set_cpi_pixel_clk(CPI_PIX_CLKSEL_480MZ,
+    set_cpi_pixel_clk(CPI_PIX_CLKSEL_400MZ,
               RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_CLK_SCR_DIV);
 }
 
@@ -954,9 +1115,9 @@ static int32_t mt9m114_mipi_camera_init(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c_cfg)
         return ARM_DRIVER_ERROR;
 
     ret = mt9m114_bulk_write_reg(i2c_cfg,
-                                 mt9m114_init_720p,
-                                 sizeof(mt9m114_init_720p) /
-                                 sizeof(mt9m114_init_720p[0]));
+                                 mt9m114_cfg_resolution,
+                                 sizeof(mt9m114_cfg_resolution) /
+                                 sizeof(mt9m114_cfg_resolution[0]));
     if(ret != ARM_DRIVER_OK)
         return ret;
 
@@ -1349,13 +1510,13 @@ static int32_t mt9m114_mipi_camera_init(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c_cfg)
 
     ret = camera_sensor_i2c_write(i2c_cfg,
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER,
-#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x2A)
+#if (MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x2A)
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_FORMAT_BAYER |
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_BAYER_FORMAT_RAWR8,
-#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x2B)
+#elif (MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x2B)
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_FORMAT_BAYER |
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_BAYER_FORMAT_RAWR10,
-#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x22)
+#elif (MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE == 0x22)
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_FORMAT_RGB |
                                   MT9M114_CAM_OUTPUT_FORMAT_REGISTER_FORMAT_RGB_565RGB,
 #endif
@@ -1386,6 +1547,32 @@ static int32_t mt9m114_mipi_camera_init(CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c_cfg)
     ret = mt9m114_stream_stop(i2c_cfg);
     if(ret != ARM_DRIVER_OK)
         return ret;
+
+    return ARM_DRIVER_OK;
+}
+
+/**
+  \fn           int32_t MT9M114_Camera_AE(const uint32_t enable, CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c_cfg)
+  \brief        Set camera Auto Exposure
+  \param[in]    enable: 0=disable, 1=enable
+  \param[in]    i2c_cfg  : Pointer to Camera Sensor i2c configuration.
+  \return       \ref execution_statusn
+  */
+static int32_t MT9M114_Camera_AE(const uint32_t enable, CAMERA_SENSOR_SLAVE_I2C_CONFIG *i2c_cfg)
+{
+    int32_t  ret = 0;
+    if(enable)
+    {
+        ret = camera_sensor_i2c_write(i2c_cfg, MT9M114_AE_TRACK_ALGO_REGISTER, MT9M114_AE_ENABLE, 2);
+        if(ret != ARM_DRIVER_OK)
+            return ret;
+    }
+    else
+    {
+        ret = camera_sensor_i2c_write(i2c_cfg, MT9M114_AE_TRACK_ALGO_REGISTER, MT9M114_AE_DISABLE, 2);
+        if(ret != ARM_DRIVER_OK)
+            return ret;
+    }
 
     return ARM_DRIVER_OK;
 }
@@ -1528,10 +1715,17 @@ static int32_t mt9m114_Control(CAMERA_SENSOR_DEVICE *cpi_mt9m114_camera_sensor,
                                uint32_t control,
                                uint32_t arg)
 {
-    ARG_UNUSED(cpi_mt9m114_camera_sensor);
-    ARG_UNUSED(i2c_cfg);
-    ARG_UNUSED(control);
-    ARG_UNUSED(arg);
+    switch (control)
+    {
+        case CPI_CAMERA_SENSOR_AE:
+            if(cpi_mt9m114_camera_sensor->interface == CAMERA_SENSOR_INTERFACE_MIPI)
+            {
+                return MT9M114_Camera_AE(arg, i2c_cfg);
+            }
+        default:
+            return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
     return ARM_DRIVER_OK;
 }
 
@@ -1586,12 +1780,19 @@ static int32_t mt9m114_CPI_Control(uint32_t control, uint32_t arg);
   */
 #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE)
 
+/* I2C Instance */
+#if(RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE == 4)
+#define CAMERA_SENSOR_I2C_CPI_INSTANCE                       I3C
+#else
+#define CAMERA_SENSOR_I2C_CPI_INSTANCE                       RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE
+#endif
+
 /* I2C Driver Instance */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE);
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(CAMERA_SENSOR_I2C_CPI_INSTANCE);
 
 CAMERA_SENSOR_SLAVE_I2C_CONFIG cpi_mt9m114_camera_sensor_i2c_cnfg =
 {
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE),
+    .drv_i2c                        = &ARM_Driver_I2C_(CAMERA_SENSOR_I2C_CPI_INSTANCE),
     .bus_speed                      = ARM_I2C_BUS_SPEED_STANDARD,
     .cam_sensor_slave_addr          = MT9M114_CAMERA_SENSOR_MIPI_SLAVE_ADDR,
     .cam_sensor_slave_reg_addr_type = CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT,
@@ -1604,7 +1805,7 @@ CAMERA_SENSOR_SLAVE_I2C_CONFIG cpi_mt9m114_camera_sensor_i2c_cnfg =
 static CSI_INFO csi_mt9m114_config =
 {
     .frequency              = RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_FREQ,
-    .dt                     = RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE,
+    .dt                     = MT9M114_CAMERA_SENSOR_MIPI_CSI_DATA_TYPE,
     .n_lanes                = RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_N_LANES,
     .vc_id                  = RTE_MT9M114_CAMERA_SENSOR_MIPI_CSI_VC_ID,
     .cpi_cfg.override       = RTE_MT9M114_CAMERA_SENSOR_MIPI_OVERRIDE_CPI_COLOR_MODE,
@@ -1614,12 +1815,19 @@ static CSI_INFO csi_mt9m114_config =
 
 #if (RTE_MT9M114_CAMERA_SENSOR_CPI_ENABLE)
 
+/* I2C Instance */
+#if(RTE_MT9M114_CAMERA_SENSOR_CPI_I2C_INSTANCE == 4)
+#define CAMERA_SENSOR_I2C_CPI_INSTANCE                       I3C
+#else
+#define CAMERA_SENSOR_I2C_CPI_INSTANCE                       RTE_MT9M114_CAMERA_SENSOR_CPI_I2C_INSTANCE
+#endif
+
 /* I2C Driver Instance */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_CPI_I2C_INSTANCE);
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(CAMERA_SENSOR_I2C_CPI_INSTANCE);
 
 CAMERA_SENSOR_SLAVE_I2C_CONFIG cpi_mt9m114_camera_sensor_i2c_cnfg =
 {
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_CPI_I2C_INSTANCE),
+    .drv_i2c                        = &ARM_Driver_I2C_(CAMERA_SENSOR_I2C_CPI_INSTANCE),
     .bus_speed                      = ARM_I2C_BUS_SPEED_STANDARD,
     .cam_sensor_slave_addr          = MT9M114_PARALLEL_CAMERA_SENSOR_SLAVE_ADDR,
     .cam_sensor_slave_reg_addr_type = CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT,
@@ -1667,8 +1875,8 @@ Contains:
 static CAMERA_SENSOR_DEVICE cpi_mt9m114_camera_sensor =
 {
     .interface   = CAMERA_SENSOR_INTERFACE_MIPI,
-    .width       = RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
-    .height      = RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
+    .width       = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
+    .height      = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     .csi_info    = &csi_mt9m114_config,
     .ops         = &cpi_mt9m114_ops,
 };
@@ -1731,8 +1939,15 @@ static int32_t mt9m114_LPCPI_Stop(void);
 /* MT9M114 LPCPI Control */
 static int32_t mt9m114_LPCPI_Control(uint32_t control, uint32_t arg);
 
+/* I2C Instance */
+#if(RTE_MT9M114_CAMERA_SENSOR_LPCPI_I2C_INSTANCE == 4)
+#define CAMERA_SENSOR_I2C_LPCPI_INSTANCE                     I3C
+#else
+#define CAMERA_SENSOR_I2C_LPCPI_INSTANCE                     RTE_MT9M114_CAMERA_SENSOR_LPCPI_I2C_INSTANCE
+#endif
+
 /* I2C Driver Instance */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_LPCPI_I2C_INSTANCE);
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(CAMERA_SENSOR_I2C_LPCPI_INSTANCE);
 
 /**
   \brief MT9M114 Camera Sensor slave i2c Configuration
@@ -1740,7 +1955,7 @@ extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_LPCPI_I2C_INSTAN
   */
 CAMERA_SENSOR_SLAVE_I2C_CONFIG lpcpi_mt9m114_camera_sensor_i2c_cnfg =
 {
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_MT9M114_CAMERA_SENSOR_LPCPI_I2C_INSTANCE),
+    .drv_i2c                        = &ARM_Driver_I2C_(CAMERA_SENSOR_I2C_LPCPI_INSTANCE),
     .bus_speed                      = ARM_I2C_BUS_SPEED_STANDARD,
     .cam_sensor_slave_addr          = MT9M114_PARALLEL_CAMERA_SENSOR_SLAVE_ADDR,
     .cam_sensor_slave_reg_addr_type = CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT,

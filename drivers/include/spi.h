@@ -413,7 +413,9 @@ static inline void spi_mask_interrupts(SPI_Type *spi)
 */
 static inline void spi_enable_rx_dma(SPI_Type *spi)
 {
+    spi_disable(spi);
     spi->SPI_DMACR |= SPI_DMACR_RX_DMA_ENABLE;
+    spi_enable(spi);
 }
 
 /**
@@ -424,7 +426,9 @@ static inline void spi_enable_rx_dma(SPI_Type *spi)
 */
 static inline void spi_disable_rx_dma(SPI_Type *spi)
 {
+    spi_disable(spi);
     spi->SPI_DMACR &= ~SPI_DMACR_RX_DMA_ENABLE;
+    spi_enable(spi);
 }
 
 /**
@@ -435,7 +439,9 @@ static inline void spi_disable_rx_dma(SPI_Type *spi)
 */
 static inline void spi_enable_tx_dma(SPI_Type *spi)
 {
+    spi_disable(spi);
     spi->SPI_DMACR |= SPI_DMACR_TX_DMA_ENABLE;
+    spi_enable(spi);
 }
 
 /**
@@ -446,7 +452,9 @@ static inline void spi_enable_tx_dma(SPI_Type *spi)
 */
 static inline void spi_disable_tx_dma(SPI_Type *spi)
 {
+    spi_disable(spi);
     spi->SPI_DMACR &= ~SPI_DMACR_TX_DMA_ENABLE;
+    spi_enable(spi);
 }
 
 /**

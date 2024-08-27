@@ -48,6 +48,7 @@
 #include "pinconf.h"
 #include "Driver_GPIO.h"
 
+#include "RTE_Device.h"
 #include "RTE_Components.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
@@ -62,7 +63,7 @@ static ARM_DRIVER_I3C *I3Cdrv = &Driver_I3C;
 #define I3C_SLAVE_ADDRESS             (0X48)
 
 /* receive data from i3c */
-uint8_t rx_data[4] = {0x00};
+uint8_t __ALIGNED(4) rx_data[4] = {0x00};
 
 uint32_t tx_cnt = 0;
 uint32_t rx_cnt = 0;
@@ -184,8 +185,15 @@ void i3c_slave_loopback_demo(void)
 
     /* Get i3c driver version. */
     version = I3Cdrv->GetVersion();
-    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",  \
+    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",
                            version.api, version.drv);
+
+    if((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U))       ||
+       (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    {
+        printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
+        return;
+    }
 
     /* Initialize i3c hardware pins using PinMux Driver. */
     ret = hardware_init();
@@ -196,7 +204,11 @@ void i3c_slave_loopback_demo(void)
     }
 
     /* Initialize I3C driver */
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+    ret = I3Cdrv->Initialize(NULL);
+#else
     ret = I3Cdrv->Initialize(I3C_callback);
+#endif
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Initialize failed.\r\n");
@@ -219,7 +231,6 @@ void i3c_slave_loopback_demo(void)
         goto error_uninitialize;
     }
 
-
     while(1)
     {
         len = 4;
@@ -235,15 +246,17 @@ void i3c_slave_loopback_demo(void)
             goto error_poweroff;
         }
 
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
         /* wait for callback event. */
-        while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
+        while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+                (cb_event == I3C_CB_EVENT_ERROR)));
 
         if(cb_event == I3C_CB_EVENT_ERROR)
         {
             printf("\nError: I3C Slave Receive failed\n");
             while(1);
         }
-
+#endif
         rx_cnt += 1;
 
         /* clear callback event flag. */
@@ -261,15 +274,17 @@ void i3c_slave_loopback_demo(void)
             goto error_poweroff;
         }
 
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
         /* wait for callback event. */
-        while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
+        while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+                (cb_event == I3C_CB_EVENT_ERROR)));
 
         if(cb_event == I3C_CB_EVENT_ERROR)
         {
             printf("\nError: I2C Slave Transmit failed\n");
             while(1);
         }
-
+#endif
         tx_cnt += 1;
     }
 

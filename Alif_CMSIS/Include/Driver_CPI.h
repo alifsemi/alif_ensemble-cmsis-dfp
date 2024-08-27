@@ -35,6 +35,8 @@ extern "C"
 #define CPI_EVENTS_CONFIGURE                                       (0x03UL) ///< CAMERA EVENTS configure; arg: list of events to enable (ARM_CPI_EVENT_*)
 #define CPI_CAMERA_SENSOR_GAIN                                     (0x04UL) ///< CAMERA SENSOR gain set; arg: 0x10000 * gain, 0=read only. Returns current/updated gain if no error.
 #define CPI_CONFIGURE                                              (0x05UL) ///< CPI configure
+#define CPI_CAMERA_SENSOR_AE                                       (0x06UL) ///< CAMERA SENSOR AE; arg: 0=disable, 1=enable
+#define CPI_CAMERA_SENSOR_AE_TARGET_LUMA                           (0x07UL) ///< CAMERA SENSOR AE Tagret LUMA; arg: Value for target luminance
 
 /****** CPI Events *****/
 #define ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED                       (1UL << 0) ///< Camera Capture Stopped

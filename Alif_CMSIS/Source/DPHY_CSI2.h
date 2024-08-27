@@ -1,4 +1,4 @@
-/* Copyright (C) 2022 Alif Semiconductor - All Rights Reserved.
+/* Copyright (C) 2024 Alif Semiconductor - All Rights Reserved.
  * Use, distribution and modification of this code is permitted under the
  * terms stated in the Alif Semiconductor Software License Agreement
  *
@@ -8,40 +8,20 @@
  *
  */
 
-/**************************************************************************//**
- * @file     DPHY_init.h
+/******************************************************************************
+ * @file     DPHY_DSI.h
  * @author   Prasanna Ravi
  * @email    prasanna.ravi@alifsemi.com
  * @version  V1.0.0
- * @date     24-Feb-2022
- * @brief    Driver Specific Header file for DPHY Driver.
+ * @date     14-May-2024
+ * @brief    Driver Specific Header file for DPHY CSI2 Driver.
  ******************************************************************************/
 
-#ifndef DPHY_INIT_H_
-#define DPHY_INIT_H_
+#ifndef DPHY_CSI2_H_
+#define DPHY_CSI2_H_
 
-#include "RTE_Device.h"
-#include <stdbool.h>
+#include <stdint.h>
 
-#if (RTE_MIPI_DSI)
-/**
-  \fn          int32_t DSI_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
-  \brief       Initialize MIPI DSI DPHY Interface.
-  \param[in]   frequency to configure DPHY PLL.
-  \param[in]   n_lanes number of lanes.
-  \return      \ref execution_status
-  */
-int32_t DSI_DPHY_Initialize (uint32_t frequency,  uint8_t n_lanes);
-
-/**
-  \fn          int32_t DSI_DPHY_Uninitialize (void)
-  \brief       Uninitialize MIPI DSI DPHY Interface.
-  \return      \ref execution_status
-  */
-int32_t DSI_DPHY_Uninitialize (void);
-#endif
-
-#if (RTE_MIPI_CSI2)
 /**
   \fn          int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
   \brief       Initialize MIPI CSI2 DPHY Interface.
@@ -57,6 +37,5 @@ int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes);
   \return      \ref execution_status
   */
 int32_t CSI2_DPHY_Uninitialize (void);
-#endif
 
-#endif /* DPHY_INIT_H_ */
+#endif /* DPHY_CSI2_H_ */

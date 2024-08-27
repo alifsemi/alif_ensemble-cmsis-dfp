@@ -1189,4 +1189,7 @@ void csi_set_ipi_sync_event_type(CSI_Type *csi, CSI_IPI_SYNC_EVENT sync_event);
 void csi_set_vertical_timing(CSI_Type *csi, uint16_t vsa_lines, uint16_t vbp_lines,
                                             uint16_t vfp_lines, uint16_t vactive_lines);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* CSI_H_ */

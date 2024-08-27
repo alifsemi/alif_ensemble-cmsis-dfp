@@ -150,7 +150,6 @@ void pdm_warning_irq_handler(PDM_Type *pdm, pdm_transfer_t *transfer)
 */
 void pdm_receive_blocking(PDM_Type *pdm, pdm_transfer_t *transfer)
 {
-    bool fifo_almost_full_irq;
     uint32_t audio_ch;
     uint32_t audio_ch_0_1;
     uint32_t audio_ch_2_3;

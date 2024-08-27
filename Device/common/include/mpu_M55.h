@@ -40,6 +40,9 @@ void MPU_Clear_All_Regions(void);
  * @note   This function loads the region and also sets the
  *         attributes for the regions.
  *         User can override from application.
+ * @note   This function will be invoked much early in the boot process
+ *         and before the scatterload. User must ensure that this function
+ *         is included in the primary load region.
  * @param  None
  * @retval None
  */
@@ -50,6 +53,9 @@ void MPU_Load_Regions(void);
  * @note   This function disables the MPU and loads the regions
  *         from the table. Once it is loaded, MPU is enabled.
  *         User can override from application.
+ * @note   This function will be invoked much early in the boot process
+ *         and before the scatterload. User must ensure that this function
+ *         is included in the primary load region.
  * @param  None
  * @retval None
  */

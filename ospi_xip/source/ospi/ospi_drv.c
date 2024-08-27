@@ -19,6 +19,13 @@
 #include "ospi_drv.h"
 #include "ospi_xip_user.h"
 
+#include "RTE_Components.h"
+#include CMSIS_device_header
+
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+#include "sys_ctrl_ospi.h"
+#endif
+
 /**
   \fn        static void ospi_xip_disable(ospi_flash_cfg_t *ospi_cfg)
   \brief     Disables XIP - Switch SSI Host controller from XiP mode to regular read-write mode
@@ -256,7 +263,7 @@ void ospi_xip_enter(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t 
             | (ADDR_L32bit << XIP_CTRL_ADDR_L_OFFSET)
             | (INST_L8bit << XIP_CTRL_INST_L_OFFSET)
             | (0x0 << XIP_CTRL_MD_BITS_EN_OFFSET)
-            | (0x10 << XIP_CTRL_WAIT_CYCLES_OFFSET)
+            | (ospi_cfg->wait_cycles << XIP_CTRL_WAIT_CYCLES_OFFSET)
             | (0x1 << XIP_CTRL_DFC_HC_OFFSET)
             | (0x1 << XIP_CTRL_DDR_EN_OFFSET)
             | (0x0 << XIP_CTRL_INST_DDR_EN_OFFSET)
@@ -272,12 +279,13 @@ void ospi_xip_enter(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t 
     ospi_writel(ospi_cfg, xip_ctrl, val);
 
     ospi_writel(ospi_cfg, rx_sample_dly, 0);
-    ospi_cfg->aes_regs->aes_rxds_delay = 11;
 
     ospi_writel(ospi_cfg, xip_mode_bits, 0x0);
     ospi_writel(ospi_cfg, xip_incr_inst, incr_command);
     ospi_writel(ospi_cfg, xip_wrap_inst, wrap_command);
+#ifdef DEVICE_FEATURE_OSPI_HAS_XIP_SER
     ospi_writel(ospi_cfg, xip_ser, ospi_cfg->ser);
+#endif
 
     spi_enable(ospi_cfg);
     ospi_xip_enable(ospi_cfg);
@@ -321,7 +329,9 @@ void ospi_xip_exit(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t w
     ospi_writel(ospi_cfg, xip_mode_bits, 0x1);
     ospi_writel(ospi_cfg, xip_incr_inst, incr_command);
     ospi_writel(ospi_cfg, xip_wrap_inst, wrap_command);
+#ifdef DEVICE_FEATURE_OSPI_HAS_XIP_SER
     ospi_writel(ospi_cfg, xip_ser, ospi_cfg->ser);
+#endif
     ospi_writel(ospi_cfg, ser, ospi_cfg->ser);
     ospi_writel(ospi_cfg, xip_cnt_time_out, 100);
 
@@ -339,11 +349,15 @@ void ospi_xip_exit(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t w
 */
 void ospi_init(ospi_flash_cfg_t *ospi_cfg)
 {
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+    enable_ospi_clk();
+#endif
     ospi_xip_disable(ospi_cfg);
     spi_disable(ospi_cfg);
     ospi_writel(ospi_cfg, ser, 0);
-    ospi_writel(ospi_cfg, rx_sample_dly, 4);
-    ospi_writel(ospi_cfg, txd_drive_edge, 1);
+    ospi_writel(ospi_cfg, rx_sample_dly, OSPI_XIP_RX_SAMPLE_DELAY);
+    ospi_writel(ospi_cfg, txd_drive_edge, OSPI_XIP_DDR_DRIVE_EDGE);
+    ospi_cfg->aes_regs->aes_rxds_delay = OSPI_XIP_RXDS_DELAY;
     spi_set_clk(ospi_cfg, (GetSystemAXIClock() / ospi_cfg->ospi_clock));
     spi_enable(ospi_cfg);
 }

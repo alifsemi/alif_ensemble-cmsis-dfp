@@ -27,11 +27,6 @@
 #define DTCM_SIZE                   (SRAM5_SIZE) /* 256K */
 #define DTCM_GLOBAL_BASE            (SRAM5_BASE)
 
-/* NS REGIONs, should be 16KB aligned */
-#define NS_REGION_0_BASE            (0x20030000)
-#define NS_REGION_0_END             (0x2003BFFF)
-#define NS_REGION_0_SIZE            (NS_REGION_0_END - NS_REGION_0_BASE + 1) /* 48K */
-
 #define MHU_A32_M55HE_0_RX_BASE     0x40000000UL
 #define MHU_M55HE_A32_0_TX_BASE     0x40010000UL
 #define MHU_A32_M55HE_1_RX_BASE     0x40020000UL

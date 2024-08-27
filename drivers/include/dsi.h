@@ -138,6 +138,16 @@ typedef struct {                                           /*!< (@ 0x49032000) D
 #define DSI_COLORM_ACTIVE_LOW                4U
 #define DSI_COLORM_ACTIVE_LOW_MASK           (0x1U << DSI_COLORM_ACTIVE_LOW)
 
+/*DSI_PCKHDL_CFG register bits parameters*/
+#define DSI_EOTP_TX_EN                       0U
+#define DSI_EOTP_TX_EN_MASK                  (0x1U << DSI_EOTP_TX_EN)
+#define DSI_BTA_EN                           2U
+#define DSI_BTA_EN_MASK                      (0x1U << DSI_BTA_EN)
+#define DSI_ECC_RX_EN                        3U
+#define DSI_ECC_RX_EN_MASK                   (0x1U << DSI_ECC_RX_EN)
+#define DSI_CRC_RX_EN                        4U
+#define DSI_CRC_RX_EN_MASK                   (0x1U << DSI_CRC_RX_EN)
+
 /*MODE_CFG register bits parameters*/
 #define DSI_CMD_VIDEO_MODE                   0U
 #define DSI_CMD_VIDEO_MODE_MASK              (0x1U << DSI_CMD_VIDEO_MODE)
@@ -146,7 +156,7 @@ typedef struct {                                           /*!< (@ 0x49032000) D
 #define DSI_VID_MODE_TYPE                    0U
 #define DSI_VID_MODE_TYPE_MASK               (0x3U << DSI_VID_MODE_TYPE)
 #define DSI_LP_CMD_EN                        8U
-#define DSI_LP_CMD_EN_MASK                   (0x3FU << DSI_LP_CMD_EN)
+#define DSI_LP_CMD_EN_MASK                   (0xBFU << DSI_LP_CMD_EN)
 
 /*VID_PKT_SIZE register bits parameters*/
 #define DSI_VIDEO_PKT_SIZE                   0U
@@ -190,7 +200,7 @@ typedef struct {                                           /*!< (@ 0x49032000) D
 
 /*GEN_HDR register bits parameters*/
 #define DSI_GEN_DT                           0U
-#define DSI_GEN_DT_MASK                      (0x1FU << DSI_GEN_DT)
+#define DSI_GEN_DT_MASK                      (0x3FU << DSI_GEN_DT)
 #define DSI_GEN_VC                           6U
 #define DSI_GEN_VC_MASK                      (0x3U << DSI_GEN_VC)
 #define DSI_GEN_WC_LSBYTE                    8U
@@ -270,7 +280,13 @@ typedef struct {                                           /*!< (@ 0x49032000) D
 #define DSI_DCS_SHORT_WRITE_NODATA_TYPE      0x05
 #define DSI_DCS_SHORT_WRITE_DATA_TYPE        0x15
 #define DSI_DCS_LONG_WRITE_DATA_TYPE         0x39
-#define DSI_DCS_LONG_WRITE_DATA_LEN          0x06
+
+/*DSI Features macro*/
+#define DSI_GEN_PAYLOAD_FIFO_SIZE            512
+#define DSI_PAYLOAD_FIFO_SLOT_DEPTH          4
+#define DSI_DPHY_LONG_PKT_OVERHEAD           6
+#define DSI_PAYLOAD_FIFO_SIZE                4096
+#define DSI_BTA_TIMEOUT_COUNT                0xD00
 
 /* DSI_IRQ0 register bits parameters */
 #define DSI_IRQ0_ACK_WITH_ERR_0     (1U << 0)        /**< SoT error from the Acknowledge error report                                       */
@@ -912,6 +928,29 @@ static inline DSI_CMD_MODE_CFG dsi_get_command_mode_config(DSI_Type *dsi)
 }
 
 /**
+  \fn          static inline void dsi_reception_enable(DSI_Type *dsi)
+  \brief       Enable dsi reception using bus turnaround.
+  \param[in]   dsi     Pointer to the dsi register map.
+  \return      none
+*/
+static inline void dsi_reception_enable(DSI_Type *dsi)
+{
+    dsi->DSI_BTA_TO_CNT = DSI_BTA_TIMEOUT_COUNT;
+    dsi->DSI_PCKHDL_CFG |= DSI_BTA_EN_MASK | DSI_ECC_RX_EN_MASK | DSI_CRC_RX_EN_MASK;
+}
+
+/**
+  \fn          static inline void dsi_hs_eotp_enable(DSI_Type *dsi)
+  \brief       Enable dsi end of transmission packet in hs mode.
+  \param[in]   dsi     Pointer to the dsi register map.
+  \return      none
+*/
+static inline void dsi_hs_eotp_enable(DSI_Type *dsi)
+{
+    dsi->DSI_PCKHDL_CFG |= DSI_EOTP_TX_EN_MASK;
+}
+
+/**
   \fn          static inline void dsi_auto_clklane_enable(DSI_Type *dsi)
   \brief       Enable dsi automatic mechanism on clock lane.
   \param[in]   dsi     Pointer to the dsi register map.
@@ -1276,12 +1315,12 @@ void dsi_dcs_cmd_short_write(DSI_Type *dsi, uint8_t cmd, uint8_t vc_id);
 /**
   \fn          void dsi_dcs_long_write(DSI_Type *dsi, uint8_t cmd, uint32_t data, uint8_t vc_id)
   \brief       Perform dsi DCS Short write.
-  \param[in]   cmd is DCS command info.
-  \param[in]   data of four bytes to send.
+  \param[in]   data pointer to data buffer.
+  \param[in]   len data buffer length.
   \param[in]   vc_id virtual channel ID.
   \return      none.
 */
-void dsi_dcs_long_write(DSI_Type *dsi, uint8_t cmd, uint32_t data, uint8_t vc_id);
+void dsi_dcs_long_write(DSI_Type *dsi, uint8_t* data, uint32_t len, uint8_t vc_id);
 
 /**
   \fn          DSI_LANE_STOPSTATE dsi_get_lane_stopstate_status(DSI_Type *dsi, DSI_LANE lane)

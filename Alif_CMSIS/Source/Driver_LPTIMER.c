@@ -46,7 +46,7 @@ static int32_t ARM_LPTIMER_Initialize (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t c
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -101,7 +101,7 @@ static int32_t ARM_LPTIMER_Initialize (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t c
  */
 static int32_t ARM_LPTIMER_PowerControl (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channel, ARM_POWER_STATE state)
 {
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -171,7 +171,7 @@ static int32_t ARM_LPTIMER_Control (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t chan
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -235,7 +235,7 @@ static int32_t ARM_LPTIMER_Control (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t chan
  */
 static int32_t ARM_LPTIMER_Start (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channel)
 {
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -273,7 +273,7 @@ static int32_t ARM_LPTIMER_Start (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channe
  */
 static int32_t ARM_LPTIMER_Stop (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channel)
 {
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -296,7 +296,7 @@ static int32_t ARM_LPTIMER_Stop (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channel
  */
 static int32_t ARM_LPTIMER_Uninitialize (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t channel)
 {
-    if (channel >= LPTIMER_MAX_CHANNEL_NUMBER)
+    if (channel >= LPTIMER_RES->max_channels)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -336,26 +336,29 @@ static int32_t LPTIMER_Irq_Handler (LPTIMER_RESOURCES *LPTIMER_RES, uint8_t chan
 
 static LPTIMER_RESOURCES LPTIMER0 = {
     .regs   = (LPTIMER_Type*) LPTIMER_BASE,
-    .ch_info[0] = {
+    .max_channels = DEVICE_FEATURE_LPTIMER_MAX_CHANNELS,
+    .ch_info[LPTIMER_CHANNEL_0] = {
         .mode = RTE_LPTIMER_CHANNEL0_FREE_RUN_MODE,
         .clk_src = RTE_LPTIMER_CHANNEL0_CLK_SRC,
         .irq_priority = RTE_LPTIMER_CHANNEL0_IRQ_PRIORITY
     },
-    .ch_info[1] = {
+    .ch_info[LPTIMER_CHANNEL_1] = {
         .mode = RTE_LPTIMER_CHANNEL1_FREE_RUN_MODE,
         .clk_src = RTE_LPTIMER_CHANNEL1_CLK_SRC,
         .irq_priority = RTE_LPTIMER_CHANNEL1_IRQ_PRIORITY
     },
-    .ch_info[2] = {
+#if (DEVICE_FEATURE_LPTIMER_MAX_CHANNELS > 2)
+    .ch_info[LPTIMER_CHANNEL_2] = {
         .mode = RTE_LPTIMER_CHANNEL2_FREE_RUN_MODE,
         .clk_src = RTE_LPTIMER_CHANNEL2_CLK_SRC,
         .irq_priority = RTE_LPTIMER_CHANNEL2_IRQ_PRIORITY
     },
-    .ch_info[3] = {
+    .ch_info[LPTIMER_CHANNEL_3] = {
         .mode = RTE_LPTIMER_CHANNEL3_FREE_RUN_MODE,
         .clk_src = RTE_LPTIMER_CHANNEL3_CLK_SRC,
         .irq_priority = RTE_LPTIMER_CHANNEL3_IRQ_PRIORITY
     }
+#endif
 };
 
 void LPTIMER0_IRQHandler (void)
@@ -368,6 +371,7 @@ void LPTIMER1_IRQHandler (void)
     LPTIMER_Irq_Handler (&LPTIMER0, LPTIMER_CHANNEL_1);
 }
 
+#if (DEVICE_FEATURE_LPTIMER_MAX_CHANNELS > 2)
 void LPTIMER2_IRQHandler (void)
 {
     LPTIMER_Irq_Handler (&LPTIMER0, LPTIMER_CHANNEL_2);
@@ -377,6 +381,7 @@ void LPTIMER3_IRQHandler (void)
 {
     LPTIMER_Irq_Handler (&LPTIMER0, LPTIMER_CHANNEL_3);
 }
+#endif
 
 static int32_t ARM_LPTIMER0_Initialize (uint8_t channel, ARM_LPTIMER_SignalEvent_t cb_unit_event)
 {

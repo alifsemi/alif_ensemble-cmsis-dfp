@@ -30,6 +30,12 @@
 
 #define CANFD_MAX_OBJ_SUPPORTED  2U
 
+#if (RTE_CANFD0_BLOCKING_MODE_ENABLE || RTE_CANFD1_BLOCKING_MODE_ENABLE)
+    #define CANFD_BLOCKING_MODE_ENABLE  1
+#else
+    #define CANFD_BLOCKING_MODE_ENABLE  0
+#endif
+
 /*CANFD operational Modes */
 typedef enum _CANFD_OP_MODE
 {
@@ -71,11 +77,15 @@ typedef struct _CANFD_RESOURCES
     canfd_transfer_t            data_transfer;                 /* Data transfer information                     */
     CANFD_OP_MODE               op_mode;                       /* canfd operational mode                        */
     CANFD_DRIVER_STATE          state;                         /* CANFD Driver State                            */
-#if RTE_CANFD_BLOCKING_MODE_ENABLE
+    const CANFD_INSTANCE        instance;                      /* CANFD Instance                                */
+    const uint32_t              clk_src;                       /* CANFD Clock Source                            */
+    const uint32_t              clk_speed;                     /* CANFD Clock Speed                             */
+    const uint32_t              clk_div;                       /* CANFD Clock Divisor                           */
+#if CANFD_BLOCKING_MODE_ENABLE
     bool                        blocking_mode;                 /* CANFD blocking mode transfer enable           */
 #endif
-    uint8_t                     irq_priority;                  /* Interrupt priority                            */
-    IRQn_Type                   irq_num;                       /* Instance IRQ number                           */
+    const uint8_t               irq_priority;                  /* Interrupt priority                            */
+    const IRQn_Type             irq_num;                       /* Instance IRQ number                           */
     ARM_CAN_STATUS              status;                        /* CANFD instance status                         */
     bool                        fd_mode;                       /* CANFD Clock Control                           */
     CANFD_OBJ_STATUS            objs[CANFD_MAX_OBJ_SUPPORTED]; /* Number of objects supported */

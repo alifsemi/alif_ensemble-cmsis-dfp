@@ -351,42 +351,6 @@ static inline void gpio_interrupt_eoi (GPIO_Type *gpio, uint8_t pin_no)
 }
 
 /**
-  \fn          static inline bool gpio_is_flexio (uint8_t pin_no)
-  \brief       check whether gpio pin supports voltage flexio feature.
-  \param       pin_no   pin number
-  \return      none
-*/
-static inline bool gpio_is_flexio (uint8_t pin_no)
-{
-    if (pin_no == 4 || pin_no == 5 || pin_no == 6 || pin_no == 7)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-/**
-  \fn          static inline bool lpgpio_is_flexio (uint8_t pin_no)
-  \brief       check whether lpgpio pin supports voltage flexio feature.
-  \param       pin_no   pin number
-  \return      none
-*/
-static inline bool lpgpio_is_flexio (uint8_t pin_no)
-{
-    if (pin_no == 0 || pin_no == 1 || pin_no == 2 || pin_no == 3)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-/**
   \fn          static inline void gpio_set_hardware_mode (GPIO_Type *gpio, uint8_t pin_no)
   \brief       GPIO set data source as hardware mode (applicable only for LPGPIO).
   \param       gpio     Pointer to the GPIO register map

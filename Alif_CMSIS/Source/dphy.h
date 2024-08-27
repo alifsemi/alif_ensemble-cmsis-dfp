@@ -44,6 +44,7 @@
 #define dphy4txtester_DIG_RDWR_TX_PLL_0               (0x15DU)
 #define dphy4txtester_DIG_RDWR_TX_PLL_1               (0x15EU)
 #define dphy4txtester_DIG_RDWR_TX_PLL_5               (0x162U)
+#define dphy4txtester_DIG_RDWR_TX_PLL_9               (0x166U)
 #define dphy4txtester_DIG_RDWR_TX_PLL_10              (0x167U)
 #define dphy4txtester_DIG_RDWR_TX_PLL_13              (0x16AU)
 #define dphy4txtester_DIG_RDWR_TX_PLL_17              (0x16EU)
@@ -93,6 +94,12 @@
 #define PHY_TESTDOUT_Msk                              MASK(15,8)
 #define PHY_TESTEN_Pos                                16U
 #define PHY_TESTEN_Msk                                (1U << PHY_TESTEN_Pos)
+
+/*DPHY Test control base*/
+#define PHY_CSI_TEST_CTRL0_BASE                       (CSI_BASE + 0x50)
+#define PHY_CSI_TEST_CTRL1_BASE                       (CSI_BASE + 0x54)
+#define PHY_DSI_TEST_CTRL0_BASE                       (DSI_BASE + 0xB4)
+#define PHY_DSI_TEST_CTRL1_BASE                       (DSI_BASE + 0xB8)
 
 /*CFG_CLK frequency*/
 #define DPHY_FCFG_CLOCK_MHZ                           25

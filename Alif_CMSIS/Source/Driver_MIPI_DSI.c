@@ -22,7 +22,7 @@
 #include "Driver_MIPI_DSI.h"
 #include "Driver_DSI_Private.h"
 #include "RTE_Device.h"
-#include "DPHY_init.h"
+#include "DPHY_DSI.h"
 #include "display.h"
 
 #define ARM_MIPI_DSI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /*driver version*/
@@ -99,7 +99,6 @@ static ARM_MIPI_DSI_CAPABILITIES ARM_MIPI_DSI_GetCapabilities (void)
 {
     return DriverCapabilities;
 }
-
 /**
   \fn          int32_t DSI_Initialize (ARM_MIPI_DSI_SignalEvent_t cb_event,
                                        DISPLAY_PANEL_DEVICE *display_panel, DSI_RESOURCES *dsi)
@@ -115,7 +114,6 @@ static int32_t DSI_Initialize (ARM_MIPI_DSI_SignalEvent_t cb_event,
     int32_t ret = ARM_DRIVER_OK;
     DSI_INFO *dsi_info;
     uint32_t pixclk;
-    uint32_t frequency;
 
     if(dsi->state.initialized == 1)
     {
@@ -161,10 +159,10 @@ static int32_t DSI_Initialize (ARM_MIPI_DSI_SignalEvent_t cb_event,
      * PLL frequency = LANEBYTECLK * 4
      *               = PIXCLK * SCALE * 4
      */
-    frequency = pixclk * 2 * 4;
+    dsi->frequency = pixclk * 2 * 4;
 
     /*Checking LCD Panel supports MIPI DSI DPHY data rate*/
-    if((frequency * 2) > (dsi_info->max_bitrate * 1000000))
+    if((dsi->frequency * 2) > (dsi_info->max_bitrate * 1000000))
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -204,7 +202,7 @@ static int32_t DSI_Initialize (ARM_MIPI_DSI_SignalEvent_t cb_event,
     dsi->cb_event = cb_event;
 
     /*DPHY initialization*/
-    ret  = DSI_DPHY_Initialize(frequency, dsi_info->n_lanes);
+    ret  = DSI_DPHY_Initialize(dsi->frequency, dsi_info->n_lanes);
     if(ret != ARM_DRIVER_OK)
     {
         return ret;
@@ -494,23 +492,7 @@ static int32_t DSI_StartCommandMode (DISPLAY_PANEL_DEVICE *display_panel, DSI_RE
         return ARM_DRIVER_ERROR;
     }
 
-    /* Calculate the pixel clock for DPI controller
-     *     PIXCLK = FPS x HTOTAL x VTOTAL
-     */
-    pixclk = (dsi->horizontal_timing * dsi->vertical_timing * RTE_CDC200_DPI_FPS);
-
-    /* SCALE = LANEBYTECLK / PIXCLK
-     * MIPI data rate must be exactly equal, not greater than, for 1.5 scale to work
-     * MIPI data rate + 33% allows for scaling times 2
-     *    24 x 1.333 / 16 = 2
-     * LANEBYTECLK = PIXCLK * SCALE
-     * lanebyteclk frequency is 1/4th of the DPHY frequency
-     * PLL frequency = LANEBYTECLK * 4
-     *               = PIXCLK * SCALE * 4
-     */
-    frequency = pixclk * 2 * 4;
-
-    bitrate_mbps = (frequency * 2)/1000000;
+    bitrate_mbps = (dsi->frequency * 2)/1000000;
 
     for(range = 0; (range < ARRAY_SIZE(hstransition_timing_range) - 1) &&
         ((bitrate_mbps) > hstransition_timing_range[range].bitrate_mbps);
@@ -532,6 +514,8 @@ static int32_t DSI_StartCommandMode (DISPLAY_PANEL_DEVICE *display_panel, DSI_RE
     dsi_set_phy_lp2hs_time(dsi->reg_base, lp2hs_time);
 
     dsi_set_phy_hs2lp_time(dsi->reg_base, hs2lp_time);
+
+    dsi_reception_enable(dsi->reg_base);
 
     dsi_command_mode_enable(dsi->reg_base);
 
@@ -589,6 +573,8 @@ static int32_t DSI_StartVideoMode (DISPLAY_PANEL_DEVICE *display_panel, DSI_RESO
     dsi_auto_clklane_disable(dsi->reg_base);
 
     dsi_phy_txrequestclkhs_enable(dsi->reg_base);
+
+    dsi_hs_eotp_enable(dsi->reg_base);
 
     dsi_video_mode_enable(dsi->reg_base);
 
@@ -725,12 +711,12 @@ void DSI_DCS_CMD_Short_Write (uint8_t cmd)
 /**
   \fn          void DSI_DCS_Long_Write (uint8_t cmd, uint32_t data)
   \brief       Perform MIPI DSI DCS Short write.
-  \param[in]   cmd is DCS command info.
-  \param[in]   data of four bytes to send.
+  \param[in]   data pointer to data buffer.
+  \param[in]   len data buffer length.
 */
-void DSI_DCS_Long_Write (uint8_t cmd, uint32_t data)
+void DSI_DCS_Long_Write (uint8_t* data, uint32_t len)
 {
-    dsi_dcs_long_write(DSI_RES.reg_base, cmd, data, display_panel->dsi_info->vc_id);
+    dsi_dcs_long_write(DSI_RES.reg_base, data, len, display_panel->dsi_info->vc_id);
 
     sys_busy_loop_us(100);
 }

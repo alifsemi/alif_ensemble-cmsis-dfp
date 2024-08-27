@@ -54,11 +54,11 @@
 #include "pinconf.h"
 #include "Driver_GPIO.h"
 
+#include "RTE_Device.h"
 #include "RTE_Components.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
 #endif  /* RTE_Compiler_IO_STDOUT */
-
 
 /* i3c Driver instance 0 */
 extern ARM_DRIVER_I3C Driver_I3C;
@@ -68,10 +68,10 @@ static ARM_DRIVER_I3C *I3Cdrv = &Driver_I3C;
 #define I3C_SLV_TAR           (0x48)
 
 /* transmit buffer from i3c */
-uint8_t tx_data[4] = {0x00, 0x01, 0x02, 0x03};
+uint8_t __ALIGNED(4) tx_data[4] = {0x00, 0x01, 0x02, 0x03};
 
 /* receive buffer from i3c */
-uint8_t rx_data[4] = {0x00};
+uint8_t __ALIGNED(4) rx_data[4] = {0x00};
 
 uint32_t tx_cnt = 0;
 uint32_t rx_cnt = 0;
@@ -190,14 +190,24 @@ void i3c_master_loopback_demo(void)
     int32_t    cmp    = 0;
     uint8_t    slave_addr = 0x00;
 
+    /* I3C CCC (Common Command Codes) */
+    ARM_I3C_CMD i3c_cmd;
+
     ARM_DRIVER_VERSION version;
 
     printf("\r\n \t\t >>> Master loop back demo starting up!!! <<< \r\n");
 
     /* Get i3c driver version. */
     version = I3Cdrv->GetVersion();
-    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",  \
+    printf("\r\n i3c version api:0x%X driver:0x%X \r\n",
                            version.api, version.drv);
+
+    if((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U))       ||
+       (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    {
+        printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
+        return;
+    }
 
     /* Initialize i3c hardware pins using PinMux Driver. */
     ret = hardware_init();
@@ -207,8 +217,13 @@ void i3c_master_loopback_demo(void)
         return;
     }
 
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+    /* Initialize I3C driver */
+    ret = I3Cdrv->Initialize(NULL);
+#else
     /* Initialize I3C driver */
     ret = I3Cdrv->Initialize(I3C_callback);
+#endif
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Initialize failed.\r\n");
@@ -223,14 +238,46 @@ void i3c_master_loopback_demo(void)
         goto error_uninitialize;
     }
 
+    /* Initialize I3C master */
+    ret = I3Cdrv->Control(I3C_MASTER_INIT, NULL);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Init control failed.\r\n");
+        goto error_uninitialize;
+    }
+
     /* i3c Speed Mode Configuration:
      *  I3C_BUS_MODE_PURE                             : Only Pure I3C devices
      *  I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 Mbps
      *  I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS : Fast Mode      400 Kbps
      *  I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 Kbps
      */
-    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,  \
+    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,
                           I3C_BUS_MODE_PURE);
+
+    /* Reject Hot-Join request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Hot Join control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Master request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Request control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Slave Interrupt request */
+    ret = I3Cdrv->Control(I3C_MASTER_SETUP_SIR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Slave Interrupt Request control failed.\r\n");
+        goto error_uninitialize;
+    }
 
     sys_busy_loop_us(1000);
 
@@ -240,44 +287,76 @@ void i3c_master_loopback_demo(void)
     /* clear callback event flag. */
     cb_event = 0;
 
-    ret = I3Cdrv->MasterAssignDA(&slave_addr, I3C_SLV_TAR);
+    i3c_cmd.rw            = 0U;
+    i3c_cmd.cmd_id        = I3C_CCC_SETDASA;
+    i3c_cmd.len           = 1U;
+    /* Assign Slave's Static address */
+    i3c_cmd.addr          = I3C_SLV_TAR;
+    i3c_cmd.data          = NULL;
+    i3c_cmd.def_byte      = 0U;
+
+    ret = I3Cdrv->MasterAssignDA(&i3c_cmd);
     if(ret != ARM_DRIVER_OK)
     {
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
         printf("\r\n Error: I3C MasterAssignDA failed.\r\n");
         goto error_poweroff;
+#endif
     }
-    printf("\r\n >> i3c: Received dyn_addr:0x%X for static addr:0x%X. \r\n",   \
-                                 slave_addr,I3C_SLV_TAR);
 
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
     /* wait for callback event. */
-    while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
+    while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+            (cb_event == I3C_CB_EVENT_ERROR)));
+#endif
 
-    /* Delay */
-    sys_busy_loop_us(1000);
+    if((cb_event == I3C_CB_EVENT_ERROR) ||
+       ((RTE_I3C_BLOCKING_MODE_ENABLE && (ret != ARM_DRIVER_OK))))
+    {
+        printf("\r\n Error: First attempt failed. retrying \r\n");
+        /* Delay */
+        sys_busy_loop_us(1000);
 
-    /* clear callback event flag. */
-    cb_event = 0;
+        /* clear callback event flag. */
+        cb_event = 0;
 
-    /* Observation:
-     *  Master needs to send "MasterAssignDA" two times,
-     *  First time slave is not giving ACK.
-     */
+        /* Observation:
+         *  Master needs to send "MasterAssignDA" two times,
+         *  First time slave is not giving ACK.
+         */
 
-    /* Assign Dynamic Address to i3c slave */
-    ret = I3Cdrv->MasterAssignDA(&slave_addr, I3C_SLV_TAR);
+        /* Assign Dynamic Address to i3c slave */
+        ret = I3Cdrv->MasterAssignDA(&i3c_cmd);
+        if(ret != ARM_DRIVER_OK)
+        {
+            printf("\r\n Error: I3C MasterAssignDA failed.\r\n");
+            goto error_poweroff;
+        }
+
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
+        /* wait for callback event. */
+        while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+                (cb_event == I3C_CB_EVENT_ERROR)));
+
+        if(cb_event == I3C_CB_EVENT_ERROR)
+        {
+            printf("\nError: I3C MasterAssignDA failed\n");
+            while(1);
+        }
+#endif
+    }
+
+    /* Get assigned dynamic address for the static address */
+    ret = I3Cdrv->GetSlaveDynAddr(I3C_SLV_TAR, &slave_addr);
     if(ret != ARM_DRIVER_OK)
     {
-        printf("\r\n Error: I3C MasterAssignDA failed.\r\n");
+        printf("\r\n Error: I3C Failed to get Dynamic Address.\r\n");
         goto error_poweroff;
     }
-
-    /* wait for callback event. */
-    while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
-
-    if(cb_event == I3C_CB_EVENT_ERROR)
+    else
     {
-        printf("\nError: I3C MasterAssignDA failed\n");
-        while(1);
+        printf("\r\n >> i3c: Rcvd dyn_addr:0x%X for static addr:0x%X\r\n",
+                slave_addr,I3C_SLV_TAR);
     }
 
     sys_busy_loop_us(1000);
@@ -305,16 +384,17 @@ void i3c_master_loopback_demo(void)
             printf("\r\n Error: I3C Master Transmit failed. \r\n");
             goto error_poweroff;
         }
-
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
         /* wait for callback event. */
-        while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
+        while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+                (cb_event == I3C_CB_EVENT_ERROR)));
 
         if(cb_event == I3C_CB_EVENT_ERROR)
         {
             printf("\nError: I3C Master transmit Failed\n");
             while(1);
         }
-
+#endif
         tx_cnt += 1;
 
         /* Delay */
@@ -337,15 +417,17 @@ void i3c_master_loopback_demo(void)
             goto error_poweroff;
         }
 
+#if !RTE_I3C_BLOCKING_MODE_ENABLE
         /* wait for callback event. */
-        while(!((cb_event == I3C_CB_EVENT_SUCCESS) || (cb_event == I3C_CB_EVENT_ERROR)));
+        while(!((cb_event == I3C_CB_EVENT_SUCCESS) ||
+                (cb_event == I3C_CB_EVENT_ERROR)));
 
         if(cb_event == I3C_CB_EVENT_ERROR)
         {
             printf("\nError: I3C Master Receive failed.\n");
             while(1);
         }
-
+#endif
         rx_cnt += 1;
 
         /* compare tx and rx data, stop if data does not match */

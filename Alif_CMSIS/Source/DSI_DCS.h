@@ -38,9 +38,9 @@ void DSI_DCS_CMD_Short_Write (uint8_t cmd);
 /**
   \fn          void DSI_DCS_Long_Write (uint8_t cmd, uint32_t data)
   \brief       Perform MIPI DSI DCS Short write.
-  \param[in]   cmd is DCS command info.
-  \param[in]   data of four bytes to send.
+  \param[in]   data pointer to data buffer.
+  \param[in]   len data buffer length.
 */
-void DSI_DCS_Long_Write (uint8_t cmd, uint32_t data);
+void DSI_DCS_Long_Write (uint8_t* data, uint32_t len);
 
 #endif /* MIPI_DSI_DCS_H_ */

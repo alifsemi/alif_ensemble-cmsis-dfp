@@ -34,9 +34,6 @@ extern "C"
 #include "Driver_UTIMER.h"
 #include "utimer.h"
 
-#define ARM_UTIMER_MAX_CHANNEL                      15U
-#define ARM_UTIMER_TOTAL_CHANNELS                   16U
-
 #define UTIMER_MODE_ENABLE                          1U
 #define QEC_MODE_ENABLE                             0U
 
@@ -67,11 +64,13 @@ extern "C"
 #define UTIMER_UNDERFLOW_IRQ(channel)               (UTIMER_UNDERFLOW_IRQ_BASE + (channel*8U))
 #define UTIMER_OVERFLOW_IRQ(channel)                (UTIMER_OVERFLOW_IRQ_BASE + (channel*8U))
 
+#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
 #define QEC_CAPTURE_A_IRQ_BASE                      (QEC0_CMPA_IRQ_IRQn + 0U)
 #define QEC_CAPTURE_B_IRQ_BASE                      (QEC0_CMPA_IRQ_IRQn + 1U)
 
 #define QEC_CAPTURE_A_IRQ(channel)                  (QEC_CAPTURE_A_IRQ_BASE + ((channel - ARM_UTIMER_CHANNEL12)*2U))
 #define QEC_CAPTURE_B_IRQ(channel)                  (QEC_CAPTURE_B_IRQ_BASE + ((channel - ARM_UTIMER_CHANNEL12)*2U))
+#endif
 
 /** \brief UTIMER driver state. */
 typedef struct _UTIMER_DRV_STATE {
@@ -106,7 +105,8 @@ typedef struct _UTIMER_CHANNEL_INFO
 typedef struct _UTIMER_RESOURCES
 {
     UTIMER_Type *regs;                /**< Pointer to UTIMER registers >*/
-    UTIMER_CHANNEL_INFO ch_info[ARM_UTIMER_TOTAL_CHANNELS]; /**< Pointer to Info structure of UTIMER >*/
+    uint8_t max_channels;             /**< number of channels >*/
+    UTIMER_CHANNEL_INFO ch_info[DEVICE_FEATURE_UTIMER_MAX_CHANNELS]; /**< Pointer to Info structure of UTIMER >*/
 } UTIMER_RESOURCES;
 
 /**

@@ -17,6 +17,25 @@
  ******************************************************************************/
 #include <clk.h>
 
+
+#ifdef SOC_VARIANT_E1C
+#ifndef SYST_ACLK
+#define SYST_ACLK   80000000
+#endif
+
+#ifndef SYST_HCLK
+#define SYST_HCLK   80000000
+#endif
+
+#ifndef SYST_PCLK
+#define SYST_PCLK   40000000
+#endif
+
+#ifndef SYST_REFCLK
+#define SYST_REFCLK 80000000
+#endif
+
+#else
 #ifndef SYST_ACLK
 #define SYST_ACLK   400000000
 #endif
@@ -32,7 +51,7 @@
 #ifndef SYST_REFCLK
 #define SYST_REFCLK 100000000
 #endif
-
+#endif
 /*----------------------------------------------------------------------------
   System AXI Clock Variable(SYST_ACLK)
  *----------------------------------------------------------------------------*/

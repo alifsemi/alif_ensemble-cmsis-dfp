@@ -75,12 +75,28 @@
 /*
 //     <o>Start Address <0-0xFFFFFFE0>
 */
-#define SAU_INIT_START0     NS_REGION_0_BASE /* start address of SAU region 0 */
+#if defined ( __ARMCC_VERSION )
+  extern const uint32_t Image$$NS_REGION_0$$Base;
+  #define SAU_INIT_START0     (uint32_t)&Image$$NS_REGION_0$$Base
+#elif defined ( __GNUC__ )
+  extern const uint32_t __ns_region_0_start;
+  #define SAU_INIT_START0     (uint32_t)&__ns_region_0_start /* start address of SAU region 0 */
+#else
+  #error Unknown compiler.
+#endif
 
 /*
 //     <o>End Address <0x1F-0xFFFFFFFF>
 */
-#define SAU_INIT_END0       NS_REGION_0_END  /* end address of SAU region 0 */
+#if defined ( __ARMCC_VERSION )
+  extern const uint32_t Image$$NS_REGION_0_PAD$$Base;
+  #define SAU_INIT_END0       ((uint32_t)&Image$$NS_REGION_0_PAD$$Base - 1)
+#elif defined ( __GNUC__ )
+  extern const uint32_t __ns_region_0_end;
+  #define SAU_INIT_END0       ((uint32_t)&__ns_region_0_end - 1) /* end address of SAU region 0 */
+#else
+  #error Unknown compiler.
+#endif
 
 /*
 //     <o>Region is

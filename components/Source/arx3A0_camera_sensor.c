@@ -30,6 +30,13 @@
 /* Proceed only if ARX3A0 Camera Sensor is enabled. */
 #if RTE_ARX3A0_CAMERA_SENSOR_CSI_ENABLE
 
+/* I2C Instance */
+#if(RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE == 4)
+#define CAMERA_SENSOR_I2C_INSTANCE                           I3C
+#else
+#define CAMERA_SENSOR_I2C_INSTANCE                           RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE
+#endif
+
 /* ARX3A0 Camera Sensor Slave Address. */
 #define ARX3A0_CAMERA_SENSOR_SLAVE_ADDR                      0x36
 
@@ -100,7 +107,7 @@ extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_ARX3A0_CAMERA_SENSOR_POWER_GPIO_PORT
 static ARM_DRIVER_GPIO *GPIO_Driver_CAM_PWR = &ARM_Driver_GPIO_(RTE_ARX3A0_CAMERA_SENSOR_POWER_GPIO_PORT);
 
 /* I2C Driver Instance */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE);
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(CAMERA_SENSOR_I2C_INSTANCE);
 
 /**
 \brief ARX3A0 Camera Sensor slave i2c Configuration
@@ -108,7 +115,7 @@ extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE);
 */
 static CAMERA_SENSOR_SLAVE_I2C_CONFIG arx3A0_camera_sensor_i2c_cnfg =
 {
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE),
+    .drv_i2c                        = &ARM_Driver_I2C_(CAMERA_SENSOR_I2C_INSTANCE),
     .bus_speed                      = ARM_I2C_BUS_SPEED_STANDARD,
     .cam_sensor_slave_addr          = ARX3A0_CAMERA_SENSOR_SLAVE_ADDR,
     .cam_sensor_slave_reg_addr_type = CAMERA_SENSOR_I2C_REG_ADDR_TYPE_16BIT,

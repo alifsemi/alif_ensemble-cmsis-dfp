@@ -69,6 +69,7 @@ typedef struct _DSI_DPI_INFO{
 typedef struct _DSI_RESOURCES{
     DSI_Type                        *reg_base;         /**< Pointer to regs */
     ARM_MIPI_DSI_SignalEvent_t      cb_event;          /**< Pointer to call back function */
+    uint32_t                        frequency;         /**< DSI PHY Frequency */
     uint32_t                        tx_ecs_clk_div;    /**< Tx escape clock divider value */
     uint32_t                        horizontal_timing; /**< Total horizontal timing */
     uint32_t                        vertical_timing;   /**< Total vertical timing */

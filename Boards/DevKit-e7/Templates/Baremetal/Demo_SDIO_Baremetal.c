@@ -35,6 +35,11 @@
 #include "Driver_Common.h"
 #endif  /* RTE_Compiler_IO_STDOUT */
 
+#define SDC_A 1
+#define SDC_B 2
+#define SDC_C 3
+#define SDC_PINS SDC_A
+
 #define BAREMETAL_SD_TEST_RAW_SECTOR 0x2000     //start reading and writing raw data from partition sector
 volatile unsigned char sdbuffer[512*4] __attribute__((section("sd_dma_buf"))) __attribute__((aligned(32)));
 
@@ -61,15 +66,20 @@ void sd_cb(uint32_t status) {
 */
 void BareMetalSDIOTest(){
 
+    sd_param_t sd_param;
+
     /* SD Clock and Board Pin mux Configurations */
+#if (SDC_PINS == SDC_A)
     pinconf_set(PORT_7, PIN_0, PINMUX_ALTERNATE_FUNCTION_6, PADCTRL_READ_ENABLE); //cmd
     pinconf_set(PORT_7, PIN_1, PINMUX_ALTERNATE_FUNCTION_6, PADCTRL_READ_ENABLE); //clk
     pinconf_set(PORT_5, PIN_0, PINMUX_ALTERNATE_FUNCTION_7, PADCTRL_READ_ENABLE); //d0
+
 #if RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE
     pinconf_set(PORT_5, PIN_1, PINMUX_ALTERNATE_FUNCTION_7, PADCTRL_READ_ENABLE); //d1
     pinconf_set(PORT_5, PIN_2, PINMUX_ALTERNATE_FUNCTION_7, PADCTRL_READ_ENABLE); //d2
     pinconf_set(PORT_5, PIN_3, PINMUX_ALTERNATE_FUNCTION_6, PADCTRL_READ_ENABLE); //d3
 #endif
+
 #if RTE_SDC_BUS_WIDTH == SDMMC_8_BIT_MODE
     pinconf_set(PORT_5, PIN_4, PINMUX_ALTERNATE_FUNCTION_6, PADCTRL_READ_ENABLE); //d4
     pinconf_set(PORT_5, PIN_5, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE); //d5
@@ -77,9 +87,41 @@ void BareMetalSDIOTest(){
     pinconf_set(PORT_5, PIN_7, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE); //d7
 #endif
 
-    if(p_SD_Driver->disk_initialize(1, RTE_SDC_BUS_WIDTH, RTE_SDC_DMA_SELECT) != SD_DRV_STATUS_OK){
-        printf("SDIO initialization failed...\n");
-        goto error;
+#elif (SDC_PINS == SDC_B)
+    pinconf_set(PORT_14, PIN_0, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE); //cmd
+    pinconf_set(PORT_14, PIN_1, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE); //clk
+    pinconf_set(PORT_14, PIN_2, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE); //rst
+    pinconf_set(PORT_13, PIN_0, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE); //d0
+#if RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE
+    pinconf_set(PORT_13, PIN_1, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE); //d1
+    pinconf_set(PORT_13, PIN_2, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE); //d2
+    pinconf_set(PORT_13, PIN_3, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE); //d3
+#endif
+
+#elif (SDC_PINS == SDC_C)
+    pinconf_set(PORT_9, PIN_0, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //cmd
+    pinconf_set(PORT_9, PIN_1, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //clk
+    pinconf_set(PORT_8, PIN_0, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //d0
+#if RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE
+    pinconf_set(PORT_8, PIN_1, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //d1
+    pinconf_set(PORT_8, PIN_2, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //d2
+    pinconf_set(PORT_8, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA); //d3
+#endif
+
+#else
+    #error "Invalid SDMMC Pins defined...\n"
+
+#endif
+
+    sd_param.dev_id         = SDMMC_DEV_ID;
+    sd_param.clock_id       = RTE_SDC_CLOCK_SELECT;
+    sd_param.bus_width      = RTE_SDC_BUS_WIDTH;
+    sd_param.dma_mode       = RTE_SDC_DMA_SELECT;
+    sd_param.app_callback   = sd_cb;
+
+    if( p_SD_Driver->disk_initialize(&sd_param) ) {
+        printf("SD initialization failed...\n");
+        return;
     }
 
     for(int i=0x0; i<0x1000; i++){

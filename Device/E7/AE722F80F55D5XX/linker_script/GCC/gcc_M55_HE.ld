@@ -34,6 +34,8 @@ __APP_HEAP_SIZE = 0x00004000;
 __ROM_BASE      = 0x80000000;
 __ROM_SIZE      = 0x00200000;
 
+TGU_BLOCK_SIZE   = 16384;
+
 /*
  * Note:
  * The empty regions(eg SRAM1) are ON by default, but may have been released
@@ -64,6 +66,7 @@ SECTIONS
     *pm*(.text .rodata*)
     *tgu_*(.text .rodata*)
     *mpu_*(.text .rodata*)
+    *tcm_partition*(.text .rodata*)
 
     *lv_*(.text .rodata*)
 
@@ -136,6 +139,17 @@ SECTIONS
 
     . = ALIGN(8);
     __bss_end__ = .;
+  } > DTCM
+
+  .nonsecure0_region (NOLOAD) :
+  {
+    . = ALIGN(TGU_BLOCK_SIZE);
+    __ns_region_0_start = .;
+    * (eth_buf)
+    * (usb_dma_buf)
+    * (sd_dma_buf)
+    . = ALIGN(TGU_BLOCK_SIZE);
+    __ns_region_0_end = .;
   } > DTCM
 
   .__app_heap (NOLOAD) : ALIGN(8)

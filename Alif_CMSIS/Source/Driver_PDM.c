@@ -23,7 +23,7 @@
 #include "Driver_PDM_Private.h"
 #include "sys_ctrl_pdm.h"
 
-#define ARM_PDM_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)  /*  Driver version */
+#define ARM_PDM_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1)  /*  Driver version */
 
 /*Driver version*/
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -136,7 +136,10 @@ static inline int32_t PDM_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
+                                       dma_periph->evtrtr_cfg.group,
                                        DMA_ACK_COMPLETION_PERIPHERAL);
+        evtrtrlocal_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
+                                         dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
@@ -170,6 +173,8 @@ static inline int32_t PDM_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
+        evtrtrlocal_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
+                                          dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
@@ -816,7 +821,7 @@ static int32_t PDMx_Receive(void *data, uint32_t num, PDM_RESOURCES *PDM)
         /* Each PCM sample is represented by 16-bits resolution (2 bytes) */
         dma_params.num_bytes    = num * 2;
         dma_params.irq_priority = PDM->dma_irq_priority;
-        dma_params.burst_len    = PDM->fifo_watermark + 1;
+        dma_params.burst_len    = 1;
         dma_params.burst_size   = BS_BYTE_4;
 
         /* Start DMA transfer */

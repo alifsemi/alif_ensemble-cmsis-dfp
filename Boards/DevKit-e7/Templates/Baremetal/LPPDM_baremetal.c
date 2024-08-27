@@ -192,7 +192,7 @@ void pdm_demo()
     }
 
     /* Select Standard voice PDM mode */
-    ret = PDMdrv->Control(ARM_PDM_MODE, ARM_PDM_MODE_STANDARD_VOICE_512_CLK_FRQ, NULL);
+    ret = PDMdrv->Control(ARM_PDM_MODE, ARM_PDM_MODE_AUDIOFREQ_8K_DECM_64, NULL);
     if(ret != ARM_DRIVER_OK){
         printf("\r\n Error: PDM Standard voice control mode failed\n");
         goto error_poweroff;

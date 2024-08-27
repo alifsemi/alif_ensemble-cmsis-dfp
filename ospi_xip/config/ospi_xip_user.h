@@ -1,4 +1,4 @@
-/* Copyright (C) 2022 Alif Semiconductor - All Rights Reserved.
+/* Copyright (C) 2024 Alif Semiconductor - All Rights Reserved.
  * Use, distribution and modification of this code is permitted under the
  * terms stated in the Alif Semiconductor Software License Agreement
  *
@@ -99,6 +99,21 @@ extern "C"
 //   <i> Default:16
 
 #define OSPI_XIP_FLASH_WAIT_CYCLES               16
+
+//   <o> Receive sample delay
+//   <i> Defines the number of internal clock cycles that are delayed before rx sampling.
+//   <i> Default:4
+#define OSPI_XIP_RX_SAMPLE_DELAY                 4
+
+//   <o> DDR transmit drive edge
+//   <i> Defines the driving edge in DDR mode.
+//   <i> Default:1
+#define OSPI_XIP_DDR_DRIVE_EDGE                  1
+
+//   <o> RXDS delay
+//   <i> Defines the delay added to the OSPI Read Data Strobe signal.
+//   <i> Default:11
+#define OSPI_XIP_RXDS_DELAY                      11
 
 // </h>
 //------------- <<< end of configuration section >>> ---------------------------

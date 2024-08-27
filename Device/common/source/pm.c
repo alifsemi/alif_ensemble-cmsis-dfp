@@ -296,10 +296,9 @@ void pm_core_enter_deep_sleep(void)
  */
 void pm_core_enter_deep_sleep_request_subsys_off(void)
 {
-    uint32_t orig_ccr, orig_mscr, orig_demcr;
+    uint32_t orig_ccr, orig_mscr, orig_demcr, orig_cppwr;
 #if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
     (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
-    uint32_t   orig_cppwr;
     fp_state_t fp_state;
     bool fp_saved = false;
 #endif
@@ -314,13 +313,12 @@ void pm_core_enter_deep_sleep_request_subsys_off(void)
      * don't intend to block this, they should put it back to OFF before
      * calling this.
      */
-
-#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
-    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
     /* PDEPU OFF requires that we set the State Unknown 10 flag indicating it's
      * okay to forget the FP/MVE state (S/D/Q registers, FPSR and VPR)
      */
     orig_cppwr = ICB->CPPWR;
+#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
+    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
     if (!(orig_cppwr & ICB_CPPWR_SU10_Msk)) {
         /* As we are going to say it's okay to lose EPU state, we should save it;
          * we can't independently turn EPU off on our silicon, but the CPU
@@ -336,14 +334,16 @@ void pm_core_enter_deep_sleep_request_subsys_off(void)
             save_fp_state(&fp_state);
             fp_saved = true;
         }
+    }
+#endif
 
+    if (!(orig_cppwr & ICB_CPPWR_SU10_Msk)) {
         /* Indicate we're okay to lose MVE/FP state. Note that MVE/FP instructions
          * will fault after this, so we hope we're not doing anything that
          * prompts the compiler to generate MVE/FP code during this function.
          */
         ICB->CPPWR = orig_cppwr | (ICB_CPPWR_SU11_Msk | ICB_CPPWR_SU10_Msk);
     }
-#endif
 
     /* Stop new data cache allocations */
     orig_ccr = SCB->CCR;
@@ -411,10 +411,7 @@ void pm_core_enter_deep_sleep_request_subsys_off(void)
                        (MEMSYSCTL_MSCR_ICACTIVE_Msk | MEMSYSCTL_MSCR_DCACTIVE_Msk);
     SCB->CCR = orig_ccr;
     DCB->DEMCR = orig_demcr;
-#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
-    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
     ICB->CPPWR = orig_cppwr;
-#endif
 
     /* Make sure enables are synchronized */
     __DSB();
@@ -444,11 +441,7 @@ void pm_core_enter_deep_sleep_request_subsys_off(void)
 */
 void pm_core_request_subsys_off_from_spurious_wakeup(void)
 {
-    uint32_t orig_mscr;
-#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
-    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
-    uint32_t   orig_cppwr;
-#endif
+    uint32_t orig_mscr, orig_cppwr;
     /* We attempt to power off the subsystem by turning off all active
      * indications from the CPU, taking its power domains PDCORE, PDEPU,
      * PDRAMS and PDDEBUG to OFF. See Power chapter of M55 TRM for details.
@@ -460,8 +453,6 @@ void pm_core_request_subsys_off_from_spurious_wakeup(void)
      * calling this.
      */
 
-#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
-    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
     /* PDEPU OFF requires that we set the State Unknown 10 flag indicating it's
      * okay to forget the FP/MVE state (S/D/Q registers, FPSR and VPR)
      */
@@ -473,7 +464,7 @@ void pm_core_request_subsys_off_from_spurious_wakeup(void)
          */
         ICB->CPPWR = orig_cppwr | (ICB_CPPWR_SU11_Msk | ICB_CPPWR_SU10_Msk);
     }
-#endif
+
     /* Check cache status */
     orig_mscr = MEMSYSCTL->MSCR;
     /*
@@ -513,10 +504,7 @@ void pm_core_request_subsys_off_from_spurious_wakeup(void)
     MEMSYSCTL->MSCR |= orig_mscr &
                        (MEMSYSCTL_MSCR_ICACTIVE_Msk | MEMSYSCTL_MSCR_DCACTIVE_Msk);
 
-#if (defined (__FPU_USED) && (__FPU_USED == 1U)) || \
-    (defined (__ARM_FEATURE_MVE) && (__ARM_FEATURE_MVE > 0U))
     ICB->CPPWR = orig_cppwr;
-#endif
 
     /* Make sure enables are synchronized */
     __DSB();

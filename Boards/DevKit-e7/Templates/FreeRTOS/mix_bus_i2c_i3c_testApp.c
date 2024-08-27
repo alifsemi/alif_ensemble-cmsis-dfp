@@ -81,29 +81,30 @@ TaskHandle_t i3c_xHandle;
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
       StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
-   *ppxIdleTaskTCBBuffer = &IdleTcb;
-   *ppxIdleTaskStackBuffer = IdleStack;
-   *pulIdleTaskStackSize = IDLE_TASK_STACK_SIZE;
+    *ppxIdleTaskTCBBuffer = &IdleTcb;
+    *ppxIdleTaskStackBuffer = IdleStack;
+    *pulIdleTaskStackSize = IDLE_TASK_STACK_SIZE;
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 {
-   (void) pxTask;
+    (void) pxTask;
 
-   for (;;);
+    for (;;);
 }
 
 void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
-      StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize)
+                                    StackType_t **ppxTimerTaskStackBuffer,
+                                    uint32_t *pulTimerTaskStackSize)
 {
-   *ppxTimerTaskTCBBuffer = &TimerTcb;
-   *ppxTimerTaskStackBuffer = TimerStack;
-   *pulTimerTaskStackSize = TIMER_SERVICE_TASK_STACK_SIZE;
+    *ppxTimerTaskTCBBuffer = &TimerTcb;
+    *ppxTimerTaskStackBuffer = TimerStack;
+    *pulTimerTaskStackSize = TIMER_SERVICE_TASK_STACK_SIZE;
 }
 
 void vApplicationIdleHook(void)
 {
-   for (;;);
+    for (;;);
 }
 
 void mix_bus_i2c_i3c_Thread(void *pvParameters);
@@ -196,7 +197,8 @@ void I3C_callback(uint32_t event)
     if (event & ARM_I3C_EVENT_TRANSFER_DONE)
     {
         /* Transfer Success */
-        xResult = xTaskNotifyFromISR(i3c_xHandle,I3C_CB_EVENT_SUCCESS,eSetBits, &xHigherPriorityTaskWoken);
+        xResult = xTaskNotifyFromISR(i3c_xHandle,I3C_CB_EVENT_SUCCESS,
+                                     eSetBits, &xHigherPriorityTaskWoken);
         if (xResult == pdTRUE)
         {
             portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
@@ -206,7 +208,8 @@ void I3C_callback(uint32_t event)
     if (event & ARM_I3C_EVENT_TRANSFER_ERROR)
     {
         /* Transfer Error */
-        xResult = xTaskNotifyFromISR(i3c_xHandle,I3C_CB_EVENT_ERROR,eSetBits, &xHigherPriorityTaskWoken);
+        xResult = xTaskNotifyFromISR(i3c_xHandle,I3C_CB_EVENT_ERROR,
+                                     eSetBits, &xHigherPriorityTaskWoken);
         if (xResult == pdTRUE)
         {
             portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
@@ -288,10 +291,10 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
      */
 
     /* transmit data to i3c */
-    uint8_t tx_data[4] = {0};
+    uint8_t __ALIGNED(4) tx_data[4] = {0};
 
     /* receive data from i3c */
-    uint8_t rx_data[4] = {0};
+    uint8_t __ALIGNED(4) rx_data[4] = {0};
 
     /* receive data used for comparison. */
     uint8_t cmp_rx_data = 0;
@@ -305,8 +308,7 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
 
     ARM_DRIVER_VERSION version;
 
-    /* I3C CCC (Common Command Codes) */
-    I3C_CMD i3c_cmd;
+    ARM_I3C_CMD i3c_cmd;
     uint8_t i3c_cmd_tx_data[4] = {0x0F};
     uint8_t i3c_cmd_rx_data[4] = {0};
 
@@ -316,6 +318,13 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
     version = I3CDrv->GetVersion();
     printf("\r\n i3c version api:0x%X driver:0x%X \r\n",  \
                            version.api, version.drv);
+
+    if((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U))        ||
+       (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    {
+        printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
+        return;
+    }
 
     /* Initialize i3c hardware pins using PinMux Driver. */
     ret = hardware_init();
@@ -341,6 +350,14 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
         goto error_uninitialize;
     }
 
+    /* Initialize I3C master */
+    ret = I3CDrv->Control(I3C_MASTER_INIT, NULL);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Init control failed.\r\n");
+        goto error_uninitialize;
+    }
+
     /* i3c Speed Mode Configuration:
      *  I3C_BUS_MODE_PURE                             : Only Pure I3C devices
      *  I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 Mbps
@@ -355,6 +372,30 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
         goto error_poweroff;
     }
 
+    /* Reject Hot-Join request */
+    ret = I3CDrv->Control(I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Hot Join control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Master request */
+    ret = I3CDrv->Control(I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Master Request control failed.\r\n");
+        goto error_uninitialize;
+    }
+
+    /* Reject Slave Interrupt request */
+    ret = I3CDrv->Control(I3C_MASTER_SETUP_SIR_ACCEPTANCE, 0);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: Slave Interrupt Request control failed.\r\n");
+        goto error_uninitialize;
+    }
+
     /* Delay for n micro second.
      *  @Note: Minor delay is required if prints are disable.
      */
@@ -365,7 +406,15 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
     /* Assign Dynamic Address for Accelerometer */
     printf("\r\n >> i3c: Get dynamic addr for static addr:0x%X.\r\n",I3C_ACCERO_ADDR);
 
-    ret = I3CDrv->MasterAssignDA(&slave_addr[0], I3C_ACCERO_ADDR);
+    i3c_cmd.rw            = 0U;
+    i3c_cmd.cmd_id        = I3C_CCC_SETDASA;
+    i3c_cmd.len           = 1U;
+    /* Assign Slave's Static address */
+    i3c_cmd.addr          = I3C_ACCERO_ADDR;
+    i3c_cmd.data          = NULL;
+    i3c_cmd.def_byte      = 0U;
+
+    ret = I3CDrv->MasterAssignDA(&i3c_cmd);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C MasterAssignDA failed.\r\n");
@@ -380,8 +429,18 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
         printf("\r\nError: I3C MasterAssignDA failed.\r\n");
     }
 
-    printf("\r\n >> i3c: Received dyn_addr:0x%X for static addr:0x%X. \r\n",   \
-                                 slave_addr[0],I3C_ACCERO_ADDR);
+    /* Get assigned dynamic address for the static address */
+    ret = I3CDrv->GetSlaveDynAddr(I3C_ACCERO_ADDR, &slave_addr[0]);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: I3C Failed to get Dynamic Address.\r\n");
+        goto error_poweroff;
+    }
+    else
+    {
+        printf("\r\n >> i3c: Rcvd dyn_addr:0x%X for static addr:0x%X\r\n",
+                slave_addr[0],I3C_ACCERO_ADDR);
+    }
 
     actual_events = 0;
     /* Delay for n micro second.
@@ -455,7 +514,7 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
     /* Attach i2c BMI slave using static address */
     printf("\r\n >> i2c: Attaching i2c BMI slave addr:0x%X to i3c...\r\n",slave_addr[1]);
 
-    ret = I3CDrv->AttachI2Cdev(slave_addr[1]);
+    ret = I3CDrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[1]);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Attach I2C device failed.\r\n");
@@ -700,7 +759,10 @@ int main(void)
    SystemCoreClockUpdate();
 
    /* Create application main thread */
-   BaseType_t xReturned = xTaskCreate(mix_bus_i2c_i3c_Thread, "mix_bus_i2c_i3c_Thread", 256, NULL,configMAX_PRIORITIES-1, &i3c_xHandle);
+   BaseType_t xReturned = xTaskCreate(mix_bus_i2c_i3c_Thread,
+                                      "mix_bus_i2c_i3c_Thread",
+                                      STACK_SIZE, NULL,
+                                      configMAX_PRIORITIES-1, &i3c_xHandle);
    if (xReturned != pdPASS)
    {
       vTaskDelete(i3c_xHandle);

@@ -64,11 +64,20 @@ extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_GT911_TOUCH_INT_GPIO_PORT);
 static ARM_DRIVER_GPIO *GPIO_Driver_INT = &ARM_Driver_GPIO_(RTE_GT911_TOUCH_INT_GPIO_PORT);
 
 /* I2C Driver instance for Touch screen communication */
-extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_GT911_TOUCH_I2C_INSTANCE);
-static ARM_DRIVER_I2C *I2C_Driver = &ARM_Driver_I2C_(RTE_GT911_TOUCH_I2C_INSTANCE);
+#if(RTE_GT911_TOUCH_I2C_INSTANCE == 4)
+#define GT911_TOUCH_I2C_INSTANCE     I3C
+#else
+#define GT911_TOUCH_I2C_INSTANCE     RTE_GT911_TOUCH_I2C_INSTANCE
+#endif
+
+extern ARM_DRIVER_I2C ARM_Driver_I2C_(GT911_TOUCH_I2C_INSTANCE);
+static ARM_DRIVER_I2C *I2C_Driver = &ARM_Driver_I2C_(GT911_TOUCH_I2C_INSTANCE);
 
 /* GT911 Driver specific macros */
-#define GT911_SLAVE_ADDR                 0x5D
+
+/* Set the GT911_SLAVE_ADDR macro to either 0x5D or 0x14 to select the desired I2C slave address */
+#define GT911_SLAVE_ADDR                 RTE_GT911_TOUCH_I2C_SLAVE_ADDRESS_SEL
+
 #define GT911_COMMAND_REG                0x8040
 #define GT911_PRODUCT_ID                 0x8140
 #define GT911_TOUCH_STATUS               0x814E
@@ -356,6 +365,16 @@ static int32_t TOUCH_Reset(void)
 
     sys_busy_loop_us(1000);
 
+#if (GT911_SLAVE_ADDR == 0x14)
+    ret = GPIO_Driver_INT->SetValue(RTE_GT911_TOUCH_INT_PIN_NO, GPIO_PIN_OUTPUT_STATE_HIGH);
+    if(ret != ARM_DRIVER_OK)
+    {
+        return ret;
+    }
+
+    sys_busy_loop_us(100);
+#endif
+
     ret = GPIO_Driver_RST->SetValue(RTE_GT911_TOUCH_RESET_PIN_NO, GPIO_PIN_OUTPUT_STATE_HIGH);
     if(ret != ARM_DRIVER_OK)
     {
@@ -363,6 +382,14 @@ static int32_t TOUCH_Reset(void)
     }
 
     sys_busy_loop_us(50000);
+
+#if (GT911_SLAVE_ADDR == 0x14)
+    ret = GPIO_Driver_INT->SetValue(RTE_GT911_TOUCH_INT_PIN_NO, GPIO_PIN_OUTPUT_STATE_LOW);
+    if(ret != ARM_DRIVER_OK)
+    {
+        return ret;
+    }
+#endif
 
     ret = GPIO_Driver_INT->SetDirection(RTE_GT911_TOUCH_INT_PIN_NO, GPIO_PIN_DIRECTION_INPUT);
     if(ret != ARM_DRIVER_OK)

@@ -32,7 +32,7 @@
 #error "SPI is not enabled in the RTE_Components.h"
 #endif
 
-#define ARM_SPI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
+#define ARM_SPI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1) /* driver version */
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -147,7 +147,10 @@ static inline int32_t SPI_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
+                                       dma_periph->evtrtr_cfg.group,
                                        DMA_ACK_COMPLETION_PERIPHERAL);
+        evtrtrlocal_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
+                                         dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
@@ -181,6 +184,8 @@ static inline int32_t SPI_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
+        evtrtrlocal_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
+                                          dma_periph->evtrtr_cfg.group);
     }
 
 
@@ -1222,7 +1227,18 @@ static int32_t ARM_SPI_Control(SPI_RESOURCES *SPI, uint32_t control, uint32_t ar
         {
             if (SPI->drv_instance == LPSPI_INSTANCE)
             {
+#ifndef DEVICE_FEATURE_LPSPI_MASTER_ONLY
+                if (!RTE_LPSPI_CONFIG_MASTER_SLAVE)
+                {
+                    lpspi_config_slave();
+                }
+                else
+                {
+                    return ARM_DRIVER_ERROR;
+                }
+#else
                 return ARM_DRIVER_ERROR_UNSUPPORTED;
+#endif
             }
             else
             {
@@ -1632,11 +1648,19 @@ static void SPI_DMACallback(SPI_RESOURCES *SPI, uint32_t event, int8_t peri_num)
     {
         switch(peri_num)
         {
+#if (RTE_SPI0)
             case SPI0_DMA_TX_PERIPH_REQ:
+#endif
+#if (RTE_SPI1)
             case SPI1_DMA_TX_PERIPH_REQ:
+#endif
+#if (RTE_SPI2)
             case SPI2_DMA_TX_PERIPH_REQ:
+#endif
+#if (RTE_SPI3)
             case SPI3_DMA_TX_PERIPH_REQ:
-#if defined (M55_HE)
+#endif
+#if (RTE_LPSPI)
             case LPSPI_DMA_TX_PERIPH_REQ:
 #endif
                 if (SPI->transfer.mode == SPI_TMOD_TX)
@@ -1645,11 +1669,19 @@ static void SPI_DMACallback(SPI_RESOURCES *SPI, uint32_t event, int8_t peri_num)
                     SPI->cb_event(ARM_SPI_EVENT_TRANSFER_COMPLETE);
                 }
                 break;
+#if (RTE_SPI0)
             case SPI0_DMA_RX_PERIPH_REQ:
+#endif
+#if (RTE_SPI1)
             case SPI1_DMA_RX_PERIPH_REQ:
+#endif
+#if (RTE_SPI2)
             case SPI2_DMA_RX_PERIPH_REQ:
+#endif
+#if (RTE_SPI3)
             case SPI3_DMA_RX_PERIPH_REQ:
-#if defined (M55_HE)
+#endif
+#if (RTE_LPSPI)
             case LPSPI_DMA_RX_PERIPH_REQ:
 #endif
                 SPI->status.busy = 0;
@@ -2352,7 +2384,11 @@ extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_LPSPI_SW_SPI_PORT);
 #endif
 
 static SPI_RESOURCES LPSPI_RES = {
-    .regs                   = (SPI_Type*) LPSPI_BASE,
+#if (!defined(DEVICE_FEATURE_LPSPI_MASTER_ONLY) && !RTE_LPSPI_CONFIG_MASTER_SLAVE)
+    .regs                   = (SPI_Type*) LPSPI1_BASE,
+#else
+    .regs                   = (SPI_Type*) LPSPI0_BASE,
+#endif
     .cb_event               = NULL,
     .irq_priority           = RTE_LPSPI_IRQ_PRIORITY,
     .drv_instance           = LPSPI_INSTANCE,
@@ -2366,7 +2402,7 @@ static SPI_RESOURCES LPSPI_RES = {
     .dma_enable             = RTE_LPSPI_DMA_ENABLE,
     .dma_irq_priority       = RTE_LPSPI_DMA_IRQ_PRI,
     .dma_cb                 = LPSPI_DMACallback,
-    .dma_cfg                = &LPSPI_DMA_HW_CONFIG
+    .dma_cfg                = &LPSPI_DMA_HW_CONFIG,
 #endif
 #if SPI_BLOCKING_MODE_ENABLE
     .blocking_mode          = RTE_LPSPI_BLOCKING_MODE_ENABLE,

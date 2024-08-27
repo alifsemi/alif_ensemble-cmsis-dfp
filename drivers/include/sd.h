@@ -160,6 +160,7 @@ void hc_set_tout(sd_handle_t *, uint8_t);
 SDMMC_HC_STATUS hc_identify_card(sd_handle_t *);
 SDMMC_HC_STATUS hc_get_card_ifcond(sd_handle_t *);
 SDMMC_HC_STATUS hc_get_card_opcond(sd_handle_t *);
+SDMMC_HC_STATUS hc_get_emmc_card_opcond(sd_handle_t *);
 SDMMC_HC_STATUS hc_get_card_cid(sd_handle_t *);
 SDMMC_HC_STATUS hc_get_card_csd(sd_handle_t *);
 SDMMC_HC_STATUS hc_config_dma(sd_handle_t *, uint8_t);

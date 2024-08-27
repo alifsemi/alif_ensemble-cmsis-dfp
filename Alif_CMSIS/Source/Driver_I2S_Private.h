@@ -70,6 +70,8 @@ typedef union _I2S_DRV_STATUS {
 } I2S_DRV_STATUS;
 
 typedef struct _I2S_CONFIG_INFO {
+    /*!< I2S mode */
+    const bool master_mode;
 
     /*!< I2S Word Select Size */
     I2S_WSS wss_len;
