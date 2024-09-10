@@ -79,8 +79,8 @@ typedef enum _CANFD_FRAME
 }CANFD_FRAME;
 
 /* CANFD instance object */
-extern ARM_DRIVER_CAN  Driver_CANFD0;
-static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD0;
+extern ARM_DRIVER_CAN  Driver_CANFD;
+static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD;
 
 /* File Global variables */
 static volatile bool msg_rx_complete            = false;

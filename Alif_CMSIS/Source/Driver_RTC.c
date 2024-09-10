@@ -353,7 +353,7 @@ static void RTC_IRQHandler (LPRTC_RESOURCES *LPRTC_RES)
 static LPRTC_RESOURCES RTC0 = {
     .regs                      = (LPRTC_Type*) LPRTC_BASE,
     .cb_event                  = NULL,
-    .irq_num                   = (IRQn_Type) LPRTC0_IRQ_IRQn,
+    .irq_num                   = (IRQn_Type) LPRTC_IRQ_IRQn,
     .irq_priority              = RTE_RTC0_IRQ_PRI,
 };
 
@@ -394,7 +394,7 @@ static int32_t RTC0_LoadCounter (uint32_t loadval)
 }
 
 /* Function Name: RTC0_IRQHandler */
-void LPRTC0_IRQHandler (void)
+void LPRTC_IRQHandler (void)
 {
     RTC_IRQHandler (&RTC0);
 }

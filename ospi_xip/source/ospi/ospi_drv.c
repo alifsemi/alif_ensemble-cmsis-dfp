@@ -19,13 +19,6 @@
 #include "ospi_drv.h"
 #include "ospi_xip_user.h"
 
-#include "RTE_Components.h"
-#include CMSIS_device_header
-
-#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
-#include "sys_ctrl_ospi.h"
-#endif
-
 /**
   \fn        static void ospi_xip_disable(ospi_flash_cfg_t *ospi_cfg)
   \brief     Disables XIP - Switch SSI Host controller from XiP mode to regular read-write mode
@@ -279,13 +272,12 @@ void ospi_xip_enter(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t 
     ospi_writel(ospi_cfg, xip_ctrl, val);
 
     ospi_writel(ospi_cfg, rx_sample_dly, 0);
+    ospi_cfg->aes_regs->aes_rxds_delay = 11;
 
     ospi_writel(ospi_cfg, xip_mode_bits, 0x0);
     ospi_writel(ospi_cfg, xip_incr_inst, incr_command);
     ospi_writel(ospi_cfg, xip_wrap_inst, wrap_command);
-#ifdef DEVICE_FEATURE_OSPI_HAS_XIP_SER
     ospi_writel(ospi_cfg, xip_ser, ospi_cfg->ser);
-#endif
 
     spi_enable(ospi_cfg);
     ospi_xip_enable(ospi_cfg);
@@ -329,9 +321,7 @@ void ospi_xip_exit(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t w
     ospi_writel(ospi_cfg, xip_mode_bits, 0x1);
     ospi_writel(ospi_cfg, xip_incr_inst, incr_command);
     ospi_writel(ospi_cfg, xip_wrap_inst, wrap_command);
-#ifdef DEVICE_FEATURE_OSPI_HAS_XIP_SER
     ospi_writel(ospi_cfg, xip_ser, ospi_cfg->ser);
-#endif
     ospi_writel(ospi_cfg, ser, ospi_cfg->ser);
     ospi_writel(ospi_cfg, xip_cnt_time_out, 100);
 
@@ -349,9 +339,6 @@ void ospi_xip_exit(ospi_flash_cfg_t *ospi_cfg, uint16_t incr_command, uint16_t w
 */
 void ospi_init(ospi_flash_cfg_t *ospi_cfg)
 {
-#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
-    enable_ospi_clk();
-#endif
     ospi_xip_disable(ospi_cfg);
     spi_disable(ospi_cfg);
     ospi_writel(ospi_cfg, ser, 0);

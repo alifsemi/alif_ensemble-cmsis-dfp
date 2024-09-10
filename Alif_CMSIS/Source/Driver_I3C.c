@@ -26,7 +26,7 @@
 #error "I3C not configured in RTE_Device.h!"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(7, 2) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(7, 3) /* driver version */
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion =
@@ -472,7 +472,7 @@ static int I3Cx_GetSlvsInfo(I3C_RESOURCES *i3c,
         ARM_I3C_DEV_CHAR *char_info = (ARM_I3C_DEV_CHAR*)data;
 
         /* Create device characteristics array of specified length */
-        i3c_dev_char_t dev_chr[value];
+        i3c_dev_char_t dev_chr[I3C_MAX_DEVS];
 
         /* Secondary master fetches slaves' characteristics */
         i3c_sec_master_get_dct(i3c->regs, dev_chr, value);
@@ -1341,7 +1341,7 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c,
                  * program the dat in index pos */
                 i3c_add_slv_to_dat(i3c->regs, pos,
                                    addr_cmd->addr,
-                                   NULL);
+                                   0);
             }
 
             /* Stores first found free address position in
@@ -2077,8 +2077,17 @@ static I3C_DMA_HW_CONFIG I3Cx_DMA_HW_CONFIG =
 static I3C_RESOURCES i3c =
 {
     .regs              = (I3C_Type *)I3C_BASE,
-    .cb_event          = NULL,
-    .xfer              = {0},
+    .cb_event          = (void*)0,
+    .xfer              = {
+                          .xfer_cmd = {0},
+                          .tx_len   = 0,
+                          .rx_len   = 0,
+                          .tx_buf   = (void*)0,
+                          .rx_buf   = (void*)0,
+                          .status   = I3C_XFER_STATUS_NONE,
+                          .error    = 0,
+                          .addr     = 0
+                         },
     .status            = {0},
     .state             = {0},
 #if RTE_I3C_BLOCKING_MODE_ENABLE

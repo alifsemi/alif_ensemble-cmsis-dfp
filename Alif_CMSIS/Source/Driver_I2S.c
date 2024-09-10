@@ -23,7 +23,7 @@
 #include "Driver_I2S_Private.h"
 #include "Driver_SAI_EX.h"
 
-#define ARM_SAI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(3, 2) /*!< I2S Driver Version */
+#define ARM_SAI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(3, 0) /*!< I2S Driver Version */
 
 static const ARM_DRIVER_VERSION DriverVersion = {
         ARM_SAI_API_VERSION,
@@ -31,7 +31,7 @@ static const ARM_DRIVER_VERSION DriverVersion = {
 };
 
 
-#if !(RTE_I2S0 || RTE_I2S1 || RTE_I2S2 || RTE_I2S3 || RTE_LPI2S)
+#if !(RTE_I2S0 || RTE_I2S1 || RTE_I2S2 || RTE_I2S3)
 #error "I2S is not enabled in the RTE_Device.h"
 #endif
 
@@ -50,11 +50,7 @@ static const ARM_SAI_CAPABILITIES DriverCapabilities = {
     0, /* supports AC'97 Protocol */
     1, /* supports Mono mode */
     0, /* supports Companding */
-#if DEVICE_FEATURE_I2S_EXT_AUDIO_CLK_PRESENT
     1, /* supports MCLK (Master Clock) pin */
-#else
-    0, /* supports MCLK (Master Clock) pin */
-#endif
     0, /* supports Frame error event: \ref ARM_SAI_EVENT_FRAME_ERROR */
     0  /* reserved (must be zero) */
 };
@@ -246,10 +242,7 @@ __STATIC_INLINE int32_t I2S_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       dma_periph->evtrtr_cfg.group,
                                        DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtrlocal_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                         dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
@@ -283,8 +276,6 @@ __STATIC_INLINE int32_t I2S_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtrlocal_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                          dma_periph->evtrtr_cfg.group);
     }
 
 
@@ -450,14 +441,12 @@ static int32_t I2S_PowerControl(ARM_POWER_STATE state, I2S_RESOURCES *I2S)
 
         I2S->drv_status.status = 0U;
 
-        if(I2S->cfg->master_mode)
-            i2s_clock_disable(I2S->regs);
+        i2s_clock_disable(I2S->regs);
         i2s_disable(I2S->regs);
 
         /* Disable the I2S module clock */
         disable_i2s_clock(I2S->instance);
-        if(I2S->cfg->master_mode)
-            disable_i2s_sclk_aon(I2S->instance);
+        disable_i2s_sclk_aon(I2S->instance);
 
         I2S->state.powered = 0;
         break;
@@ -471,13 +460,11 @@ static int32_t I2S_PowerControl(ARM_POWER_STATE state, I2S_RESOURCES *I2S)
 
         I2S->drv_status.status = 0U;
 
-        if(I2S->cfg->master_mode) {
-            /* Initialize with the internal clock source */
-            select_i2s_clock_source(I2S->instance, I2S_INTERNAL_CLOCK_SOURCE);
+        /* Initialize with the internal clock source */
+        select_i2s_clock_source(I2S->instance, I2S_INTERNAL_CLOCK_SOURCE);
 
-            /* Enable the I2S module clock */
-            enable_i2s_sclk_aon(I2S->instance);
-        }
+        /* Enable the I2S module clock */
+        enable_i2s_sclk_aon(I2S->instance);
         enable_i2s_clock(I2S->instance);
 
         /* Enable I2S */
@@ -998,11 +985,8 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
             /* Set WLEN */
             i2s_set_tx_wlen(I2S->regs, I2S->cfg->wlen);
 
-            if(I2S->cfg->master_mode)
-            {
-                /* Enable Master Clock */
-                i2s_clock_enable(I2S->regs, I2S->cfg->sclkg, I2S->cfg->wss_len);
-            }
+            /* Enable Master Clock */
+            i2s_clock_enable(I2S->regs, I2S->cfg->sclkg, I2S->cfg->wss_len);
 
             /* Enable Tx Block */
             i2s_txblock_enable(I2S->regs);
@@ -1049,11 +1033,8 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
             /* Disable Tx Interrupt */
             i2s_disable_tx_interrupt(I2S->regs);
 
-            if(I2S->cfg->master_mode)
-            {
-                /* Disable Master Clock */
-                i2s_clock_disable(I2S->regs);
-            }
+            /* Disable Master Clock */
+            i2s_clock_disable(I2S->regs);
 
             /* Set the Tx flags*/
             I2S->drv_status.status_b.tx_busy = 0U;
@@ -1073,11 +1054,8 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
             /* Set WLEN */
             i2s_set_rx_wlen(I2S->regs, I2S->cfg->wlen);
 
-            if(I2S->cfg->master_mode)
-            {
-                /* Enable serial Clock */
-                i2s_clock_enable(I2S->regs, I2S->cfg->sclkg, I2S->cfg->wss_len);
-            }
+            /* Enable serial Clock */
+            i2s_clock_enable(I2S->regs, I2S->cfg->sclkg, I2S->cfg->wss_len);
 
             /* Enable Rx Block */
             i2s_rxblock_enable(I2S->regs);
@@ -1124,11 +1102,8 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
             /* Disable Rx Interrupt */
             i2s_disable_rx_interrupt(I2S->regs);
 
-            if(I2S->cfg->master_mode)
-            {
-                /* Disable Master Clock */
-                i2s_clock_disable(I2S->regs);
-            }
+            /* Disable Master Clock */
+            i2s_clock_disable(I2S->regs);
 
             /* Set the rx flags*/
             I2S->drv_status.status_b.rx_busy = 0U;
@@ -1215,7 +1190,7 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
     }
 
     /* Handle I2S Modes */
-    if(!!(control & ARM_SAI_MODE_Msk) != I2S->cfg->master_mode)
+    if((control & ARM_SAI_MODE_Msk) != ARM_SAI_MODE_MASTER)
         return ARM_DRIVER_ERROR_UNSUPPORTED;
 
     /* Handle Synchronization */
@@ -1292,9 +1267,6 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
     switch(control & ARM_SAI_MCLK_PIN_Msk)
     {
     case ARM_SAI_MCLK_PIN_INACTIVE:
-        if(!I2S->cfg->master_mode)
-            break;
-
         /* Enable internal clock source */
         select_i2s_clock_source(I2S->instance, I2S_INTERNAL_CLOCK_SOURCE);
 
@@ -1310,32 +1282,20 @@ static int32_t I2S_Control(uint32_t control, uint32_t arg1,
         break;
 
     case ARM_SAI_MCLK_PIN_INPUT:
+        /* Enable external clock source */
+        select_i2s_clock_source(I2S->instance, I2S_EXTERNAL_CLOCK_SOURCE);
 
-#if DEVICE_FEATURE_I2S_EXT_AUDIO_CLK_PRESENT
-        if(I2S->cfg->master_mode)
-        {
-            /* Enable external clock source */
-            select_i2s_clock_source(I2S->instance, I2S_EXTERNAL_CLOCK_SOURCE);
+        /* Set the MCLK clock divider */
+        mclk_prescaler = ((arg2 & ARM_SAI_MCLK_PRESCALER_Msk)
+                           >> ARM_SAI_MCLK_PRESCALER_Pos);
 
-            /* Set the MCLK clock divider */
-            mclk_prescaler = ((arg2 & ARM_SAI_MCLK_PRESCALER_Msk)
-                               >> ARM_SAI_MCLK_PRESCALER_Pos);
+        if(mclk_prescaler > I2S_CLK_DIVISOR_MAX)
+            return ARM_SAI_ERROR_MCLK_PRESCALER;
 
-            if(mclk_prescaler > I2S_CLK_DIVISOR_MAX)
-                return ARM_SAI_ERROR_MCLK_PRESCALER;
-
-            if(mclk_prescaler < I2S_CLK_DIVISOR_MIN)
-                bypass_i2s_clock_divider(I2S->instance);
-            else
-                set_i2s_clock_divisor(I2S->instance, mclk_prescaler);
-        }
+        if(mclk_prescaler < I2S_CLK_DIVISOR_MIN)
+            bypass_i2s_clock_divider(I2S->instance);
         else
-        {
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-        }
-#else
-        return ARM_DRIVER_ERROR_UNSUPPORTED;
-#endif
+            set_i2s_clock_divisor(I2S->instance, mclk_prescaler);
 
         break;
 
@@ -1424,38 +1384,23 @@ static void I2S_DMACallback(uint32_t event, int8_t peri_num,
     {
         switch(peri_num)
         {
-#if (RTE_I2S0)
         case I2S0_DMA_TX_PERIPH_REQ:
-#endif
-#if (RTE_I2S1)
         case I2S1_DMA_TX_PERIPH_REQ:
-#endif
-#if (RTE_I2S2)
         case I2S2_DMA_TX_PERIPH_REQ:
-#endif
-#if (RTE_I2S3)
         case I2S3_DMA_TX_PERIPH_REQ:
-#endif
-#if (RTE_LPI2S)
+#if defined (M55_HE)
         case LPI2S_DMA_TX_PERIPH_REQ:
 #endif
             /* Set the Tx flags*/
             I2S->drv_status.status_b.tx_busy = 0U;
             I2S->cb_event(ARM_SAI_EVENT_SEND_COMPLETE);
             break;
-#if (RTE_I2S0)
+
         case I2S0_DMA_RX_PERIPH_REQ:
-#endif
-#if (RTE_I2S1)
         case I2S1_DMA_RX_PERIPH_REQ:
-#endif
-#if (RTE_I2S2)
         case I2S2_DMA_RX_PERIPH_REQ:
-#endif
-#if (RTE_I2S3)
         case I2S3_DMA_RX_PERIPH_REQ:
-#endif
-#if (RTE_LPI2S)
+#if defined (M55_HE)
         case LPI2S_DMA_RX_PERIPH_REQ:
 #endif
             /* Set the Rx flags*/
@@ -1487,7 +1432,6 @@ static void I2S_DMACallback(uint32_t event, int8_t peri_num,
 #if (RTE_I2S0)
 
 static I2S_CONFIG_INFO I2S0_CONFIG = {
-    .master_mode         = DEVICE_FEATURE_I2S0_MASTER_MODE,
     .rx_fifo_trg_lvl     = RTE_I2S0_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S0_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S0_IRQ_PRI,
@@ -1694,7 +1638,6 @@ ARM_DRIVER_SAI Driver_SAI0 = {
 #if (RTE_I2S1)
 
 static I2S_CONFIG_INFO I2S1_CONFIG = {
-    .master_mode         = DEVICE_FEATURE_I2S1_MASTER_MODE,
     .rx_fifo_trg_lvl     = RTE_I2S1_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S1_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S1_IRQ_PRI,
@@ -1900,7 +1843,6 @@ ARM_DRIVER_SAI Driver_SAI1 = {
 #if (RTE_I2S2)
 
 static I2S_CONFIG_INFO I2S2_CONFIG = {
-    .master_mode         = DEVICE_FEATURE_I2S2_MASTER_MODE,
     .rx_fifo_trg_lvl     = RTE_I2S2_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S2_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S2_IRQ_PRI,
@@ -2107,7 +2049,6 @@ ARM_DRIVER_SAI Driver_SAI2 = {
 #if (RTE_I2S3)
 
 static I2S_CONFIG_INFO I2S3_CONFIG = {
-    .master_mode         = DEVICE_FEATURE_I2S3_MASTER_MODE,
     .rx_fifo_trg_lvl     = RTE_I2S3_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_I2S3_TX_TRIG_LVL,
     .irq_priority        = RTE_I2S3_IRQ_PRI,
@@ -2314,7 +2255,6 @@ ARM_DRIVER_SAI Driver_SAI3 = {
 #if (RTE_LPI2S)
 
 static I2S_CONFIG_INFO LPI2S_CONFIG = {
-    .master_mode         = DEVICE_FEATURE_LPI2S_MASTER_MODE,
     .rx_fifo_trg_lvl     = RTE_LPI2S_RX_TRIG_LVL,
     .tx_fifo_trg_lvl     = RTE_LPI2S_TX_TRIG_LVL,
     .irq_priority        = RTE_LPI2S_IRQ_PRI,

@@ -136,28 +136,6 @@ static inline void disable_lpspi_clk (void)
     M55HE_CFG->HE_CLK_ENA &= ~HE_CLK_ENA_SPI_CKEN;
 }
 
-#ifndef DEVICE_FEATURE_LPSPI_MASTER_ONLY
-/**
-  \fn          static inline void lpspi_config_master (void)
-  \brief       LPSPI configure as master
-  \return      none
-*/
-static inline void lpspi_config_master (void)
-{
-    M55HE_CFG->HE_CLK_ENA &= ~HE_CLK_ENA_SPI_MODE_SLAVE;
-}
-
-/**
-  \fn          static inline void lpspi_config_slave (void)
-  \brief       LPSPI configure as slave
-  \return      none
-*/
-static inline void lpspi_config_slave (void)
-{
-    M55HE_CFG->HE_CLK_ENA |= HE_CLK_ENA_SPI_MODE_SLAVE;
-}
-#endif
-
 #ifdef __cplusplus
 }
 #endif

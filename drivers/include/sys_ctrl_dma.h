@@ -25,7 +25,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include "peripheral_types.h"
-#include "RTE_Device.h"
 
 #ifdef  __cplusplus
 extern "C"
@@ -42,7 +41,6 @@ typedef enum _DMA_INSTANCE
     DMA_INSTANCE_LOCAL,                     /**< DMALOCAL   */
 } DMA_INSTANCE;
 
-#if (RTE_DMA0)
 static inline void dma0_enable_periph_clk(void)
 {
     CLKCTL_PER_MST->PERIPH_CLK_ENA |= PERIPH_CLK_ENA_DMA_CKEN;
@@ -78,33 +76,6 @@ static inline void dma0_reset(void)
     CLKCTL_PER_MST->DMA_CTRL |= DMA_CTRL_SW_RST;
 }
 
-static inline void dma0_set_glitch_filter(uint32_t glitch_filter)
-{
-    CLKCTL_PER_MST->DMA_GLITCH_FLT = glitch_filter;
-}
-
-static inline void lppdm_select_dma0(void)
-{
-    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_PDM_DMA0;
-}
-
-static inline void lpi2s_select_dma0(void)
-{
-    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_I2S_DMA0;
-}
-
-static inline void lpspi_select_dma0(uint8_t group)
-{
-    M55HE_CFG->HE_DMA_SEL |= ((group << HE_DMA_SEL_LPSPI_Pos) & HE_DMA_SEL_LPSPI_Msk);
-}
-
-static inline void lpuart_select_dma0(void)
-{
-    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_LPUART_DMA0;
-}
-#endif /* RTE_DMA0 */
-
-#if ((RTE_DMA1) || (RTE_DMA2))
 static inline void dmalocal_enable_periph_clk(void)
 {
     M55LOCAL_CFG->CLK_ENA |= CLK_ENA_DMA_CKEN;
@@ -140,27 +111,35 @@ static inline void dmalocal_reset(void)
     M55LOCAL_CFG->DMA_CTRL |= DMA_CTRL_SW_RST;
 }
 
-#ifdef DEVICE_FEATURE_DMALOCAL_DMASEL_GPIO_GLITCH_FILTER_ENABLE
+static inline void dma0_set_glitch_filter(uint32_t glitch_filter)
+{
+    CLKCTL_PER_MST->DMA_GLITCH_FLT = glitch_filter;
+}
+
 static inline void dmalocal_set_glitch_filter(uint8_t glitch_filter)
 {
     M55LOCAL_CFG->DMA_SEL |= (glitch_filter << DMA_SEL_FLT_ENA_Pos);
 }
-#endif
 
-#ifdef DEVICE_FEATURE_DMA2_GPIO_GLITCH_FILTER_ENABLE0
-static inline void dma2_set_glitch_filter0(uint32_t glitch_filter)
+static inline void lppdm_select_dma0(void)
 {
-    M55HE_CFG->HE_FLT_ENA0 = glitch_filter;
+    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_PDM_DMA0;
 }
-#endif
-#ifdef DEVICE_FEATURE_DMA2_GPIO_GLITCH_FILTER_ENABLE1
-static inline void dma2_set_glitch_filter1(uint32_t glitch_filter)
-{
-    M55HE_CFG->HE_FLT_ENA1 = glitch_filter;
-}
-#endif
 
-#endif /* ((RTE_DMA1) || (RTE_DMA2)) */
+static inline void lpi2s_select_dma0(void)
+{
+    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_I2S_DMA0;
+}
+
+static inline void lpspi_select_dma0(uint8_t group)
+{
+    M55HE_CFG->HE_DMA_SEL |= ((group << HE_DMA_SEL_LPSPI_Pos) & HE_DMA_SEL_LPSPI_Msk);
+}
+
+static inline void lpuart_select_dma0(void)
+{
+    M55HE_CFG->HE_DMA_SEL |= HE_DMA_SEL_LPUART_DMA0;
+}
 
 #ifdef  __cplusplus
 }

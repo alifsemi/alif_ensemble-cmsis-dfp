@@ -164,67 +164,45 @@
 /******************************************************************************/
 /*                         Global memory map                              */
 /******************************************************************************/
-#include "soc_feature.h"
 
 /*On chip RAM Regions */
-#if DEVICE_FEATURE_SRAM0_PRESENT
 #define SRAM0_BASE                0x02000000
-#define SRAM0_SIZE                DEVICE_FEATURE_SRAM0_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM1_PRESENT
+#define SRAM0_SIZE                0x00400000		/* 4M */
 #define SRAM1_BASE                0x08000000
-#define SRAM1_SIZE                DEVICE_FEATURE_SRAM1_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM2_PRESENT
+#define SRAM1_SIZE                0x00280000		/* 2.5M */
 #define SRAM2_BASE                0x50000000
-#define SRAM2_SIZE                DEVICE_FEATURE_SRAM2_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM3_PRESENT
+#define SRAM2_SIZE                0x00040000		/* 256K */
 #define SRAM3_BASE                0x50800000
-#define SRAM3_SIZE                DEVICE_FEATURE_SRAM3_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM4_PRESENT
+#define SRAM3_SIZE                0x00100000		/* 1M */
 #define SRAM4_BASE                0x58000000
-#define SRAM4_SIZE                DEVICE_FEATURE_SRAM4_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM5_PRESENT
+#define SRAM4_SIZE                0x00040000		/* 256K */
 #define SRAM5_BASE                0x58800000
-#define SRAM5_SIZE                DEVICE_FEATURE_SRAM5_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM6_A_PRESENT
+#define SRAM5_SIZE                0x00040000		/* 256K */
 #define SRAM6_A_BASE              0x62000000
-#define SRAM6_A_SIZE              DEVICE_FEATURE_SRAM6_A_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM6_B_PRESENT
+#define SRAM6_A_SIZE              0x00100000		/* 1M */
 #define SRAM6_B_BASE              0x62400000
-#define SRAM6_B_SIZE              DEVICE_FEATURE_SRAM6_B_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM7_PRESENT
+#define SRAM6_B_SIZE              0x00100000		/* 1M */
 #define SRAM7_BASE                0x63000000
-#define SRAM7_SIZE                DEVICE_FEATURE_SRAM7_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM8_PRESENT
+#define SRAM7_SIZE                0x00080000		/* 512K */
 #define SRAM8_BASE                0x63200000
-#define SRAM8_SIZE                DEVICE_FEATURE_SRAM8_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM9_A_PRESENT
+#define SRAM8_SIZE                0x00200000		/* 2M */
 #define SRAM9_A_BASE              0x60000000
-#define SRAM9_A_SIZE              DEVICE_FEATURE_SRAM9_A_SIZE
-#endif
-#if DEVICE_FEATURE_SRAM9_B_PRESENT
+#define SRAM9_A_SIZE              0x00040000		/* 256K */
 #define SRAM9_B_BASE              0x60040000
-#define SRAM9_B_SIZE              DEVICE_FEATURE_SRAM9_B_SIZE
-#endif
+#define SRAM9_B_SIZE              0x00080000		/* 512K */
 
 /* Backwards compatibility */
-#define SRAM6_BASE                0x62000000
-#define SRAM6_SIZE                0x00100000
-#define SRAM9_BASE                0x60040000
+#define SRAM6_BASE                SRAM6_A_BASE
+#define SRAM6_SIZE                SRAM6_A_SIZE
+#define SRAM9_BASE                SRAM9_A_BASE
 #define SRAM9_SIZE                0x000C0000            /* 768K */
+#define LPSPI_BASE                0x43000000UL
+#define CANFD_BASE                0x49036000UL
+#define CANFD_CNT_BASE            0x49037000UL
 
 /* On Chip NVM */
 #define MRAM_BASE                 0x80000000
-#define MRAM_SIZE                 DEVICE_FEATURE_MRAM_SIZE
+#define MRAM_SIZE                 0x00580000		/* 5.5M */
 
 /* OSPI XIP regions */
 #define OSPI0_XIP_BASE            0xA0000000

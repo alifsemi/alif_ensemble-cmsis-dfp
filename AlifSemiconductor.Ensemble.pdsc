@@ -12,8 +12,8 @@
   -->
 
   <releases>
-     <release version="1.3.0-rc1" date="2024-08-23">
-      - rc1 release for DFPv1.3.0
+     <release version="1.3.0-rc2" date="2024-09-05">
+      - rc2 release for DFPv1.3.0
     </release>
      <release version="1.2.2" date="2024-08-13">
       - update SD Driver for various fixes
@@ -158,8 +158,6 @@
         <feature type="VCC" n="1.71" m="4.2"/>
         <feature type="Temp" n="-40" m="75"/>
         <device Dname="AE722F80F55D5AS">
-          <compile Pname="M55_HP" Pdefine="AE722F80F55D5XX"/>
-          <compile Pname="M55_HE" Pdefine="AE722F80F55D5XX"/>
           <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
           <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
           <debug svd="Debug/SVD/AE722F80F55D5AS_CM55_HP_View.svd" Pname="M55_HP" __apid="0"/>
@@ -167,8 +165,6 @@
           <feature type="CSP" n="208" name="WLCSP Package"/>
         </device>
         <device Dname="AE722F80F55D5LS">
-          <compile Pname="M55_HP" Pdefine="AE722F80F55D5XX"/>
-          <compile Pname="M55_HE" Pdefine="AE722F80F55D5XX"/>
           <compile Pname="M55_HP" header="Device/core/M55_HP/include/M55_HP.h" define="M55_HP"/>
           <compile Pname="M55_HE" header="Device/core/M55_HE/include/M55_HE.h" define="M55_HE"/>
           <debug svd="Debug/SVD/AE722F80F55D5LS_CM55_HP_View.svd" Pname="M55_HP" __apid="0"/>
@@ -926,7 +922,9 @@
         <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/GCC/gcc_M55_HP.ld" version="1.0.0" attr="config" condition="GCC"/>
         <file category="sourceC" name="Device/common/source/system_M55.c"/>
         <file category="header" name="Device/E7/AE722F80F55D5XX/RTE_Device.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/core/M55_HP/include/M55_HP_map.h" version="1.0.0" attr="config"/>
         <file category="header" name="Device/core/M55_HP/config/M55_HP_Config.h" version="1.0.0" attr="config"/>
+        <file category="header" name="Device/common/include/global_map.h" version="1.0.0" attr="config"/>
         <file category="header" name="Device/common/config/app_map.h" version="1.0.0" attr="config"/>
         <file category="sourceC" name="Device/common/source/clk.c"/>
         <file category="sourceC" name="Device/common/source/system_utils.c"/>
@@ -951,6 +949,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/dma_testmemcpy.c" attr="template" select="DMA Mem-Mem Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_Test_Baremetal.c" attr="template" select="DPHY Loopback Baremetal Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_test.c" attr="template" select="DPHY Loopback Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/GT911_Baremetal.c" attr="template" select="GT911 Touch Screen Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/HWSEM_Baremetal.c" attr="template" select="HWSEM Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C Baremetal Demo"/>
@@ -960,7 +959,6 @@
         <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/i2s_samples.h" attr="template" select="I2S Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_masterside.c" attr="template" select="I3C Master Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/I3C_Baremetal_slaveside.c" attr="template" select="I3C Slave Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/ICM42670P_Baremetal.c" attr="template" select="ICM42670P 3-axis accelerometer Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_blink_baremetal.c" attr="template" select="LED Blinky Baremetal Demo"/>
         <file category="header" name="libs/conductor/example/pins.h" attr="template" select="LED Blinky Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/LED_Breathe_Baremetal.c" attr="template" select="LED PWM Baremtal Demo"/>
@@ -980,6 +978,14 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/RTC_Baremetal.c" attr="template" select="RTC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="SDIO Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="SDMMC Baremetal Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/SPI0_SPI1_baremetal.c" attr="template" select="SPI Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/TSENS_Baremetal.c" attr="template" select="TSENS Baremetal Demo"/>
         <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS Baremetal Demo"/>
@@ -1056,7 +1062,9 @@
         <file category="linkerScript" name="Device/E7/AE722F80F55D5XX/linker_script/GCC/gcc_M55_HE.ld" version="1.0.0" attr="config" condition="GCC"/>
         <file category="sourceC" name="Device/common/source/system_M55.c"/>
         <file category="header" name="Device/E7/AE722F80F55D5XX/RTE_Device.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/core/M55_HE/include/M55_HE_map.h" version="1.0.0" attr="config"/>
 	    <file category="header" name="Device/core/M55_HE/config/M55_HE_Config.h" version="1.0.0" attr="config"/>
+	    <file category="header" name="Device/common/include/global_map.h" version="1.0.0" attr="config"/>
 	    <file category="header" name="Device/common/config/app_map.h" version="1.0.0" attr="config"/>
         <file category="sourceC" name="Device/common/source/clk.c"/>
 	    <file category="sourceC" name="Device/common/source/system_utils.c"/>
@@ -1082,6 +1090,7 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/dma_testmemcpy.c" attr="template" select="DMA Mem-Mem Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_Test_Baremetal.c" attr="template" select="DPHY Loopback Baremetal Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/DPHY_Loopback_test.c" attr="template" select="DPHY Loopback Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/GT911_Baremetal.c" attr="template" select="GT911 Touch Screen Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/HWSEM_Baremetal.c" attr="template" select="HWSEM Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C Baremetal Demo"/>
@@ -1114,6 +1123,14 @@
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/RTC_Baremetal.c" attr="template" select="RTC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="SDIO Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="SDMMC Baremetal Demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/SPI0_SPI1_baremetal.c" attr="template" select="SPI Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/TSENS_Baremetal.c" attr="template" select="TSENS Baremetal Demo"/>
         <file category="header" name="Boards/DevKit-e7/Templates/Common/Include/temperature.h" attr="template" select="TSENS Baremetal Demo"/>
@@ -1714,8 +1731,7 @@
         <file category="header" name="Alif_CMSIS/Include/Driver_OSPI.h"/>
         <file category="header" name="Alif_CMSIS/Source/Driver_OSPI_Private.h"/>
         <file category="header" name="drivers/include/ospi.h"/>
-        <file category="header" name="drivers/include/sys_ctrl_aes.h"/>
-        <file category="header" name="drivers/include/sys_ctrl_ospi.h"/>
+	<file category="header" name="drivers/include/sys_ctrl_aes.h"/>
       </files>
     </component>
 
@@ -1757,7 +1773,7 @@
         #define RTE_OSPI_XIP_UTILITY   1           /* OSPI XIP SETUP utility*/
       </RTE_Components_h>
       <files>
-        <file category="source" name="ospi_xip/app/ospi_xip_issi_flash.c"/>
+        <file category="source" name="ospi_xip/app/app_issi_flash.c"/>
       </files>
     </component>
 

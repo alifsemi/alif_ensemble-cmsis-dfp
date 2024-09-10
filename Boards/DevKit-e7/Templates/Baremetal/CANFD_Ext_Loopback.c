@@ -81,8 +81,8 @@ typedef enum _CANFD_FRAME
 }CANFD_FRAME;
 
 /* CANFD instance object */
-extern ARM_DRIVER_CAN  Driver_CANFD0;
-static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD0;
+extern ARM_DRIVER_CAN  Driver_CANFD;
+static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD;
 
 /* File Global variables */
 static volatile bool msg_rx_complete            = false;
@@ -399,7 +399,7 @@ static void canfd_lbe_demo_thread_entry(void)
        goto power_off_canfd;
     }
 
-    /* Setting CANFD to External Loopback mode */
+    /* Setting CANFD to Normal mode */
     ret_val = CANFD_instance->SetMode(ARM_CAN_MODE_LOOPBACK_EXTERNAL);
     if(ret_val != ARM_DRIVER_OK)
     {

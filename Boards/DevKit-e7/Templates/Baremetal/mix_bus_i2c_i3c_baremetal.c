@@ -383,7 +383,6 @@ void mix_bus_i2c_i3c_demo_entry()
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Failed to get Dynamic Address.\r\n");
-        goto error_poweroff;
     }
     else
     {

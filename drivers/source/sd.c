@@ -30,6 +30,7 @@ const diskio_t SD_Driver =
     sd_init,
     sd_uninit,
     sd_state,
+    sd_info,
     sd_read,
     sd_write,
     NULL
@@ -299,10 +300,11 @@ SD_DRV_STATUS sd_uninit(uint8_t devId)
 /**
   \fn           sd_state
   \brief        sd state
-  \param[in]    Global SD handle pointer
+  \param[in]    void
   \return       sd state
   */
-SD_CARD_STATE sd_state(sd_handle_t *pHsd){
+SD_CARD_STATE sd_state(void){
+    sd_handle_t *pHsd =  &Hsd;
     uint32_t status;
 
     hc_get_card_status(pHsd, &status);
@@ -310,6 +312,23 @@ SD_CARD_STATE sd_state(sd_handle_t *pHsd){
     return status;
 }
 
+/**
+  \fn           sd_info
+  \brief        returns sd card info
+  \param[in]    sd_cardinfo_t *
+  \return       sd driver status
+  */
+SD_DRV_STATUS sd_info(sd_cardinfo_t *pinfo){
+
+    sd_handle_t *pHsd =  &Hsd;
+
+    if(pinfo == NULL)
+        return SD_DRV_STATUS_ERR;
+
+    memcpy(pinfo, &pHsd->sd_card, sizeof(sd_cardinfo_t));
+
+    return SD_DRV_STATUS_OK;
+}
 /**
   \fn           SD_DRV_STATUS SD_read(uint32_t sec, uint32_t blk_cnt, volatile unsigned char * dest_buff)
   \brief        read sd sector

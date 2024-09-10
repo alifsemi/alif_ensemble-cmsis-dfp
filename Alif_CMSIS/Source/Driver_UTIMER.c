@@ -101,14 +101,12 @@ static void UTIMER_Interrupt_Enable (UTIMER_RESOURCES *UTIMER_RES, uint8_t chann
                     NVIC_SetPriority (UTIMER_CAPTURE_A_IRQ(channel), UTIMER_RES->ch_info[channel].capture_A_irq_priority);
                     NVIC_EnableIRQ (UTIMER_CAPTURE_A_IRQ(channel));
                 }
-#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
                 else
                 {
                     NVIC_ClearPendingIRQ (QEC_CAPTURE_A_IRQ(channel));
                     NVIC_SetPriority (QEC_CAPTURE_A_IRQ(channel), UTIMER_RES->ch_info[channel].capture_A_irq_priority);
                     NVIC_EnableIRQ (QEC_CAPTURE_A_IRQ(channel));
                 }
-#endif
             }
             if (UTIMER_RES->ch_info[channel].ch_config.driver_B)
             {
@@ -120,14 +118,12 @@ static void UTIMER_Interrupt_Enable (UTIMER_RESOURCES *UTIMER_RES, uint8_t chann
                     NVIC_SetPriority (UTIMER_CAPTURE_B_IRQ(channel), UTIMER_RES->ch_info[channel].capture_B_irq_priority);
                     NVIC_EnableIRQ (UTIMER_CAPTURE_B_IRQ(channel));
                 }
-#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
                 else
                 {
                     NVIC_ClearPendingIRQ (QEC_CAPTURE_B_IRQ(channel));
                     NVIC_SetPriority (QEC_CAPTURE_B_IRQ(channel), UTIMER_RES->ch_info[channel].capture_B_irq_priority);
                     NVIC_EnableIRQ (QEC_CAPTURE_B_IRQ(channel));
                 }
-#endif
             }
             break;
         }
@@ -263,13 +259,11 @@ static void UTIMER_Interrupt_Disable (UTIMER_RESOURCES *UTIMER_RES, uint8_t chan
                     NVIC_ClearPendingIRQ (UTIMER_CAPTURE_A_IRQ(channel));
                     NVIC_DisableIRQ (UTIMER_CAPTURE_A_IRQ(channel));
                 }
-#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
                 else
                 {
                     NVIC_ClearPendingIRQ (QEC_CAPTURE_A_IRQ(channel));
                     NVIC_DisableIRQ (QEC_CAPTURE_A_IRQ(channel));
                 }
-#endif
             }
             if (UTIMER_RES->ch_info[channel].ch_config.driver_B)
             {
@@ -280,13 +274,11 @@ static void UTIMER_Interrupt_Disable (UTIMER_RESOURCES *UTIMER_RES, uint8_t chan
                     NVIC_ClearPendingIRQ (UTIMER_CAPTURE_B_IRQ(channel));
                     NVIC_DisableIRQ (UTIMER_CAPTURE_B_IRQ(channel));
                 }
-#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
                 else
                 {
                     NVIC_ClearPendingIRQ (QEC_CAPTURE_B_IRQ(channel));
                     NVIC_DisableIRQ (QEC_CAPTURE_B_IRQ(channel));
                 }
-#endif
             }
             break;
         }
@@ -367,7 +359,7 @@ static int32_t ARM_UTIMER_Initialize (UTIMER_RESOURCES *UTIMER_RES, uint8_t chan
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
-    if(channel >= UTIMER_RES->max_channels)
+    if(channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -404,7 +396,7 @@ static int32_t ARM_UTIMER_Initialize (UTIMER_RESOURCES *UTIMER_RES, uint8_t chan
  */
 static int32_t ARM_UTIMER_PowerControl (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel, ARM_POWER_STATE state)
 {
-    if (channel >= UTIMER_RES->max_channels)
+    if (channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -471,7 +463,7 @@ static int32_t ARM_UTIMER_PowerControl (UTIMER_RESOURCES *UTIMER_RES, uint8_t ch
  */
 static int32_t ARM_UTIMER_ConfigCounter (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel, ARM_UTIMER_MODE mode, ARM_UTIMER_COUNTER_DIR dir)
 {
-    if (channel >= UTIMER_RES->max_channels)
+    if (channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -523,7 +515,7 @@ static int32_t ARM_UTIMER_ConfigCounter (UTIMER_RESOURCES *UTIMER_RES, uint8_t c
  */
 static int32_t ARM_UTIMER_SetCount (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel, ARM_UTIMER_COUNTER counter, uint32_t value)
 {
-    if (channel >= UTIMER_RES->max_channels)
+    if (channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -568,7 +560,7 @@ static int32_t ARM_UTIMER_ConfigTrigger (UTIMER_RESOURCES *UTIMER_RES, uint8_t c
 {
     uint32_t trigger = 0;
 
-    if(channel >= UTIMER_RES->max_channels)
+    if(channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -620,7 +612,7 @@ static int32_t ARM_UTIMER_ConfigTrigger (UTIMER_RESOURCES *UTIMER_RES, uint8_t c
  */
 static int32_t ARM_UTIMER_Start (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel)
 {
-    if(channel >= UTIMER_RES->max_channels)
+    if(channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -653,7 +645,7 @@ static int32_t ARM_UTIMER_Start (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel)
  */
 static int32_t ARM_UTIMER_Stop (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel, bool count_clear_option)
 {
-    if(channel >= UTIMER_RES->max_channels)
+    if(channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -681,7 +673,7 @@ static int32_t ARM_UTIMER_Stop (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel, b
  */
 static int32_t ARM_UTIMER_Uninitialize (UTIMER_RESOURCES *UTIMER_RES, uint8_t channel)
 {
-    if(channel >= UTIMER_RES->max_channels)
+    if(channel > ARM_UTIMER_MAX_CHANNEL)
     {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -833,7 +825,6 @@ static void UTIMER_UnderFlow_IRQHandler (UTIMER_RESOURCES *UTIMER_RES, uint8_t c
 #if RTE_UTIMER
 static UTIMER_RESOURCES UTIMER0 = {
     .regs        = (UTIMER_Type*) UTIMER_BASE,
-    .max_channels = DEVICE_FEATURE_UTIMER_MAX_CHANNELS,
     .ch_info[ARM_UTIMER_CHANNEL0]  = {
         .ch_config = {
             .buf_trough_n_crest = RTE_UTIMER_CHANNEL0_BUF_TROUGH_N_CREST,
@@ -970,7 +961,6 @@ static UTIMER_RESOURCES UTIMER0 = {
         .over_flow_irq_priority = RTE_UTIMER_CHANNEL3_OVER_FLOW_IRQ_PRIORITY,
         .under_flow_irq_priority = RTE_UTIMER_CHANNEL3_UNDER_FLOW_IRQ_PRIORITY
     },
-#if (DEVICE_FEATURE_UTIMER_MAX_CHANNELS > 4)
     .ch_info[ARM_UTIMER_CHANNEL4]  = {
         .ch_config = {
             .buf_trough_n_crest = RTE_UTIMER_CHANNEL4_BUF_TROUGH_N_CREST,
@@ -1355,7 +1345,6 @@ static UTIMER_RESOURCES UTIMER0 = {
         .capture_A_irq_priority = RTE_UTIMER_CHANNEL15_CAPTURE_A_IRQ_PRIORITY,
         .capture_B_irq_priority = RTE_UTIMER_CHANNEL15_CAPTURE_B_IRQ_PRIORITY
     }
-#endif
 };
 
 static void UTIMER_IRQHandler_Capture_A(uint8_t channel)
@@ -1398,7 +1387,6 @@ static void UTIMER_IRQHandler_UnderFlow(uint8_t channel)
     UTIMER_UnderFlow_IRQHandler(&UTIMER0, channel);
 }
 
-#ifdef DEVICE_FEATURE_QEC_SEPARATE_CHANNELS
 void QEC0_CMPA_IRQHandler(void)
 {
     UTIMER_IRQHandler_Capture_A(ARM_UTIMER_CHANNEL12);
@@ -1438,7 +1426,6 @@ void QEC3_CMPB_IRQHandler(void)
 {
     UTIMER_IRQHandler_Capture_B(ARM_UTIMER_CHANNEL15);
 }
-#endif
 
 void UTIMER_IRQ0Handler(void)
 {
@@ -1599,7 +1586,6 @@ void UTIMER_IRQ31Handler(void)
     UTIMER_IRQHandler_OverFlow(ARM_UTIMER_CHANNEL3);
 }
 
-#if (DEVICE_FEATURE_UTIMER_MAX_CHANNELS > 4)
 void UTIMER_IRQ32Handler(void)
 {
     UTIMER_IRQHandler_Capture_A(ARM_UTIMER_CHANNEL4);
@@ -1919,7 +1905,6 @@ void UTIMER_IRQ95Handler(void)
 {
     UTIMER_IRQHandler_OverFlow(ARM_UTIMER_CHANNEL11);
 }
-#endif
 
 static int32_t ARM_UTIMER0_Initialize(uint8_t channel, ARM_UTIMER_SignalEvent_t cb_unit_event)
 {

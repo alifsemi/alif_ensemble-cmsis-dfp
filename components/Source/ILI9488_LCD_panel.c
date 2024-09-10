@@ -251,8 +251,6 @@ static int32_t ILI9488_Init(void)
   */
 static int32_t ILI9488_Uninit(void)
 {
-    int32_t  ret = ARM_DRIVER_OK;
-
     return GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO,
                                      GPIO_PIN_OUTPUT_STATE_LOW);
 }
@@ -287,8 +285,6 @@ static int32_t ILI9488_Control(uint32_t control)
   */
 static int32_t ILI9488_Start(void)
 {
-    int32_t  ret = ARM_DRIVER_OK;
-
     return ILI9488_BL_LED_Control(ENABLE);
 }
 
@@ -299,8 +295,6 @@ static int32_t ILI9488_Start(void)
   */
 static int32_t ILI9488_Stop(void)
 {
-    int32_t  ret = ARM_DRIVER_OK;
-
     return ILI9488_BL_LED_Control(DISABLE);
 }
 

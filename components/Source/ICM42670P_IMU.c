@@ -31,7 +31,7 @@
     #error "IMU ICM42670P is not configured in RTE_Components.h"
 #endif
 
-#define ARM_IMU_DRV_VERSION  ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)
+#define ARM_IMU_DRV_VERSION  ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1)
 
 /* Timeout in Microsec */
 #define IMU_I3C_TIMEOUT_US              (100000)
@@ -196,6 +196,42 @@ void IMU_I3CCallBack(uint32_t event)
 }
 
 /**
+  \fn           int32_t IMU_ResetDynAddr(void)
+  \brief        Resets all slaves' dynamic address
+  \return       \ref execution_status.
+*/
+static int32_t IMU_ResetDynAddr(void)
+{
+    int32_t ret;
+
+    ARM_I3C_CMD i3c_cmd   = {0};
+
+    /* Reset slave address */
+    i3c_cmd.rw            = 0U;
+    i3c_cmd.cmd_id        = I3C_CCC_RSTDAA(true);
+    i3c_cmd.len           = 0U;
+    i3c_cmd.addr          = 0;
+
+    ret = I3C_Driver->MasterSendCommand(&i3c_cmd);
+    if(ret != ARM_DRIVER_OK)
+    {
+        return ret;
+    }
+
+    /* wait for callback event. */
+    while(!((icm42670p_drv_info.imu_i3c_event & ARM_I3C_EVENT_TRANSFER_DONE) ||
+            (icm42670p_drv_info.imu_i3c_event & ARM_I3C_EVENT_TRANSFER_ERROR)));
+    if(icm42670p_drv_info.imu_i3c_event & ARM_I3C_EVENT_TRANSFER_ERROR)
+    {
+        return ARM_DRIVER_ERROR;
+    }
+
+    icm42670p_drv_info.imu_i3c_event = 0U;
+
+    return ARM_DRIVER_OK;
+}
+
+/**
   \fn           int32_t IMU_SetDynAddr(void)
   \brief        Assigns Dynamic address to IMU.
   \return       \ref execution_status.
@@ -205,7 +241,7 @@ static int32_t IMU_SetDynAddr(void)
     int32_t ret;
 
     /* I3C CCC (Common Command Codes) */
-    ARM_I3C_CMD i3c_cmd;
+    ARM_I3C_CMD i3c_cmd   = {0};
 
     i3c_cmd.rw            = 0U;
     i3c_cmd.cmd_id        = I3C_CCC_SETDASA;
@@ -213,7 +249,6 @@ static int32_t IMU_SetDynAddr(void)
 
     /* Assign IMU's Static address */
     i3c_cmd.addr          = ICM42670P_DEFAULT_ADDR;
-    i3c_cmd.data          = NULL;
 
     /* Assign Dynamic address */
     ret = I3C_Driver->MasterAssignDA(&i3c_cmd);
@@ -662,7 +697,7 @@ static int32_t IMU_Setup(void)
     uint8_t data[4];
 
     /* Initializes I3C master */
-    ret = I3C_Driver->Control(I3C_MASTER_INIT, NULL);
+    ret = I3C_Driver->Control(I3C_MASTER_INIT, 0);
     if(ret != ARM_DRIVER_OK)
     {
         return ret;
@@ -688,6 +723,13 @@ static int32_t IMU_Setup(void)
 
     /* Accepts Slave Interrupt request */
     ret = I3C_Driver->Control(I3C_MASTER_SETUP_SIR_ACCEPTANCE, 1);
+    if(ret != ARM_DRIVER_OK)
+    {
+        return ret;
+    }
+
+    /* Resets IMU's address */
+    ret = IMU_ResetDynAddr();
     if(ret != ARM_DRIVER_OK)
     {
         return ret;
@@ -961,8 +1003,9 @@ static int32_t ARM_IMU_PowerControl(ARM_POWER_STATE state)
 */
 static int32_t ARM_IMU_Control(uint32_t control, uint32_t arg)
 {
-    ARM_IMU_COORDINATES *ptr = NULL;
-    float *temp_data         = NULL;
+    ARM_IMU_COORDINATES *ptr;
+    float *temp_data;
+
     switch(control)
     {
         case IMU_GET_ACCELEROMETER_DATA:

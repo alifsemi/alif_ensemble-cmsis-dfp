@@ -397,15 +397,10 @@ static int32_t ARM_Flash_PowerControl (ARM_POWER_STATE state)
 
                 /* Prepare command and address for setting flash in octal mode */
                 cmd[0] = CMD_WRITE_VOL_CONFIG;
-#ifdef DEVICE_FEATURE_OSPI_ADDRESS_IN_SINGLE_FIFO_LOCATION
-                cmd[1] = IO_MODE_ADDRESS;
-                cmd[2] = OCTAL_DDR;
-#else
                 cmd[1] = (uint8_t)(IO_MODE_ADDRESS >> 16);
                 cmd[2] = (uint8_t)(IO_MODE_ADDRESS >> 8);
                 cmd[3] = (uint8_t)(IO_MODE_ADDRESS >> 0);
                 cmd[4] = OCTAL_DDR;
-#endif
 
                 status = ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE, (ARM_OSPI_ADDR_LENGTH_0_BITS << ARM_OSPI_ADDR_LENGTH_POS) | (0 << ARM_OSPI_WAIT_CYCLE_POS));
 
@@ -463,11 +458,7 @@ static int32_t ARM_Flash_PowerControl (ARM_POWER_STATE state)
                     return ARM_DRIVER_ERROR;
                 }
 
-#ifdef DEVICE_FEATURE_OSPI_ADDRESS_IN_SINGLE_FIFO_LOCATION
-                status = ptrOSPI->Send(cmd, 3);
-#else
                 status = ptrOSPI->Send(cmd, 5);
-#endif
 
                 if (status != ARM_DRIVER_OK)
                 {

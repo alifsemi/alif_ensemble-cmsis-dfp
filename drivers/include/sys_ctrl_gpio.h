@@ -27,36 +27,6 @@ extern "C"
 
 #include "peripheral_types.h"
 
-#ifdef DEVICE_FEATURE_GPIO_HAS_CLOCK_ENABLE
-/**
-  \fn          static void inline enable_gpio_clk (uint8_t instance)
-  \brief       Enable GPIO clock from EXPMST0.
-  \param       instance     instance number
-  \return      none
-*/
-static inline void enable_gpio_clk (GPIO_INSTANCE instance)
-{
-    volatile uint32_t *gpio_ctrl = (volatile uint32_t*) ((&CLKCTL_PER_SLV->GPIO_CTRL0) + instance);
-
-    /* enable EXPMST0 GPIO clock. */
-    *gpio_ctrl |= GPIO_CTRL_CKEN;
-}
-
-/**
-  \fn          static inline void disable_gpio_clk (uint8_t instance)
-  \brief       Disable GPIO clock from EXPMST0.
-  \param       instance     instance number
-  \return      none
-*/
-static inline void disable_gpio_clk (GPIO_INSTANCE instance)
-{
-    volatile uint32_t *gpio_ctrl = (volatile uint32_t*) ((&CLKCTL_PER_SLV->GPIO_CTRL0) + instance);
-
-    /* disable EXPMST0 GPIO clock. */
-    *gpio_ctrl &= ~GPIO_CTRL_CKEN;
-}
-#endif
-
 /**
   \fn          static void inline enable_gpio_debounce_clk (uint8_t instance)
   \brief       Enable GPIO Debounce clock from EXPMST0.

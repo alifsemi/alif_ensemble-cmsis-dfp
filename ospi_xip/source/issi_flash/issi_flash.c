@@ -20,9 +20,6 @@
 #include "ospi_drv.h"
 #include "ospi_xip_user.h"
 
-#include "RTE_Components.h"
-#include CMSIS_device_header
-
 static ospi_flash_cfg_t ospi_flash_config;
 
 /**
@@ -97,10 +94,8 @@ static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg
     issi_write_enable(ospi_cfg);
     ospi_setup_write_sdr(ospi_cfg, ADDR_LENGTH_24_BITS);
     ospi_push(ospi_cfg, cmd);
-#ifndef DEVICE_FEATURE_OSPI_ADDRESS_IN_SINGLE_FIFO_LOCATION
     ospi_push(ospi_cfg, 0x00);
     ospi_push(ospi_cfg, 0x00);
-#endif
     ospi_push(ospi_cfg, address);
     ospi_send_blocking(ospi_cfg, value);
 }

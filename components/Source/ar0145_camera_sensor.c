@@ -19,7 +19,7 @@
 #include "sys_ctrl_cpi.h"
 
 /* Proceed only if AR0145 Camera Sensor is enabled. */
-#if RTE_AR0145_CAMERA_SENSOR_CPI_ENABLE
+#if RTE_AR0145_CAMERA_SENSOR_CSI_ENABLE
 
 /* I2C Instance */
 #if(RTE_AR0145_CAMERA_SENSOR_I2C_INSTANCE == 4)

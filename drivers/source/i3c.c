@@ -716,7 +716,7 @@ void i3c_slave_tx(I3C_Type *i3c, i3c_xfer_t *xfer)
                             xfer->xfer_cmd.data_len) |
                             I3C_COMMAND_QUEUE_PORT_SLV_PORT_TID(I3C_SLV_TX_TID);
 
-    xfer->xfer_cmd.cmd_lo = NULL;
+    xfer->xfer_cmd.cmd_lo = 0U;
 
     /* Add commands to i3c Command Queue */
     i3c_enqueue_xfer(i3c, xfer);
@@ -734,8 +734,8 @@ void i3c_slave_rx(I3C_Type *i3c, i3c_xfer_t *xfer)
     /* As per mipi_i3c_user Section 7
      * no command is required for slave receive
      */
-    xfer->xfer_cmd.cmd_hi = NULL;
-    xfer->xfer_cmd.cmd_lo = NULL;
+    xfer->xfer_cmd.cmd_hi = 0U;
+    xfer->xfer_cmd.cmd_lo = 0U;
 
     /* Add commands to i3c Command Queue */
     i3c_enqueue_xfer(i3c, xfer);
@@ -763,7 +763,7 @@ void i3c_slave_tx_blocking(I3C_Type *i3c, i3c_xfer_t *xfer)
                                  xfer->xfer_cmd.data_len)  |
                                  I3C_COMMAND_QUEUE_PORT_SLV_PORT_TID(I3C_SLV_TX_TID);
 
-    xfer->xfer_cmd.cmd_lo      = NULL;
+    xfer->xfer_cmd.cmd_lo      = 0U;
 
     xfer->xfer_cmd.port_id     = I3C_SLV_TX_TID;
 
@@ -815,8 +815,8 @@ void i3c_slave_rx_blocking(I3C_Type *i3c, i3c_xfer_t *xfer)
     /* As per mipi_i3c_user Section 7
      * no command is required for slave receive
      */
-    xfer->xfer_cmd.cmd_hi      = NULL;
-    xfer->xfer_cmd.cmd_lo      = NULL;
+    xfer->xfer_cmd.cmd_hi      = 0U;
+    xfer->xfer_cmd.cmd_lo      = 0U;
 
     xfer->xfer_cmd.port_id     = I3C_SLV_RX_TID;
 

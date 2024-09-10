@@ -49,13 +49,15 @@ extern "C"
 /****** CDC200 Control Function Operation codes *****/
 #define CDC200_CONFIGURE_DISPLAY         (1U << 0)    ///< Configure Display
 #define CDC200_FRAMEBUF_UPDATE           (1U << 1)    ///< Update layer Frame buffer
-#define CDC200_SCANLINE0_EVENT           (1U << 2)    ///< Enable/Disable Scanline0 event
-#define CDC200_CONFIGURE_LAYER           (1U << 3)    ///< Configure Layer
-#define CDC200_LAYER_ON                  (1U << 4)    ///< Turn On the Layer
-#define CDC200_LAYER_OFF                 (1U << 5)    ///< Turn Off the Layer
-#define CDC200_CONFIGURE_LAYER_WINDOW    (1U << 6)    ///< Configure Layer window
-#define CDC200_CONFIGURE_BG_COLOR        (1U << 7)    ///< Configure Background color
-#define CDC200_CONFIGURE_LAYER_BLENDING  (1U << 8)    ///< Configure Layer blending
+#define CDC200_FRAMEBUF_UPDATE_VSYNC     (1U << 2)    ///< Update layer Frame buffer on vertical blanking
+#define CDC200_SCANLINE0_EVENT           (1U << 3)    ///< Enable/Disable Scanline0 event
+#define CDC200_CONFIGURE_LAYER           (1U << 4)    ///< Configure Layer
+#define CDC200_LAYER_ON                  (1U << 5)    ///< Turn On the Layer
+#define CDC200_LAYER_OFF                 (1U << 6)    ///< Turn Off the Layer
+#define CDC200_CONFIGURE_LAYER_WINDOW    (1U << 7)    ///< Configure Layer window
+#define CDC200_CONFIGURE_BG_COLOR        (1U << 8)    ///< Configure Background color
+#define CDC200_CONFIGURE_LAYER_BLENDING  (1U << 9)    ///< Configure Layer blending
+
 
 /**
 \brief CDC200 Layer index
@@ -145,6 +147,7 @@ typedef struct _ARM_CDC200_LAYER_INFO {
   \param[in]   control CDC200 contol code operation.
                  - \ref CDC200_CONFIGURE_DISPLAY :         Configure Display
                  - \ref CDC200_FRAMEBUF_UPDATE :           Update layer Frame buffer
+                 - \ref CDC200_FRAMEBUF_UPDATE_VSYNC :     Update layer Frame buffer on vertical blanking
                  - \ref CDC200_SCANLINE0_EVENT :           Enable/Disable Scanline0 event
                  - \ref CDC200_CONFIGURE_LAYER :           Configure Layer
                  - \ref CDC200_LAYER_ON :                  Turn On the Layer
@@ -155,6 +158,7 @@ typedef struct _ARM_CDC200_LAYER_INFO {
   \param[in]   arg Argument of operation.
                 - CDC200_CONFIGURE_DISPLAY :         Frame buffer address
                 - CDC200_FRAMEBUF_UPDATE :           Frame buffer address
+                - CDC200_FRAMEBUF_UPDATE_VSYNC :     Frame buffer address
                 - CDC200_SCANLINE0_EVENT :           ENABLE/DISABLE
                 - CDC200_CONFIGURE_LAYER :           Pointer to layer info \ref ARM_CDC200_LAYER_INFO
                 - CDC200_LAYER_ON :                  layer index /ref ARM_CDC200_LAYER_INDEX

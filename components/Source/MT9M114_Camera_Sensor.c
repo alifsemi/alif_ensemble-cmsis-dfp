@@ -1718,10 +1718,12 @@ static int32_t mt9m114_Control(CAMERA_SENSOR_DEVICE *cpi_mt9m114_camera_sensor,
     switch (control)
     {
         case CPI_CAMERA_SENSOR_AE:
+#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE)
             if(cpi_mt9m114_camera_sensor->interface == CAMERA_SENSOR_INTERFACE_MIPI)
             {
                 return MT9M114_Camera_AE(arg, i2c_cfg);
             }
+#endif
         default:
             return ARM_DRIVER_ERROR_PARAMETER;
     }

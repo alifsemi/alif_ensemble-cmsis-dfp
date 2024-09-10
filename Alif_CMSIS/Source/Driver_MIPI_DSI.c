@@ -481,8 +481,6 @@ static int32_t DSI_StartCommandMode (DISPLAY_PANEL_DEVICE *display_panel, DSI_RE
 {
     int32_t ret  = ARM_DRIVER_OK;
     DSI_DPI_INFO *dpi_info = (DSI_DPI_INFO *)dsi->dpi_info;
-    uint32_t pixclk;
-    uint32_t frequency;
     uint16_t clklp2hs_time, lp2hs_time, clkhs2lp_time, hs2lp_time;
     uint32_t bitrate_mbps;
     uint8_t range = 0;
