@@ -274,7 +274,7 @@ static char *CPUID_to_string(uint32_t cpu_id)
 
 /**
  * @brief flags_to_string - convert TOC 'Flags' to a string
- * @param p_status
+ * @param flags
  * @param flag_string
  * @return
  */
@@ -1888,21 +1888,53 @@ static uint32_t test_services_get_bus_frequencies(char *p_test_name, uint32_t se
   uint32_t service_error_code;
 
   uint32_t frequency;
-  error_code = SERVICES_clocks_get_refclk_frequency(services_handle,
-                                                    &frequency,
-                                                    &service_error_code);
-
+  SERVICES_clocks_setting_get(services_handle, 
+                              CLOCK_SETTING_HFOSC_FREQ, &frequency, 
+                              &service_error_code);
   TEST_print(services_handle,
               "** TEST %s error_code=%s service_resp=0x%08X\n",
               p_test_name,
               SERVICES_error_to_string(error_code),
               service_error_code);
-  TEST_print(services_handle, "REFCLK frequency %d\n", frequency);
+  TEST_print(services_handle, "HFOSC frequency %d\n", frequency);
 
-  error_code = SERVICES_clocks_get_apb_frequency(services_handle,
-                                                 &frequency,
-                                                 &service_error_code);
-  TEST_print(services_handle, "APB frequency %d\n", frequency);
+  SERVICES_clocks_setting_get(services_handle, 
+                              CLOCK_SETTING_EXTSYS0_FREQ, &frequency, 
+                              &service_error_code);
+  TEST_print(services_handle, "EXTSYS0 frequency: %d\n", frequency);
+
+  SERVICES_clocks_setting_get(services_handle, 
+                              CLOCK_SETTING_EXTSYS1_FREQ, &frequency, 
+                              &service_error_code);
+  TEST_print(services_handle, "EXTSYS1 frequency: %d\n", frequency);
+
+  SERVICES_clocks_setting_get(services_handle,
+                              CLOCK_SETTING_AXI_FREQ, &frequency,
+                              &service_error_code);
+  TEST_print(services_handle, "AXI frequency: %d\n", frequency);
+
+  SERVICES_clocks_setting_get(services_handle,
+                              CLOCK_SETTING_AHB_FREQ, &frequency,
+                              &service_error_code);
+  TEST_print(services_handle, "AHB frequency: %d\n", frequency);
+
+  SERVICES_clocks_setting_get(services_handle,
+                              CLOCK_SETTING_APB_FREQ, &frequency,
+                              &service_error_code);
+  TEST_print(services_handle, "APB frequency: %d\n", frequency);
+
+  SERVICES_clocks_setting_get(services_handle,
+                              CLOCK_SETTING_SYSREF_FREQ, &frequency,
+                              &service_error_code);
+  TEST_print(services_handle, "SYSREF frequency: %d\n", frequency);
+
+  // try an invalid Clock setting ID
+  error_code = SERVICES_clocks_setting_get(services_handle, 
+                                           CLOCK_SETTING_SYSREF_FREQ + 1,
+                                           &frequency, 
+                                           &service_error_code);
+  TEST_print(services_handle, "Invalid Clock Setting ID service_resp=0x%08X\n", 
+                               service_error_code);
 
   return error_code;
 }

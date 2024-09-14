@@ -30,6 +30,7 @@ extern "C" {
  ******************************************************************************/
 /**
  * Version   JIRA         Description
+ * 0.50.0   SE-2706       API for getting HFOSC and EXTSYS0/1 frequency
  * 0.49.0                 Deprecating SERVICES_system_get_toc_via_name
  * 0.49.1                 Updated examples for ALIF Update Package support.
  * 0.48.0                 Switch to external CMSIS source builds
@@ -95,9 +96,9 @@ extern "C" {
  * 0.0.2    SE-708        First re-factoring
  * 0.0.1                  First implementation
  */
-#define SE_SERVICES_VERSION_STRING                 "0.49.0"
+#define SE_SERVICES_VERSION_STRING                 "0.50.0"
 #define SE_SERVICES_VERSION_MAJOR                  0
-#define SE_SERVICES_VERSION_MINOR                  49
+#define SE_SERVICES_VERSION_MINOR                  50
 #define SE_SERVICES_VERSION_PATCH                  0
 
 #define IMAGE_NAME_LENGTH                          8
@@ -138,6 +139,14 @@ typedef struct {
 	service_header_t header;
 	volatile int     resp_error_code;
 } generic_svc_t;
+
+// SE Deep Sleeper
+typedef struct
+{
+  service_header_t header;
+  volatile uint32_t  send_param;
+  volatile uint32_t  resp_error_code;
+} se_sleep_svc_t;
 
 // AI PM APIs
 typedef struct {
@@ -833,6 +842,14 @@ typedef struct {
 	volatile uint32_t value;
 	volatile uint32_t resp_error_code;
 } power_setting_svc_t;
+
+// Clock Setting Get API
+typedef struct {
+    service_header_t header;
+    volatile uint32_t send_setting_type;
+    volatile uint32_t value;
+    volatile uint32_t resp_error_code;
+} clock_setting_svc_t;
 
 /*******************************************************************************
  *  G L O B A L   D E F I N E S
