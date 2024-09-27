@@ -19,7 +19,7 @@
 #include "i2c.h"
 
 /* Driver version */
-#define ARM_I2C_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1)
+#define ARM_I2C_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -193,10 +193,7 @@ __STATIC_INLINE int32_t I2C_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       dma_periph->evtrtr_cfg.group,
                                        DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtrlocal_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                         dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
@@ -229,8 +226,6 @@ __STATIC_INLINE int32_t I2C_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtrlocal_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                          dma_periph->evtrtr_cfg.group);
     }
 
 

@@ -118,18 +118,12 @@ __STATIC_INLINE int32_t I3C_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     if(dma_periph->evtrtr_cfg.instance == 0)
     {
         evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                   dma_periph->evtrtr_cfg.group,
                                    DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtr0_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                     dma_periph->evtrtr_cfg.group);
     }
     else
     {
         evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       dma_periph->evtrtr_cfg.group,
                                        DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtrlocal_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                         dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;
