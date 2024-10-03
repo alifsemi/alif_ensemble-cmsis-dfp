@@ -1632,13 +1632,22 @@ static int32_t I3Cx_Control(I3C_RESOURCES *i3c,
                     i2c_clk_cfg(i3c->regs, i3c->core_clk, i2c_speed_mode);
 
                     /* fall through */
-                case I3C_BUS_MODE_PURE:
+                case I3C_BUS_SLOW_MODE:
 
                     if (!(i3c->core_clk))
                         return ARM_DRIVER_ERROR;
 
                     /* i3c clock configuration */
-                    i3c_clk_cfg(i3c->regs, i3c->core_clk);
+                    i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
+                    break;
+
+                case I3C_BUS_NORMAL_MODE:
+
+                    if (!(i3c->core_clk))
+                        return ARM_DRIVER_ERROR;
+
+                    /* i3c clock configuration */
+                    i3c_normal_bus_clk_cfg(i3c->regs, i3c->core_clk);
                     break;
 
                 default:
@@ -1808,7 +1817,6 @@ static int32_t I3Cx_Initialize(I3C_RESOURCES         *i3c,
 #endif
 
     i3c->core_clk = GetSystemAPBClock();
-
     /* set the state as initialized. */
     i3c->state.initialized = 1;
     return ARM_DRIVER_OK;

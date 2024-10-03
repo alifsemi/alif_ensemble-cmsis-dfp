@@ -966,15 +966,17 @@ void i3c_send_xfer_cmd_blocking(I3C_Type *i3c, i3c_xfer_t *xfer)
 }
 
 /**
-  \fn           void i3c_clk_cfg(I3C_Type *i3c,
-                                 uint32_t  core_clk)
-  \brief        i3c clock configuration for i3c slave device
+  \fn           void i3c_slow_bus_clk_cfg(I3C_Type *i3c,
+                                          uint32_t  core_clk)
+  \brief        i3c slow bus clock configuration for i3c slave device
+  \note         This function sets the clock timings as follows:
+                OD - 2MHz, PP - 2MHz, SDR1-SDR4 - null
   \param[in]    i3c       : Pointer to i3c register set structure
   \param[in]    core_clk  : core clock
   \return       none
 */
-void i3c_clk_cfg(I3C_Type *i3c,
-                 uint32_t  core_clk)
+void i3c_slow_bus_clk_cfg(I3C_Type *i3c,
+                          uint32_t  core_clk)
 {
     unsigned long core_rate, core_period;
     uint32_t scl_timing;
@@ -987,11 +989,11 @@ void i3c_clk_cfg(I3C_Type *i3c,
 
     /* Calculate SCL push-pull High and Low count for
      *  I3C transfers targeted to I3C devices.*/
-    hcnt = DIV_ROUND_UP(I3C_BUS_THIGH_MAX_NS, core_period) - 1;
+    hcnt = DIV_ROUND_UP(I3C_SLOW_BUS_THIGH_NS, core_period);
     if (hcnt < I3C_SCL_I3C_TIMING_CNT_MIN)
         hcnt = I3C_SCL_I3C_TIMING_CNT_MIN;
 
-    lcnt = DIV_ROUND_UP(core_rate, I3C_BUS_TYP_I3C_SCL_RATE) - hcnt;
+    lcnt = DIV_ROUND_UP(core_rate, I3C_BUS_SDR4_SCL_RATE) - hcnt;
     if (lcnt < I3C_SCL_I3C_TIMING_CNT_MIN)
         lcnt = I3C_SCL_I3C_TIMING_CNT_MIN;
 
@@ -1005,7 +1007,57 @@ void i3c_clk_cfg(I3C_Type *i3c,
 
     /* SCL open-drain High and Low count (I3C) for
      *  I3C transfers targeted to I3C devices*/
-    lcnt = DIV_ROUND_UP(I3C_BUS_TLOW_OD_MIN_NS, core_period);
+    lcnt = DIV_ROUND_UP(I3C_SLOW_BUS_TLOW_OD_NS, core_period);
+    scl_timing = (I3C_SCL_I3C_OD_TIMING_I3C_OD_HCNT(hcnt) |
+                  I3C_SCL_I3C_OD_TIMING_I3C_OD_LCNT(lcnt));
+    i3c->I3C_SCL_I3C_OD_TIMING = scl_timing;
+
+    /* set SCL Extended Low Count Timing Register. */
+    i3c->I3C_SCL_EXT_LCNT_TIMING = 0U;
+}
+
+/**
+  \fn           void i3c_normal_bus_clk_cfg(I3C_Type *i3c,
+                                            uint32_t  core_clk)
+  \brief        i3c normal bus clock configuration for i3c slave device
+  \note         This function sets the clock timings as per MIPI I3C std
+  \param[in]    i3c       : Pointer to i3c register set structure
+  \param[in]    core_clk  : core clock
+  \return       none
+*/
+void i3c_normal_bus_clk_cfg(I3C_Type *i3c,
+                            uint32_t  core_clk)
+{
+    unsigned long core_rate, core_period;
+    uint32_t scl_timing;
+    uint8_t  hcnt, lcnt;
+
+    core_rate = core_clk;
+
+    /* Calculate core clk period */
+    core_period = DIV_ROUND_UP(REF_CLK_RATE, core_rate);
+
+    /* Calculate SCL push-pull High and Low count for
+     *  I3C transfers targeted to I3C devices.*/
+    hcnt = DIV_ROUND_UP(I3C_NORMAL_BUS_THIGH_NS, core_period) - 1;
+    if (hcnt < I3C_SCL_I3C_TIMING_CNT_MIN)
+        hcnt = I3C_SCL_I3C_TIMING_CNT_MIN;
+
+    lcnt = DIV_ROUND_UP(core_rate, I3C_BUS_SDR0_SCL_RATE) - hcnt;
+    if (lcnt < I3C_SCL_I3C_TIMING_CNT_MIN)
+        lcnt = I3C_SCL_I3C_TIMING_CNT_MIN;
+
+    scl_timing = (I3C_SCL_I3C_PP_TIMING_I3C_PP_HCNT(hcnt) |
+                  I3C_SCL_I3C_PP_TIMING_I3C_PP_LCNT(lcnt));
+    i3c->I3C_SCL_I3C_PP_TIMING = scl_timing;
+
+    /* set the Bus free time for initiating the transfer in master mode.*/
+    if (!(i3c->I3C_DEVICE_CTRL & I3C_DEVICE_CTRL_I2C_SLAVE_PRESENT))
+        i3c->I3C_BUS_FREE_AVAIL_TIMING = I3C_BUS_FREE_AVAIL_TIMING_BUS_FREE_TIME(lcnt);
+
+    /* SCL open-drain High and Low count (I3C) for
+     *  I3C transfers targeted to I3C devices*/
+    lcnt = DIV_ROUND_UP(I3C_NORMAL_BUS_TLOW_OD_NS, core_period);
     scl_timing = (I3C_SCL_I3C_OD_TIMING_I3C_OD_HCNT(hcnt) |
                   I3C_SCL_I3C_OD_TIMING_I3C_OD_LCNT(lcnt));
     i3c->I3C_SCL_I3C_OD_TIMING = scl_timing;

@@ -31,7 +31,7 @@
     #error "IMU ICM42670P is not configured in RTE_Components.h"
 #endif
 
-#define ARM_IMU_DRV_VERSION  ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1)
+#define ARM_IMU_DRV_VERSION  ARM_DRIVER_VERSION_MAJOR_MINOR(1, 2)
 
 /* Timeout in Microsec */
 #define IMU_I3C_TIMEOUT_US              (100000)
@@ -703,9 +703,9 @@ static int32_t IMU_Setup(void)
         return ret;
     }
 
-    /* i3c Speed Mode Configuration: Pure Bus mode*/
+    /* i3c Speed Mode Configuration: Slow mode*/
     ret = I3C_Driver->Control(I3C_MASTER_SET_BUS_MODE,
-                              I3C_BUS_MODE_PURE);
+                              I3C_BUS_SLOW_MODE);
 
     /* Rejects Hot-Join request */
     ret = I3C_Driver->Control(I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
@@ -741,6 +741,10 @@ static int32_t IMU_Setup(void)
     {
         return ret;
     }
+
+    /* i3c Speed Mode Configuration: Normal mode*/
+    ret = I3C_Driver->Control(I3C_MASTER_SET_BUS_MODE,
+                              I3C_BUS_NORMAL_MODE);
 
     /* Reads Chip ID */
     IMU_Read(icm42670p_drv_info.target_addr, ICM42670P_WHO_AM_I_REG, data, 1U);

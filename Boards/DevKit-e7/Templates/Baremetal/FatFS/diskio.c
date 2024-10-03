@@ -7,15 +7,14 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
-#include "ff.h"			/* Obtains integer types */
-#include "diskio.h"		/* Declarations of disk functions */
+#include "ff.h"            /* Obtains integer types */
+#include "diskio.h"        /* Declarations of disk functions */
 #include "string.h"
 #include "stdio.h"
 
 /* Definitions of physical drive number for each drive */
-#define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
-#define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
-#define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
+#define DEV_MMC        0    /* Example: Map MMC/SD card to physical drive 1 */
+#define DEV_USB        1    /* Example: Map USB MSD to physical drive 2 */
 
 /* SD Card Instance */
 extern sd_handle_t Hsd;
@@ -26,10 +25,10 @@ static sd_handle_t *pHsd = &Hsd;
 volatile uint32_t dma_done_irq;
 void sd_cb(uint32_t status)
 {
-	if(status == RES_OK)
-		dma_done_irq = 1;
-	else
-		printf("Invalid Xfer status...:%d\n",status);
+    if(status == RES_OK)
+        dma_done_irq = 1;
+    else
+        printf("Invalid Xfer status...:%d\n",status);
 }
 extern unsigned char media_memory;
 volatile uint8_t *dma_buff = &media_memory;
@@ -39,16 +38,11 @@ volatile uint8_t *dma_buff = &media_memory;
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE pdrv		/* Physical drive nmuber to identify the drive */
+    BYTE pdrv        /* Physical drive number to identify the drive */
 )
 {
-	DSTATUS stat;
-	int result;
 
-	//result = p_SD_Driver->disk_status(pHsd);
-
-
-	return RES_OK;
+    return RES_OK;
 }
 
 
@@ -59,9 +53,9 @@ DSTATUS disk_status (
 
 DSTATUS disk_initialize(BYTE drivenum)//FATFS *p_sd_card, char *MEDIA_NAME, void * media_memory, uint32_t media_size)
 {
-	DSTATUS stat;
-	int status;
-	sd_param_t sd_param;
+    DSTATUS stat;
+    int status;
+    sd_param_t sd_param;
 
     sd_param.dev_id         = SDMMC_DEV_ID;
     sd_param.clock_id       = RTE_SDC_CLOCK_SELECT;
@@ -71,14 +65,16 @@ DSTATUS disk_initialize(BYTE drivenum)//FATFS *p_sd_card, char *MEDIA_NAME, void
 
     status = p_SD_Driver->disk_initialize(&sd_param);
 
-	if(status)
-		return STA_NOINIT;
+    if(status)
+        return STA_NOINIT;
 
-	/*dummy read */
-	memset((void *)dma_buff, '\0', sizeof(media_memory));
-	p_SD_Driver->disk_read(0, 1, dma_buff);
+    /*dummy read */
+    memset((void *)dma_buff, '\0', sizeof(media_memory));
+    p_SD_Driver->disk_read(0, 1, dma_buff);
 
-	return RES_OK;
+    sys_busy_loop_us(1000);
+
+    return RES_OK;
 }
 
 
@@ -87,26 +83,26 @@ DSTATUS disk_initialize(BYTE drivenum)//FATFS *p_sd_card, char *MEDIA_NAME, void
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
-	BYTE *buff,		/* Data buffer to store read data */
-	LBA_t sector,	/* Start sector in LBA */
-	UINT count		/* Number of sectors to read */
+    BYTE pdrv,        /* Physical drive number to identify the drive */
+    BYTE *buff,        /* Data buffer to store read data */
+    LBA_t sector,    /* Start sector in LBA */
+    UINT count        /* Number of sectors to read */
 )
 {
-	DRESULT res;
-	int result;
+    DRESULT res;
+    int result;
 
-	dma_done_irq = 0;
+    dma_done_irq = 0;
 
-	result = p_SD_Driver->disk_read(sector, count, dma_buff);
+    result = p_SD_Driver->disk_read(sector, count, dma_buff);
 
-	while(!dma_done_irq);
+    while(!dma_done_irq);
 
-	RTSS_InvalidateDCache_by_Addr((volatile void *)dma_buff, count * SDMMC_BLK_SIZE_512_Msk);
+    RTSS_InvalidateDCache_by_Addr((volatile void *)dma_buff, count * SDMMC_BLK_SIZE_512_Msk);
 
-	memcpy(buff, (const void *)dma_buff, count * SDMMC_BLK_SIZE_512_Msk);
+    memcpy(buff, (const void *)dma_buff, count * SDMMC_BLK_SIZE_512_Msk);
 
-	return RES_OK;
+    return RES_OK;
 }
 
 
@@ -117,26 +113,25 @@ DRESULT disk_read (
 #if FF_FS_READONLY == 0
 
 DRESULT disk_write (
-	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	LBA_t sector,		/* Start sector in LBA */
-	UINT count			/* Number of sectors to write */
+    BYTE pdrv,          /* Physical drive number to identify the drive */
+    const BYTE *buff,   /* Data to be written */
+    LBA_t sector,       /* Start sector in LBA */
+    UINT count          /* Number of sectors to write */
 )
 {
-	DRESULT res = RES_OK;
-	int status;
+    DRESULT res = RES_OK;
 
-	dma_done_irq = 0;
-	RTSS_CleanDCache_by_Addr((volatile void *)buff, count * SDMMC_BLK_SIZE_512_Msk);
+    dma_done_irq = 0;
+    RTSS_CleanDCache_by_Addr((volatile void *)buff, count * SDMMC_BLK_SIZE_512_Msk);
 
-	memcpy((void*)dma_buff, buff, count * SDMMC_BLK_SIZE_512_Msk);
+    memcpy((void*)dma_buff, buff, count * SDMMC_BLK_SIZE_512_Msk);
 
-	if( p_SD_Driver->disk_write(sector, count, (volatile uint8_t *)dma_buff) != SD_DRV_STATUS_OK )
-		res = RES_ERROR;
+    if( p_SD_Driver->disk_write(sector, count, (volatile uint8_t *)dma_buff) != SD_DRV_STATUS_OK )
+        res = RES_ERROR;
 
-	while(!dma_done_irq);
+    while(!dma_done_irq);
 
-	return res;
+    return res;
 }
 
 #endif
@@ -147,34 +142,27 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	BYTE pdrv,		/* Physical drive nmuber (0..) */
-	BYTE cmd,		/* Control code */
-	void *buff		/* Buffer to send/receive control data */
+    BYTE pdrv,        /* Physical drive number (0..) */
+    BYTE cmd,         /* Control code */
+    void *buff        /* Buffer to send/receive control data */
 )
 {
-	DRESULT res;
-	int result;
+    DRESULT res = 0;
 
-	switch (pdrv) {
-	case DEV_RAM :
+    switch (pdrv) {
+    case DEV_MMC :
 
-		// Process of the command for the RAM drive
+        // Process of the command for the MMC/SD card
 
-		return res;
+        return res;
 
-	case DEV_MMC :
+    case DEV_USB :
 
-		// Process of the command for the MMC/SD card
+        // Process of the command the USB drive
 
-		return res;
+        return res;
+    }
 
-	case DEV_USB :
-
-		// Process of the command the USB drive
-
-		return res;
-	}
-
-	return RES_PARERR;
+    return RES_PARERR;
 }
 

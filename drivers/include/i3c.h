@@ -108,12 +108,34 @@ typedef struct {                                     /*!< (@ 0x49034000) I3C Str
 #define I3C_MAX_DEVS                      8U
 
 /* Clock rates and periods */
-#define I3C_BUS_MAX_I3C_SCL_RATE          12900000
-#define I3C_BUS_TYP_I3C_SCL_RATE          12500000
 #define I3C_BUS_I2C_FM_PLUS_SCL_RATE      1000000
 #define I3C_BUS_I2C_FM_SCL_RATE           400000
 #define I3C_BUS_I2C_SS_SCL_RATE           100000
-#define I3C_BUS_TLOW_OD_MIN_NS            200
+#define I3C_BUS_I2C_SS_TLOW_MIN_NS        4700
+#define I3C_BUS_I2C_FM_TLOW_MIN_NS        1300
+#define I3C_BUS_I2C_FMP_TLOW_MIN_NS       500
+
+/* Below macros are timing requirements to
+ * to connect with slower I3C slaves.
+ * PP and OD timing is 2MHz
+ */
+#define I3C_SLOW_BUS_TLOW_OD_NS           300
+#define I3C_SLOW_BUS_THIGH_NS             200
+
+/* Below macros are timing requirements
+ * for normal communication.
+ * OD timing is 4MHz
+ */
+#define I3C_NORMAL_BUS_TLOW_OD_NS         200
+#define I3C_NORMAL_BUS_THIGH_NS           41
+
+#define I3C_BUS_MAX_I3C_SCL_RATE          12900000
+#define I3C_BUS_SDR0_SCL_RATE             12500000
+#define I3C_BUS_SDR1_SCL_RATE             8000000
+#define I3C_BUS_SDR2_SCL_RATE             6000000
+#define I3C_BUS_SDR3_SCL_RATE             4000000
+#define I3C_BUS_SDR4_SCL_RATE             2000000
+#define I3C_SCL_I3C_TIMING_CNT_MIN        5
 
 /* ref clock frequency 1 GHz to get core-period */
 #define REF_CLK_RATE                      1000000000
@@ -385,7 +407,6 @@ typedef struct {                                     /*!< (@ 0x49034000) I3C Str
 #define I3C_DEVICE_CTRL_EXTENDED_DEV_OPERATION_MODE_Msk GENMASK(1, 0)
 #define I3C_DEVICE_CTRL_EXTENDED_DEV_OP_MODE_SLV        (1)
 
-#define I3C_SCL_I3C_TIMING_CNT_MIN            5
 #define I3C_SCL_I3C_OD_TIMING_I3C_OD_HCNT(x)            (((x) << 16) & GENMASK(23, 16))
 #define I3C_SCL_I3C_OD_TIMING_I3C_OD_LCNT(x)            ((x) & GENMASK(7, 0))
 
@@ -447,15 +468,6 @@ typedef struct {                                     /*!< (@ 0x49034000) I3C Str
 #define I3C_DEV_ADDR_TABLE_LOC1_LEGACY_I2C_DEV          BIT(31)
 #define I3C_DEV_ADDR_TABLE_LOC1_DEV_DYNAMIC_ADDR(x)     (((x) << 16) & GENMASK(23, 16))
 #define I3C_DEV_ADDR_TABLE_LOC1_DEV_STATIC_ADDR(x)      ((x) & GENMASK(6, 0))
-
-#define I3C_BUS_SDR1_SCL_RATE                           8000000
-#define I3C_BUS_SDR2_SCL_RATE                           6000000
-#define I3C_BUS_SDR3_SCL_RATE                           4000000
-#define I3C_BUS_SDR4_SCL_RATE                           2000000
-#define I3C_BUS_I2C_SS_TLOW_MIN_NS                      4700
-#define I3C_BUS_I2C_FM_TLOW_MIN_NS                      1300
-#define I3C_BUS_I2C_FMP_TLOW_MIN_NS                     500
-#define I3C_BUS_THIGH_MAX_NS                            41
 
 /**
  \brief I3C Control Codes: I2C Bus Speed mode
@@ -1400,15 +1412,26 @@ void i3c_send_xfer_cmd(I3C_Type *i3c, i3c_xfer_t *xfer);
 void i3c_send_xfer_cmd_blocking(I3C_Type *i3c, i3c_xfer_t *xfer);
 
 /**
-  \fn           void i3c_clk_cfg(I3C_Type *i3c,
-                                 uint32_t  core_clk)
-  \brief        i3c clock configuration for i3c slave device
+  \fn           void i3c_slow_bus_clk_cfg(I3C_Type *i3c,
+                                          uint32_t  core_clk)
+  \brief        i3c slow bus clock configuration for i3c slave device
   \param[in]    i3c       : Pointer to i3c register set structure
   \param[in]    core_clk  : core clock
   \return       none
 */
-void i3c_clk_cfg(I3C_Type *i3c,
-                 uint32_t  core_clk);
+void i3c_slow_bus_clk_cfg(I3C_Type *i3c,
+                          uint32_t  core_clk);
+
+/**
+  \fn           void i3c_normal_bus_clk_cfg(I3C_Type *i3c,
+                                            uint32_t  core_clk)
+  \brief        i3c normal bus clock configuration for i3c slave device
+  \param[in]    i3c       : Pointer to i3c register set structure
+  \param[in]    core_clk  : core clock
+  \return       none
+*/
+void i3c_normal_bus_clk_cfg(I3C_Type *i3c,
+                            uint32_t  core_clk);
 
 /**
   \fn           void i2c_clk_cfg(I3C_Type           *i3c,

@@ -17,12 +17,6 @@
  * @brief    Baremetal testapp to verify Mix Bus i2c and i3c communication with
  *            i2c + i3c slave devices using i3c IP
  *
- *           Select appropriate i3c Speed mode as per i2c or i3c slave device.
- *             I3C_BUS_MODE_PURE                             : Only Pure I3C devices
- *             I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 Mbps
- *             I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS : Fast Mode      400 Kbps
- *             I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 Kbps
- *
  *           Hardware setup
  *            TestApp will communicate with Accelerometer and BMI Slave,
  *             which are on-board connected with the I3C_D.
@@ -296,21 +290,20 @@ void mix_bus_i2c_i3c_demo_entry()
     }
 
     /* Initialize I3C master */
-    ret = I3Cdrv->Control(I3C_MASTER_INIT, NULL);
+    ret = I3Cdrv->Control(I3C_MASTER_INIT, 0);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: Master Init control failed.\r\n");
         goto error_uninitialize;
     }
 
-    /* i3c Speed Mode Configuration:
-     *  I3C_BUS_MODE_PURE                             : Only Pure I3C devices
+    /* i3c Speed Mode Configuration for i2c comm:
      *  I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 Mbps
      *  I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS : Fast Mode      400 Kbps
      *  I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 Kbps
      */
-    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,  \
-                  I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS);
+    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,
+                          I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Control failed.\r\n");
@@ -392,6 +385,15 @@ void mix_bus_i2c_i3c_demo_entry()
 
     /* Delay for n micro second. */
     sys_busy_loop_us(1000);
+
+    /* i3c Speed Mode Configuration: I3C_BUS_NORMAL_MODE */
+    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,
+                          I3C_BUS_NORMAL_MODE);
+    if(ret != ARM_DRIVER_OK)
+    {
+        printf("\r\n Error: I3C Control failed.\r\n");
+        goto error_poweroff;
+    }
 
     /* clear callback event flag. */
     cb_event_flag = 0;

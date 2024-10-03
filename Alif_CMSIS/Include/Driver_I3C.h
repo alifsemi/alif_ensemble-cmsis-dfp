@@ -17,7 +17,7 @@ extern "C"
 
 #include "Driver_Common.h"
 
-#define ARM_I3C_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(7,1)     /* API version */
+#define ARM_I3C_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(7,2)     /* API version */
 
 /****** I3C Control Codes *****/
 
@@ -37,11 +37,12 @@ extern "C"
 #define I3C_SLAVE_SET_PID                               (1UL << 12) ///< Set MIPI I3C Slave's 48-bit Provisional ID
 
 /* I3C Control Codes: Bus mode arguments */
-#define I3C_BUS_MODE_PURE                               (0x00UL)    ///< Pure i3c device
+#define I3C_BUS_SLOW_MODE                               (0x00UL)    ///< Slow bus mode for pure i3c devices - For slave addressing
 #define I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS    (0x01UL)    ///< Mixed i3c + i2c device, Speed: Fast Mode Plus   1 MBPS
 #define I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS   (0x02UL)    ///< Mixed i3c + i2c device, Speed: Fast Mode      400 KBPS
 #define I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS   (0x03UL)    ///< Mixed i3c + i2c device, Speed: Standard Mode  100 KBPS
 #define I3C_BUS_MODE_MIXED_LIMITED                      (0x04UL)
+#define I3C_BUS_NORMAL_MODE                             (0x05UL)    ///< Normal bus mode for pure i3c devices - For actual data comm
 
 /* I3C Control arguments: For Slave Nack retry count */
 #define I3C_SLAVE_NACK_RETRY_COUNT_Pos                  8U
