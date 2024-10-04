@@ -128,6 +128,7 @@ static inline int32_t PDM_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     if(dma_periph->evtrtr_cfg.instance == 0)
     {
         evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
+        						   dma_periph->evtrtr_cfg.group,
                                    DMA_ACK_COMPLETION_PERIPHERAL);
     }
     else
@@ -167,8 +168,6 @@ static inline int32_t PDM_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     else
     {
         evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtrlocal_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                          dma_periph->evtrtr_cfg.group);
     }
 
     return ARM_DRIVER_OK;

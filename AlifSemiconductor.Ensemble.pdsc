@@ -12,8 +12,8 @@
   -->
 
   <releases>
-     <release version="1.3.0-rc5" date="2024-10-01">
-      - rc5 release for DFPv1.3.0
+     <release version="1.3.0-rc6" date="2024-10-03">
+      - rc6 release for DFPv1.3.0
     </release>
      <release version="1.2.2" date="2024-08-13">
       - update SD Driver for various fixes
