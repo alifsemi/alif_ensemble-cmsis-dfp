@@ -12,25 +12,50 @@
   -->
 
   <releases>
-     <release version="1.3.0-rc6" date="2024-10-03">
-      - rc6 release for DFPv1.3.0
+     <release version="1.3.0"  tag="v1.3.0" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.3.0/AlifSemiconductor.Ensemble.1.3.0.pack" date="2024-10-04">
+      - ICM42670 driver
+      - New component for MIPI DPHY
+      - Support for ILI9488 1-lane Display
+      - Support for AR0145 Camera Sensor
+      - Support for OV5647 Camera Sensor
+      - Updated I3C Driver
+      - Baremetal FATFS demo for SD
+      - Update SE services to v1.100.0
     </release>
-     <release version="1.2.2" date="2024-08-13">
+    <release version="1.2.2" tag="v1.2.2" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.2.2/AlifSemiconductor.Ensemble.1.2.2.pack" date="2024-08-13">
       - update SD Driver for various fixes
-      - Add emmc init sequence 
+      - Add emmc init sequence
       - Low Capacity SD card support
     </release>
-    <release version="1.2.1" date="2024-06-27">
+    <release version="1.2.1" tag="v1.2.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.2.1/AlifSemiconductor.Ensemble.1.2.1.pack" date="2024-06-27">
       - update SE services to 1.97.0
     </release>
-  <release version="1.2.0" date="2024-06-19">
-      - update to 1.2.0 release
+    <release version="1.2.0" tag="v1.2.0" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.2.0/AlifSemiconductor.Ensemble.1.2.0.pack" date="2024-06-19">
+      - CANFD Blocking mode support
+      - FreeRTOS test apps for DMA, I2S, ADC
+      - Add Support for RAW8 and RGB565 for MT9M114
+      - MT9M114-mipi, HM0360 Camera sensor support
+      - Polling mode driver for PDM, CAN-FD, I2S, LPSPI
+      - SDMMC Driver IRQ mode support
+      - Updates in DMA, SPI, I2S, UART, SD, CAN-FD driver
+      - Updates in UART, I2C, ADC, PM, SDC, CAN-FD applications
+      - Auto timing calculation for CSI
+      - Compiler warnings and Error Fixes
+      - Change SDMMC default clock to 50MHz
+      - Update SE services to v1.96.0
     </release>
-    <release version="1.1.3" date="2024-05-13">
+    <release version="1.1.3" tag="v1.1.3" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.1.3/AlifSemiconductor.Ensemble.1.1.3.pack" date="2024-05-13">
       - Fix FLM file format issue
+      - Minor updates to Demo_pm_baremetal and mhu_sender sources
+      - Update SE services to v1.0.94
     </release>
-    <release version="1.1.2" date="2024-04-19">
+    <release version="1.1.2" tag="v1.1.2" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.1.2/AlifSemiconductor.Ensemble.1.1.2.pack" date="2024-04-19">
       - Update SE services to v1.0.93
+    </release>
+    <release version="1.1.1" tag="v1.1.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v1.1.1/AlifSemiconductor.Ensemble.1.1.1.pack" date="2024-03-25">
+      - Update SE services to v1.0.92
+      - Update drivers and testapps
+      - Rename HSCMP component as CMP
     </release>
   <release version="1.0.0" date="2023-11-15">
       Initial release
