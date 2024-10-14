@@ -914,23 +914,23 @@
     <condition id="Retarget IO STDIN">
       <description>Requirement for Retarget IO STDIN</description>
       <require condition="Ensemble CMSIS_Driver"/>
-	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
-	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDIN" Cvariant="User"/>
-	</condition>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+      <require Cclass="CMSIS-Compiler" Cgroup="STDIN" Csub="Custom"/>
+    </condition>
 
     <condition id="Retarget IO STDOUT">
       <description>Requirement for Retarget IO STDOUT</description>
       <require condition="Ensemble CMSIS_Driver"/>
-	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
-	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDOUT" Cvariant="User"/>
-	</condition>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+      <require Cclass="CMSIS-Compiler" Cgroup="STDOUT" Csub="Custom"/>
+    </condition>
 
     <condition id="Retarget IO STDERR">
       <description>Requirement for Retarget IO STDERR</description>
       <require condition="Ensemble CMSIS_Driver"/>
-	  <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
-	  <require Cclass="CMSIS-Compiler" Cgroup="I/O" Csub="STDERR" Cvariant="User"/>
-	</condition>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="USART"/>
+      <require Cclass="CMSIS-Compiler" Cgroup="STDERR" Csub="Custom"/>
+    </condition>
 
   </conditions>
 <!-- component section -->
