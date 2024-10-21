@@ -143,7 +143,6 @@ static uint32_t test_services_bor_en(char *p_test_name, uint32_t services_handle
                                        SERVICES_error_to_string(error_code), \
                                        service_error_code)
 
-
 /*******************************************************************************
  *  T Y P E D E F S
  ******************************************************************************/
@@ -646,18 +645,19 @@ static uint32_t test_services_gettoc_data(char *p_test_name,
              service_error_code);
 
   TEST_print(services_handle,
-             "+---------------------------------------------------------------------------------+\n");
+          "+-----------------------------------------------------------------------------------+\n");
   TEST_print(services_handle,
-             "|   Name   |    CPU   |Load Address|Boot Address|Image Size| Version |    Flags   |\n");
+
+          "|   Name   |    CPU   |Load Address|Boot Address|Image Size|  Version  |    Flags   |\n");
   TEST_print(services_handle,
-             "+---------------------------------------------------------------------------------+\n");
+          "+-----------------------------------------------------------------------------------+\n");
 
   for (each_toc = 0; each_toc < toc_info.number_of_toc_entries ; each_toc++)
   {
     char flags_string[FLAG_STRING_SIZE] = {0}; /* Flags as string   */
 
     TEST_print(services_handle,
-               "| %8s |  %6s  | 0x%08X | 0x%08X | %8d | %6s  | %10s |\n",
+               "| %8s |  %6s  | 0x%08X | 0x%08X | %8d |%11s| %10s |\n",
                toc_info.toc_entry[each_toc].image_identifier,
                CPUID_to_string(toc_info.toc_entry[each_toc].cpu),
                toc_info.toc_entry[each_toc].load_address,
@@ -671,7 +671,7 @@ static uint32_t test_services_gettoc_data(char *p_test_name,
                                flags_string));
   }
   TEST_print(services_handle,
-             "+---------------------------------------------------------------------------------+\n");
+          "+-----------------------------------------------------------------------------------+\n");
 
   return error_code;
 }
@@ -1363,7 +1363,7 @@ static uint32_t test_services_bounds(char *p_test_name,
                                    0,
                                    (uint8_t*)&buffer[0]);
   TEST_print(services_handle,
-             "** TEST %s error_code=%s service_resp=0x%08X\n",
+             "** TEST %s error_code=%s\n",
              p_test_name,
              SERVICES_error_to_string(error_code));
 
@@ -1371,7 +1371,7 @@ static uint32_t test_services_bounds(char *p_test_name,
                                    PRINT_BUFFER_SIZE+1,
                                    (uint8_t*)&buffer[0]);
   TEST_print(services_handle,
-             "** TEST %s error_code=%s service_resp=0x%08X\n",
+             "** TEST %s error_code=%s\n",
              p_test_name,
              SERVICES_error_to_string(error_code));
 
@@ -1380,7 +1380,7 @@ static uint32_t test_services_bounds(char *p_test_name,
                                      (uint8_t*)NULL);
 
   TEST_print(services_handle,
-               "** TEST %s error_code=%s service_resp=0x%08X\n",
+               "** TEST %s error_code=%s\n",
                p_test_name,
                SERVICES_error_to_string(error_code));
 

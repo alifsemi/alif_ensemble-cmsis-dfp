@@ -29,20 +29,24 @@
 #include "services_lib_interface.h"
 #endif
 
-/*
 static char s_print_buf[64 * 6] = {0};
 
+/**
+ * @fn void fill_print_buf(uint8_t*, uint32_t)
+ * @brief
+ * @param buf
+ * @param length
+ */
 static void fill_print_buf(uint8_t *buf, uint32_t length)
 {
   s_print_buf[0] = 0;
   for (uint32_t i = 0; i < length; i++)
   {
     char temp_buf[10];
-    sprintf(temp_buf, " 0x%02X", buf[i]);
+    sprintf(temp_buf, "%02X", buf[i]);
     strcat(s_print_buf, temp_buf);
   }
 }
-*/
 
 /**
  * @brief Test MBEDTLS AES
@@ -52,18 +56,15 @@ static void test_mbedtls_aes(uint32_t services_handle)
   /* https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/AES_OFB.pdf */
   static const uint8_t IV[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                                 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
-  static const uint8_t PLAIN[] = { 0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F,
-                                   0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93,
-                                   0x17, 0x2A };
+  static const uint8_t PLAIN[] = { 0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96,
+                                   0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A };
   static const uint8_t KEY[] = { 0x60, 0x3D, 0xEB, 0x10, 0x15, 0xCA, 0x71, 0xBE,
                                  0x2B, 0x73, 0xAE, 0xF0, 0x85, 0x7D, 0x77, 0x81,
                                  0x1F, 0x35, 0x2C, 0x07, 0x3B, 0x61, 0x08, 0xD7,
                                  0x2D, 0x98, 0x10, 0xA3, 0x09, 0x14, 0xDF, 0xF4 };
-  /*
-  static const uint8_t CYPHER[] = { 0xDC, 0x7E, 0x84, 0xBF, 0xDA, 0x79, 0x16,
-                                    0x4B, 0x7E, 0xCD, 0x84, 0x86, 0x98, 0x5D,
-                                    0x38, 0x60 };
-                                    */
+
+  // Expected ciphertext
+  // DC7E84BF DA79164B 7ECD8486 985D3860
 
 #define AES_KEY_SIZE 256
 #define AES_IV_SIZE 16
@@ -75,40 +76,36 @@ static void test_mbedtls_aes(uint32_t services_handle)
 
   uint32_t aes_ctx[24] = {0};
 
-  uint32_t error_code = SERVICES_REQ_SUCCESS;
-  uint32_t service_error_code;
+  uint32_t error_code;
 
   // Initialize aes engine
-  SERVICES_cryptocell_mbedtls_aes_init(services_handle, &service_error_code,
+  SERVICES_cryptocell_mbedtls_aes_init(services_handle, &error_code,
                                        (uint32_t)aes_ctx);
+  TEST_print(services_handle,
+             "** TEST SERVICES_cryptocell_mbedtls_aes_init            service_resp=0x%08X\n",
+             error_code);
 
   memcpy(key, KEY, sizeof(key));
   memcpy(buf, PLAIN, sizeof(buf));
   memcpy(iv, IV, sizeof(iv));
 
-  TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_aes_init    error_code=%s service_resp=0x%08X\n",
-             SERVICES_error_to_string(error_code),
-             service_error_code);
-
   // encrypt
   // set key into context
   SERVICES_cryptocell_mbedtls_aes_set_key(services_handle, 
-                                          &service_error_code, 
+                                          &error_code,
                                           (uint32_t)aes_ctx, 
                                           (uint32_t)key, 
                                           AES_KEY_SIZE,
                                           MBEDTLS_OP_ENCRYPT);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_aes_set_key error_code=%s service_resp=0x%08X\n",
-             SERVICES_error_to_string(error_code),
-             service_error_code);
+             "** TEST SERVICES_cryptocell_mbedtls_aes_set_key         service_resp=0x%08X\n",
+             error_code);
 
   // perform cryptographic operation
   SERVICES_cryptocell_mbedtls_aes_crypt(services_handle, 
-                                        &service_error_code, 
+                                        &error_code,
                                         (uint32_t)aes_ctx,
-                                        MBEDTLS_AES_CRYPT_OFB, 
+                                        MBEDTLS_AES_CRYPT_OFB,
                                         0, 
                                         sizeof(buf), 
                                         (uint32_t)iv, 
@@ -116,49 +113,40 @@ static void test_mbedtls_aes(uint32_t services_handle)
                                         (uint32_t)buf);
 
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_aes_crypt   error_code=%s service_resp=0x%08X\n",
-             SERVICES_error_to_string(error_code),
-             service_error_code);
+             "** TEST SERVICES_cryptocell_mbedtls_aes_crypt         service_resp=0x%08X\n",
+             error_code);
 
-/*
-  TEST_print(services_handle, "Encrypted data:\n");
   fill_print_buf(buf, AES_BLOCK_SIZE);
-  TEST_print(services_handle, "  %s\n", s_print_buf);
-*/
+  TEST_print(services_handle, "Encrypted data: %s\n", s_print_buf);
 
   // decrypt
   // set key into context
   SERVICES_cryptocell_mbedtls_aes_set_key(services_handle, 
-                                          &service_error_code, 
+                                          &error_code,
                                           (uint32_t)aes_ctx, 
                                           (uint32_t)key, 
                                           AES_KEY_SIZE,
                                           MBEDTLS_OP_DECRYPT);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_aes_set_key error_code=%s service_resp=0x%08X\n",
-             SERVICES_error_to_string(error_code),
-             service_error_code);
+             "** TEST SERVICES_cryptocell_mbedtls_aes_set_key        service_resp=0x%08X\n",
+             error_code);
 
   // perform cryptographic operation
   SERVICES_cryptocell_mbedtls_aes_crypt(services_handle, 
-                                        &service_error_code, 
+                                        &error_code,
                                         (uint32_t)aes_ctx,
-                                        MBEDTLS_AES_CRYPT_OFB, 
+                                        MBEDTLS_AES_CRYPT_OFB,
                                         0, 
                                         sizeof(buf), 
                                         (uint32_t)iv, 
-                                        (uint32_t)buf, 
+                                        (uint32_t)buf,
                                         (uint32_t)buf);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_aes_crypt   error_code=%s service_resp=0x%08X\n",
-             SERVICES_error_to_string(error_code),
-             service_error_code);
+             "** TEST SERVICES_cryptocell_mbedtls_aes_crypt          service_resp=0x%08X\n",
+             error_code);
 
-/*
-  TEST_print(services_handle, "Decrypted data:\n");
   fill_print_buf(buf, AES_BLOCK_SIZE);
-  TEST_print(services_handle, "  %s\n", s_print_buf);
-*/
+  TEST_print(services_handle, "Decrypted data: %s\n", s_print_buf);
 }
 
 /**
@@ -167,59 +155,61 @@ static void test_mbedtls_aes(uint32_t services_handle)
 static void test_mbedtls_sha(uint32_t services_handle)
 {
 #define SHA256_BYTES         32  // 256 bits
-#define SHA256_PRINT         64  // 256 bits is 64 characters
 
   char * test_payload = "SHA 256";
-  uint32_t error_code = SERVICES_REQ_SUCCESS;
+
   uint32_t sha_ctx[60] = {0};
   uint8_t sha256sum[SHA256_BYTES];
+  uint32_t error_code;
 
   SERVICES_cryptocell_mbedtls_sha_starts(services_handle,
                                          &error_code,
                                          (uint32_t)sha_ctx,
                                          MBEDTLS_HASH_SHA256);
+  TEST_print(services_handle,
+             "** TEST SERVICES_cryptocell_mbedtls_sha_starts         service_resp=0x%08X\n",
+             error_code);
+
   SERVICES_cryptocell_mbedtls_sha_update(services_handle,
                                          &error_code,
                                          (uint32_t)sha_ctx,
                                          MBEDTLS_HASH_SHA256,
                                          (uint32_t)test_payload,
                                          strlen(test_payload));
+  TEST_print(services_handle,
+             "** TEST SERVICES_cryptocell_mbedtls_sha_update         service_resp=0x%08X\n",
+             error_code);
+
   SERVICES_cryptocell_mbedtls_sha_finish(services_handle,
                                          &error_code,
                                          (uint32_t)sha_ctx,
                                          MBEDTLS_HASH_SHA256,
                                          (uint32_t)sha256sum);
-
-  uint8_t buf[10] = {0};
-  uint8_t print_buf[SHA256_PRINT] = {0};
-  for (uint32_t i = 0; i < SHA256_BYTES; i++)
-  {
-    sprintf((void *)buf, "%02X", sha256sum[i]);
-    strcat((void *)print_buf, (void *)buf);
-  }
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_sha   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_sha_finish         service_resp=0x%08X\n",
              error_code);
 
-  TEST_print(services_handle, "SHA256 sum: %s\n", print_buf);
+  // Expected result: 0d5bad3f01155a5ec3e352d2925eee7700af0225f7891beccd1dc1ddef50393f
+  fill_print_buf(sha256sum, SHA256_BYTES);
+  TEST_print(services_handle, "SHA256 sum: %s\n", s_print_buf);
 }
-
-
 
 #define MBEDTLS_CIPHER_AES_128_ECB     2
 
 /**
  * @brief Test MBEDTLS CMAC
  */
+
 static void test_mbedtls_cmac(uint32_t services_handle)
 {
-  uint32_t cmac_ctx[24] = {0};
+  uint32_t cmac_ctx[100] = {0};
   uint32_t ctx_addr = (uint32_t)cmac_ctx;
 
   uint8_t cmac_key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
   uint32_t cmac_key_bits = 128;
 
-  uint8_t cmac_output[16]; // MBEDTLS_CIPHER_BLKSIZE_MAX
+#define MBEDTLS_CIPHER_BLKSIZE_MAX 16
+  uint8_t cmac_output[MBEDTLS_CIPHER_BLKSIZE_MAX];
 
   uint8_t block1[] = {0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A, 0xAE, 0x2D, 0x8A, 0x57, 0x1E, 0x03, 0xAC, 0x9C, 0x9E, 0xB7, 0x6F, 0xAC, 0x45, 0xAF, 0x8E, 0x51, 0x30, 0xC8, 0x1C, 0x46, 0xA3, 0x5C, 0xE4, 0x11, 0xE5, 0xFB, 0xC1, 0x19, 0x1A, 0x0A, 0x52, 0xEF, 0xF6, 0x9F, 0x24, 0x45, 0xDF, 0x4F, 0x9B, 0x17, 0xAD, 0x2B, 0x41, 0x7B, 0xE6, 0x6C, 0x37, 0x10};
   uint32_t block1_len = 64;
@@ -236,18 +226,22 @@ static void test_mbedtls_cmac(uint32_t services_handle)
 
   SERVICES_cryptocell_mbedtls_cmac_reset(services_handle, &error_code, ctx_addr);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_cmac_reset   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_cmac_reset         service_resp=0x%08X\n",
              error_code);
   SERVICES_cryptocell_mbedtls_cmac_update(services_handle, &error_code,
       ctx_addr, (uint32_t)block1, block1_len);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_cmac_update   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_cmac_update        service_resp=0x%08X\n",
              error_code);
   SERVICES_cryptocell_mbedtls_cmac_finish(services_handle, &error_code,
       ctx_addr, (uint32_t)cmac_output);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_cmac_finish   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_cmac_finish        service_resp=0x%08X\n",
              error_code);
+
+  // Expected result: 51F0BEBF7E3B9D92FC49741779363CFE
+  fill_print_buf(cmac_output, MBEDTLS_CIPHER_BLKSIZE_MAX);
+  TEST_print(services_handle, "CMAC: %s\n", s_print_buf);
 }
 
 /**
@@ -275,14 +269,14 @@ static void test_mbedtls_ccm_gcm(uint32_t services_handle)
   SERVICES_cryptocell_mbedtls_ccm_gcm_set_key(services_handle, &error_code,
       ctx_addr, 0, MBEDTLS_CIPHER_ID_AES, (uint32_t)KEY, 8 * sizeof(KEY));
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_set_key   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_set_key    service_resp=0x%08X\n",
              error_code);
   SERVICES_cryptocell_mbedtls_ccm_gcm_crypt(services_handle, &error_code,
       ctx_addr, 0 /*MBEDTLS_CCM_ENCRYPT_AND_TAG*/, sizeof(MSG),
       (uint32_t)IV, sizeof(IV), (uint32_t)AD, sizeof(AD),
       (uint32_t)MSG, (uint32_t)buf, (uint32_t)(buf + sizeof(MSG)), TAG_LEN);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_crypt   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_crypt      service_resp=0x%08X\n",
              error_code);
 
 /*
@@ -298,7 +292,7 @@ static void test_mbedtls_ccm_gcm(uint32_t services_handle)
       (uint32_t)IV, sizeof(IV), (uint32_t)AD, sizeof(AD),
       (uint32_t)RES, (uint32_t)buf, (uint32_t)(buf + sizeof(MSG)), TAG_LEN);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_crypt   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_ccm_gcm_crypt      service_resp=0x%08X\n",
              error_code);
 
 /*
@@ -324,10 +318,10 @@ static void test_mbedtls_chachapoly(uint32_t services_handle)
   uint8_t chacha_dataOut[114] = {0};
 
   SERVICES_cryptocell_mbedtls_chacha20_crypt(services_handle, &error_code,
-      (uint32_t)chacha_key, (uint32_t)chacha_IVCounter, chacha_counter,
-      sizeof(chacha_dataIn), (uint32_t)chacha_dataIn, (uint32_t)chacha_dataOut);
+		  (uint32_t)chacha_key, (uint32_t)chacha_IVCounter, chacha_counter,
+		  sizeof(chacha_dataIn), (uint32_t)chacha_dataIn, (uint32_t)chacha_dataOut);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_chacha20_crypt   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_chacha20_crypt     service_resp=0x%08X\n",
              error_code);
 /*
   TEST_print(services_handle, "Encrypted data:\n");
@@ -367,7 +361,7 @@ static void test_mbedtls_chachapoly(uint32_t services_handle)
   SERVICES_cryptocell_mbedtls_poly1305_crypt(services_handle, &error_code,
       (uint32_t)poly_key, (uint32_t)poly_dataIn, sizeof(poly_dataIn), (uint32_t)poly_macBuf);
   TEST_print(services_handle,
-             "** TEST SERVICES_cryptocell_mbedtls_poly1305_crypt   service_resp=0x%08X\n",
+             "** TEST SERVICES_cryptocell_mbedtls_poly1305_crypt       service_resp=0x%08X\n",
              error_code);
 
 /*
@@ -378,7 +372,9 @@ static void test_mbedtls_chachapoly(uint32_t services_handle)
 }
 
 /**
- * @brief Test MBEDTLS API
+ * @fn void test_crypto(uint32_t)
+ * @brief
+ * @param services_handle
  */
 void test_crypto(uint32_t services_handle)
 {

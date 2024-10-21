@@ -1937,7 +1937,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.100.0" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.101.0" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -1959,10 +1959,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.100.0" condition="SE SERVICES SRC">
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.101.0" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.100.0.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.101.0.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
