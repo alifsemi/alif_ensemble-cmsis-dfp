@@ -16,10 +16,9 @@
 /* system includes */
 #include "Driver_I2C.h"
 #include "Driver_I2C_Private.h"
-#include "i2c.h"
 
 /* Driver version */
-#define ARM_I2C_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)
+#define ARM_I2C_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 2)
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -182,19 +181,14 @@ __STATIC_INLINE int32_t I2C_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Enable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                   dma_periph->evtrtr_cfg.group,
-                                   DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtr0_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                     dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       DMA_ACK_COMPLETION_PERIPHERAL);
-    }
+    evtrtr_enable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                              dma_periph->evtrtr_cfg.channel,
+                              dma_periph->evtrtr_cfg.group,
+                              DMA_ACK_COMPLETION_PERIPHERAL);
+
+    evtrtr_enable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                dma_periph->evtrtr_cfg.channel,
+                                dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -217,17 +211,12 @@ __STATIC_INLINE int32_t I2C_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Disable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtr0_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                      dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-    }
+    evtrtr_disable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                               dma_periph->evtrtr_cfg.channel);
 
+    evtrtr_disable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                 dma_periph->evtrtr_cfg.channel,
+                                 dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -594,7 +583,6 @@ static int32_t ARM_I2C_MasterTransmit(I2C_RESOURCES *I2C,
          * fields of I2C transfer structure */
         I2C->transfer.tx_buf        = (uint8_t *)NULL;
         I2C->transfer.tx_total_num  = 0U;
-        I2C->transfer.pending       = false;
 
         /* Start the DMA engine for sending the data to I2C */
         dma_params.peri_reqno    = (int8_t)I2C->dma_cfg->dma_tx.dma_periph_req;

@@ -23,7 +23,7 @@
 #include "Driver_PDM_Private.h"
 #include "sys_ctrl_pdm.h"
 
-#define ARM_PDM_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 1)  /*  Driver version */
+#define ARM_PDM_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 2)  /*  Driver version */
 
 /*Driver version*/
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -125,17 +125,14 @@ static inline int32_t PDM_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Enable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-        						   dma_periph->evtrtr_cfg.group,
-                                   DMA_ACK_COMPLETION_PERIPHERAL);
-    }
-    else
-    {
-        evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       DMA_ACK_COMPLETION_PERIPHERAL);
-    }
+    evtrtr_enable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                              dma_periph->evtrtr_cfg.channel,
+                              dma_periph->evtrtr_cfg.group,
+                              DMA_ACK_COMPLETION_PERIPHERAL);
+
+    evtrtr_enable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                dma_periph->evtrtr_cfg.channel,
+                                dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -159,16 +156,12 @@ static inline int32_t PDM_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Disable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtr0_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                      dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-    }
+    evtrtr_disable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                               dma_periph->evtrtr_cfg.channel);
+
+    evtrtr_disable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                 dma_periph->evtrtr_cfg.channel,
+                                 dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -238,6 +231,278 @@ static inline int32_t PDM_DMA_GetStatus(DMA_PERIPHERAL_CONFIG *dma_periph, uint3
     }
 
     return ARM_DRIVER_OK;
+}
+
+/**
+  \fn          int32_t PDM_DMA_Usermcode(DMA_PERIPHERAL_CONFIG *dma_periph,
+                                         uint32_t dma_mcode)
+  \brief       Use Custom Microcode for PDM
+  \param[in]   dma_periph  Pointer to DMA resources
+  \param[in]   dma_mcode  Pointer to DMA microcode
+  \return      \ref        execution_status
+*/
+__STATIC_INLINE int32_t PDM_DMA_Usermcode(DMA_PERIPHERAL_CONFIG *dma_periph,
+                                          uint32_t dma_mcode)
+{
+    int32_t        status;
+    ARM_DRIVER_DMA *dma_drv = dma_periph->dma_drv;
+
+    /* Use User provided custom microcode */
+    status = dma_drv->Control(&dma_periph->dma_handle,
+                              ARM_DMA_USER_PROVIDED_MCODE,
+                              dma_mcode);
+    if(status)
+    {
+        return ARM_DRIVER_ERROR;
+    }
+
+    return ARM_DRIVER_OK;
+}
+
+/**
+ @fn          int32_t PDM_DMA_GenerateOpcode(DMA_PERIPHERAL_CONFIG *dma_periph,
+                                             PDM_RESOURCES *PDM)
+  @brief       Generate PDM DMA microcode
+  \param[in]   dma_periph   Pointer to DMA resources
+  @param[in]   PDM : Pointer to PDM resources
+  \return      \ref         execution_status
+*/
+int32_t PDM_DMA_GenerateOpcode(DMA_PERIPHERAL_CONFIG *dma_periph,
+                                PDM_RESOURCES *PDM)
+{
+    uint8_t             dma_handle = (uint8_t)dma_periph->dma_handle;
+    uint32_t            dst_addr = LocalToGlobal(PDM->transfer.buf);
+    uint32_t            active_channels = pdm_get_active_channels(PDM->regs);
+    uint8_t             periph_num = PDM->dma_cfg->dma_rx.dma_periph_req;
+    dma_opcode_buf      op_buf;
+    dma_loop_t          lp_args;
+    dma_ccr_t           ccr;
+    DMA_XFER            xfer_type;
+    bool                ret;
+    uint32_t            total_bytes, req_burst, burst;
+    uint16_t            lp_start_lc1, lp_start_lc0, lc0, lc1;
+    uint32_t            src_addr;
+    uint8_t             tmp, num_active_channels;
+
+    op_buf.buf = (uint8_t *)&PDM->dma_mcode;
+    op_buf.buf_size = PDM_DMA_MICROCODE_SIZE;
+    op_buf.off = 0;
+
+    ccr.value = 0;
+
+    ccr.value_b.dst_burst_len = 0;
+    ccr.value_b.src_burst_len = 0;
+    ccr.value_b.dst_burst_size = BS_BYTE_4;
+    ccr.value_b.src_burst_size = BS_BYTE_4;
+    ccr.value_b.dst_cache_ctrl = DMA_DEST_CACHE_CTRL;
+    ccr.value_b.src_cache_ctrl = 0;
+    ccr.value_b.dst_inc = DMA_BURST_INCREMENTING;
+    ccr.value_b.src_inc = DMA_BURST_FIXED;
+    ccr.value_b.dst_prot_ctrl = DMA_DEST_PROT_CTRL;
+    ccr.value_b.src_prot_ctrl = DMA_SRC_PROT_CTRL;
+    ccr.value_b.endian_swap_size = 0x0;
+
+    ret = dma_construct_move(ccr.value, DMA_REG_CCR, &op_buf);
+    if(!ret)
+        return ret;
+
+    ret = dma_construct_move(dst_addr, DMA_REG_DAR, &op_buf);
+    if(!ret)
+        return ret;
+
+    src_addr = LocalToGlobal(pdm_get_ch0_1_addr(PDM->regs));
+    ret = dma_construct_move(src_addr, DMA_REG_SAR, &op_buf);
+    if(!ret)
+        return ret;
+
+    num_active_channels = 0;
+    tmp = active_channels;
+    while(tmp)
+    {
+        tmp = tmp & (tmp - 1);
+        num_active_channels++;
+    }
+    /* Stereo Mode only */
+    num_active_channels = num_active_channels / 2;
+
+    burst       = (1 << BS_BYTE_4);
+    total_bytes = PDM->transfer.total_cnt * 2;
+    req_burst   = total_bytes / (burst * num_active_channels);
+
+    while(req_burst)
+    {
+        if(req_burst >= (DMA_MAX_LP_CNT * DMA_MAX_LP_CNT))
+        {
+            lc0 = DMA_MAX_LP_CNT;
+            lc1 = DMA_MAX_LP_CNT;
+            req_burst = req_burst - (DMA_MAX_LP_CNT * DMA_MAX_LP_CNT);
+        }
+        else if(req_burst >= DMA_MAX_LP_CNT)
+        {
+            lc0 = DMA_MAX_LP_CNT;
+            lc1 = (uint16_t)(req_burst / lc0);
+            req_burst = req_burst - (lc0 * lc1) ;
+        }
+        else
+        {
+            lc0 = (uint16_t)req_burst;
+            lc1 = 0;
+            req_burst = 0;
+        }
+
+        lp_start_lc1 = 0;
+        if(lc1)
+        {
+            ret = dma_construct_loop(DMA_LC_1, (uint8_t)lc1, &op_buf);
+            if(!ret)
+                return ret;
+            lp_start_lc1 = op_buf.off;
+        }
+
+        if(lc0 == 0)
+            return ret;
+
+        ret = dma_construct_loop(DMA_LC_0, (uint8_t)lc0, &op_buf);
+        if(!ret)
+            return ret;
+
+        lp_start_lc0 = op_buf.off;
+
+        xfer_type = DMA_XFER_SINGLE;
+
+        ret = dma_construct_flushperiph(periph_num, &op_buf);
+        if (!ret)
+            return ret;
+
+        ret = dma_construct_wfp(xfer_type, periph_num, &op_buf);
+        if (!ret)
+            return ret;
+
+        if(active_channels & PDM_CHANNEL_0_1)
+        {
+            ret = dma_construct_loadperiph(xfer_type,
+                                           periph_num,
+                                           &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_store(xfer_type, &op_buf);
+            if(!ret)
+                return ret;
+        }
+
+        if(active_channels & PDM_CHANNEL_2_3)
+        {
+            ret = dma_construct_add(DMA_REG_SAR,
+                                    0x4,
+                                    &op_buf);
+            if(!ret)
+                return ret;
+            ret = dma_construct_loadperiph(xfer_type,
+                                           periph_num,
+                                           &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_store(xfer_type, &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_addneg(DMA_REG_SAR,
+                                       0x4,
+                                       &op_buf);
+            if(!ret)
+                return ret;
+        }
+
+        if(active_channels & PDM_CHANNEL_4_5)
+        {
+            ret = dma_construct_add(DMA_REG_SAR,
+                                    0x8,
+                                    &op_buf);
+            if(!ret)
+                return ret;
+            ret = dma_construct_loadperiph(xfer_type,
+                                           periph_num,
+                                           &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_store(xfer_type, &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_addneg(DMA_REG_SAR,
+                                       0x8,
+                                       &op_buf);
+            if(!ret)
+                return ret;
+        }
+
+        if(active_channels & PDM_CHANNEL_6_7)
+        {
+            ret = dma_construct_add(DMA_REG_SAR,
+                                    0xC,
+                                    &op_buf);
+            if(!ret)
+                return ret;
+            ret = dma_construct_loadperiph(xfer_type,
+                                           periph_num,
+                                           &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_store(xfer_type, &op_buf);
+            if(!ret)
+                return ret;
+
+            ret = dma_construct_addneg(DMA_REG_SAR,
+                                       0xC,
+                                       &op_buf);
+            if(!ret)
+                return ret;
+        }
+
+        if((op_buf.off - lp_start_lc0) > DMA_MAX_BACKWARD_JUMP)
+            return false;
+        lp_args.jump = (uint8_t)(op_buf.off - lp_start_lc0);
+        lp_args.lc = DMA_LC_0;
+        lp_args.nf = 1;
+        lp_args.xfer_type = DMA_XFER_FORCE;
+        ret = dma_construct_loopend(&lp_args, &op_buf);
+        if(!ret)
+            return ret;
+
+        if(lc1)
+        {
+            if((op_buf.off - lp_start_lc1) > DMA_MAX_BACKWARD_JUMP)
+                return false;
+            lp_args.jump = (uint8_t)(op_buf.off - lp_start_lc1);
+            lp_args.lc = DMA_LC_1;
+            lp_args.nf = 1;
+            lp_args.xfer_type = DMA_XFER_FORCE;
+            ret = dma_construct_loopend(&lp_args, &op_buf);
+            if(!ret)
+                return ret;
+        }
+    }
+
+    ret = dma_construct_wmb(&op_buf);
+    if(!ret)
+        return ret;
+
+    ret = dma_construct_send_event(dma_handle, &op_buf);
+    if(!ret)
+        return ret;
+
+    ret = dma_construct_end(&op_buf);
+    if(!ret)
+        return ret;
+
+    /* If mcode is not in TCM, Flush the Cache now */
+    RTSS_CleanDCache_by_Addr(op_buf.buf, op_buf.buf_size);
+
+    return true;
 }
 #endif
 
@@ -767,47 +1032,23 @@ static int32_t PDMx_Receive(void *data, uint32_t num, PDM_RESOURCES *PDM)
 #if PDM_DMA_ENABLE
     if(PDM->dma_enable)
     {
-        uint32_t audio_ch;
-        uint8_t channel_count = 0;
         ARM_DMA_PARAMS dma_params;
 
-        audio_ch = pdm_get_active_channels(PDM->regs);
+        if(!PDM_DMA_GenerateOpcode(&PDM->dma_cfg->dma_rx, PDM))
+        {
+            return ARM_DRIVER_ERROR;
+        }
+
+        if(PDM_DMA_Usermcode(&PDM->dma_cfg->dma_rx,
+                             LocalToGlobal(&PDM->dma_mcode)))
+        {
+            return ARM_DRIVER_ERROR;
+        }
 
         /* Start the DMA engine for sending the data to PDM */
         dma_params.peri_reqno    = (int8_t)PDM->dma_cfg->dma_rx.dma_periph_req;
         dma_params.dir           = ARM_DMA_DEV_TO_MEM;
         dma_params.cb_event      = PDM->dma_cb;
-
-        if(audio_ch & PDM_CHANNEL_0_1)
-        {
-            dma_params.src_addr = (void *)pdm_get_ch0_1_addr(PDM->regs);
-            dma_params.dst_addr = data;
-            channel_count++;
-        }
-        if(audio_ch & PDM_CHANNEL_2_3)
-        {
-            dma_params.src_addr = (void *)pdm_get_ch2_3_addr(PDM->regs);
-            dma_params.dst_addr = data;
-            channel_count++;
-        }
-        if(audio_ch & PDM_CHANNEL_4_5)
-        {
-            dma_params.src_addr = (void *)pdm_get_ch4_5_addr(PDM->regs);
-            dma_params.dst_addr = data;
-            channel_count++;
-        }
-        if(audio_ch & PDM_CHANNEL_6_7)
-        {
-            dma_params.src_addr = (void *)pdm_get_ch6_7_addr(PDM->regs);
-            dma_params.dst_addr = data;
-            channel_count++;
-        }
-
-        if(channel_count > PDM_MAX_DMA_CHANNEL)
-        {
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-        }
-
         /* Enable PDM DMA */
         pdm_dma_enable_irq(PDM->regs);
 

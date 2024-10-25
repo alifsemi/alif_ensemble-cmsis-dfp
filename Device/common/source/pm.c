@@ -31,7 +31,7 @@
 #if   defined(M55_HP)
 #define WICCONTROL                  (AON->RTSS_HP_CTRL)
 #define RESET_STATUS_REG            (AON->RTSS_HP_RESET)
-#elif defined(M55_HE)
+#elif defined(M55_HE) || defined (M55_HE_E1C)
 #define WICCONTROL                  (AON->RTSS_HE_CTRL)
 #define RESET_STATUS_REG            (AON->RTSS_HE_RESET)
 #else

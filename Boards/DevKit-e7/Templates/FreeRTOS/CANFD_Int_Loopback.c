@@ -133,8 +133,8 @@ void vApplicationIdleHook(void)
 }
 
 /* CANFD instance object */
-extern ARM_DRIVER_CAN  Driver_CANFD;
-static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD;
+extern ARM_DRIVER_CAN  Driver_CANFD0;
+static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD0;
 
 /* File Global variables */
 static volatile bool error_occurred             = false;
@@ -407,7 +407,7 @@ static void canfd_lbi_demo_task(void *pvParameters)
        goto power_off_canfd;
     }
 
-    /* Setting CANFD to Normal mode */
+    /* Setting CANFD to Internal Loopback mode */
     ret_val = CANFD_instance->SetMode(ARM_CAN_MODE_LOOPBACK_INTERNAL);
     if(ret_val != ARM_DRIVER_OK)
     {

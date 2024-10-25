@@ -18,7 +18,16 @@
 */
 void cmp_irq_handler(CMP_Type *cmp)
 {
-    /* clear the interrupt before re-starting */
-    if(cmp->CMP_INTERRUPT_STATUS == 1)
-        cmp->CMP_INTERRUPT_STATUS = CMP_INTERRUPT_CLEAR;
+    uint8_t int_status = (cmp->CMP_INTERRUPT_STATUS & (DEVICE_FEATURE_HSCMP_INT_STATUS_MASK));
+
+    if(int_status == CMP_FILTER_EVENT0_CLEAR)
+    {
+        cmp->CMP_INTERRUPT_STATUS = CMP_FILTER_EVENT0_CLEAR;
+    }
+
+    if(int_status == CMP_FILTER_EVENT1_CLEAR)
+    {
+        cmp->CMP_INTERRUPT_STATUS = CMP_FILTER_EVENT1_CLEAR;
+    }
+
 }

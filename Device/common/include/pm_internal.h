@@ -117,6 +117,7 @@ typedef struct
 
 /*@}*/ /* end of group EWIC_Type */
 #endif
+
 /**
   @brief WakeUp Interrupt Controller(WIC) Type:-
  */

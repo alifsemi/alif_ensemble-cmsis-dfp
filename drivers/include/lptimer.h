@@ -57,7 +57,8 @@ typedef struct {
     volatile const  uint32_t  LPTIMERS_EOI;                                  /*!< (@ 0x000000A4) Timers End-of-Interrupt Register      */
     volatile const  uint32_t  LPTIMERS_RAWINTSTATUS;                         /*!< (@ 0x000000A8) Timers Raw Interrupt Status Register  */
     volatile const  uint32_t  LPTIMERS_COMP_VERSION;                         /*!< (@ 0x000000AC) Reserved                              */
-} LPTIMER_Type;                                                              /*!< Size = 176 (0xb0)                                    */
+    volatile        uint32_t  LPTIMER_LOADCOUNT2[4];                         /*!< (@ 0x000000B0) Timer (n) Load Count 2 Register       */
+} LPTIMER_Type;                                                              /*!< Size = 192 (0xc0)                                    */
 
 /**
   \fn          static inline void lptimer_set_mode_userdefined (LPTIMER_Type *lptimer, uint8_t channel)
@@ -178,6 +179,43 @@ static inline void lptimer_mask_interrupt (LPTIMER_Type *lptimer, uint8_t channe
 static inline void lptimer_unmask_interrupt (LPTIMER_Type *lptimer, uint8_t channel)
 {
     lptimer->LPTIMER_CHANNEL_CFG[channel].LPTIMER_CONTROLREG &= ~LPTIMER_CONTROL_REG_TIMER_INTERRUPT_MASK_BIT;
+}
+
+/**
+  \fn          static inline void lptimer_load_count2 (LPTIMER_Type *lptimer, uint8_t channel, uint32_t value)
+  \brief       Load counter 2 value
+  \param[in]   lptimer   Pointer to the LPTIMER register map
+  \param[in]   channel   lptimer channel
+  \param[in]   value     Pointer to variable which stores value to be assigned to counter
+  \return      none
+*/
+static inline void lptimer_load_count2 (LPTIMER_Type *lptimer, uint8_t channel, uint32_t *value)
+{
+    lptimer->LPTIMER_LOADCOUNT2[channel] = *value;
+}
+
+/**
+  \fn          static inline void lptimer_enable_pwm (LPTIMER_Type *lptimer, uint8_t channel)
+  \brief       Enable channel PWM feature
+  \param[in]   lptimer   Pointer to the LPTIMER register map
+  \param[in]   channel   lptimer channel
+  \return      none
+*/
+static inline void lptimer_enable_pwm (LPTIMER_Type *lptimer, uint8_t channel)
+{
+    lptimer->LPTIMER_CHANNEL_CFG[channel].LPTIMER_CONTROLREG |= LPTIMER_CONTROL_REG_TIMER_PWM_BIT;
+}
+
+/**
+  \fn          static inline void lptimer_disable_pwm (LPTIMER_Type *lptimer, uint8_t channel)
+  \brief       Disable channel PWM feature
+  \param[in]   lptimer   Pointer to the LPTIMER register map
+  \param[in]   channel   lptimer channel
+  \return      none
+*/
+static inline void lptimer_disable_pwm (LPTIMER_Type *lptimer, uint8_t channel)
+{
+    lptimer->LPTIMER_CHANNEL_CFG[channel].LPTIMER_CONTROLREG &= ~LPTIMER_CONTROL_REG_TIMER_PWM_BIT;
 }
 
 #ifdef __cplusplus

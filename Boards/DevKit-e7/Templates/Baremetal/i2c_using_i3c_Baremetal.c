@@ -190,7 +190,7 @@ void i2c_using_i3c_demo_thread_entry()
     }
 
     /* Initialize I3C master */
-    ret = I3Cdrv->Control(I3C_MASTER_INIT, 0);
+    ret = I3Cdrv->Control(I3C_MASTER_INIT, NULL);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: Master Init control failed.\r\n");
@@ -203,7 +203,7 @@ void i2c_using_i3c_demo_thread_entry()
      *  I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 KBPS
      */
     ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE,
-                          I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS);
+                           I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS);
     if(ret != ARM_DRIVER_OK)
     {
         printf("\r\n Error: I3C Control failed.\r\n");

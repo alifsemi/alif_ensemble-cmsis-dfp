@@ -21,6 +21,10 @@
 
 #include "Driver_OSPI_Private.h"
 
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+#include "sys_ctrl_ospi.h"
+#endif
+
 #if !( (RTE_OSPI0) || (RTE_OSPI1) )
 #error "OSPI is not enabled in the RTE_Device.h"
 #endif
@@ -29,7 +33,7 @@
 #error "OSPI is not enabled in the RTE_Components.h"
 #endif
 
-#define ARM_OSPI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
+#define ARM_OSPI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 2) /* driver version */
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -207,19 +211,14 @@ __STATIC_INLINE int32_t OSPI_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Enable the channel in the Event Router */
-    if (dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                   dma_periph->evtrtr_cfg.group,
-                                   DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtr0_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                     dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       DMA_ACK_COMPLETION_PERIPHERAL);
-    }
+    evtrtr_enable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                              dma_periph->evtrtr_cfg.channel,
+                              dma_periph->evtrtr_cfg.group,
+                              DMA_ACK_COMPLETION_PERIPHERAL);
+
+    evtrtr_enable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                dma_periph->evtrtr_cfg.channel,
+                                dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -244,16 +243,12 @@ __STATIC_INLINE int32_t OSPI_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Disable the channel in the Event Router */
-    if (dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtr0_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                      dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-    }
+    evtrtr_disable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                               dma_periph->evtrtr_cfg.channel);
+
+    evtrtr_disable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                 dma_periph->evtrtr_cfg.channel,
+                                 dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -454,6 +449,9 @@ static int32_t ARM_OSPI_PowerControl(OSPI_RESOURCES *OSPI, ARM_POWER_STATE state
                 }
             }
 #endif
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+            disable_ospi_clk();
+#endif
             OSPI->state.powered = 0;
             break;
         }
@@ -464,7 +462,9 @@ static int32_t ARM_OSPI_PowerControl(OSPI_RESOURCES *OSPI, ARM_POWER_STATE state
             {
                 return ARM_DRIVER_OK;
             }
-
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+            enable_ospi_clk();
+#endif
             ospi_set_tx_threshold(OSPI->regs, OSPI->tx_fifo_threshold);
             ospi_set_rx_threshold(OSPI->regs, OSPI->rx_fifo_threshold);
             ospi_set_rx_sample_delay(OSPI->regs, OSPI->rx_sample_delay);

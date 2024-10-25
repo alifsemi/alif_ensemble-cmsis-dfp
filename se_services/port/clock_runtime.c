@@ -37,7 +37,7 @@ int32_t system_update_clock_values(void)
     clock_setting_t core_clock_setting;
 #if defined( M55_HP )
     core_clock_setting = CLOCK_SETTING_EXTSYS0_FREQ;
-#elif defined( M55_HE )
+#elif defined( M55_HE ) || defined (M55_HE_E1C)
     core_clock_setting = CLOCK_SETTING_EXTSYS1_FREQ;
 #else
     #error No CPU defined!

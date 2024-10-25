@@ -739,6 +739,98 @@ extern "C" {
 
 #endif /* M55_HE */
 
+#if RTE_GPIO3
+#define GPIO3_DMA_GLITCH_FILTER ((RTE_GPIO3_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
+                                 (RTE_GPIO3_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
+                                 (RTE_GPIO3_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
+                                 (RTE_GPIO3_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
+                                 (RTE_GPIO3_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
+                                 (RTE_GPIO3_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
+                                 (RTE_GPIO3_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
+                                 (RTE_GPIO3_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
+#else
+#define GPIO3_DMA_GLITCH_FILTER 0
+#endif
+
+#if RTE_GPIO4
+#define GPIO4_DMA_GLITCH_FILTER ((RTE_GPIO4_PIN0_DMA_GLITCH_FILTER_ENABLE << 8)|\
+                                 (RTE_GPIO4_PIN1_DMA_GLITCH_FILTER_ENABLE << 9)|\
+                                 (RTE_GPIO4_PIN2_DMA_GLITCH_FILTER_ENABLE << 10)|\
+                                 (RTE_GPIO4_PIN3_DMA_GLITCH_FILTER_ENABLE << 11)|\
+                                 (RTE_GPIO4_PIN4_DMA_GLITCH_FILTER_ENABLE << 12)|\
+                                 (RTE_GPIO4_PIN5_DMA_GLITCH_FILTER_ENABLE << 13)|\
+                                 (RTE_GPIO4_PIN6_DMA_GLITCH_FILTER_ENABLE << 14)|\
+                                 (RTE_GPIO4_PIN7_DMA_GLITCH_FILTER_ENABLE << 15))
+#else
+#define GPIO4_DMA_GLITCH_FILTER 0
+#endif
+
+#if RTE_GPIO7
+#define GPIO7_DMA_GLITCH_FILTER ((RTE_GPIO7_PIN0_DMA_GLITCH_FILTER_ENABLE << 16)|\
+                                 (RTE_GPIO7_PIN1_DMA_GLITCH_FILTER_ENABLE << 17)|\
+                                 (RTE_GPIO7_PIN2_DMA_GLITCH_FILTER_ENABLE << 18)|\
+                                 (RTE_GPIO7_PIN3_DMA_GLITCH_FILTER_ENABLE << 19)|\
+                                 (RTE_GPIO7_PIN4_DMA_GLITCH_FILTER_ENABLE << 20)|\
+                                 (RTE_GPIO7_PIN5_DMA_GLITCH_FILTER_ENABLE << 21)|\
+                                 (RTE_GPIO7_PIN6_DMA_GLITCH_FILTER_ENABLE << 22)|\
+                                 (RTE_GPIO7_PIN7_DMA_GLITCH_FILTER_ENABLE << 23))
+#else
+#define GPIO7_DMA_GLITCH_FILTER 0
+#endif
+
+#if RTE_GPIO8
+#define GPIO8_DMA_GLITCH_FILTER ((RTE_GPIO8_PIN0_DMA_GLITCH_FILTER_ENABLE << 24)|\
+                                 (RTE_GPIO8_PIN1_DMA_GLITCH_FILTER_ENABLE << 25)|\
+                                 (RTE_GPIO8_PIN2_DMA_GLITCH_FILTER_ENABLE << 26)|\
+                                 (RTE_GPIO8_PIN3_DMA_GLITCH_FILTER_ENABLE << 27)|\
+                                 (RTE_GPIO8_PIN4_DMA_GLITCH_FILTER_ENABLE << 28)|\
+                                 (RTE_GPIO8_PIN5_DMA_GLITCH_FILTER_ENABLE << 29)|\
+                                 (RTE_GPIO8_PIN6_DMA_GLITCH_FILTER_ENABLE << 30)|\
+                                 (RTE_GPIO8_PIN7_DMA_GLITCH_FILTER_ENABLE << 31))
+#else
+#define GPIO8_DMA_GLITCH_FILTER 0
+#endif
+
+#if RTE_GPIO9
+#define GPIO9_DMA_GLITCH_FILTER ((RTE_GPIO9_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
+                                 (RTE_GPIO9_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
+                                 (RTE_GPIO9_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
+                                 (RTE_GPIO9_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
+                                 (RTE_GPIO9_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
+                                 (RTE_GPIO9_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
+                                 (RTE_GPIO9_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
+                                 (RTE_GPIO9_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
+#else
+#define GPIO9_DMA_GLITCH_FILTER 0
+#endif
+
+#if RTE_LPGPIO
+#define LPGPIO_DMA_GLITCH_FILTER ((RTE_LPGPIO_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
+                                  (RTE_LPGPIO_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
+                                  (RTE_LPGPIO_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
+                                  (RTE_LPGPIO_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
+                                  (RTE_LPGPIO_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
+                                  (RTE_LPGPIO_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
+                                  (RTE_LPGPIO_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
+                                  (RTE_LPGPIO_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
+#else
+#define LPGPIO_DMA_GLITCH_FILTER 0
+#endif
+
+
+#define DMA0_GLITCH_FILTER       (GPIO3_DMA_GLITCH_FILTER | \
+                                  GPIO4_DMA_GLITCH_FILTER | \
+                                  GPIO7_DMA_GLITCH_FILTER | \
+                                  GPIO8_DMA_GLITCH_FILTER)
+
+#if (RTE_DMA1)
+#define DMALOCAL_GLITCH_FILTER   (GPIO9_DMA_GLITCH_FILTER)
+#elif (RTE_DMA2)
+#define DMALOCAL_GLITCH_FILTER   (LPGPIO_DMA_GLITCH_FILTER)
+#endif
+
+
+
 #ifdef __cplusplus
 }
 #endif

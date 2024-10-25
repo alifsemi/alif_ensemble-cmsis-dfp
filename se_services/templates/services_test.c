@@ -105,7 +105,7 @@ static uint32_t test_services_bor_en(char *p_test_name, uint32_t services_handle
 #define PLL_XTAL_TESTS_ENABLE       0
 #define CPU_BOOT_SEQUENCE_TEST_ENABLE 0 /* Boot a CPU core using the low level APIs */
 
-#if defined(M55_HE)
+#if defined(M55_HE) || defined(M55_HE_E1C)
 #define CPU_STRING "M55_HE"
 #elif defined(M55_HP)
 #define CPU_STRING "M55_HP"

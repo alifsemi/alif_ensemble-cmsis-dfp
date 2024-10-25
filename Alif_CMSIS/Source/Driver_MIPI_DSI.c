@@ -159,7 +159,8 @@ static int32_t DSI_Initialize (ARM_MIPI_DSI_SignalEvent_t cb_event,
      * PLL frequency = LANEBYTECLK * 4
      *               = PIXCLK * SCALE * 4
      */
-    dsi->frequency = pixclk * 2 * 4;
+
+    dsi->frequency = pixclk *  (24 * 1.333f / (8 * dsi_info->n_lanes)) * 4;
 
     /*Checking LCD Panel supports MIPI DSI DPHY data rate*/
     if((dsi->frequency * 2) > (dsi_info->max_bitrate * 1000000))

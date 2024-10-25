@@ -133,8 +133,8 @@ void vApplicationIdleHook(void)
 }
 
 /* CANFD instance object */
-extern ARM_DRIVER_CAN  Driver_CANFD;
-static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD;
+extern ARM_DRIVER_CAN  Driver_CANFD0;
+static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD0;
 
 /* File Global variables */
 static volatile bool bus_error                  = false;

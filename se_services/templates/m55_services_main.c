@@ -27,7 +27,7 @@
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 
-#if   defined(M55_HE)
+#if   defined(M55_HE) ||defined (M55_HE_E1C)
 #define CPU_STRING "M55_HE"
 #include "M55_HE.h"
 #elif defined(M55_HP)

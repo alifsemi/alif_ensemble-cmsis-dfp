@@ -25,7 +25,7 @@
 #if defined (M55_HP)
   #include "M55_HP.h"
   #include "M55_HP_Config.h"
-#elif defined (M55_HE)
+#elif defined (M55_HE) || defined (M55_HE_E1C)
   #include "M55_HE.h"
   #include "M55_HE_Config.h"
 #else
@@ -59,6 +59,8 @@ extern "C" {
 #define MASK(h,l)           (((~(0U)) << (l)) &  (~(0U) >> (32 - 1 - (h))))
 #define MASK64(h,l)         (((~(0UL)) << (l)) &  (~(0UL) >> (32 - 1 - (h))))
 #endif
+
+#define DIV_ROUND_UP(n, d)                  (((n) + (d) - 1) / (d))
 
 #define BIT(nr)                             (1UL << (nr))
 #define SET_BIT(REG, BIT_Msk)               ((REG) |= (BIT_Msk))

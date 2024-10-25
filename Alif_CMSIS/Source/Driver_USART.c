@@ -51,7 +51,7 @@
 #endif
 
 
-#define ARM_USART_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)  /* driver version */
+#define ARM_USART_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 2)  /* driver version */
 
 /* enable transmit/receive interrupt */
 #define UART_ENABLE_TRANSMITTER_INT                 (1U)    /* enable transmitter interrupt  */
@@ -227,19 +227,14 @@ __STATIC_INLINE int32_t UART_DMA_Allocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Enable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                   dma_periph->evtrtr_cfg.group,
-                                   DMA_ACK_COMPLETION_PERIPHERAL);
-        evtrtr0_enable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                     dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_enable_dma_channel(dma_periph->evtrtr_cfg.channel,
-                                       DMA_ACK_COMPLETION_PERIPHERAL);
-    }
+    evtrtr_enable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                              dma_periph->evtrtr_cfg.channel,
+                              dma_periph->evtrtr_cfg.group,
+                              DMA_ACK_COMPLETION_PERIPHERAL);
+
+    evtrtr_enable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                dma_periph->evtrtr_cfg.channel,
+                                dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -263,16 +258,12 @@ __STATIC_INLINE int32_t UART_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
     }
 
     /* Disable the channel in the Event Router */
-    if(dma_periph->evtrtr_cfg.instance == 0)
-    {
-        evtrtr0_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-        evtrtr0_disable_dma_handshake(dma_periph->evtrtr_cfg.channel,
-                                      dma_periph->evtrtr_cfg.group);
-    }
-    else
-    {
-        evtrtrlocal_disable_dma_channel(dma_periph->evtrtr_cfg.channel);
-    }
+    evtrtr_disable_dma_channel(dma_periph->evtrtr_cfg.instance,
+                               dma_periph->evtrtr_cfg.channel);
+
+    evtrtr_disable_dma_handshake(dma_periph->evtrtr_cfg.instance,
+                                 dma_periph->evtrtr_cfg.channel,
+                                 dma_periph->evtrtr_cfg.group);
 
     return ARM_DRIVER_OK;
 }
@@ -1568,7 +1559,7 @@ static void UART_DMATxCallback(uint32_t event, int8_t peri_num,
         case UART5_DMA_TX_PERIPH_REQ:
         case UART6_DMA_TX_PERIPH_REQ:
         case UART7_DMA_TX_PERIPH_REQ:
-#if defined (M55_HE)
+#if defined (M55_HE) || defined (M55_HE_E1C)
         case LPUART_DMA_TX_PERIPH_REQ:
 #endif
             /* clear the Tx flag. */

@@ -986,6 +986,89 @@
 #endif
 // </e> OV5647_MIPI [Driver_OV5647_MIPI]
 
+// <e> OV5675_MIPI [Driver_OV5675_MIPI]
+// <o> Enable/Disable OV5675 MIPI camera sensor
+//     <0=> disable
+//     <1=> enable
+// <i> define if to enable or disable OV5675 MIPI camera sensor
+// <i> default: enable
+#define RTE_OV5675_CAMERA_SENSOR_ENABLE                  1
+
+#if (RTE_OV5675_CAMERA_SENSOR_ENABLE)
+
+// <o> Select camera OV5675 frequency
+// <i> Defines camera OV5675 frequency
+// <i> Default: 450000000
+#define RTE_OV5675_CAMERA_SENSOR_CSI_FREQ                   450000000
+
+// <o> select OV5675 CSI2 Data type
+// <i> defines select CSI2 Data type
+// <i> default:  0x2B (RAW10)
+#define RTE_OV5675_CAMERA_SENSOR_CSI_DATA_TYPE              0x2B
+
+// <o> select OV5675 number of lanes in DPHY
+// <i> defines select OV5675 number of lanes in DPHY.
+// <i> default: 2 lane
+#define RTE_OV5675_CAMERA_SENSOR_CSI_N_LANES                2
+
+// <o> select OV5675 virtual channel ID
+// <i> defines select OV5675 virtual channel ID.
+// <i> default: 0
+#define RTE_OV5675_CAMERA_SENSOR_CSI_VC_ID                  0
+
+// <o> select OV5675 override CPI color mode
+// <i> defines select OV5675 override CPI color mode.
+// <i> default: 1
+#define RTE_OV5675_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE    1
+
+// <o> select OV5675 CPI color mode
+// <i> defines select OV5675 CPI color mode.
+// <i> default: 2  (IPI-16 RAW 8)
+#define RTE_OV5675_CAMERA_SENSOR_CPI_COLOR_MODE             2
+
+// <o> select OV5675 frame height
+// <i> defines select OV5675 frame height.
+// <i> default: 972
+#define RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT               972
+
+// <o> select OV5675 frame width
+// <i> defines select OV5675 frame width.
+// <i> default: 1296
+#define RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH                1296
+
+// <o> Select camera sensor OV5675 reset pin number
+// <i> Defines camera sensor OV5675 reset pin number
+// <i> Default: 1
+#define RTE_OV5675_CAMERA_SENSOR_RESET_PIN_NO               1
+
+// <o> Select camera sensor OV5675 reset GPIO port
+// <i> Defines camera sensor OV5675 reset GPIO port
+// <i> Default: 9
+#define RTE_OV5675_CAMERA_SENSOR_RESET_GPIO_PORT            9
+
+// <o> Select camera sensor OV5675 power pin number
+// <i> Defines camera sensor OV5675 power pin number
+// <i> Default: 5
+#define RTE_OV5675_CAMERA_SENSOR_POWER_PIN_NO               5
+
+// <o> Select camera sensor OV5675 power GPIO port
+// <i> Defines camera sensor OV5675 power GPIO port
+// <i> Default: 7
+#define RTE_OV5675_CAMERA_SENSOR_POWER_GPIO_PORT            7
+
+// <o RTE_OV5675_CAMERA_SENSOR_I2C_INSTANCE> Select camera sensor OV5675 i2c instance
+// <i> Defines camera sensor OV5675 i2c instance
+//     <0=>   I2C0
+//     <1=>   I2C1
+//     <2=>   I2C2
+//     <3=>   I2C3
+//     <I3C=> I2C OVER I3C
+// <i> Default: 1
+#define RTE_OV5675_CAMERA_SENSOR_I2C_INSTANCE               1
+
+#endif
+// </e> OV5675_MIPI [Driver_OV5675_MIPI]
+
 #endif
 // </e> MIPI_CSI2 (mipi csi2) [Driver_MIPI_CSI2]
 
@@ -1494,13 +1577,18 @@
 
 // <e> I3C (Improved Inter-Integrated Circuit) [Driver_I3C]
 // <i> Configuration settings for Driver_I3C in component ::Drivers:I3C
-#define RTE_I3C   1
+#define RTE_I3C                             1
+
 #if RTE_I3C
-#define RTE_I3C_IRQ_PRI       0
+
+// <o> I3C IRQ priority <0-255>
+// <i> Defines I3C  Interrupt priority
+// <i> Default: 0
+#define RTE_I3C_IRQ_PRI                     0
 
 // <e> I2C (Inter Integrated Circuit) [Driver_I2CI3C]
 // <i> Configuration settings for Driver_I2CI3C in component ::Drivers:I2CI3C
-#define RTE_I2CI3C            1
+#define RTE_I2CI3C                          1
 // </e> I2C (Inter Integrated Circuit) [Driver_I2CI3C]
 
 // <o> I3C DMA ENABLE
@@ -1508,26 +1596,26 @@
 //    <1=> ENABLE
 // <i> Defines DMA feature for I3C
 // <i> Default: DISABLE
-#define RTE_I3C_DMA_ENABLE   0
+#define RTE_I3C_DMA_ENABLE                  0
 
 // <o> I3C DMA Selection
 //    <0=> DMA2(M55-HE)
 //    <1=> DMA0
 // <i> Defines Select DMA0 for I3C. By default DMA0 will be considered
 // <i> Default: DMA0
-#define RTE_I3C_SELECT_DMA0  1
+#define RTE_I3C_SELECT_DMA0                 1
 
 // <o> I3C DMA IRQ priority <0-255>
 // <i> Defines I3C DMA Interrupt priority
 // <i> Default: 0
-#define RTE_I3C_DMA_IRQ_PRI  0
+#define RTE_I3C_DMA_IRQ_PRI                 0
 
 // <o> I3C blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
 // <i> Defines Blocking mode support for I3C
 // <i> Default: DISABLE
-#define RTE_I3C_BLOCKING_MODE_ENABLE    0
+#define RTE_I3C_BLOCKING_MODE_ENABLE        0
 
 // <o> I3C Slave I2C/I3C Adaptive mode Enable
 //    <0=> DISABLE
@@ -8061,6 +8149,21 @@
 // <i> Defines RX FIFO threshold for I2C0.
 // <i> Default: 16
 #define RTE_I2C0_RX_FIFO_THRESHOLD   16
+
+// <o> I2C0 DMA ENABLE
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines DMA feature for I2C0
+// <i> Default: DISABLE
+#define RTE_I2C0_DMA_ENABLE          0
+#if RTE_I2C0_DMA_ENABLE
+
+// <o> I2C0 DMA IRQ priority <0-255>
+// <i> Defines I2C0 DMA Interrupt priority
+// <i> Default: 0
+#define RTE_I2C0_DMA_IRQ_PRI         0
+#endif
+
 #endif
 // </e> I2C (Inter Integrated Circuit) [Driver_I2C0]
 
@@ -8083,6 +8186,21 @@
 // <i> Defines RX FIFO threshold for I2C1.
 // <i> Default: 16
 #define RTE_I2C1_RX_FIFO_THRESHOLD   16
+
+// <o> I2C1 DMA ENABLE
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines DMA feature for I2C1
+// <i> Default: DISABLE
+#define RTE_I2C1_DMA_ENABLE          0
+#if RTE_I2C1_DMA_ENABLE
+
+// <o> I2C1 DMA IRQ priority <0-255>
+// <i> Defines I2C1 DMA Interrupt priority
+// <i> Default: 0
+#define RTE_I2C1_DMA_IRQ_PRI         0
+#endif
+
 #endif
 // </e> I2C (Inter Integrated Circuit) [Driver_I2C1]
 
@@ -8105,6 +8223,21 @@
 // <i> Defines RX FIFO threshold for I2C2.
 // <i> Default: 16
 #define RTE_I2C2_RX_FIFO_THRESHOLD   16
+
+// <o> I2C2 DMA ENABLE
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines DMA feature for I2C2
+// <i> Default: DISABLE
+#define RTE_I2C2_DMA_ENABLE          0
+#if RTE_I2C2_DMA_ENABLE
+
+// <o> I2C2 DMA IRQ priority <0-255>
+// <i> Defines I2C2 DMA Interrupt priority
+// <i> Default: 0
+#define RTE_I2C2_DMA_IRQ_PRI         0
+#endif
+
 #endif
 // </e> I2C (Inter Integrated Circuit) [Driver_I2C2]
 
@@ -8128,6 +8261,21 @@
 // <i> Defines RX FIFO threshold for I2C3.
 // <i> Default: 16
 #define RTE_I2C3_RX_FIFO_THRESHOLD   16
+
+// <o> I2C3 DMA ENABLE
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines DMA feature for I2C3
+// <i> Default: DISABLE
+#define RTE_I2C3_DMA_ENABLE          0
+#if RTE_I2C3_DMA_ENABLE
+
+// <o> I2C3 DMA IRQ priority <0-255>
+// <i> Defines I2C3 DMA Interrupt priority
+// <i> Default: 0
+#define RTE_I2C3_DMA_IRQ_PRI         0
+#endif
+
 #endif
 // </e> I2C (Inter Integrated Circuit) [Driver_I2C3]
 
@@ -8141,6 +8289,12 @@
 // <i> defines LPI2C interrupt priority
 // <i> default: 0
 #define RTE_LPI2C_IRQ_PRIORITY       0
+
+// <o> LPI2C Bus-Speed <1-400000>
+// <i> defines LPI2C Bus-Speed - It is used for Bit-time calculation in driver
+// <i> default: 400KHz
+#define RTE_LPI2C_BUS_SPEED          400000
+
 #endif
 // </e> LPI2C (Low Power Inter-Integrated Circuit) [Driver_LPI2C]
 #endif //defined(M55_HE)
@@ -9490,40 +9644,40 @@
 // </h> LPPDM (Low Power Pulse density modulation)
 
 // <h> CANFD (Controller Area Network - Fast Mode)
-// <e> CANFD (Controller Area Network - Fast Mode Interface) [Driver_CANFD]
-// <i> Configuration settings for Driver_CANFD in component ::Drivers:CANFD
-#define RTE_CANFD 1
+// <e> CANFD0 (Controller Area Network - Fast Mode Interface) [Driver_CANFD0]
+// <i> Configuration settings for Driver_CANFD0 in component ::Drivers:CANFD
+#define RTE_CANFD0                           1
 
-#ifdef RTE_CANFD
+#if RTE_CANFD0
 
-// <o> CANFD IRQ priority <0-255>
-// <i> Defines Interrupt priority for CANFD.
+// <o> CANFD0 IRQ priority <0-255>
+// <i> Defines Interrupt priority for CANFD0.
 // <i> Default: 0
-#define RTE_CANFD_IRQ_PRIORITY              0
+#define RTE_CANFD0_IRQ_PRIORITY              0
 
-// <o> CANFD Clock Source
+// <o> CANFD0 Clock Source
 //    <0=> 38.4 MHz Clock
 //    <1=> 160 MHz Clock
-// <i> Defines Clock Source for CANFD.
+// <i> Defines Clock Source for CANFD0.
 // <i> Default: 160 MHz
-#define RTE_CANFD_CLK_SOURCE                1
+#define RTE_CANFD0_CLK_SOURCE                1
 
-// <o> CANFD Clock Speed (Hz) <160000-80000000>
-// <i> Defines Clock Speed for CANFD.
+// <o> CANFD0 Clock Speed (Hz) <160000-80000000>
+// <i> Defines Clock Speed for CANFD0.
 // <i> Maximum Clock speed is 80MHz
 // <i> Recommended speeds with 160MHz clock source: 20MHz, 40MHz, 80MHz
 // <i> Default: 20MHz
-#define RTE_CANFD_CLK_SPEED                 20000000
+#define RTE_CANFD0_CLK_SPEED                 20000000
 
-// <o> CANFD blocking mode enable
+// <o> CANFD0 blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
-// <i> Defines Blocking mode support for CANFD
+// <i> Defines Blocking mode support for CANFD0
 // <i> Default: DISABLE
-#define RTE_CANFD_BLOCKING_MODE_ENABLE      0
+#define RTE_CANFD0_BLOCKING_MODE_ENABLE      0
 
 #endif
-// </e> CANFD (Controller Area Network - Fast Mode Interface) [Driver_CANFD]
+// </e> CANFD0 (Controller Area Network - Fast Mode Interface) [Driver_CANFD0]
 // </h> CANFD (Controller Area Network - Fast Mode)
 
 // <h> SDC (Secure Digital Controller)

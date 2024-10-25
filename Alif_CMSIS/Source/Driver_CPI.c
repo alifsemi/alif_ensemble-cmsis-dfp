@@ -557,6 +557,9 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sen
 
             cpi_info.csi_ipi_color_mode          = camera_sensor->cpi_info->csi_mode;
 
+#if (DEVICE_FEATURE_CPI_CROP_SEQ_CTRL)
+            enable_cpi_crop_seq_ctrl();
+#endif
             cpi_set_config(CPI->regs, &cpi_info);
 
             break;

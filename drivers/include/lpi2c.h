@@ -51,20 +51,25 @@ typedef struct _LPI2C_XFER_INFO_T
 } LPI2C_XFER_INFO_T;
 
 /**
- * @func   : void lpi2c_wr_tx_fifo(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
+ * @func   : void lpi2c_send(LPI2C_TYPE *lpi2c,
+ *                                 LPI2C_XFER_INFO_T *transfer,
+ *                                 const uint32_t delay)
  * @brief  : writing to the register for transmit data
  * @param  : lpi2c    : Pointer to lpi2c register map
  * @param  : transfer : Pointer to LPI2C_XFER_INFO_T
- * @retval : callback event
+ * @param  : delay    : delay in us
+ * @retval : none
  */
-void lpi2c_send(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer);
+void lpi2c_send(LPI2C_TYPE *lpi2c,
+                LPI2C_XFER_INFO_T *transfer,
+                const uint32_t delay);
 
 /**
  * @func   : void lpi2c_irq_handler(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
  * @brief  : lpi2c irq handler
  * @param  : lpi2c    : Pointer to lpi2c register map
  * @param  : transfer : Pointer to LPI2C_XFER_INFO_T
- * @retval : callback event
+ * @retval : none
  */
 void lpi2c_irq_handler(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer);
 

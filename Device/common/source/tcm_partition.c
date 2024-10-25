@@ -27,7 +27,7 @@
 
 #if defined (M55_HP)
   #include "M55_HP.h"
-#elif defined (M55_HE)
+#elif defined (M55_HE) || defined (M55_HE_E1C)
   #include "M55_HE.h"
 #else
   #error device not specified!
@@ -78,8 +78,17 @@ __STATIC_INLINE void SAU_TCM_NS_Setup (void)
 
 void setup_tcm_ns_partition (void)
 {
-    /* Do nothing if partitions are not defined in the linker script */
-    if (&ns_region_0_end == &ns_region_0_start)
+    int32_t ret = 0;
+
+    __asm volatile (
+        "cmp %1, %2\n\t"
+        "cset %0, eq\n\t"
+        : "=r" (ret)
+        : "r" (&ns_region_0_start), "r" (&ns_region_0_end)
+        : "cc"
+    );
+    /* Do nothing if partitions are not defined/not used in the linker script */
+    if (ret)
         return;
 
     SAU_TCM_NS_Setup();

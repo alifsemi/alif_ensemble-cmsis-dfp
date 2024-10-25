@@ -26,7 +26,7 @@
 
 #if defined (M55_HP)
   #include "M55_HP_map.h"
-#elif defined (M55_HE)
+#elif defined (M55_HE) || defined (M55_HE_E1C)
   #include "M55_HE_map.h"
 #else
   #error device not specified!

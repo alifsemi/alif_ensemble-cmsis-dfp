@@ -24,7 +24,7 @@
 
 #if defined (M55_HP)
   #include "M55_HP_map.h"
-#elif defined (M55_HE)
+#elif defined (M55_HE) || defined (M55_HE_E1C)
   #include "M55_HE_map.h"
 #else
   #error device not specified!
@@ -236,6 +236,24 @@ typedef struct {                                /*!< (@ 0x4903F000) CLKCTL_PER_M
 #define EXPMST0_CTRL_PDM_CKEN               (1U << 8)                       /* PDM Clock Enable                        */
 #define EXPMST0_CTRL_BKRAM_CKEN             (1U << 4)                       /* Backup SRAM Clock Enable                */
 
+/* CLKCTL_PER_SLV CANFD_CTRL CANFD Control field definitions */
+#if DEVICE_FEATURE_CANFD0_CANFD1_CONTROL
+#define CANFD1_CTRL_FD_ENA                   (1U << 26U)                    /* CANFD1 FD Enable                        */
+#define CANFD1_CTRL_CLK_SEL_Pos              (25U)                          /* CANFD1 Clock Selection                  */
+#define CANFD1_CTRL_CKEN                     (1U << 24U)                    /* CANFD1 Clock Enable                     */
+#define CANFD1_CTRL_CKDIV_Pos                (16U)                          /* CANFD1 Clock Divisor position           */
+
+#define CANFD0_CTRL_FD_ENA                   (1U << 10U)                    /* CANFD0 FD Enable                        */
+#define CANFD0_CTRL_CLK_SEL_Pos              (9U)                           /* CANFD0 Clock Selection                  */
+#define CANFD0_CTRL_CKEN                     (1U << 8U)                     /* CANFD0 Clock Enable                     */
+#define CANFD0_CTRL_CKDIV_Pos                (0U)                           /* CANFD0 Clock Divisor position           */
+
+#else
+#define CANFD0_CTRL_FD_ENA                   (1U << 20U)                    /* CANFD0 FD Enable                        */
+#define CANFD0_CTRL_CLK_SEL_Pos              (16U)                          /* CANFD0 Clock Selection                  */
+#define CANFD0_CTRL_CKEN                     (1U << 12U)                    /* CANFD0 Clock Enable                     */
+#define CANFD0_CTRL_CKDIV_Pos                (0U)                           /* CANFD0 Clock Divisor position           */
+#endif
 
 /* CLKCTL_PER_SLV I2Sn_CTRL I2S Control field definitions */
 #define I2S_CTRL_SCLK_AON                   (1U << 20)                      /* SCLK Always On                          */
@@ -265,6 +283,9 @@ typedef struct {                                /*!< (@ 0x4903F000) CLKCTL_PER_M
 
 /* CLKCTL_PER_SLV GPIO_CTRLn field definitions */
 #define GPIO_CTRL_DB_CKEN                   (1U  << 12U) /* GPIO Debounce clock enable */
+#ifdef DEVICE_FEATURE_GPIO_HAS_CLOCK_ENABLE
+#define GPIO_CTRL_CKEN                      (1U  << 16U) /* GPIO clock enable */
+#endif
 
 /* CLKCTL_PER_SLV DAC field definitions */
 #define DAC_CTRL_DAC0_CKEN                  (1U  <<  0U) /* DAC0 clock enable */
@@ -275,6 +296,9 @@ typedef struct {                                /*!< (@ 0x4903F000) CLKCTL_PER_M
 #define CMP_CTRL_CMP1_CLKEN                (1U << 4U)  /* Enable CMP1 clock */
 #define CMP_CTRL_CMP2_CLKEN                (1U << 8U)  /* Enable CMP2 clock */
 #define CMP_CTRL_CMP3_CLKEN                (1U << 12U) /* Enable CMP3 clock */
+
+/* CLKCTL_PER_SLV OSPI CTRL field definitions */
+#define OSPI_CTRL_CKEN                     (1U << 0U) /* Enable OSPI clock */
 
 typedef struct {                                /*!< (@ 0x4902F000) CLKCTL_PER_SLV Structure                                   */
   __IOM uint32_t  EXPMST0_CTRL;                 /*!< (@ 0x00000000) Clock Control Register                                     */
@@ -292,7 +316,11 @@ typedef struct {                                /*!< (@ 0x4902F000) CLKCTL_PER_S
   __IOM uint32_t  ADC_CTRL;                     /*!< (@ 0x00000030) ADC Control Register                                       */
   __IOM uint32_t  DAC_CTRL;                     /*!< (@ 0x00000034) DAC Control Register                                       */
   __IOM uint32_t  CMP_CTRL;                     /*!< (@ 0x00000038) CMP Control Register                                       */
+#ifdef DEVICE_FEATURE_OSPI_CTRL_CLK_ENABLE
+  __IOM uint32_t  OSPI_CTRL;                    /*!< (@ 0x0000003C) OSPI Control Register                                      */
+#else
   __IM  uint32_t  RESERVED3;
+#endif
   __IOM uint32_t  FREQ_MON_CTRL0;               /*!< (@ 0x00000040) Frequency Monitor 0 Control Register                       */
   __IM  uint32_t  FREQ_MON_STAT0;               /*!< (@ 0x00000044) Frequency Monitor 0 Status Register                        */
   __IOM uint32_t  FREQ_MON_CTRL1;               /*!< (@ 0x00000048) Frequency Monitor 1 Control Register                       */
@@ -357,8 +385,10 @@ typedef struct {                                /*!< (@ 0x1A609000) VBAT Structu
 /* =========================================================================================================================== */
 /* ================                                         M55HE_CFG                                         ================ */
 /* =========================================================================================================================== */
+#ifdef DEVICE_FEATURE_DMALOCAL_DMASEL_GPIO_GLITCH_FILTER_ENABLE
 #define HE_DMA_SEL_FLT_ENA_Pos                   (24)                                 /* Glitch filter Pos for LPGPIO    */
 #define HE_DMA_SEL_FLT_ENA_Msk                   (0xFF)                               /* Glitch filter Mask for LPGPIO   */
+#endif
 #define HE_DMA_SEL_PDM_DMA0                      (1U << 16)                           /* Select DMA0 for LPPDM           */
 #define HE_DMA_SEL_I2S_DMA0                      (1U << 12)                           /* Select DMA0 for LPI2S           */
 #define HE_DMA_SEL_LPSPI_Pos                     (4)                                  /* Pos to Select DMA0 for LPSPI    */
@@ -373,9 +403,12 @@ typedef struct {                                /*!< (@ 0x1A609000) VBAT Structu
   */
 
 /* M55HE_CFG HE_CLK_ENA field definitions */
-#define HE_CLK_ENA_LPCPI_CKEN              (1U << 12)   /* Enable LPCPI clock */
-#define HE_CLK_ENA_SPI_CKEN                (1U << 16U)  /* Enable LPSPI clock */
-#define HE_CLK_ENA_PDM_CKEN                (1U << 8)    /* Enable LPPDM clock */
+#define HE_CLK_ENA_SPI_CKEN                     (1U << 16)  /* Enable LPSPI clock */
+#ifndef DEVICE_FEATURE_LPSPI_MASTER_ONLY
+#define HE_CLK_ENA_SPI_MODE_SLAVE               (1U << 15)   /* Configure LPSPI as slave */
+#endif
+#define HE_CLK_ENA_LPCPI_CKEN                   (1U << 12)   /* Enable LPCPI clock */
+#define HE_CLK_ENA_PDM_CKEN                     (1U << 8)    /* Enable LPPDM clock */
 
 /* M55HE_CFG HE_CAMERA_PIXCLK field definitions */
 #define HE_CAMERA_PIXCLK_CTRL_CKEN              (1U << 0)
@@ -391,6 +424,12 @@ typedef struct {                                /*!< (@ 0x43007000) M55HE_CFG St
   __IOM uint32_t  HE_I2S_CTRL;                  /*!< (@ 0x00000014) LPI2S Control Register                                     */
   __IM  uint32_t  RESERVED[2];
   __IOM uint32_t  HE_CAMERA_PIXCLK;             /*!< (@ 0x00000020) LPCPI Pixel Clock Control Register                         */
+#ifdef DEVICE_FEATURE_DMA2_GPIO_GLITCH_FILTER_ENABLE0
+  __IOM uint32_t  HE_FLT_ENA0;                  /*!< (@ 0x00000024) DMA Glitch Filter Enable0 Register                         */
+#endif
+#ifdef DEVICE_FEATURE_DMA2_GPIO_GLITCH_FILTER_ENABLE1
+  __IOM uint32_t  HE_FLT_ENA1;                  /*!< (@ 0x00000028) DMA Glitch Filter Enable1 Register                         */
+#endif
 } M55HE_CFG_Type;
 
 /**
@@ -642,7 +681,7 @@ typedef struct {                                /*!< (@ 0x400E2000) EVTRTR1 Stru
 #define M55LOCAL_CFG                ((M55_CFG_Common_Type*)    M55HP_CFG_BASE)
 #define EVTRTRLOCAL                 ((EVTRTR1_Type*)           EVTRTR1_BASE)
 #endif
-#if defined(M55_HE)
+#if defined(M55_HE) || defined (M55_HE_E1C)
 #define M55LOCAL_CFG                ((M55_CFG_Common_Type*)    M55HE_CFG_BASE)
 #define EVTRTRLOCAL                 ((EVTRTR1_Type*)           EVTRTR2_BASE)
 #endif

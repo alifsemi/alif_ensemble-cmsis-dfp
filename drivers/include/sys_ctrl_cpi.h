@@ -36,6 +36,22 @@ typedef enum _CPI_PIX_CLKSEL
     CPI_PIX_CLKSEL_480MZ                    /**< Select 480 MHz clock source (PLL_CLK3) */
 }CPI_PIX_CLKSEL;
 
+#if (DEVICE_FEATURE_CPI_CROP_SEQ_CTRL)
+/* CPI cropping and sequential capture*/
+#define CAM_CROP_SEQ_CTRL_BASE_ADDR                    0x43007028
+#define CAM_ENABLE_CROP_SEQ_CTRL                       (3U << 30)
+
+/**
+  \fn          void enable_cpi_crop_seq_ctrl(void)
+  \brief       Enable clock supply for CPI controller.
+  \return      none.
+*/
+static inline void enable_cpi_crop_seq_ctrl (void)
+{
+    *((volatile uint32_t *)CAM_CROP_SEQ_CTRL_BASE_ADDR) = CAM_ENABLE_CROP_SEQ_CTRL;
+}
+#endif
+
 /**
   \fn          void enable_cpi_periph_clk(void)
   \brief       Enable clock supply for CPI controller.

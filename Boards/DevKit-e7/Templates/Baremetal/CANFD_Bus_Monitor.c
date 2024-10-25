@@ -66,8 +66,8 @@
 #define CANFD_MAX_MSG_SIZE                  64U
 
 /* CANFD instance object */
-extern ARM_DRIVER_CAN  Driver_CANFD;
-static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD;
+extern ARM_DRIVER_CAN  Driver_CANFD0;
+static ARM_DRIVER_CAN* CANFD_instance           = &Driver_CANFD0;
 
 /* File Global variables */
 static volatile bool msg_rx_complete            = false;
@@ -324,7 +324,7 @@ static void canfd_lom_demo_thread_entry(void)
        goto power_off_canfd;
     }
 
-    /* Setting CANFD to Normal mode */
+    /* Setting CANFD to Bus Monitor mode */
     ret_val = CANFD_instance->SetMode(ARM_CAN_MODE_MONITOR);
     if(ret_val != ARM_DRIVER_OK)
     {

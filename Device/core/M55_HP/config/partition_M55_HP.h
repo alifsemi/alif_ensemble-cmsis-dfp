@@ -81,6 +81,9 @@
 #elif defined ( __GNUC__ )
   extern const uint32_t __ns_region_0_start;
   #define SAU_INIT_START0     (uint32_t)&__ns_region_0_start /* start address of SAU region 0 */
+#elif defined ( __ICCARM__ )
+  extern const uint32_t NS_REGION_0$$Base;
+  #define SAU_INIT_START0     (uint32_t)&NS_REGION_0$$Base
 #else
   #error Unknown compiler.
 #endif
@@ -94,6 +97,9 @@
 #elif defined ( __GNUC__ )
   extern const uint32_t __ns_region_0_end;
   #define SAU_INIT_END0       ((uint32_t)&__ns_region_0_end - 1) /* end address of SAU region 0 */
+#elif defined ( __ICCARM__ )
+  extern const uint32_t NS_REGION_0$$Limit;
+  #define SAU_INIT_END0       ((uint32_t)&NS_REGION_0$$Limit - 1)
 #else
   #error Unknown compiler.
 #endif

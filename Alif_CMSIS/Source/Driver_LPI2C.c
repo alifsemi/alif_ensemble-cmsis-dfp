@@ -11,7 +11,16 @@
 /* system includes */
 #include "Driver_LPI2C_Private.h"
 
-#define ARM_I2C_DRV_VERISON ARM_DRIVER_VERSION_MAJOR_MINOR(0,0) /*DRIVER VERSION*/
+#define ARM_I2C_DRV_VERISON ARM_DRIVER_VERSION_MAJOR_MINOR(0,1) /*DRIVER VERSION*/
+
+/* 1 Mega bits */
+#define LPI2C_1_MEGA_BIT 1000000
+
+#if !RTE_LPI2C_BUS_SPEED
+    #error "Invalid LPI2C Bitrate"
+#else
+    #define LPI2C_1BYTE_TIME (DIV_ROUND_UP(LPI2C_1_MEGA_BIT, RTE_LPI2C_BUS_SPEED) * 8)
+#endif
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {
@@ -76,7 +85,6 @@ static int32_t ARM_LPI2C_Initialize(ARM_I2C_SignalEvent_t cb_event,
  */
 static int32_t ARM_LPI2C_Uninitialize(LPI2C_RESOURCES *LPI2C)
 {
-
   /* check lpi2c driver is initialized or not */
   if (LPI2C->state.initialized == 0)
       return ARM_DRIVER_OK;
@@ -176,9 +184,6 @@ static int32_t ARM_LPI2C_SlaveTransmit(LPI2C_RESOURCES *LPI2C,
   if (LPI2C->state.powered == 0)
       return ARM_DRIVER_ERROR;
 
-  if ((data == NULL) || (num > 8U))
-    return ARM_DRIVER_ERROR_PARAMETER;
-
   if (LPI2C->status.busy == 1U)
     return ARM_DRIVER_ERROR;
 
@@ -194,13 +199,15 @@ static int32_t ARM_LPI2C_SlaveTransmit(LPI2C_RESOURCES *LPI2C,
   LPI2C->transfer.rx_curr_cnt  = 0U;
 
   /* Writing data to fifo */
-  lpi2c_send(LPI2C->regs, &LPI2C->transfer);
+  lpi2c_send(LPI2C->regs, &LPI2C->transfer, LPI2C_1BYTE_TIME);
 
   if(LPI2C->transfer.status & LPI2C_XFER_STAT_COMPLETE)
   {
       LPI2C->status.busy = 0U;
       /* receive complete successfully. */
       LPI2C->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+
+      LPI2C->transfer.status = LPI2C_XFER_STAT_NONE;
   }
 
   return ARM_DRIVER_OK;
@@ -231,9 +238,6 @@ static int32_t ARM_LPI2C_SlaveReceive(LPI2C_RESOURCES *LPI2C,
   /* check lpi2c driver is powered or not */
   if (LPI2C->state.powered == 0)
       return ARM_DRIVER_ERROR;
-
-  if ((data == NULL) || (num > 8U))
-    return ARM_DRIVER_ERROR_PARAMETER;
 
   if (LPI2C->status.busy == 1U)
     return ARM_DRIVER_ERROR;
@@ -301,18 +305,18 @@ void LPI2C_IRQHandler(void)
 {
   LPI2C_RESOURCES *res = &LPI2C_RES;
 
-  LPI2C_TYPE *lpi2c = (LPI2C_RES.regs);
-  LPI2C_XFER_INFO_T *transfer = &(LPI2C_RES.transfer);
+  LPI2C_XFER_INFO_T *transfer = &(res->transfer);
 
-      /* Storing receive value to the buffer */
-      transfer->rx_buf[transfer->rx_curr_cnt++] = lpi2c->LPI2C_DATA;
+  lpi2c_irq_handler(res->regs, &(res->transfer));
 
-      if (transfer->rx_curr_cnt == (transfer->rx_total_num))
-      {
-         res->status.busy = 0U;
-         /* receive complete successfully. */
-         res->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
-      }
+  if(transfer->status == LPI2C_XFER_STAT_COMPLETE)
+  {
+     res->status.busy = 0U;
+     /* receive complete successfully. */
+     res->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+
+     transfer->status = LPI2C_XFER_STAT_NONE;
+  }
 }
 
 static int32_t LPI2C_Initialize (ARM_I2C_SignalEvent_t cb_event)

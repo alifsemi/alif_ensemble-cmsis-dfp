@@ -35,6 +35,12 @@
 
 #if PDM_DMA_ENABLE
 #include <DMA_Common.h>
+#include "dma_opcode.h"
+#include "dma_config.h"
+#endif
+
+#if PDM_DMA_ENABLE
+#define PDM_DMA_MICROCODE_SIZE 128
 #endif
 
 /**
@@ -72,11 +78,12 @@ typedef struct _PDM_RESOURCES
     PDM_INSTANCE                      instance;             /* PDM Driver instance                */
     uint8_t                           fifo_watermark;       /* PDM fifo watermark value           */
     ARM_PDM_STATUS                    status;               /* PDM Driver status                  */
-    #if PDM_DMA_ENABLE
+#if PDM_DMA_ENABLE
     ARM_DMA_SignalEvent_t             dma_cb;               /* PDM DMA Callback                   */
     PDM_DMA_HW_CONFIG                *dma_cfg;              /* DMA controller configuration       */
     bool                              dma_enable;           /* PDM instance DMA enable            */
     uint8_t                           dma_irq_priority;     /* PDM instance DMA irq priority      */
+    uint8_t                           dma_mcode[PDM_DMA_MICROCODE_SIZE]; /* PDM DMA microcode size */
 #endif
 #if PDM_BLOCKING_MODE_ENABLE
     bool                              blocking_mode;        /* PDM blocking mode transfer enable  */

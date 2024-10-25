@@ -226,7 +226,7 @@ typedef enum {
   NPU_HE_IRQ_IRQn                =  55,
   LPCMP_IRQ_IRQn                 =  56,
   LPGPIO_COMB_IRQ_IRQn      =  57,              /*!< 57 LPGPIO combined interrupt request                                      */
-  LPRTC_IRQ_IRQn                 =  58,
+  LPRTC0_IRQ_IRQn                =  58,
   LPTIMER0_IRQ_IRQn              =  60,
   LPTIMER1_IRQ_IRQn              =  61,
   LPTIMER2_IRQ_IRQn              =  62,
@@ -259,7 +259,7 @@ typedef enum {
   USB_IRQ_IRQn              = 101,              /*!< 101  USB interrupt                                                        */
   SDMMC_IRQ_IRQn            = 102,              /*!< 102  SDMMC Interrupt request                                              */
   SDMMC_WAKEUP_IRQ_IRQn     = 103,              /*!< 103  SDMMC Wakeup event interrupt request                                 */
-  CANFD_IRQ_IRQn            = 104,              /*!< 104  CANFD Interrupt request                                              */
+  CANFD0_IRQ_IRQn           = 104,              /*!< 104  CANFD0 Interrupt request                                             */
   HWSEM_IRQ0_IRQn           = 105,              /*!< 105  HWSEM interrupt request 0                                            */
   HWSEM_IRQ1_IRQn           = 106,              /*!< 106  HWSEM interrupt request 1                                            */
   HWSEM_IRQ2_IRQn           = 107,              /*!< 107  HWSEM interrupt request 2                                            */

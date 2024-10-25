@@ -26,7 +26,6 @@
 /* PINMUX Driver */
 #include "pinconf.h"
 #include "RTE_Components.h"
-#include CMSIS_device_header
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
 #endif  /* RTE_Compiler_IO_STDOUT */

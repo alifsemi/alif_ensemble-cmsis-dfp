@@ -17,6 +17,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include "soc_feature.h"
 
 /**
  @brief struct CMP_Type:- Register map for Analog Comparator
@@ -40,7 +41,9 @@ typedef struct {                                     /*!< CMP Structure         
 #define LPCMP_ENABLE                   (1U << 24)    /* To enable the LPCMP                          */
 
 #define CMP_FILTER_CONTROL_ENABLE      (1U << 0)     /* To enable the filter control                 */
-#define CMP_WINDOW_CONTROL_ENABLE      (3U << 0)     /* To enable the window control                 */
+
+#define CMP_WINDOW_CONTROL_ENABLE      DEVICE_FEATURE_HSCMP_WINDOW_FUNCTION_ENABLE /* To enable the window control */
+
 #define CMP_PRESCALER_MAX_VALUE        (0x3FU)       /* Maximum value of prescaler control           */
 #define CMP_POLARITY_MAX_VALUE         (0x2U)        /* Maximum value of polarity control            */
 #define CMP_WINDOW_MAX_VALUE           (0x3U)        /* Maximum value of window control              */
@@ -51,6 +54,9 @@ typedef struct {                                     /*!< CMP Structure         
 #define CMP_INTERRUPT_CLEAR            (0x01UL)      /* To clear the interrupt                       */
 
 #define LPCMP_MSK_CTRL_VAL             (0xFEU << 24) /* Mask all LPCMP configuration value           */
+
+#define CMP_FILTER_EVENT0_CLEAR        (1U << 0)     /* Clear FILTER_EVENT0 interrupt                */
+#define CMP_FILTER_EVENT1_CLEAR        (1U << 1)     /* Clear FILTER_EVENT1 interrupt                */
 
 /**
   @fn          void cmp_enable_interrupt(CMP_Type *cmp)

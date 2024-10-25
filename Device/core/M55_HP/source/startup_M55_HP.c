@@ -150,7 +150,7 @@ void USB_IRQHandler          (void) __attribute__ ((weak, alias("Default_Handler
 void SDMMC_IRQHandler        (void) __attribute__ ((weak, alias("Default_Handler")));
 void SDMMC_WAKEUP_IRQHandler (void) __attribute__ ((weak, alias("Default_Handler")));
 
-void CANFD_IRQHandler       (void) __attribute__ ((weak, alias("Default_Handler")));
+void CANFD0_IRQHandler       (void) __attribute__ ((weak, alias("Default_Handler")));
 
 void HWSEM_IRQ0Handler      (void) __attribute__ ((weak, alias("Default_Handler")));
 void HWSEM_IRQ1Handler      (void) __attribute__ ((weak, alias("Default_Handler")));
@@ -433,7 +433,7 @@ void LPTIMER1_IRQHandler    (void) __attribute__ ((weak, alias("Default_Handler"
 void LPTIMER2_IRQHandler    (void) __attribute__ ((weak, alias("Default_Handler")));
 void LPTIMER3_IRQHandler    (void) __attribute__ ((weak, alias("Default_Handler")));
 
-void LPRTC_IRQHandler       (void) __attribute__ ((weak, alias("Default_Handler")));
+void LPRTC0_IRQHandler      (void) __attribute__ ((weak, alias("Default_Handler")));
 
 void QEC0_CMPA_IRQHandler   (void) __attribute__ ((weak, alias("Default_Handler")));
 void QEC0_CMPB_IRQHandler   (void) __attribute__ ((weak, alias("Default_Handler")));
@@ -629,7 +629,7 @@ extern const VECTOR_TABLE_Type __VECTOR_TABLE[496];
   NPU_HP_IRQHandler,                        /*   55 Interrupt 55 */
   LPCMP_IRQHandler,                         /*   56 Interrupt 56 */
   LPGPIO_COMB_IRQHandler,                   /*   57 Interrupt 57 */
-  LPRTC_IRQHandler,                         /*   58 Interrupt 58 */
+  LPRTC0_IRQHandler,                        /*   58 Interrupt 58 */
   0,                                        /*   59 Reserved Interrupt 59 */
   LPTIMER0_IRQHandler,                      /*   60 Interrupt 60 */
   LPTIMER1_IRQHandler,                      /*   61 Interrupt 61 */
@@ -675,7 +675,7 @@ extern const VECTOR_TABLE_Type __VECTOR_TABLE[496];
   USB_IRQHandler,                           /*   101 Interrupt 101 */
   SDMMC_IRQHandler,                         /*   102 Interrupt 102 */
   SDMMC_WAKEUP_IRQHandler,                  /*   103 Interrupt 103 */
-  CANFD_IRQHandler,                         /*   104 Interrupt 104 */
+  CANFD0_IRQHandler,                        /*   104 Interrupt 104 */
   HWSEM_IRQ0Handler,                        /*   105 Interrupt 105 */
   HWSEM_IRQ1Handler,                        /*   106 Interrupt 106 */
   HWSEM_IRQ2Handler,                        /*   107 Interrupt 107 */
@@ -921,7 +921,7 @@ extern const VECTOR_TABLE_Type __VECTOR_TABLE[496];
   LPTIMER1_IRQHandler,                      /*   347 Interrupt 347 */
   LPTIMER2_IRQHandler,                      /*   348 Interrupt 348 */
   LPTIMER3_IRQHandler,                      /*   349 Interrupt 349 */
-  LPRTC_IRQHandler,                         /*   350 Interrupt 350 */
+  LPRTC0_IRQHandler,                        /*   350 Interrupt 350 */
   0,			                            /*   351 Reserved Interrupt 351 */
   0,					            /*   352 Reserved Interrupt 352 */
   0,					            /*   353 Reserved Interrupt 353 */
