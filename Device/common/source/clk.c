@@ -20,7 +20,7 @@
 
 #ifdef M55_HE_E1C
 #ifndef SYST_ACLK
-#define SYST_ACLK   80000000
+#define SYST_ACLK   160000000
 #endif
 
 #ifndef SYST_HCLK
