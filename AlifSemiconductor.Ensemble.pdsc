@@ -12,7 +12,7 @@
   -->
 
   <releases>
-     <release version="1.3.0_E1C-rc1" date="2024-10-22">
+     <release version="1.3.0-E1C-rc1" date="2024-10-22">
       - rc1 release for DFPv1.3.0_E1C
     </release>
      <release version="1.2.2" date="2024-08-13">
@@ -558,8 +558,6 @@
          <!-- DebugConfig for E1 -->
         <debugconfig sdf="Debug/SDF/E1/Ensemble E1.sdf" dormant="true"/>
        <!-- <compile Pname="M55_HE" Pdefine="M55_HE"/>-->
-        <compile Pname="M55_HE_E1C" Pdefine="M55_HE_E1C"/>
-        <compile Pname="M55_HE_E1C" Pdefine="AE1C1F4051920PH"/>
         <!-- Cortex-M55 Access Ports -->
         <accessportV2 __apid="0" address="0x00300000"/>
         <!-- Documents -->
@@ -616,6 +614,8 @@
         <feature type="VCC" n="1.71" m="4.2"/>
         <feature type="Temp" n="-40" m="105"/>
         <device Dname="AE101F4071542LH">
+          <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
+          <compile Pname="M55_HE" Pdefine="M55_HE"/>
           <!-- On-chip NVM Region -->
           <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
 
@@ -634,8 +634,10 @@
           <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
           <feature type="Other" n="1" name="MIPI DSI"/>
         </device>
-        <device Dname="AE1C">
+        <device Dname="AE1C1F4051920PH">
           <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE_E1C"/>
+          <compile Pname="M55_HE_E1C" Pdefine="M55_HE_E1C"/>
+          <compile Pname="M55_HE_E1C" Pdefine="AE1C1F4051920PH"/>
           <!-- On-chip NVM Region -->
           <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
 

@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef AE722F80F55D5XX_H
-#define AE722F80F55D5XX_H
+#ifndef AE1C1F4051920PH_H
+#define AE1C1F4051920PH_H
 
 
 /* MRAM */
@@ -43,4 +43,4 @@
 
 #include "soc_E1C_feature.h"
 
-#endif /* AE722F80F55D5XX_H */
+#endif /* AE1C1F4051920PH_H */
