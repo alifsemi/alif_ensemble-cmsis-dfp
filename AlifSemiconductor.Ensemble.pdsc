@@ -12,8 +12,8 @@
   -->
 
   <releases>
-     <release version="1.3.0-E1C-rc1" date="2024-10-22">
-      - rc1 release for DFPv1.3.0_E1C
+     <release version="1.3.0-E1C-rc2" date="2024-11-21">
+      - rc release for DFPv1.3.0_E1C
     </release>
      <release version="1.2.2" date="2024-08-13">
       - update SD Driver for various fixes
@@ -1257,16 +1257,14 @@
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CANFD_BlockingMode.c" attr="template" select="CANFD Polling Mode Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CMP_baremetal.c" attr="template" select="CMP Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CRC_baremetal.c" attr="template" select="CRC Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="SDIO Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="SDMMC Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C using I3C Baremetal Demo"/>
