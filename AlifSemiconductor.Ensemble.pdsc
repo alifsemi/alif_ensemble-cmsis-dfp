@@ -12,8 +12,8 @@
   -->
 
   <releases>
-     <release version="1.3.0_E1C-rc1" date="2024-10-22">
-      - rc1 release for DFPv1.3.0_E1C
+     <release version="1.3.0-E1C-rc2" date="2024-11-21">
+      - rc release for DFPv1.3.0_E1C
     </release>
      <release version="1.2.2" date="2024-08-13">
       - update SD Driver for various fixes
@@ -558,8 +558,6 @@
          <!-- DebugConfig for E1 -->
         <debugconfig sdf="Debug/SDF/E1/Ensemble E1.sdf" dormant="true"/>
        <!-- <compile Pname="M55_HE" Pdefine="M55_HE"/>-->
-        <compile Pname="M55_HE_E1C" Pdefine="M55_HE_E1C"/>
-        <compile Pname="M55_HE_E1C" Pdefine="AE1C1F4051920PH"/>
         <!-- Cortex-M55 Access Ports -->
         <accessportV2 __apid="0" address="0x00300000"/>
         <!-- Documents -->
@@ -616,6 +614,8 @@
         <feature type="VCC" n="1.71" m="4.2"/>
         <feature type="Temp" n="-40" m="105"/>
         <device Dname="AE101F4071542LH">
+          <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
+          <compile Pname="M55_HE" Pdefine="M55_HE"/>
           <!-- On-chip NVM Region -->
           <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
 
@@ -634,8 +634,10 @@
           <feature type="GLCD" n="1" m="1280.800" name="Display Parallel Interface"/>
           <feature type="Other" n="1" name="MIPI DSI"/>
         </device>
-        <device Dname="AE1C">
+        <device Dname="AE1C1F4051920PH">
           <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE_E1C"/>
+          <compile Pname="M55_HE_E1C" Pdefine="M55_HE_E1C"/>
+          <compile Pname="M55_HE_E1C" Pdefine="AE1C1F4051920PH"/>
           <!-- On-chip NVM Region -->
           <memory name="MRAM" start="0x80000000" size="0x00180000" access="rx" default="1"/>
 
@@ -1255,16 +1257,14 @@
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CANFD_BlockingMode.c" attr="template" select="CANFD Polling Mode Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CMP_baremetal.c" attr="template" select="CMP Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/CRC_baremetal.c" attr="template" select="CRC Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SDIO_Baremetal.c" attr="template" select="SDIO Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_Baremetal.c" attr="template" select="SDMMC Baremetal Demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="header" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
-        <file category="source" name="Boards/DevKit-e7/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/diskio.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/diskio.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ff.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffconf.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="header" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ff.h" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/Demo_SD_fatFS_Baremetal.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/Dac_baremetal.c" attr="template" select="DAC Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/i2c_baremetal.c" attr="template" select="I2C Baremetal Demo"/>
         <file category="source" name="Boards/DevKit-e1c/Templates/Baremetal/i2c_using_i3c_Baremetal.c" attr="template" select="I2C using I3C Baremetal Demo"/>
@@ -1935,7 +1935,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.100.0" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.101.0" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -1957,10 +1957,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.100.0" condition="SE SERVICES SRC">
+    <component Cclass="Device" Cgroup="SE runtime Services" Csub="core" Cvariant="Source" Cversion="1.101.0" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.100.0.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.101.0.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
