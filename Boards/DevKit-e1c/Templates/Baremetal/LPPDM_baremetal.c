@@ -26,15 +26,7 @@
  *           -> Export the memory and To play the PCM data, use pcmplay.c file which
  *              will generate the pcm_samples.pcm audio file
  *           -> Use ffplay command to play the audio.
- *           Hardware setup:
- *           -> Connect Flat board PDM Microphone PDM data line to LPPDM data
- *              line of P5_6 (J14 on Flat board)
- *            For channel 0 and channel 1
- *           -> Clock line:
-                pin P7_4 (on Flat board J14) --> pin P5_4 (on Flat board J14)
-             -> Data line:
-                pin P7_5 (on Flat board J14) --> pin P5_6 (on Flat board J14)
-
+ *           -> Alternatively, use the Audacity player.
  ******************************************************************************/
 /* System Includes */
 #include <stdio.h>
@@ -57,12 +49,29 @@
 #define ENABLE              1
 #define DISABLE             0
 
+/*
+ * Hardware setup:
+ * Connect the Spark DevKit PDM Microphone's PDM data line to LPPDM data
+ * line (P5_6)
+ * For channel 0 and channel 1 as follows:
+ * -> Clock Line Connection:
+ *     pin P7_4 --> pin P5_4
+ * -> Data Line Connection:
+ *     pin P7_5 --> pin P5_6
+ */
+
 /* Store the number of samples */
 /* For 40000 samples user can hear maximum up to 4 sec of audio
  * to store maximum samples then change the scatter file and increase the memory */
 #define NUM_SAMPLE  40000
 
-/* channel number used for channel configuration and status register */
+/* Channel Configuration:
+ * The CHANNEL_0 and CHANNEL_1 macros define the channel numbers used
+ * for channel configuration.
+ * To configure other channels (e.g., channel 2 and channel 3), update the macros as follows:
+ * #define CHANNEL_0  2
+ * #define CHANNEL_1  3
+ */
 #define CHANNEL_0  0
 #define CHANNEL_1  1
 
@@ -234,7 +243,13 @@ void pdm_demo()
         goto error_uninitialize;
     }
 
-    /* To select the PDM channel 0 and channel 1 */
+    /* PDM Channel Selection:
+     * This code selects PDM channel 0 and channel 1 for operation.
+     * To select different channels (e.g., channel 2 and channel 3), update the macro parameter
+     * in the PDMdrv->Control function as follows:
+     * (ARM_PDM_MASK_CHANNEL_2 | ARM_PDM_MASK_CHANNEL_3)
+     * Note: These macros are defined in Driver_PDM.h.
+     */
     ret = PDMdrv->Control(ARM_PDM_SELECT_CHANNEL, (ARM_PDM_MASK_CHANNEL_0 | ARM_PDM_MASK_CHANNEL_1), NULL);
     if(ret != ARM_DRIVER_OK){
         printf("\r\n Error: PDM channel select control failed\n");
