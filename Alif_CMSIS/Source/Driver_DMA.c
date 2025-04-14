@@ -56,6 +56,8 @@ static const ARM_DRIVER_VERSION DriverVersion = {ARM_DMA_API_VERSION, ARM_DMA_DR
 #define RTE_DMALOCAL_BOOT_IRQ_NS_STATE    RTE_DMA2_BOOT_IRQ_NS_STATE
 #define RTE_DMALOCAL_BOOT_PERIPH_NS_STATE RTE_DMA2_BOOT_PERIPH_NS_STATE
 
+#elif defined(A32)
+
 #else
 #error device not specified!
 #endif

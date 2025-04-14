@@ -21,7 +21,11 @@
 #define CACHE_H
 
 #include <stdbool.h>
+#ifndef A32
 #include "soc.h"
+#else
+#include "a32_device.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +43,7 @@ extern "C" {
 __STATIC_FORCEINLINE
 bool RTSS_Is_DCache_Dirty(void)
 {
+#if defined(RTSS_HE) || defined(RTSS_HP)
     uint32_t mscr = MEMSYSCTL->MSCR;
 
     /* Return True, if Cache is active and not known to be clean */
@@ -47,6 +52,9 @@ bool RTSS_Is_DCache_Dirty(void)
     }
 
     return false;
+#elif defined (A32)
+    return true;
+#endif
 }
 
 /**
@@ -122,11 +130,16 @@ void RTSS_InvalidateDCache_by_Addr(volatile void *addr, int32_t dsize)
          * Perform the check for threshold size and decide.
          *
          */
+#if defined (RTSS_HE) || defined (RTSS_HP)
         if (dsize < RTSS_FORCE_GLOBAL_CLEAN_INVALIDATE_THRESHOLD_SIZE) {
             SCB_InvalidateDCache_by_Addr(addr, dsize);
         } else {
             SCB_CleanInvalidateDCache();
         }
+#else
+        SCB_InvalidateDCache_by_Addr (addr, dsize);
+#endif
+
     } else {
         __DSB();
         __ISB();
@@ -151,11 +164,15 @@ void RTSS_CleanDCache_by_Addr(volatile void *addr, int32_t dsize)
          * Perform the check for threshold size and decide.
          *
          */
+#if defined (RTSS_HE) || defined (RTSS_HP)
         if (dsize < RTSS_FORCE_GLOBAL_CLEAN_INVALIDATE_THRESHOLD_SIZE) {
             SCB_CleanDCache_by_Addr(addr, dsize);
         } else {
             SCB_CleanDCache();
         }
+#else
+            SCB_CleanDCache_by_Addr (addr, dsize);
+#endif
     } else {
         __DSB();
         __ISB();
@@ -166,6 +183,7 @@ void RTSS_CleanDCache_by_Addr(volatile void *addr, int32_t dsize)
   \fn          void RTSS_CleanDCache (void)
   \brief       Clean the Cache only if the line is dirty.
 */
+#if defined (RTSS_HE) || defined (RTSS_HP)
 __STATIC_FORCEINLINE
 void RTSS_CleanDCache(void)
 {
@@ -173,6 +191,10 @@ void RTSS_CleanDCache(void)
         SCB_CleanDCache();
     }
 }
+#else
+// Global D-cache clean is not safely possible in SMP system - do not fake.
+// Callers must do ranged cleans.
+#endif
 
 /**
   \fn          void RTSS_CleanInvalidateDCache_by_Addr (volatile void *addr, int32_t dsize)
@@ -184,6 +206,7 @@ void RTSS_CleanDCache(void)
 __STATIC_FORCEINLINE
 void RTSS_CleanInvalidateDCache_by_Addr(volatile void *addr, int32_t dsize)
 {
+#if defined (RTSS_HE) || defined (RTSS_HP)
     bool clean_req      = true;
     bool invalidate_req = true;
 
@@ -219,6 +242,9 @@ void RTSS_CleanInvalidateDCache_by_Addr(volatile void *addr, int32_t dsize)
         __DSB();
         __ISB();
     }
+#elif defined (A32)
+    SCB_CleanInvalidateDCache_by_Addr(addr, dsize);
+#endif
 }
 
 #ifdef __cplusplus

@@ -11,11 +11,15 @@
 #ifndef ALIF_H
 #define ALIF_H
 
+#ifndef A32
 #include "soc.h"
+#include "core_defines.h"
+#else
+#include "a32_device.h"
+#endif
 #include "soc_features.h"
 #include "soc_dma_map.h"
 #include "soc_strings.h"
-#include "core_defines.h"
 #include "system.h"
 #include "cache.h"
 #include "mpu.h"

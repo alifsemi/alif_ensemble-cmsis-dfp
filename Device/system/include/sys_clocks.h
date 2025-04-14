@@ -11,7 +11,11 @@
 #ifndef SYS_CLOCKS_H
 #define SYS_CLOCKS_H
 
+#ifndef A32
 #include "soc.h"
+#else
+#include "a32_device.h"
+#endif
 
 #if SOC_FEAT_FORCE_ENABLE_SYSTEM_CLOCKS
 

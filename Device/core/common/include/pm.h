@@ -24,8 +24,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
+#ifndef A32
 #include "soc.h"
-
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif

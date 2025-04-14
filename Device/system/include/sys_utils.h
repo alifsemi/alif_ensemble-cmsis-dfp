@@ -135,10 +135,15 @@ int32_t sys_busy_loop_us(uint32_t delay_us);
 __STATIC_FORCEINLINE
 bool RTSS_Is_TCM_Addr(const volatile void *local_addr)
 {
+#if defined (RTSS_HE) || defined (RTSS_HP)
     uint32_t addr = (uint32_t) local_addr;
 
     return ((addr < (ITCM_BASE + ITCM_REGION_SIZE)) ||
             ((addr > DTCM_BASE) && (addr < (DTCM_BASE + DTCM_REGION_SIZE))));
+#elif defined (A32)
+    (void)local_addr;
+    return false;
+#endif
 }
 
 /**
@@ -155,7 +160,7 @@ uint32_t LocalToGlobal(const volatile void *local_addr)
      * as-is as those are accessed using global address
      */
     uint32_t addr = (uint32_t) local_addr;
-
+#if defined (RTSS_HE) || defined (RTSS_HP)
     if ((addr >= DTCM_BASE) && (addr < (DTCM_BASE + DTCM_REGION_SIZE))) {
         return (addr & (DTCM_ALIAS_BIT - 1)) + DTCM_GLOBAL_BASE;
     } else if ((addr < (ITCM_BASE + ITCM_REGION_SIZE))) {
@@ -163,6 +168,9 @@ uint32_t LocalToGlobal(const volatile void *local_addr)
     } else {
         return addr;
     }
+#elif defined (A32)
+    return addr;
+#endif
 }
 
 /**
@@ -174,6 +182,7 @@ uint32_t LocalToGlobal(const volatile void *local_addr)
 __STATIC_INLINE
 void *GlobalToLocal(uint32_t global_addr)
 {
+#if defined (RTSS_HE) || defined (RTSS_HP)
     /* Only for local TCM address, we need to map it to local address space, rest
      * for all other memories like SRAM0/1, MRAM, OctalSPI etc we can pass the address
      * as-is as it is global.
@@ -197,6 +206,9 @@ void *GlobalToLocal(uint32_t global_addr)
         return ((void *) addr);
     }
 #endif /* CONFIG_MAP_GLOBAL_TO_LOCAL_TCM_ALIAS */
+#elif defined (A32)
+    return (void*)global_addr;
+#endif
 }
 
 #ifdef __cplusplus
