@@ -512,8 +512,8 @@ typedef struct _i3c_xfer_t {
     uint16_t                 tx_cur_cnt; /* Current tx data coount                     */
     uint16_t                 rx_len;     /* len of received data                       */
     uint16_t                 rx_cur_cnt; /* Current rx data coount                     */
-    const void              *tx_buf;     /* buf address where tx data resides          */
-    void                    *rx_buf;     /* pointer where rx data needs to be kept     */
+    const uint8_t            *tx_buf;     /* buf address where tx data resides          */
+    uint8_t                  *rx_buf;     /* pointer where rx data needs to be kept     */
     volatile I3C_XFER_STATUS status;     /* transfer status                            */
     volatile uint8_t         error;      /* error if any for this transfer             */
     volatile uint8_t         addr_len;   /* Dual usage: Address of slave or length     */

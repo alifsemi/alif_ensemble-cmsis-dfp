@@ -38,6 +38,12 @@ extern const uint32_t __ns_region_0_start;
 extern const uint32_t __ns_region_0_end;
 static const uint32_t ns_region_0_start __attribute__((weakref("__ns_region_0_start")));
 static const uint32_t ns_region_0_end __attribute__((weakref("__ns_region_0_end")));
+#elif defined ( __ICCARM__ )
+/* This feature is not used by TestApp */
+extern const uint32_t __ns_region_0_start;
+extern const uint32_t __ns_region_0_end;
+static const uint32_t ns_region_0_start;
+static const uint32_t ns_region_0_end;
 #else
 #error Unknown compiler.
 #endif
