@@ -845,18 +845,18 @@ const struct pinconf board_pinconf[] = {
 
     /* P14_4 on pin R8. Functions: [0]: GPIO14_4, [1]: >>>CMP3_OUT_B<<<, [2]: SPI1_MISO_C, [3]:
        FAULT0_C */
-    /* Selected: CMP3_OUT_B for "CMP3_OUT" */
-    {PORT_14, PIN_4, PINMUX_ALTERNATE_FUNCTION_1, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+    /* Selected: GPIO14_4 for Camera Reset */
+    {PORT_14, PIN_4, PINMUX_ALTERNATE_FUNCTION_0, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
     /* P14_5 on pin L11. Functions: [0]: GPIO14_5, [1]: >>>CMP2_OUT_B<<<, [2]: SPI1_MOSI_C, [3]:
        FAULT1_C */
-    /* Selected: CMP2_OUT_B for "CMP2_OUT" */
-    {PORT_14, PIN_5, PINMUX_ALTERNATE_FUNCTION_1, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+    /* Selected: GPIO14_5 for Camera Flash */
+    {PORT_14, PIN_5, PINMUX_ALTERNATE_FUNCTION_0, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
     /* P14_6 on pin K12. Functions: [0]: GPIO14_6, [1]: >>>CMP1_OUT_B<<<, [2]: SPI1_SCLK_C, [3]:
        FAULT2_C */
-    /* Selected: CMP1_OUT_B for "CMP1_OUT" */
-    {PORT_14, PIN_6, PINMUX_ALTERNATE_FUNCTION_1, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+    /* Selected: GPIO14_6 for Camera trigger */
+    {PORT_14, PIN_6, PINMUX_ALTERNATE_FUNCTION_0, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
     /* P14_7 on pin L12. Functions: [0]: GPIO14_7, [1]: >>>CMP0_OUT_B<<<, [2]: SPI1_SS0_C, [3]:
        FAULT3_C */
