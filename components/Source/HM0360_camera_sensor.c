@@ -21,6 +21,7 @@
 #include "board_config.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
+#if defined(RTE_Drivers_CAMERA_SENSOR_HM0360)
 #include "Camera_Sensor.h"
 #include "Camera_Sensor_i2c.h"
 #include "Driver_IO.h"
@@ -686,3 +687,4 @@ static CAMERA_SENSOR_DEVICE HM0360_camera_sensor = {
 CAMERA_SENSOR(HM0360_camera_sensor)
 
 #endif /* RTE_HM0360_CAMERA_SENSOR_ENABLE */
+#endif /* RTE_Drivers_CAMERA_SENSOR_HM0360 */

@@ -18,12 +18,13 @@
  * @bug      None.
  * @Note     None.
  ******************************************************************************/
+#include "RTE_Components.h"
+#if defined(RTE_Drivers_HWSEM)
 
 /* Driver specific include */
 #include "hwsem.h"
 #include "Driver_HWSEM_Private.h"
 
-#if defined(RTE_Drivers_HWSEM)
 
 #define ARM_HWSEM_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* Driver version */
 
