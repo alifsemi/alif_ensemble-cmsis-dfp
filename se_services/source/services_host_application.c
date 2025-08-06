@@ -54,36 +54,31 @@
  * @param uart_data
  * @return
  */
-uint32_t SERVICES_uart_write(uint32_t services_handle,
-                             size_t buffer_size,
-                             const uint8_t *uart_data)
+uint32_t SERVICES_uart_write(uint32_t services_handle, size_t buffer_size, const uint8_t *uart_data)
 {
-  uart_write_svc_t * p_svc = (uart_write_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(uart_write_svc_t));
+    uart_write_svc_t *p_svc =
+        (uart_write_svc_t *) SERVICES_prepare_packet_buffer(sizeof(uart_write_svc_t));
 
-  /**
-   * check there is something to send
-   */
-  if (uart_data == NULL)
-  {
-    return SERVICES_REQ_SUCCESS;
-  }
+    /**
+     * check there is something to send
+     */
+    if (uart_data == NULL) {
+        return SERVICES_REQ_SUCCESS;
+    }
 
-  /**
-   * check we are not sending more than we can handle
-   */
-  if ( (buffer_size > sizeof(p_svc->send_string_contents)) ||
-       (buffer_size == 0) )
-  {
-    return SERVICES_REQ_SUCCESS;
-  }
+    /**
+     * check we are not sending more than we can handle
+     */
+    if ((buffer_size > sizeof(p_svc->send_string_contents)) || (buffer_size == 0)) {
+        return SERVICES_REQ_SUCCESS;
+    }
 
-  memcpy((void *)p_svc->send_string_contents, uart_data, buffer_size);
-  p_svc->send_string_length = buffer_size;
+    memcpy((void *) p_svc->send_string_contents, uart_data, buffer_size);
+    p_svc->send_string_length = buffer_size;
 
-  return SERVICES_send_request(services_handle,
-                               SERVICE_APPLICATION_UART_WRITE_ID,
-                               DEFAULT_TIMEOUT);
+    return SERVICES_send_request(services_handle,
+                                 SERVICE_APPLICATION_UART_WRITE_ID,
+                                 DEFAULT_TIMEOUT);
 }
 
 /**
@@ -94,22 +89,22 @@ uint32_t SERVICES_uart_write(uint32_t services_handle,
  * @return
  * @ingroup services-host-system
  */
-uint32_t SERVICES_get_se_revision(uint32_t services_handle,
-                                  uint8_t *revision_data,
+uint32_t SERVICES_get_se_revision(uint32_t services_handle, uint8_t *revision_data,
                                   uint32_t *error_code)
 {
-  get_se_revision_t * p_svc = (get_se_revision_t *)
-      SERVICES_prepare_packet_buffer(sizeof(get_se_revision_t));
+    get_se_revision_t *p_svc =
+        (get_se_revision_t *) SERVICES_prepare_packet_buffer(sizeof(get_se_revision_t));
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                  SERVICE_APPLICATION_FIRMWARE_VERSION_ID,
-                                  DEFAULT_TIMEOUT);
+    uint32_t ret = SERVICES_send_request(services_handle,
+                                         SERVICE_APPLICATION_FIRMWARE_VERSION_ID,
+                                         DEFAULT_TIMEOUT);
 
-  memcpy((void *)revision_data, (const void *)p_svc->resp_se_revision,
-      p_svc->resp_se_revision_length);
-  *error_code = p_svc->resp_error_code;
+    memcpy((void *) revision_data,
+           (const void *) p_svc->resp_se_revision,
+           p_svc->resp_se_revision_length);
+    *error_code = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -120,23 +115,20 @@ uint32_t SERVICES_get_se_revision(uint32_t services_handle,
  * @param error_code
  * @return
  */
-uint32_t SERVICES_application_ospi_write_key(uint32_t services_handle,
-                                             uint32_t command,
-                                             uint8_t *key,
-                                             uint32_t *error_code)
+uint32_t SERVICES_application_ospi_write_key(uint32_t services_handle, uint32_t command,
+                                             uint8_t *key, uint32_t *error_code)
 {
-  ospi_write_key_svc_t * p_svc = (ospi_write_key_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(ospi_write_key_svc_t));
+    ospi_write_key_svc_t *p_svc =
+        (ospi_write_key_svc_t *) SERVICES_prepare_packet_buffer(sizeof(ospi_write_key_svc_t));
 
-  p_svc->send_command = command;
-  memcpy((void *)p_svc->send_key, key, OSPI_KEY_LENGTH_BYTES);
+    p_svc->send_command = command;
+    memcpy((void *) p_svc->send_key, key, OSPI_KEY_LENGTH_BYTES);
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_APPLICATION_OSPI_WRITE_KEY_ID,
-                                       DEFAULT_TIMEOUT);
+    uint32_t ret = SERVICES_send_request(services_handle,
+                                         SERVICE_APPLICATION_OSPI_WRITE_KEY_ID,
+                                         DEFAULT_TIMEOUT);
 
-  *error_code = p_svc->resp_error_code;
+    *error_code  = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }
-

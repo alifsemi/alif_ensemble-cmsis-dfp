@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     DMA_Common.h
  * @author   Sudhir Sreedharan
  * @email    sudhir@alifsemi.com
@@ -24,9 +24,8 @@
 #include <RTE_Device.h>
 #include <evtrtr.h>
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #if RTE_DMA0
@@ -40,7 +39,6 @@ extern ARM_DRIVER_DMA ARM_Driver_DMA_(1);
 #if RTE_DMA2
 extern ARM_DRIVER_DMA ARM_Driver_DMA_(2);
 #endif
-
 
 /**
 \brief DMA Peripheral Configuration
@@ -60,7 +58,7 @@ typedef struct _DMA_PERIPHERAL_CONFIG {
     EVTRTR_CONFIG evtrtr_cfg;
 } DMA_PERIPHERAL_CONFIG;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

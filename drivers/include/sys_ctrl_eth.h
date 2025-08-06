@@ -10,12 +10,13 @@
 #ifndef SYS_CTRL_ETH_H_
 #define SYS_CTRL_ETH_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include <peripheral_types.h>
+#include <soc.h>
+
+#define PERIPH_CLK_ENA_ETH_CKEN (1U << 12) /* Enable clock supply for ETH */
 
 /**
   \fn     static inline void enable_eth_periph_clk(void)
@@ -39,7 +40,7 @@ static inline void disable_eth_periph_clk(void)
     CLKCTL_PER_MST->PERIPH_CLK_ENA &= ~PERIPH_CLK_ENA_ETH_CKEN;
 }
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

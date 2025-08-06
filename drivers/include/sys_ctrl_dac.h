@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_dac.h
  * @author   Nisarga A M
  * @email    nisarga.am@alifsemi.com
@@ -22,22 +22,24 @@
 #ifndef SYS_CTRL_DAC_H_
 #define SYS_CTRL_DAC_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+/* CLKCTL_PER_SLV DAC field definitions */
+#define DAC_CTRL_DAC0_CKEN (1U << 0U) /* DAC0 clock enable */
+#define DAC_CTRL_DAC1_CKEN (1U << 4U) /* DAC1 clock enable */
 
 /**
  * enum DAC_INSTANCE.
  * DAC instances.
  */
-typedef enum _DAC_INSTANCE
-{
-    DAC_INSTANCE_0,    /* DAC instance - 0 */
-    DAC_INSTANCE_1     /* DAC instance - 1 */
-}DAC_INSTANCE;
+typedef enum _DAC_INSTANCE {
+    DAC_INSTANCE_0, /* DAC instance - 0 */
+    DAC_INSTANCE_1  /* DAC instance - 1 */
+} DAC_INSTANCE;
 
 /**
   \fn     static inline void enable_dac_periph_clk(DAC_INSTANCE instance)
@@ -47,12 +49,9 @@ typedef enum _DAC_INSTANCE
  */
 static inline void enable_dac_periph_clk(DAC_INSTANCE instance)
 {
-    if (instance == DAC_INSTANCE_0)
-    {
+    if (instance == DAC_INSTANCE_0) {
         CLKCTL_PER_SLV->DAC_CTRL |= DAC_CTRL_DAC0_CKEN;
-    }
-    else
-    {
+    } else {
         CLKCTL_PER_SLV->DAC_CTRL |= DAC_CTRL_DAC1_CKEN;
     }
 }
@@ -65,12 +64,9 @@ static inline void enable_dac_periph_clk(DAC_INSTANCE instance)
  */
 static inline void disable_dac_periph_clk(DAC_INSTANCE instance)
 {
-    if (instance == DAC_INSTANCE_0)
-    {
+    if (instance == DAC_INSTANCE_0) {
         CLKCTL_PER_SLV->DAC_CTRL &= ~(DAC_CTRL_DAC0_CKEN);
-    }
-    else
-    {
+    } else {
         CLKCTL_PER_SLV->DAC_CTRL &= ~(DAC_CTRL_DAC1_CKEN);
     }
 }

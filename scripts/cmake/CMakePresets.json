@@ -1,0 +1,165 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "armclang",
+            "displayName": "Armclang Build Config",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "environment": {
+                "PATH": "$env{COMPILER_BIN_PATH}${pathListSep}$penv{PATH}"
+            }
+        },
+        {
+            "name": "gcc",
+            "displayName": "GCC Build Config",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": "default",
+            "cacheVariables": {
+                "COMPILER": "GCC"
+            },
+            "environment": {
+                "COMPILER_BIN_PATH": "$env{ARMGCC_PATH}/bin",
+                "PATH": "$env{COMPILER_BIN_PATH}${pathListSep}$penv{PATH}"
+            }
+        },
+        {
+            "name": "default",
+            "description": "Default Setting",
+            "hidden": true,
+            "inherits": "global-settings",
+            "cacheVariables": {
+                "CPU": "M55",
+                "RTSS": "HP",
+                "BOARD_REV": "B4",
+                "BOOT": "TCM",
+                "DEVICE": "AE722F80F55D5",
+                "BOARD_NAME": "DevKit-e7",
+                "COMPILER": "ARMCLANG",
+                "OS": "NONE",
+                "TEST_APP": "ALL"
+            }
+        },
+        {
+            "name": "global-settings",
+            "description": "Common settings shared by all configure presets",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "environment": {
+                "COMPILER_BIN_PATH": "$env{ARMCLANG_PATH}/bin",
+                "CMSIS_PACK_PATH": "$env{CMSIS_CORE_PACK_PATH}",
+                "CMSIS_COMPILER_PATH": "$env{CMSIS_COMPILER_PACK_PATH}",
+                "SE_TOOLS_IMAGE_DIR":"$env{SE_TOOLS}/build/images"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "armclang_build",
+            "configurePreset": "armclang",
+            "inherits": "default"
+        },
+        {
+            "name": "gcc_build",
+            "configurePreset": "gcc",
+            "inherits": "default"
+        },
+        {
+            "name": "default",
+            "description": "Default Setting",
+            //"cleanFirst": true,
+            "jobs": 16,
+            "hidden": true,
+            "nativeToolOptions": [
+                "-k",
+                "-i"
+            ],
+            "environment": {
+                "PATH": "$env{COMPILER_BIN_PATH}:$ENV{PATH}"
+            }
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "armclang_build_test",
+            "configurePreset": "armclang",
+            "inherits": "default"
+        },
+        {
+            "name": "gcc_build_test",
+            "configurePreset": "gcc",
+            "inherits": "default"
+        },
+        {
+            "name": "default",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": false,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "ignore",
+                "enableFailover ": true,
+                "stopOnFailure": false,
+                "continueOnFailure": true,
+                "inheritConfigureEnvironment": true
+            }
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "default",
+            "configurePreset": "armclang",
+            "generators": [
+                "TGZ"
+            ]
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "armclang_workflow",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "armclang"
+                },
+                {
+                    "type": "build",
+                    "name": "armclang_build"
+                },
+                {
+                    "type": "test",
+                    "name": "armclang_build_test"
+                },
+                {
+                    "type": "package",
+                    "name": "default"
+                }
+            ]
+        },
+        {
+            "name": "gcc_mram",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "gcc"
+                },
+                {
+                    "type": "build",
+                    "name": "gcc_build"
+                },
+                {
+                    "type": "test",
+                    "name": "gcc_build_test"
+                }
+            ]
+        }
+    ]
+}

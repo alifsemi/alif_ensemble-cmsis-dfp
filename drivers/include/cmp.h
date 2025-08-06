@@ -11,46 +11,29 @@
 #ifndef CMP_H_
 #define CMP_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include <stdint.h>
+#include "soc.h"
 
-/**
- @brief struct CMP_Type:- Register map for Analog Comparator
- */
-typedef struct {                                     /*!< CMP Structure                              */
-    volatile uint32_t  CMP_COMP_REG1;                /*!< Comparator Register 1                      */
-    volatile uint32_t  CMP_COMP_REG2;                /*!< Comparator Register 2                      */
-    volatile uint32_t  CMP_POLARITY_CTRL;            /*!< CMP Polarity Control Register              */
-    volatile uint32_t  CMP_WINDOW_CTRL;              /*!< CMP Window Control Register                */
-    volatile uint32_t  CMP_FILTER_CTRL;              /*!< CMP Filter Control Register                */
-    volatile uint32_t  CMP_PRESCALER_CTRL;           /*!< CMP Prescaler Control Register             */
-    volatile const  uint32_t  RESERVED[2];
-    volatile uint32_t  CMP_INTERRUPT_STATUS;         /*!< CMP Interrupt Status and Clear Register    */
-    volatile uint32_t  CMP_INTERRUPT_MASK;           /*!< CMP Interrupt Mask Register                */
-}CMP_Type;                                          /*!< Size = 40 (0x28)                           */
+#define CMP_FILTER_CONTROL_ENABLE (1U << 0) /* To enable the filter control                 */
 
-#define CMP0_ENABLE                    (1U << 28)    /* To enable the Comp0                          */
-#define CMP1_ENABLE                    (1U << 29)    /* To enable the Comp1                          */
-#define CMP2_ENABLE                    (1U << 30)    /* To enable the Comp2                          */
-#define CMP3_ENABLE                    (1U << 31)    /* To enable the Comp3                          */
-#define LPCMP_ENABLE                   (1U << 24)    /* To enable the LPCMP                          */
+#define CMP_PRESCALER_MAX_VALUE   (0x3FU) /* Maximum value of prescaler control           */
+#define CMP_POLARITY_MAX_VALUE    (0x2U)  /* Maximum value of polarity control            */
+#define CMP_WINDOW_MAX_VALUE      (0x3U)  /* Maximum value of window control              */
+#define CMP_FILTER_MIN_VALUE      (0x2U)  /* Minimum value of filter control              */
+#define CMP_FILTER_MAX_VALUE      (0x8U)  /* Maximum value of filter control              */
 
-#define CMP_FILTER_CONTROL_ENABLE      (1U << 0)     /* To enable the filter control                 */
-#define CMP_WINDOW_CONTROL_ENABLE      (3U << 0)     /* To enable the window control                 */
-#define CMP_PRESCALER_MAX_VALUE        (0x3FU)       /* Maximum value of prescaler control           */
-#define CMP_POLARITY_MAX_VALUE         (0x2U)        /* Maximum value of polarity control            */
-#define CMP_WINDOW_MAX_VALUE           (0x3U)        /* Maximum value of window control              */
-#define CMP_FILTER_MIN_VALUE           (0x2U)        /* Minimum value of filter control              */
-#define CMP_FILTER_MAX_VALUE           (0x8U)        /* Maximum value of filter control              */
+#define CMP_INT_MASK              (0x01UL) /* Mask for the interrupt                       */
+#define CMP_INTERRUPT_CLEAR       (0x01UL) /* To clear the interrupt                       */
 
-#define CMP_INT_MASK                   (0x01UL)      /* Mask for the interrupt                       */
-#define CMP_INTERRUPT_CLEAR            (0x01UL)      /* To clear the interrupt                       */
+#define LPCMP_MSK_CTRL_VAL        (0xFEU << 24) /* Mask all LPCMP configuration value           */
 
-#define LPCMP_MSK_CTRL_VAL             (0xFEU << 24) /* Mask all LPCMP configuration value           */
+#define CMP_FILTER_EVENT0_CLEAR     (1U << 0) /* Clear FILTER_EVENT0 interrupt                */
+#define CMP_FILTER_EVENT1_CLEAR     (1U << 1) /* Clear FILTER_EVENT1 interrupt                */
+#define CMP_FILTER_EVENTS_CLEAR_ALL (0x3U)    /* Clear all filter event interrupts            */
 
 /**
   @fn          void cmp_enable_interrupt(CMP_Type *cmp)
@@ -120,28 +103,34 @@ static inline void cmp_set_polarity_ctrl(CMP_Type *cmp, uint32_t arg)
 }
 
 /**
-  @fn          void cmp_set_window_ctrl(CMP_Type *cmp, uint32_t arg)
+  @fn          void cmp_set_window_ctrl(CMP_Type *cmp, uint32_t event, const uint8_t
+  window_ctrl_enable)
   @brief       Select one of the 4 inputs which will control the windowing
                (gating) function.
   @param[in]   cmp    Pointer to the CMP register map
-  @param[in]   arg    4 input events to control the processing window.
+  @param[in]   event  4 input events to control the processing window.
+  @param[in]   window_ctrl_enable HSCMP device specific window function
   @return      none
 */
-static inline void cmp_set_window_ctrl(CMP_Type *cmp, uint32_t arg)
+static inline void cmp_set_window_ctrl(CMP_Type *cmp, uint32_t event,
+                                       const uint8_t window_ctrl_enable)
 {
-    cmp->CMP_WINDOW_CTRL = (CMP_WINDOW_CONTROL_ENABLE | arg << 8);
+    cmp->CMP_WINDOW_CTRL = (window_ctrl_enable | event << 8);
 }
 
 /**
-  @fn          void cmp_clear_window_ctrl(CMP_Type *cmp, uint32_t arg)
+  @fn          void cmp_clear_window_ctrl(CMP_Type *cmp, uint32_t event, const uint8_t
+  window_ctrl_enable)
   @brief       Clear the windowing inputs to the comparator
   @param[in]   cmp    Pointer to the CMP register map
-  @param[in]   arg    4 input events to control the processing window.
+  @param[in]   event  4 input events to control the processing window.
+  @param[in]   window_ctrl_enable HSCMP device specific window function
   @return      none
 */
-static inline void cmp_clear_window_ctrl(CMP_Type *cmp, uint32_t arg)
+static inline void cmp_clear_window_ctrl(CMP_Type *cmp, uint32_t event,
+                                         const uint8_t window_ctrl_enable)
 {
-    cmp->CMP_WINDOW_CTRL &= ~(CMP_WINDOW_CONTROL_ENABLE | arg << 8);
+    cmp->CMP_WINDOW_CTRL &= ~(window_ctrl_enable | event << 8);
 }
 
 /**
@@ -169,12 +158,13 @@ static inline void cmp_set_prescaler_ctrl(CMP_Type *cmp, uint32_t arg)
 }
 
 /**
-  @fn          void cmp_irq_handler(CMP_Type *cmp) ;
+  @fn          void cmp_irq_handler(CMP_Type *cmp, const uint8_t int_mask) ;
   @brief       Handle interrupts for the CMP instance.
-  @param[in]   cmp     Pointer to the CMP register map
+  @param[in]   cmp      Pointer to the CMP register map
+  @param[in]   int_mask HSCMP device specific interrupt status
   @return      none
 */
-void cmp_irq_handler(CMP_Type *cmp);
+void cmp_irq_handler(CMP_Type *cmp, const uint8_t int_mask);
 
 #ifdef __cplusplus
 }

@@ -59,10 +59,10 @@
  *    Initial release
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_OSPI.h
- * @author   Khushboo Singh
- * @email    khushboo.singh@alifsemi.com
+ * @author   Khushboo Singh, Manoj A Murudi
+ * @email    khushboo.singh@alifsemi.com, manoj.murudi@alifsemi.com
  * @version  V1.0.0
  * @date     21-Oct-2022
  * @brief    OSPI Driver header file derived from CMSIS Driver_SPI.h
@@ -71,116 +71,182 @@
 #ifndef DRIVER_OSPI_H_
 #define DRIVER_OSPI_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include "Driver_Common.h"
 
-#define ARM_OSPI_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1,0)  /* API version */
+#define ARM_OSPI_API_VERSION   ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* API version */
 
-#define _ARM_Driver_OSPI_(n)                   Driver_OSPI##n
-#define  ARM_Driver_OSPI_(n)                   _ARM_Driver_OSPI_(n)
+#define _ARM_Driver_OSPI_(n)   Driver_OSPI##n
+#define ARM_Driver_OSPI_(n)    _ARM_Driver_OSPI_(n)
 
 /****** OSPI Control Codes *****/
 
-#define ARM_OSPI_CONTROL_POS                   0
-#define ARM_OSPI_CONTROL_MSK                   (0xFFUL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_CONTROL_POS   0
+#define ARM_OSPI_CONTROL_MSK   (0xFFUL << ARM_OSPI_CONTROL_POS)
 
 /*----- OSPI Control Codes: Mode -----*/
 
-#define ARM_OSPI_MODE_INACTIVE                 (0x00UL << ARM_OSPI_CONTROL_POS)     ///< OSPI Inactive
-#define ARM_OSPI_MODE_MASTER                   (0x01UL << ARM_OSPI_CONTROL_POS)     ///< OSPI Master (Output on MOSI, Input on MISO); arg = Bus Speed in bps
-#define ARM_OSPI_MODE_SLAVE                    (0x02UL << ARM_OSPI_CONTROL_POS)     ///< OSPI Slave  (Output on MISO, Input on MOSI)
+#define ARM_OSPI_MODE_INACTIVE (0x00UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Inactive
+#define ARM_OSPI_MODE_MASTER                                                                       \
+    (0x01UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Master (Output on MOSI, Input on MISO); arg = Bus
+                                      ///< Speed in bps
+#define ARM_OSPI_MODE_SLAVE                                                                        \
+    (0x02UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Slave  (Output on MISO, Input on MOSI)
 
 /*----- OSPI Control Codes: Mode Parameters: Frame Format -----*/
 
-#define ARM_OSPI_FRAME_FORMAT_POS              8
-#define ARM_OSPI_FRAME_FORMAT_MSK              (7UL << ARM_OSPI_FRAME_FORMAT_POS)
-#define ARM_OSPI_CPOL0_CPHA0                   (0UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< Clock Polarity 0, Clock Phase 0 (default)
-#define ARM_OSPI_CPOL0_CPHA1                   (1UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< Clock Polarity 0, Clock Phase 1
-#define ARM_OSPI_CPOL1_CPHA0                   (2UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< Clock Polarity 1, Clock Phase 0
-#define ARM_OSPI_CPOL1_CPHA1                   (3UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< Clock Polarity 1, Clock Phase 1
-#define ARM_OSPI_TI_SSI                        (4UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< Texas Instruments Frame Format
-#define ARM_OSPI_MICROWIRE                     (5UL << ARM_OSPI_FRAME_FORMAT_POS)   ///< National Semiconductor Microwire Frame Format
+#define ARM_OSPI_FRAME_FORMAT_POS 8
+#define ARM_OSPI_FRAME_FORMAT_MSK (7UL << ARM_OSPI_FRAME_FORMAT_POS)
+#define ARM_OSPI_CPOL0_CPHA0                                                                       \
+    (0UL << ARM_OSPI_FRAME_FORMAT_POS)  ///< Clock Polarity 0, Clock Phase 0 (default)
+#define ARM_OSPI_CPOL0_CPHA1                                                                       \
+    (1UL << ARM_OSPI_FRAME_FORMAT_POS)  ///< Clock Polarity 0, Clock Phase 1
+#define ARM_OSPI_CPOL1_CPHA0                                                                       \
+    (2UL << ARM_OSPI_FRAME_FORMAT_POS)  ///< Clock Polarity 1, Clock Phase 0
+#define ARM_OSPI_CPOL1_CPHA1                                                                       \
+    (3UL << ARM_OSPI_FRAME_FORMAT_POS)                      ///< Clock Polarity 1, Clock Phase 1
+#define ARM_OSPI_TI_SSI (4UL << ARM_OSPI_FRAME_FORMAT_POS)  ///< Texas Instruments Frame Format
+#define ARM_OSPI_MICROWIRE                                                                         \
+    (5UL << ARM_OSPI_FRAME_FORMAT_POS)  ///< National Semiconductor Microwire Frame Format
 
 /*----- OSPI Control Codes: Mode Parameters: Data Bits -----*/
 
-#define ARM_OSPI_DATA_BITS_POS                 12
-#define ARM_OSPI_DATA_BITS_MSK                 (0x3FUL << ARM_OSPI_DATA_BITS_POS)
-#define ARM_OSPI_DATA_BITS(n)                  (((n) & 0x3FUL) << ARM_OSPI_DATA_BITS_POS) ///< Number of Data bits
+#define ARM_OSPI_DATA_BITS_POS 12
+#define ARM_OSPI_DATA_BITS_MSK (0x3FUL << ARM_OSPI_DATA_BITS_POS)
+#define ARM_OSPI_DATA_BITS(n)  (((n) & 0x3FUL) << ARM_OSPI_DATA_BITS_POS)  ///< Number of Data bits
 
 /*----- OSPI Control Codes: Mode Parameters: Bit Order -----*/
 
-#define ARM_OSPI_BIT_ORDER_POS                 18
-#define ARM_OSPI_BIT_ORDER_MSK                 (1UL << ARM_OSPI_BIT_ORDER_POS)
-#define ARM_OSPI_MSB_LSB                       (0UL << ARM_OSPI_BIT_ORDER_POS)      ///< OSPI Bit order from MSB to LSB (default)
-#define ARM_OSPI_LSB_MSB                       (1UL << ARM_OSPI_BIT_ORDER_POS)      ///< OSPI Bit order from LSB to MSB
+#define ARM_OSPI_BIT_ORDER_POS 18
+#define ARM_OSPI_BIT_ORDER_MSK (1UL << ARM_OSPI_BIT_ORDER_POS)
+#define ARM_OSPI_MSB_LSB                                                                           \
+    (0UL << ARM_OSPI_BIT_ORDER_POS)  ///< OSPI Bit order from MSB to LSB (default)
+#define ARM_OSPI_LSB_MSB            (1UL << ARM_OSPI_BIT_ORDER_POS)  ///< OSPI Bit order from LSB to MSB
 
 /*----- OSPI Control Codes: Mode Parameters: Slave Select Mode -----*/
 
-#define ARM_OSPI_SS_MASTER_MODE_POS            19
-#define ARM_OSPI_SS_MASTER_MODE_MSK            (3UL << ARM_OSPI_SS_MASTER_MODE_POS)
-#define ARM_OSPI_SS_MASTER_UNUSED              (0UL << ARM_OSPI_SS_MASTER_MODE_POS) ///< OSPI Slave Select when Master: Not used (default)
-#define ARM_OSPI_SS_MASTER_SW                  (1UL << ARM_OSPI_SS_MASTER_MODE_POS) ///< OSPI Slave Select when Master: Software controlled
-#define ARM_OSPI_SS_MASTER_HW_OUTPUT           (2UL << ARM_OSPI_SS_MASTER_MODE_POS) ///< OSPI Slave Select when Master: Hardware controlled Output
-#define ARM_OSPI_SS_MASTER_HW_INPUT            (3UL << ARM_OSPI_SS_MASTER_MODE_POS) ///< OSPI Slave Select when Master: Hardware monitored Input
-#define ARM_OSPI_SS_SLAVE_MODE_POS             21
-#define ARM_OSPI_SS_SLAVE_MODE_MSK             (1UL << ARM_OSPI_SS_SLAVE_MODE_POS)
-#define ARM_OSPI_SS_SLAVE_HW                   (0UL << ARM_OSPI_SS_SLAVE_MODE_POS)  ///< OSPI Slave Select when Slave: Hardware monitored (default)
-#define ARM_OSPI_SS_SLAVE_SW                   (1UL << ARM_OSPI_SS_SLAVE_MODE_POS)  ///< OSPI Slave Select when Slave: Software controlled
+#define ARM_OSPI_SS_MASTER_MODE_POS 19
+#define ARM_OSPI_SS_MASTER_MODE_MSK (3UL << ARM_OSPI_SS_MASTER_MODE_POS)
+#define ARM_OSPI_SS_MASTER_UNUSED                                                                  \
+    (0UL << ARM_OSPI_SS_MASTER_MODE_POS)  ///< OSPI Slave Select when Master: Not used (default)
+#define ARM_OSPI_SS_MASTER_SW                                                                      \
+    (1UL << ARM_OSPI_SS_MASTER_MODE_POS)  ///< OSPI Slave Select when Master: Software controlled
+#define ARM_OSPI_SS_MASTER_HW_OUTPUT                                                               \
+    (2UL << ARM_OSPI_SS_MASTER_MODE_POS)  ///< OSPI Slave Select when Master: Hardware controlled
+                                          ///< Output
+#define ARM_OSPI_SS_MASTER_HW_INPUT                                                                \
+    (3UL << ARM_OSPI_SS_MASTER_MODE_POS)  ///< OSPI Slave Select when Master: Hardware monitored
+                                          ///< Input
+#define ARM_OSPI_SS_SLAVE_MODE_POS 21
+#define ARM_OSPI_SS_SLAVE_MODE_MSK (1UL << ARM_OSPI_SS_SLAVE_MODE_POS)
+#define ARM_OSPI_SS_SLAVE_HW                                                                       \
+    (0UL << ARM_OSPI_SS_SLAVE_MODE_POS)  ///< OSPI Slave Select when Slave: Hardware monitored
+                                         ///< (default)
+#define ARM_OSPI_SS_SLAVE_SW                                                                       \
+    (1UL << ARM_OSPI_SS_SLAVE_MODE_POS)  ///< OSPI Slave Select when Slave: Software controlled
 
 /*----- OSPI Control Codes: Miscellaneous Controls  -----*/
 
-#define ARM_OSPI_SET_BUS_SPEED                 (0x10UL << ARM_OSPI_CONTROL_POS)     ///< Set Bus Speed in bps; arg = value
-#define ARM_OSPI_GET_BUS_SPEED                 (0x11UL << ARM_OSPI_CONTROL_POS)     ///< Get Bus Speed in bps
-#define ARM_OSPI_SET_DEFAULT_TX_VALUE          (0x12UL << ARM_OSPI_CONTROL_POS)     ///< Set default Transmit value; arg = value
-#define ARM_OSPI_CONTROL_SS                    (0x13UL << ARM_OSPI_CONTROL_POS)     ///< Control Slave Select; arg: 0=inactive, 1=active
-#define ARM_OSPI_ABORT_TRANSFER                (0x14UL << ARM_OSPI_CONTROL_POS)     ///< Abort current data transfer
-#define ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE    (0x15UL << ARM_OSPI_CONTROL_POS)
-#define ARM_OSPI_SET_FRAME_FORMAT              (0x16UL << ARM_OSPI_CONTROL_POS)
-#define ARM_OSPI_SET_DDR_MODE                  (0x17UL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_SET_BUS_SPEED                                                                     \
+    (0x10UL << ARM_OSPI_CONTROL_POS)  ///< Set Bus Speed in bps; arg = value
+#define ARM_OSPI_GET_BUS_SPEED (0x11UL << ARM_OSPI_CONTROL_POS)  ///< Get Bus Speed in bps
+#define ARM_OSPI_SET_DEFAULT_TX_VALUE                                                              \
+    (0x12UL << ARM_OSPI_CONTROL_POS)  ///< Set default Transmit value; arg = value
+#define ARM_OSPI_CONTROL_SS                                                                        \
+    (0x13UL << ARM_OSPI_CONTROL_POS)  ///< Control Slave Select; arg: 0=inactive, 1=active
+#define ARM_OSPI_ABORT_TRANSFER             (0x14UL << ARM_OSPI_CONTROL_POS)  ///< Abort current data transfer
+#define ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE (0x15UL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_SET_FRAME_FORMAT           (0x16UL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_SET_DDR_MODE               (0x17UL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_SET_INST_LENGTH            (0x18UL << ARM_OSPI_CONTROL_POS)
 
 /*----- OSPI Custom Control codes -----*/
 
-#define ARM_OSPI_ADDR_LENGTH_0_BITS            0x0
-#define ARM_OSPI_ADDR_LENGTH_8_BITS            0x2
-#define ARM_OSPI_ADDR_LENGTH_24_BITS           0x6
-#define ARM_OSPI_ADDR_LENGTH_32_BITS           0x8
+#define ARM_OSPI_ADDR_LENGTH_0_BITS         0x0
+#define ARM_OSPI_ADDR_LENGTH_8_BITS         0x2
+#define ARM_OSPI_ADDR_LENGTH_24_BITS        0x6
+#define ARM_OSPI_ADDR_LENGTH_32_BITS        0x8
 
-#define ARM_OSPI_DDR_DISABLE                   0x0
-#define ARM_OSPI_DDR_ENABLE                    0x1
+#define ARM_OSPI_INST_LENGTH_8_BITS         0x2
+#define ARM_OSPI_INST_LENGTH_16_BITS        0x3
 
-#define ARM_OSPI_FRF_STANDRAD                  0x0    /* 0x0 Standard OSPI Format */
-#define ARM_OSPI_FRF_DUAL                      0x1    /* 0x1 Dual OSPI Format */
-#define ARM_OSPI_FRF_QUAD                      0x2    /* 0X2 Quad OSPI Format */
-#define ARM_OSPI_FRF_OCTAL                     0x3    /* 0X2 Octal OSPI Format */
+#define ARM_OSPI_DDR_DISABLE                0x0
+#define ARM_OSPI_DDR_ENABLE                 0x1
+#define ARM_OSPI_INST_DDR_ENABLE            0x3
 
-#define ARM_OSPI_ADDR_LENGTH_POS               0x0
-#define ARM_OSPI_WAIT_CYCLE_POS                0x8
+#define ARM_OSPI_FRF_STANDRAD               0x0 /* 0x0 Standard OSPI Format */
+#define ARM_OSPI_FRF_DUAL                   0x1 /* 0x1 Dual OSPI Format */
+#define ARM_OSPI_FRF_QUAD                   0x2 /* 0X2 Quad OSPI Format */
+#define ARM_OSPI_FRF_OCTAL                  0x3 /* 0X2 Octal OSPI Format */
+
+#define ARM_OSPI_ADDR_LENGTH_POS            0x0
+#define ARM_OSPI_WAIT_CYCLE_POS             0x8
 
 /*---- OSPI Slave Select Signal definitions ----*/
 
-#define ARM_OSPI_SS_INACTIVE                   0UL                 //< OSPI Slave Select Signal Inactive
-#define ARM_OSPI_SS_ACTIVE                     1UL                 ///< OSPI Slave Select Signal Active
+#define ARM_OSPI_SS_INACTIVE                0UL  //< OSPI Slave Select Signal Inactive
+#define ARM_OSPI_SS_ACTIVE                  1UL  ///< OSPI Slave Select Signal Active
 
 /*----- OSPI specific error codes ----*/
 
-#define ARM_OSPI_ERROR_MODE                    (ARM_DRIVER_ERROR_SPECIFIC - 1)     ///< Specified Mode not supported
-#define ARM_OSPI_ERROR_FRAME_FORMAT            (ARM_DRIVER_ERROR_SPECIFIC - 2)     ///< Specified Frame Format not supported
-#define ARM_OSPI_ERROR_DATA_BITS               (ARM_DRIVER_ERROR_SPECIFIC - 3)     ///< Specified number of Data bits not supported
-#define ARM_OSPI_ERROR_BIT_ORDER               (ARM_DRIVER_ERROR_SPECIFIC - 4)     ///< Specified Bit order not supported
-#define ARM_OSPI_ERROR_SS_MODE                 (ARM_DRIVER_ERROR_SPECIFIC - 5)     ///< Specified Slave Select Mode not supported
+#define ARM_OSPI_ERROR_MODE                 (ARM_DRIVER_ERROR_SPECIFIC - 1)  ///< Specified Mode not supported
+#define ARM_OSPI_ERROR_FRAME_FORMAT                                                                \
+    (ARM_DRIVER_ERROR_SPECIFIC - 2)  ///< Specified Frame Format not supported
+#define ARM_OSPI_ERROR_DATA_BITS                                                                   \
+    (ARM_DRIVER_ERROR_SPECIFIC - 3)  ///< Specified number of Data bits not supported
+#define ARM_OSPI_ERROR_BIT_ORDER                                                                   \
+    (ARM_DRIVER_ERROR_SPECIFIC - 4)  ///< Specified Bit order not supported
+#define ARM_OSPI_ERROR_SS_MODE                                                                     \
+    (ARM_DRIVER_ERROR_SPECIFIC - 5)  ///< Specified Slave Select Mode not supported
+
+/* In enum OSPI_DFS, the mapping from the enum to the corresponding
+ * integer must be strictly maintained, as the functionality
+ * relies on this association. */
+typedef enum _OSPI_DFS {
+    OSPI_DFS_4_BIT  = 4,  /* 4-bit DFS value */
+    OSPI_DFS_5_BIT  = 5,  /* 5-bit DFS value */
+    OSPI_DFS_6_BIT  = 6,  /* 6-bit DFS value */
+    OSPI_DFS_7_BIT  = 7,  /* 7-bit DFS value */
+    OSPI_DFS_8_BIT  = 8,  /* 8-bit DFS value */
+    OSPI_DFS_9_BIT  = 9,  /* 9-bit DFS value */
+    OSPI_DFS_10_BIT = 10, /* 10-bit DFS value */
+    OSPI_DFS_11_BIT = 11, /* 11-bit DFS value */
+    OSPI_DFS_12_BIT = 12, /* 12-bit DFS value */
+    OSPI_DFS_13_BIT = 13, /* 13-bit DFS value */
+    OSPI_DFS_14_BIT = 14, /* 14-bit DFS value */
+    OSPI_DFS_15_BIT = 15, /* 15-bit DFS value */
+    OSPI_DFS_16_BIT = 16, /* 16-bit DFS value */
+    OSPI_DFS_17_BIT = 17, /* 17-bit DFS value */
+    OSPI_DFS_18_BIT = 18, /* 18-bit DFS value */
+    OSPI_DFS_19_BIT = 19, /* 19-bit DFS value */
+    OSPI_DFS_20_BIT = 20, /* 20-bit DFS value */
+    OSPI_DFS_21_BIT = 21, /* 21-bit DFS value */
+    OSPI_DFS_22_BIT = 22, /* 22-bit DFS value */
+    OSPI_DFS_23_BIT = 23, /* 23-bit DFS value */
+    OSPI_DFS_24_BIT = 24, /* 24-bit DFS value */
+    OSPI_DFS_25_BIT = 25, /* 25-bit DFS value */
+    OSPI_DFS_26_BIT = 26, /* 26-bit DFS value */
+    OSPI_DFS_27_BIT = 27, /* 27-bit DFS value */
+    OSPI_DFS_28_BIT = 28, /* 28-bit DFS value */
+    OSPI_DFS_29_BIT = 29, /* 29-bit DFS value */
+    OSPI_DFS_30_BIT = 30, /* 30-bit DFS value */
+    OSPI_DFS_31_BIT = 31, /* 31-bit DFS value */
+    OSPI_DFS_32_BIT = 32, /* 32-bit DFS value */
+} OSPI_DFS;
 
 /**
 \brief OSPI Status
 */
 typedef struct _ARM_OSPI_STATUS {
-    uint32_t busy       : 1;              ///< Transmitter/Receiver busy flag
-    uint32_t data_lost  : 1;              ///< Data lost: Receive overflow / Transmit underflow (cleared on start of transfer operation)
-    uint32_t mode_fault : 1;              ///< Mode fault detected; optional (cleared on start of transfer operation)
-    uint32_t reserved   : 29;
+    uint32_t busy      : 1;  ///< Transmitter/Receiver busy flag
+    uint32_t data_lost : 1;  ///< Data lost: Receive overflow / Transmit underflow (cleared on start
+                             ///< of transfer operation)
+    uint32_t mode_fault: 1;  ///< Mode fault detected; optional (cleared on start of transfer
+                             ///< operation)
+    uint32_t reserved  : 29;
 } ARM_OSPI_STATUS;
 
 /****** OSPI Event *****/
@@ -253,40 +319,51 @@ typedef struct _ARM_OSPI_STATUS {
   \return      none
 */
 
-typedef void (*ARM_OSPI_SignalEvent_t) (uint32_t event);  ///< Pointer to \ref ARM_OSPI_SignalEvent : Signal OSPI Event.
+typedef void (*ARM_OSPI_SignalEvent_t)(uint32_t event);  ///< Pointer to \ref ARM_OSPI_SignalEvent :
+                                                         ///< Signal OSPI Event.
 
 /**
 \brief OSPI Driver Capabilities.
 */
 typedef struct _ARM_OSPI_CAPABILITIES {
-    uint32_t simplex          : 1;        ///< supports Simplex Mode (Master and Slave) @deprecated Reserved (must be zero)
-    uint32_t ti_ssi           : 1;        ///< supports TI Synchronous Serial Interface
-    uint32_t microwire        : 1;        ///< supports Microwire Interface
-    uint32_t event_mode_fault : 1;        ///< Signal Mode Fault event: \ref ARM_OSPI_EVENT_MODE_FAULT
-    uint32_t reserved         : 28;       ///< Reserved (must be zero)
+    uint32_t simplex  : 1;  ///< supports Simplex Mode (Master and Slave) @deprecated Reserved (must
+                            ///< be zero)
+    uint32_t ti_ssi   : 1;  ///< supports TI Synchronous Serial Interface
+    uint32_t microwire: 1;  ///< supports Microwire Interface
+    uint32_t event_mode_fault: 1;   ///< Signal Mode Fault event: \ref ARM_OSPI_EVENT_MODE_FAULT
+    uint32_t reserved        : 28;  ///< Reserved (must be zero)
 } ARM_OSPI_CAPABILITIES;
-
 
 /**
 \brief Access structure of the OSPI Driver.
 */
 typedef struct _ARM_DRIVER_OSPI {
-  ARM_DRIVER_VERSION    (*GetVersion)      (void);                             ///< Pointer to \ref ARM_OSPI_GetVersion : Get driver version.
-  ARM_OSPI_CAPABILITIES (*GetCapabilities) (void);                             ///< Pointer to \ref ARM_OSPI_GetCapabilities : Get driver capabilities.
-  int32_t               (*Initialize)      (ARM_OSPI_SignalEvent_t cb_event);   ///< Pointer to \ref ARM_OSPI_Initialize : Initialize OSPI Interface.
-  int32_t               (*Uninitialize)    (void);                             ///< Pointer to \ref ARM_OSPI_Uninitialize : De-initialize OSPI Interface.
-  int32_t               (*PowerControl)    (ARM_POWER_STATE state);            ///< Pointer to \ref ARM_OSPI_PowerControl : Control OSPI Interface Power.
-  int32_t               (*Send)            (const void *data, uint32_t num);   ///< Pointer to \ref ARM_OSPI_Send : Start sending data to OSPI Interface.
-  int32_t               (*Receive)         (      void *data, uint32_t num);   ///< Pointer to \ref ARM_OSPI_Receive : Start receiving data from OSPI Interface.
-  int32_t               (*Transfer)        (const void *data_out,
-                                                 void *data_in,
-                                           uint32_t    num);                  ///< Pointer to \ref ARM_OSPI_Transfer : Start sending/receiving data to/from OSPI.
-  uint32_t              (*GetDataCount)    (void);                             ///< Pointer to \ref ARM_OSPI_GetDataCount : Get transferred data count.
-  int32_t               (*Control)         (uint32_t control, uint32_t arg);   ///< Pointer to \ref ARM_OSPI_Control : Control OSPI Interface.
-  ARM_OSPI_STATUS       (*GetStatus)       (void);                             ///< Pointer to \ref ARM_OSPI_GetStatus : Get OSPI status.
+    ARM_DRIVER_VERSION (*GetVersion)
+    (void);  ///< Pointer to \ref ARM_OSPI_GetVersion : Get driver version.
+    ARM_OSPI_CAPABILITIES (*GetCapabilities)
+    (void);  ///< Pointer to \ref ARM_OSPI_GetCapabilities : Get driver capabilities.
+    int32_t (*Initialize)(ARM_OSPI_SignalEvent_t cb_event);  ///< Pointer to \ref
+                                                             ///< ARM_OSPI_Initialize : Initialize
+                                                             ///< OSPI Interface.
+    int32_t (*Uninitialize)(void);  ///< Pointer to \ref ARM_OSPI_Uninitialize : De-initialize OSPI
+                                    ///< Interface.
+    int32_t (*PowerControl)(ARM_POWER_STATE state);   ///< Pointer to \ref ARM_OSPI_PowerControl :
+                                                      ///< Control OSPI Interface Power.
+    int32_t (*Send)(const void *data, uint32_t num);  ///< Pointer to \ref ARM_OSPI_Send : Start
+                                                      ///< sending data to OSPI Interface.
+    int32_t (*Receive)(void *data, uint32_t num);     ///< Pointer to \ref ARM_OSPI_Receive : Start
+                                                      ///< receiving data from OSPI Interface.
+    int32_t (*Transfer)(const void *data_out, void *data_in,
+                        uint32_t num);  ///< Pointer to \ref ARM_OSPI_Transfer : Start
+                                        ///< sending/receiving data to/from OSPI.
+    uint32_t (*GetDataCount)(void);     ///< Pointer to \ref ARM_OSPI_GetDataCount : Get transferred
+                                        ///< data count.
+    int32_t (*Control)(uint32_t control, uint32_t arg);  ///< Pointer to \ref ARM_OSPI_Control :
+                                                         ///< Control OSPI Interface.
+    ARM_OSPI_STATUS (*GetStatus)(void);  ///< Pointer to \ref ARM_OSPI_GetStatus : Get OSPI status.
 } const ARM_DRIVER_OSPI;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif /* DRIVER_OSPI_H_ */

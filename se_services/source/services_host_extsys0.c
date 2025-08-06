@@ -29,7 +29,7 @@
 #if defined(A32_LINUX)
 #include "a32_linux.h"
 #else
-#include "system_utils.h"
+#include "sys_utils.h"
 #endif
 
 /*******************************************************************************
@@ -56,29 +56,27 @@
  * @return
  * @ingroup services-host-extsys0
  */
-uint32_t SERVICES_Boot_Net_Proc(uint32_t services_handle,
-                                net_proc_boot_args_t* boot_args,
+uint32_t SERVICES_Boot_Net_Proc(uint32_t services_handle, net_proc_boot_args_t *boot_args,
                                 uint32_t *error_code)
 {
-  net_proc_boot_svc_t *p_svc = (net_proc_boot_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(net_proc_boot_svc_t)); /* packet */
+    net_proc_boot_svc_t *p_svc = (net_proc_boot_svc_t *) SERVICES_prepare_packet_buffer(
+        sizeof(net_proc_boot_svc_t)); /* packet */
 
-  /*
-   * Assemble SERVICE packet
-   */
-  p_svc->send_nvds_src_addr = LocalToGlobal((void*)boot_args->nvds_src_addr);
-  p_svc->send_nvds_dst_addr = boot_args->nvds_dst_addr;
-  p_svc->send_nvds_copy_len = boot_args->nvds_copy_len;
-  p_svc->send_trng_dst_addr = boot_args->trng_dst_addr;
-  p_svc->send_trng_len      = boot_args->trng_len;
-  p_svc->send_internal_clock_select = boot_args->es0_clock_select;
+    /*
+     * Assemble SERVICE packet
+     */
+    p_svc->send_nvds_src_addr         = LocalToGlobal((void *) boot_args->nvds_src_addr);
+    p_svc->send_nvds_dst_addr         = boot_args->nvds_dst_addr;
+    p_svc->send_nvds_copy_len         = boot_args->nvds_copy_len;
+    p_svc->send_trng_dst_addr         = boot_args->trng_dst_addr;
+    p_svc->send_trng_len              = boot_args->trng_len;
+    p_svc->send_internal_clock_select = boot_args->es0_clock_select;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_EXTSYS0_BOOT_SET_ARGS,
-                                       DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_EXTSYS0_BOOT_SET_ARGS, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -89,16 +87,14 @@ uint32_t SERVICES_Boot_Net_Proc(uint32_t services_handle,
  * @return
  * @ingroup services-host-extsys0
  */
-uint32_t SERVICES_Shutdown_Net_Proc(uint32_t services_handle,
-                                    uint32_t *error_code)
+uint32_t SERVICES_Shutdown_Net_Proc(uint32_t services_handle, uint32_t *error_code)
 {
-  net_proc_shutdown_svc_t *p_svc = (net_proc_shutdown_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(net_proc_shutdown_svc_t));
+    net_proc_shutdown_svc_t *p_svc =
+        (net_proc_shutdown_svc_t *) SERVICES_prepare_packet_buffer(sizeof(net_proc_shutdown_svc_t));
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_EXTSYS0_SHUTDOWN,
-                                       DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_EXTSYS0_SHUTDOWN, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }

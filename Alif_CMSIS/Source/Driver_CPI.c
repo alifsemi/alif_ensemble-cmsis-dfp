@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file         Driver_CPI.c
  * @author       Tanay Rami and Chandra Bhushan Singh
  * @email        tanay@alifsemi.com and chandrabhushan.singh@alifsemi.com
@@ -21,6 +21,7 @@
 
 /* System Includes */
 #include "RTE_Device.h"
+#include "sys_utils.h"
 
 /* Project Includes */
 #include "Camera_Sensor.h"
@@ -32,12 +33,10 @@
 /* CMSIS CPI driver Includes */
 #include "Driver_CPI.h"
 
+#if defined(RTE_Drivers_CPI)
+
 #if !(RTE_CPI || RTE_LPCPI)
 #error "CAMERA is not enabled in the RTE_Device.h"
-#endif
-
-#if !defined(RTE_Drivers_CPI)
-#error "CAMERA not configured in RTE_Components.h!"
 #endif
 
 #if (RTE_MIPI_CSI2)
@@ -50,22 +49,19 @@ extern ARM_DRIVER_MIPI_CSI2 Driver_MIPI_CSI2;
   \param[in] int_event   \ref MIPI CSI2 event types.
   \return    none.
 */
-void ARM_MIPI_CSI2_Event_Callback (uint32_t int_event);
+void ARM_MIPI_CSI2_Event_Callback(uint32_t int_event);
 #endif
 
-#define ARM_CPI_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0)  /* driver version */
+#define ARM_CPI_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
 
 /* Driver Version */
-static const ARM_DRIVER_VERSION DriverVersion = {
-    ARM_CPI_API_VERSION,
-    ARM_CPI_DRV_VERSION
-};
+static const ARM_DRIVER_VERSION DriverVersion        = {ARM_CPI_API_VERSION, ARM_CPI_DRV_VERSION};
 
 /* Driver Capabilities */
 static const ARM_CPI_CAPABILITIES DriverCapabilities = {
-    1,  /* Supports CPI Snapshot mode,
-           In this mode CPI will capture one frame
-           then it gets stop. */
+    1, /* Supports CPI Snapshot mode,
+          In this mode CPI will capture one frame
+          then it gets stop. */
     1, /* Supports CPI video mode,
            In this mode CPI will capture frame
            continuously. */
@@ -93,94 +89,86 @@ static ARM_CPI_CAPABILITIES CPI_GetCapabilities(void)
 }
 
 /**
-  \fn         int32_t CPIx_Initialize(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *cam_sensor,
+  \fn         int32_t CPIx_Initialize(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *cam_sensor,
                                       ARM_CPI_SignalEvent_t cb_event)
   \brief      Initialize Camera Sensor and CPI.
               this function will
                   - set the user callback event
                   - call Camera Sensor initialize
                   - if MIPI CSI is enabled, call CSI initialize
-  \param[in] CPI       Pointer to CPI resources structure
+  \param[in] CPI_RES       Pointer to CPI resources structure
   \param[in] cam_sensor     Pointer to Camera Sensor Device resources structure
   \param[in] cb_event       Pointer to Camera Event \ref ARM_CAMERA_CONTROLLER_SignalEvent_t
   \return    \ref execution_status
 */
-static int32_t CPIx_Initialize(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *cam_sensor,
+static int32_t CPIx_Initialize(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *cam_sensor,
                                ARM_CPI_SignalEvent_t cb_event)
 {
-    int32_t ret             = ARM_DRIVER_OK;
+    int32_t ret = ARM_DRIVER_OK;
 
-    if(cam_sensor == NULL)
-    {
+    if (cam_sensor == NULL) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    if (CPI->status.initialized == 1)
-    {
+    if (CPI_RES->status.initialized == 1) {
         /* Driver is already initialized */
         return ARM_DRIVER_OK;
     }
 
-    if (!cb_event)
-    {
+    if (!cb_event) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     /* Set the user callback event. */
-    CPI->cb_event = cb_event;
+    CPI_RES->cb_event = cb_event;
 
     /* Call Camera Sensor specific init */
-    ret = cam_sensor->ops->Init();
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret               = cam_sensor->ops->Init();
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
 #if (RTE_MIPI_CSI2)
     /*Initializing MIPI CSI2 if the sensor is MIPI CSI2 sensor*/
     ret = Driver_MIPI_CSI2.Initialize(ARM_MIPI_CSI2_Event_Callback);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 #endif
 
-    if(!cam_sensor->cpi_info)
-    {
+    if (!cam_sensor->cpi_info) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     /* CPI Frame Configuration. */
-    CPI->cnfg->frame.width             = cam_sensor->width;
-    CPI->cnfg->frame.height            = cam_sensor->height;
+    CPI_RES->cnfg->frame.width  = cam_sensor->width;
+    CPI_RES->cnfg->frame.height = cam_sensor->height;
 
     /* Set the driver flag as initialized. */
-    CPI->status.initialized = 1;
+    CPI_RES->status.initialized = 1;
 
     return ARM_DRIVER_OK;
 }
 
 /**
-  \fn        int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor)
+  \fn        int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor)
   \brief     Un-Initialize Camera Sensor and CPI.
                  - Un-initialize Camera Sensor
                  - If MIPI CSI is enabled, call CSI uninitialize
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \param[in] cam_sensor Pointer to Camera Sensor Device resources structure
   \return    \ref execution_status
 */
-static int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor)
+static int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor)
 {
     int32_t ret = ARM_DRIVER_OK;
 
-    if (CPI->status.initialized == 0)
-    {
+    if (CPI_RES->status.initialized == 0) {
         /* Driver is uninitialized */
         return ARM_DRIVER_OK;
     }
 
-    if (CPI->status.powered == 1)
-    {
+    if (CPI_RES->status.powered == 1) {
         /* Driver is not powered off */
         return ARM_DRIVER_ERROR;
     }
@@ -191,117 +179,105 @@ static int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camer
 #if (RTE_MIPI_CSI2)
     /*Uninitializing MIPI CSI2 if the sensor is MIPI CSI2 sensor*/
     ret = Driver_MIPI_CSI2.Uninitialize();
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 #endif
     /* Reset driver flags. */
-    CPI->status.initialized = 0;
+    CPI_RES->status.initialized = 0;
 
     return ret;
 }
 
 /**
-  \fn        int32_t CPIx_PowerControl(CPI_RESOURCES *CPI, ARM_POWER_STATE state)
+  \fn        int32_t CPIx_PowerControl(CPI_RESOURCES *CPI_RES, ARM_POWER_STATE state)
   \brief     Camera power control.
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \param[in] state      Power state
   \return    \ref execution_status
 */
-static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI, ARM_POWER_STATE state)
+static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI_RES, ARM_POWER_STATE state)
 {
     int32_t ret = ARM_DRIVER_OK;
 
-    if (CPI->status.initialized == 0)
-    {
+    if (CPI_RES->status.initialized == 0) {
         /* Driver is not initialized */
         return ARM_DRIVER_ERROR;
     }
 
-    switch (state)
-    {
-        case ARM_POWER_OFF:
+    switch (state) {
+    case ARM_POWER_OFF:
         {
-            if (CPI->status.powered == 0)
-            {
+            if (CPI_RES->status.powered == 0) {
                 /* Driver is already powered off */
                 return ARM_DRIVER_OK;
             }
 
             /* Disable Camera IRQ */
-            NVIC_DisableIRQ(CPI->irq_num);
+            NVIC_DisableIRQ(CPI_RES->irq_num);
 
             /* Clear Any Pending Camera IRQ */
-            NVIC_ClearPendingIRQ(CPI->irq_num);
+            NVIC_ClearPendingIRQ(CPI_RES->irq_num);
 
-            if(CPI->drv_instance == CPI_INSTANCE_CPI0)
-            {
+            if (CPI_RES->drv_instance == CPI_INSTANCE_CPI0) {
                 disable_cpi_periph_clk();
-            }
-            else
-            {
+            } else {
                 disable_lpcpi_periph_clk();
             }
 
 #if (RTE_MIPI_CSI2)
             /*Disable MIPI CSI2*/
             ret = Driver_MIPI_CSI2.PowerControl(ARM_POWER_OFF);
-            if(ret != ARM_DRIVER_OK)
-            {
+            if (ret != ARM_DRIVER_OK) {
                 return ret;
             }
 #endif
 
             /* Reset the power status of Camera. */
-            CPI->status.powered = 0;
+            CPI_RES->status.powered = 0;
             break;
         }
 
-        case ARM_POWER_FULL:
+    case ARM_POWER_FULL:
         {
-            if (CPI->status.powered == 1)
-            {
+            if (CPI_RES->status.powered == 1) {
                 /* Driver is already powered ON */
                 return ARM_DRIVER_OK;
             }
 
-            if(CPI->drv_instance == CPI_INSTANCE_CPI0)
-            {
+            if (CPI_RES->drv_instance == CPI_INSTANCE_CPI0) {
                 enable_cpi_periph_clk();
-            }
-            else
-            {
+            } else {
                 enable_lpcpi_periph_clk();
             }
 
             /* Disable CPI Interrupt. */
-            cpi_disable_interrupt(CPI->regs, CAM_INTR_STOP | CAM_INTR_HSYNC | CAM_INTR_VSYNC |
-                                             CAM_INTR_INFIFO_OVERRUN | CAM_INTR_OUTFIFO_OVERRUN |
-                                             CAM_INTR_BRESP_ERR);
+            cpi_disable_interrupt(CPI_RES->regs,
+                                  CAM_INTR_STOP | CAM_INTR_HSYNC | CAM_INTR_VSYNC |
+                                      CAM_INTR_INFIFO_OVERRUN | CAM_INTR_OUTFIFO_OVERRUN |
+                                      CAM_INTR_BRESP_ERR);
 
             /* Enable Camera IRQ */
-            NVIC_ClearPendingIRQ(CPI->irq_num);
-            NVIC_SetPriority(CPI->irq_num, CPI->irq_priority);
-            NVIC_EnableIRQ(CPI->irq_num);
+            NVIC_ClearPendingIRQ(CPI_RES->irq_num);
+            NVIC_SetPriority(CPI_RES->irq_num, CPI_RES->irq_priority);
+            NVIC_EnableIRQ(CPI_RES->irq_num);
 
 #if (RTE_MIPI_CSI2)
             /*Enable MIPI CSI2*/
             ret = Driver_MIPI_CSI2.PowerControl(ARM_POWER_FULL);
-            if(ret != ARM_DRIVER_OK)
-            {
+            if (ret != ARM_DRIVER_OK) {
                 return ret;
             }
 #endif
 
             /* Set the power flag enabled */
-            CPI->status.powered = 1;
+            CPI_RES->status.powered = 1;
             break;
         }
 
-        case ARM_POWER_LOW:
+    case ARM_POWER_LOW:
 
-        default:
+    default:
         {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
@@ -311,7 +287,7 @@ static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI, ARM_POWER_STATE state)
 }
 
 /**
-  \fn         int32_t CPI_StartCapture(CPI_RESOURCES *CPI)
+  \fn         int32_t CPI_StartCapture(CPI_RESOURCES *CPI_RES)
   \brief      Start CPI
               This function will
                   - check CPI capture status
@@ -322,50 +298,50 @@ static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI, ARM_POWER_STATE state)
                       -clear control register
                       -enable snapshot or video mode with FIFO clock source selection
                       and start capture
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \return    \ref execution_status
 */
-static int32_t CPI_StartCapture(CPI_RESOURCES *CPI)
+static int32_t CPI_StartCapture(CPI_RESOURCES *CPI_RES)
 {
     /* Check CPI is busy in capturing? */
-    if(cpi_get_capture_status(CPI->regs) != CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING)
-    {
+    if (cpi_get_capture_status(CPI_RES->regs) != CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING) {
         return ARM_DRIVER_ERROR_BUSY;
     }
 
     /* Set Frame Buffer Start Address Register */
-    cpi_set_framebuff_start_addr(CPI->regs, CPI->cnfg->framebuff_saddr);
+    cpi_set_framebuff_start_addr(CPI_RES->regs, CPI_RES->cnfg->framebuff_saddr);
 
     /* Start Camera Capture in Snapshot mode/continuous capture mode */
-    cpi_start_capture(CPI->regs, CPI->capture_mode);
+    cpi_start_capture(CPI_RES->regs, CPI_RES->capture_mode);
 
     return ARM_DRIVER_OK;
 }
 
 /**
-  \fn        int32_t CPI_StopCapture(CPI_RESOURCES *CPI)
+  \fn        int32_t CPI_StopCapture(CPI_RESOURCES *CPI_RES)
   \brief     Stop CPI
              This function will
                  - disable CPI interrupt.
                  - clear control register to stop capturing.
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \return    \ref execution_status
 */
-static int32_t CPI_StopCapture(CPI_RESOURCES *CPI)
+static int32_t CPI_StopCapture(CPI_RESOURCES *CPI_RES)
 {
     /* Disable CPI Interrupt. */
-    cpi_disable_interrupt(CPI->regs, CAM_INTR_STOP | CAM_INTR_HSYNC | CAM_INTR_VSYNC |
-                                     CAM_INTR_INFIFO_OVERRUN | CAM_INTR_OUTFIFO_OVERRUN |
-                                     CAM_INTR_BRESP_ERR);
+    cpi_disable_interrupt(CPI_RES->regs,
+                          CAM_INTR_STOP | CAM_INTR_HSYNC | CAM_INTR_VSYNC |
+                              CAM_INTR_INFIFO_OVERRUN | CAM_INTR_OUTFIFO_OVERRUN |
+                              CAM_INTR_BRESP_ERR);
 
     /* Stop Clear CPI control */
-    cpi_stop_capture(CPI->regs);
+    cpi_stop_capture(CPI_RES->regs);
 
     return ARM_DRIVER_OK;
 }
 
 /**
-  \fn         int32_t CPIx_Capture(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor,
+  \fn         int32_t CPIx_Capture(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor,
                                                        void *framebuffer_startaddr,
                                                        CPI_MODE_SELECT mode
   \brief      Start Camera Sensor and CPI (in Snapshot mode or video mode).
@@ -376,7 +352,7 @@ static int32_t CPI_StopCapture(CPI_RESOURCES *CPI)
                   - set frame buffer start address in CPI
                   - set CPI Capture mode as Snapshot mode or video mode.
                   - start capturing
-  \param[in] CPI              Pointer to CPI resources structure
+  \param[in] CPI_RES              Pointer to CPI resources structure
   \param[in] cam_sensor            Pointer to Camera Sensor Device resources structure
   \param[in] framebuffer_startaddr Pointer to frame buffer start address,
                                    where camera captured image will be stored.
@@ -384,32 +360,27 @@ static int32_t CPI_StopCapture(CPI_RESOURCES *CPI)
                                    1: Capture one frame and stop
   \return    \ref execution_status
 */
-static int32_t CPIx_Capture(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor,
-                                                     void *framebuffer_startaddr,
-                                                     CPI_MODE_SELECT mode)
+static int32_t CPIx_Capture(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor,
+                            void *framebuffer_startaddr, CPI_MODE_SELECT mode)
 {
     int32_t ret = ARM_DRIVER_OK;
 
-    if(CPI->status.sensor_configured == 0)
-    {
+    if (CPI_RES->status.sensor_configured == 0) {
         return ARM_DRIVER_ERROR;
     }
 
-    if(!framebuffer_startaddr)
-    {
+    if (!framebuffer_startaddr) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     /* Check CPI is busy in capturing? */
-    if(cpi_get_capture_status(CPI->regs) != CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING)
-    {
+    if (cpi_get_capture_status(CPI_RES->regs) != CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING) {
         return ARM_DRIVER_ERROR_BUSY;
     }
 
 #if (RTE_MIPI_CSI2)
     ret = Driver_MIPI_CSI2.StartIPI();
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 #endif
@@ -420,31 +391,26 @@ static int32_t CPIx_Capture(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sen
      * Else Start the camera in continuous mode of capture. The responsibility of capturing
      *   required number of frames, will lie on Camera Controller.
      */
-    if ((mode == CPI_MODE_SELECT_SNAPSHOT) && camera_sensor->ops->Snapshot)
-    {
+    if ((mode == CPI_MODE_SELECT_SNAPSHOT) && camera_sensor->ops->Snapshot) {
         /* Capture 1 frame */
         ret = camera_sensor->ops->Snapshot(1);
-    }
-    else
-    {
+    } else {
         /* Start Sensor in continuous streaming mode */
         ret = camera_sensor->ops->Start();
     }
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         goto Error_Stop_CSI;
     }
 
     /* Update Frame Buffer Start Address */
-    CPI->cnfg->framebuff_saddr = LocalToGlobal(framebuffer_startaddr);
+    CPI_RES->cnfg->framebuff_saddr = LocalToGlobal(framebuffer_startaddr);
 
     /* Set capture mode */
-    CPI->capture_mode = mode;
+    CPI_RES->capture_mode          = mode;
 
     /* CPI start capturing */
-    ret = CPI_StartCapture(CPI);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret                            = CPI_StartCapture(CPI_RES);
+    if (ret != ARM_DRIVER_OK) {
         goto Error_Stop_Camera_Sensor;
     }
 
@@ -453,8 +419,7 @@ static int32_t CPIx_Capture(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sen
 Error_Stop_Camera_Sensor:
     /* Stop CPI */
     ret = camera_sensor->ops->Stop();
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -462,8 +427,7 @@ Error_Stop_CSI:
 #if (RTE_MIPI_CSI2)
     /*Stop MIPI CSI2 IPI interface*/
     ret = Driver_MIPI_CSI2.StopIPI();
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 #endif
@@ -472,36 +436,33 @@ Error_Stop_CSI:
 }
 
 /**
-  \fn        int32_t CPIx_Stop(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *cam_sensor)
+  \fn        int32_t CPIx_Stop(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *cam_sensor)
   \brief     Stop Camera Sensor and CPI.
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \param[in] cam_sensor Pointer to Camera Sensor Device resources structure
   \return    \ref execution_status
 */
-static int32_t CPIx_Stop(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor)
+static int32_t CPIx_Stop(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor)
 {
     int32_t ret = ARM_DRIVER_OK;
 
     /* Call Camera Sensor specific Stop */
-    ret = camera_sensor->ops->Stop();
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret         = camera_sensor->ops->Stop();
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
 #if (RTE_MIPI_CSI2)
     /*Stop MIPI CSI2 IPI interface*/
     ret = Driver_MIPI_CSI2.StopIPI();
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 #endif
 
     /* Stop CPI */
-    ret = CPI_StopCapture(CPI);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = CPI_StopCapture(CPI_RES);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -509,52 +470,51 @@ static int32_t CPIx_Stop(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor
 }
 
 /**
-  \fn         int32_t CPIx_Control(CPI_RESOURCES *CPI,CAMERA_SENSOR_DEVICE *cam_sensor,
+  \fn         int32_t CPIx_Control(CPI_RESOURCES *CPI_RES,CAMERA_SENSOR_DEVICE *cam_sensor,
                                                       uint32_t control, uint32_t arg)
   \brief     Control CPI and Camera Sensor.
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \param[in] cam_sensor Pointer to Camera Sensor Device resources structure
   \param[in] control    Operation
   \param[in] arg        Argument of operation
   \return    \ref execution_status
 */
-static int32_t CPIx_Control(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sensor,
-                                                uint32_t control, uint32_t arg)
+static int32_t CPIx_Control(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_sensor,
+                            uint32_t control, uint32_t arg)
 {
-    int32_t ret = ARM_DRIVER_OK;
+    int32_t  ret                = ARM_DRIVER_OK;
     uint32_t cam_sensor_control = 0;
-    uint32_t irqs = 0;
+    uint32_t irqs               = 0;
 
-    if (CPI->status.initialized == 0)
-    {
+    if (CPI_RES->status.initialized == 0) {
         return ARM_DRIVER_ERROR;
     }
 
-    switch(control)
-    {
-        case CPI_SOFTRESET:
+    switch (control) {
+    case CPI_SOFTRESET:
         {
-            cpi_software_reset(CPI->regs);
+            cpi_software_reset(CPI_RES->regs);
             break;
         }
 
-        case CPI_CONFIGURE:
+    case CPI_CONFIGURE:
         {
             /* Set all CPI Configurations. */
             cpi_cfg_info_t cpi_info;
 
-            if(camera_sensor->interface == CAMERA_SENSOR_INTERFACE_PARALLEL)
-            {
+            if (camera_sensor->interface == CAMERA_SENSOR_INTERFACE_PARALLEL) {
                 cpi_info.sensor_info.interface = CPI_INTERFACE_PARALLEL;
-            }
-            else
-            {
+            } else {
                 cpi_info.sensor_info.interface = CPI_INTERFACE_MIPI_CSI;
             }
 
+#if SOC_FEAT_HAS_ISP
+            cpi_info.axi_port_en                 = CPI_RES->cnfg->axi_port_en;
+            cpi_info.isp_port_en                 = CPI_RES->cnfg->isp_port_en;
+#endif
             cpi_info.sensor_info.vsync_wait      = camera_sensor->cpi_info->vsync_wait;
             cpi_info.sensor_info.vsync_mode      = camera_sensor->cpi_info->vsync_mode;
-            cpi_info.rw_roundup                  = CPI->row_roundup;
+            cpi_info.rw_roundup                  = CPI_RES->row_roundup;
             cpi_info.sensor_info.pixelclk_pol    = camera_sensor->cpi_info->pixelclk_pol;
             cpi_info.sensor_info.hsync_pol       = camera_sensor->cpi_info->hsync_pol;
             cpi_info.sensor_info.vsync_pol       = camera_sensor->cpi_info->vsync_pol;
@@ -564,157 +524,159 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI, CAMERA_SENSOR_DEVICE *camera_sen
             cpi_info.sensor_info.data_mask       = camera_sensor->cpi_info->data_mask;
 
             cpi_info.fifo_ctrl.wr_wmark          = DEFAULT_WRITE_WMARK;
-            cpi_info.fifo_ctrl.rd_wmark          = CPI->cnfg->fifo->read_watermark;
+            cpi_info.fifo_ctrl.rd_wmark          = CPI_RES->cnfg->fifo->read_watermark;
 
-            cpi_info.frame_cfg.data              = CPI->cnfg->frame.width;
-            cpi_info.frame_cfg.row               = (CPI->cnfg->frame.height - 1);
+#if SOC_FEAT_CPI_HAS_CROPPING
+            cpi_info.horizontal_cfg.hbp          = CPI_RES->cnfg->horizontal_cfg->hbp;
+            cpi_info.horizontal_cfg.hfp          = CPI_RES->cnfg->horizontal_cfg->hfp;
+            cpi_info.horizontal_cfg.hfp_en       = CPI_RES->cnfg->horizontal_cfg->hfp_en;
+
+            cpi_info.vertical_cfg.vbp            = CPI_RES->cnfg->vertical_cfg->vbp;
+            cpi_info.vertical_cfg.vfp            = CPI_RES->cnfg->vertical_cfg->vfp;
+            cpi_info.vertical_cfg.vfp_en         = CPI_RES->cnfg->vertical_cfg->vfp_en;
+#endif
+
+            cpi_info.frame_cfg.data              = CPI_RES->cnfg->frame.width;
+            cpi_info.frame_cfg.row               = (CPI_RES->cnfg->frame.height - 1);
 
             cpi_info.csi_ipi_color_mode          = camera_sensor->cpi_info->csi_mode;
 
-            cpi_set_config(CPI->regs, &cpi_info);
+            cpi_set_config(CPI_RES->regs, &cpi_info);
 
             break;
         }
 
-        case CPI_CAMERA_SENSOR_CONFIGURE:
+    case CPI_CAMERA_SENSOR_CONFIGURE:
         {
             /* Camera Sensor configure */
             cam_sensor_control = 1;
             break;
         }
 
-        case CPI_EVENTS_CONFIGURE:
+    case CPI_EVENTS_CONFIGURE:
         {
             /* Configure and enable CPI interrupt */
             irqs |= (arg & ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED) ? CAM_INTR_STOP : 0;
             irqs |= (arg & ARM_CPI_EVENT_CAMERA_FRAME_VSYNC_DETECTED) ? CAM_INTR_VSYNC : 0;
             irqs |= (arg & ARM_CPI_EVENT_CAMERA_FRAME_HSYNC_DETECTED) ? CAM_INTR_HSYNC : 0;
-            irqs |= (arg & ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN) ? CAM_INTR_INFIFO_OVERRUN : 0;
-            irqs |= (arg & ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN) ? CAM_INTR_OUTFIFO_OVERRUN : 0;
+            irqs |=
+                (arg & ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN) ? CAM_INTR_INFIFO_OVERRUN : 0;
+            irqs |=
+                (arg & ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN) ? CAM_INTR_OUTFIFO_OVERRUN : 0;
             irqs |= (arg & ARM_CPI_EVENT_ERR_HARDWARE) ? CAM_INTR_BRESP_ERR : 0;
 
-            cpi_enable_interrupt(CPI->regs, irqs);
+            cpi_enable_interrupt(CPI_RES->regs, irqs);
 
             break;
         }
 
-        case CPI_CAMERA_SENSOR_GAIN:
-        case CPI_CAMERA_SENSOR_AE:
-        case CPI_CAMERA_SENSOR_AE_TARGET_LUMA:
+    case CPI_CAMERA_SENSOR_GAIN:
+    case CPI_CAMERA_SENSOR_AE:
+    case CPI_CAMERA_SENSOR_AE_TARGET_LUMA:
         {
             /*Camera sensor controls*/
             ret = camera_sensor->ops->Control(control, arg);
-            if(ret != ARM_DRIVER_OK)
-            {
+            if (ret != ARM_DRIVER_OK) {
                 return ret;
             }
             break;
         }
 
-        default:
+    default:
         {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
     }
 
     /* Call Camera Sensor specific Control if required. */
-    if(cam_sensor_control)
-    {
+    if (cam_sensor_control) {
 
 #if (RTE_MIPI_CSI2)
         /*Configure MIPI CSI2 host and IPI interface*/
-        ret = Driver_MIPI_CSI2.ConfigureHost(CSI2_EVENT_PHY_FATAL | CSI2_EVENT_PKT_FATAL | CSI2_EVENT_PHY |
-                                            CSI2_EVENT_LINE | CSI2_EVENT_IPI_FATAL | CSI2_EVENT_BNDRY_FRAME_FATAL |
-                                            CSI2_EVENT_SEQ_FRAME_FATAL | CSI2_EVENT_CRC_FRAME_FATAL |
-                                            CSI2_EVENT_PLD_CRC_FATAL | CSI2_EVENT_DATA_ID | CSI2_EVENT_ECC_CORRECT);
-        if(ret != ARM_DRIVER_OK)
-        {
+        ret = Driver_MIPI_CSI2.ConfigureHost(
+            CSI2_EVENT_PHY_FATAL | CSI2_EVENT_PKT_FATAL | CSI2_EVENT_PHY | CSI2_EVENT_LINE |
+            CSI2_EVENT_IPI_FATAL | CSI2_EVENT_BNDRY_FRAME_FATAL | CSI2_EVENT_SEQ_FRAME_FATAL |
+            CSI2_EVENT_CRC_FRAME_FATAL | CSI2_EVENT_PLD_CRC_FATAL | CSI2_EVENT_DATA_ID |
+            CSI2_EVENT_ECC_CORRECT);
+        if (ret != ARM_DRIVER_OK) {
             return ret;
         }
 
         ret = Driver_MIPI_CSI2.ConfigureIPI();
-        if(ret != ARM_DRIVER_OK)
-        {
+        if (ret != ARM_DRIVER_OK) {
             return ret;
         }
 #endif
 
         camera_sensor->ops->Control(control, arg);
-        CPI->status.sensor_configured = 1;
+        CPI_RES->status.sensor_configured = 1;
     }
 
     return ret;
 }
 
 /**
-  \fn        int32_t CPIx_IRQHandler(CPI_RESOURCES *CPI)
+  \fn        int32_t CPIx_IRQHandler(CPI_RESOURCES *CPI_RES)
   \brief     Camera interrupt handler.
                  This function will
                      - check CPI received interrupt status.
                      - update events based on interrupt status.
                      - call the user callback function if any event occurs.
                      - clear interrupt status.
-  \param[in] CPI   Pointer to CPI resources structure
+  \param[in] CPI_RES   Pointer to CPI resources structure
   \return    \ref execution_status
 */
-static void CPIx_IRQHandler(CPI_RESOURCES *CPI)
+static void CPIx_IRQHandler(CPI_RESOURCES *CPI_RES)
 {
-    uint32_t irqs          = 0u;
-    uint32_t event         = 0U;
+    uint32_t irqs        = 0u;
+    uint32_t event       = 0U;
     uint32_t intr_status = 0U;
 
-    intr_status = cpi_get_interrupt_status(CPI->regs);
+    intr_status          = cpi_get_interrupt_status(CPI_RES->regs);
 
     /* received capture stop interrupt? */
-    if(intr_status & CAM_INTR_STOP)
-    {
-        irqs |= CAM_INTR_STOP;
+    if (intr_status & CAM_INTR_STOP) {
+        irqs  |= CAM_INTR_STOP;
         event |= ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED;
     }
 
     /* received hsync detected interrupt? */
-    if(intr_status & CAM_INTR_HSYNC)
-    {
-        irqs |= CAM_INTR_HSYNC;
+    if (intr_status & CAM_INTR_HSYNC) {
+        irqs  |= CAM_INTR_HSYNC;
         event |= ARM_CPI_EVENT_CAMERA_FRAME_HSYNC_DETECTED;
     }
 
     /* received vsync detected interrupt? */
-    if(intr_status & CAM_INTR_VSYNC)
-    {
-        irqs |= CAM_INTR_VSYNC;
+    if (intr_status & CAM_INTR_VSYNC) {
+        irqs  |= CAM_INTR_VSYNC;
         event |= ARM_CPI_EVENT_CAMERA_FRAME_VSYNC_DETECTED;
     }
 
     /* received fifo over-run interrupt? */
-    if(intr_status & CAM_INTR_INFIFO_OVERRUN)
-    {
-        irqs |= CAM_INTR_INFIFO_OVERRUN;
+    if (intr_status & CAM_INTR_INFIFO_OVERRUN) {
+        irqs  |= CAM_INTR_INFIFO_OVERRUN;
         event |= ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN;
     }
 
     /* received fifo under-run interrupt? */
-    if(intr_status & CAM_INTR_OUTFIFO_OVERRUN)
-    {
-        irqs |= CAM_INTR_OUTFIFO_OVERRUN;
+    if (intr_status & CAM_INTR_OUTFIFO_OVERRUN) {
+        irqs  |= CAM_INTR_OUTFIFO_OVERRUN;
         event |= ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN;
     }
 
     /* received bus error interrupt? */
-    if(intr_status & CAM_INTR_BRESP_ERR)
-    {
-        irqs |= CAM_INTR_BRESP_ERR;
+    if (intr_status & CAM_INTR_BRESP_ERR) {
+        irqs  |= CAM_INTR_BRESP_ERR;
         event |= ARM_CPI_EVENT_ERR_HARDWARE;
     }
 
     /* call the user callback if any event occurs */
-    if ((event != 0U) && (CPI->cb_event != NULL) )
-    {
-        CPI->cb_event(event);
+    if ((event != 0U) && (CPI_RES->cb_event != NULL)) {
+        CPI_RES->cb_event(event);
     }
 
     /* clear interrupt by writing one(W1C) */
-    cpi_irq_handler_clear_intr_status(CPI->regs, irqs);
+    cpi_irq_handler_clear_intr_status(CPI_RES->regs, irqs);
 }
 
 /* CPI Driver Instance */
@@ -724,27 +686,48 @@ static void CPIx_IRQHandler(CPI_RESOURCES *CPI)
 static CAMERA_SENSOR_DEVICE *cpi_sensor;
 
 /* CPI FIFO Water mark Configuration. */
-static CPI_FIFO_CONFIG fifo_config =
-{
-    .read_watermark = RTE_CPI_FIFO_READ_WATERMARK,
+static CPI_FIFO_CONFIG fifo_config = {
+    .read_watermark  = RTE_CPI_FIFO_READ_WATERMARK,
     .write_watermark = RTE_CPI_FIFO_WRITE_WATERMARK,
 };
 
-/* CPI color code Configuration. */
-static CPI_CONFIG config =
-{
-    .fifo = &fifo_config,
+#if SOC_FEAT_CPI_HAS_CROPPING
+/* CPI Horizontal Configuration. */
+static CPI_HORIZONTAL_CONFIG hconfig = {
+    .hbp = RTE_CPI_HBP,
+    .hfp = RTE_CPI_HFP,
+    .hfp_en = RTE_CPI_HFP_EN,
+};
+
+/* CPI Vertical Configuration. */
+static CPI_VERTICAL_CONFIG vconfig = {
+    .vbp = RTE_CPI_VBP,
+    .vfp = RTE_CPI_VFP,
+    .vfp_en = RTE_CPI_VFP_EN,
+};
+#endif
+
+/* CPI Configuration. */
+static CPI_CONFIG config = {
+#if SOC_FEAT_HAS_ISP
+    .axi_port_en    = RTE_CPI_AXI_PORT,
+    .isp_port_en    = RTE_CPI_ISP_PORT,
+#endif
+    .fifo           = &fifo_config,
+#if SOC_FEAT_CPI_HAS_CROPPING
+    .horizontal_cfg = &hconfig,
+    .vertical_cfg   = &vconfig,
+#endif
 };
 
 /* CPI Device Resource */
-static CPI_RESOURCES CPI_CTRL =
-{
-    .regs             = (CPI_Type *) CPI_BASE,
-    .irq_num          = CAM_IRQ_IRQn,
-    .irq_priority     = RTE_CPI_IRQ_PRI,
-    .drv_instance     = CPI_INSTANCE_CPI0,
-    .row_roundup      = RTE_CPI_ROW_ROUNDUP,
-    .cnfg             = &config,
+static CPI_RESOURCES CPI_CTRL = {
+    .regs         = (CPI_Type *) CPI_BASE,
+    .irq_num      = CAM_IRQ_IRQn,
+    .irq_priority = RTE_CPI_IRQ_PRI,
+    .drv_instance = CPI_INSTANCE_CPI0,
+    .row_roundup  = RTE_CPI_ROW_ROUNDUP,
+    .cnfg         = &config,
 };
 
 #if (RTE_MIPI_CSI2)
@@ -754,10 +737,10 @@ static CPI_RESOURCES CPI_CTRL =
   \param[in] int_event   \ref MIPI CSI2 event types.
   \return    none.
 */
-void ARM_MIPI_CSI2_Event_Callback (uint32_t int_event)
+void ARM_MIPI_CSI2_Event_Callback(uint32_t int_event)
 {
     ARG_UNUSED(int_event);
-    CPI_CTRL.cb_event (ARM_CPI_EVENT_MIPI_CSI2_ERROR);
+    CPI_CTRL.cb_event(ARM_CPI_EVENT_MIPI_CSI2_ERROR);
 }
 #endif
 
@@ -804,8 +787,7 @@ void CAM_IRQHandler(void)
 }
 
 extern ARM_DRIVER_CPI Driver_CPI;
-ARM_DRIVER_CPI Driver_CPI =
-{
+ARM_DRIVER_CPI        Driver_CPI = {
     CPI_GetVersion,
     CPI_GetCapabilities,
     CPI_Initialize,
@@ -826,23 +808,44 @@ ARM_DRIVER_CPI Driver_CPI =
 static CAMERA_SENSOR_DEVICE *lpcpi_sensor;
 
 /* LPCPI FIFO Water mark Configuration. */
-static CPI_FIFO_CONFIG fifo_cnfg =
-{
-    .read_watermark = RTE_LPCPI_FIFO_READ_WATERMARK,
+static CPI_FIFO_CONFIG fifo_cnfg = {
+    .read_watermark  = RTE_LPCPI_FIFO_READ_WATERMARK,
     .write_watermark = RTE_LPCPI_FIFO_WRITE_WATERMARK,
 };
 
-/* LPCPI color code Configuration. */
-static CPI_CONFIG cnfg =
-{
-    .fifo = &fifo_cnfg,
+#if SOC_FEAT_CPI_HAS_CROPPING
+/* LPCPI Horizontal Configuration. */
+static CPI_HORIZONTAL_CONFIG hconfig = {
+    .hbp = RTE_LPCPI_HBP,
+    .hfp = RTE_LPCPI_HFP,
+    .hfp_en = RTE_LPCPI_HFP_EN,
+};
+
+/* LPCPI Vertical Configuration. */
+static CPI_VERTICAL_CONFIG vconfig = {
+    .vbp = RTE_LPCPI_VBP,
+    .vfp = RTE_LPCPI_VFP,
+    .vfp_en = RTE_LPCPI_VFP_EN,
+};
+#endif
+
+/* LPCPI Configuration. */
+static CPI_CONFIG cnfg = {
+#if SOC_FEAT_HAS_ISP
+    .axi_port_en    = RTE_LPCPI_AXI_PORT,
+    .isp_port_en    = RTE_LPCPI_ISP_PORT,
+#endif
+    .fifo           = &fifo_cnfg,
+#if SOC_FEAT_CPI_HAS_CROPPING
+    .horizontal_cfg = &hconfig,
+    .vertical_cfg   = &vconfig,
+#endif
 };
 
     /* LPCPI Device Resource */
-static CPI_RESOURCES LPCPI_CTRL =
-{
+static CPI_RESOURCES LPCPI_CTRL = {
     .regs             = (CPI_Type *) LPCPI_BASE,
-    .irq_num          = LPCPI_IRQ_IRQn,
+    .irq_num          = LPCAM_IRQ_IRQn,
     .irq_priority     = RTE_LPCPI_IRQ_PRI,
     .drv_instance     = CPI_INSTANCE_LPCPI,
     .cnfg             = &cnfg,
@@ -891,8 +894,7 @@ void LPCPI_IRQHandler(void)
 }
 
 extern ARM_DRIVER_CPI Driver_LPCPI;
-ARM_DRIVER_CPI Driver_LPCPI =
-{
+ARM_DRIVER_CPI        Driver_LPCPI = {
     CPI_GetVersion,
     CPI_GetCapabilities,
     LPCPI_Initialize,
@@ -907,3 +909,4 @@ ARM_DRIVER_CPI Driver_LPCPI =
 #endif /* End of RTE_LPCPI */
 
 /************************ (C) COPYRIGHT ALIF SEMICONDUCTOR *****END OF FILE****/
+#endif /* RTE_Drivers_CPI */

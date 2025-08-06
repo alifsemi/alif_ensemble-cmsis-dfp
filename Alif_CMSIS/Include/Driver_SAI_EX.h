@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_SAI_EX.h
  * @author   Sudhir Sreedharan
  * @email    sudhir@alifsemi.com
@@ -22,16 +22,17 @@
 #ifndef Driver_SAI_EX_H_
 #define Driver_SAI_EX_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /****** SAI Control Codes *****/
-#define ARM_SAI_USE_CUSTOM_DMA_MCODE_TX           (0xA0UL)    ///< Use User defined DMA microcode arg1 provides address
-#define ARM_SAI_USE_CUSTOM_DMA_MCODE_RX           (0xA1UL)    ///< Use User defined DMA microcode arg1 provides address
+#define ARM_SAI_USE_CUSTOM_DMA_MCODE_TX                                                            \
+    (0xA0UL)  ///< Use User defined DMA microcode arg1 provides address
+#define ARM_SAI_USE_CUSTOM_DMA_MCODE_RX                                                            \
+    (0xA1UL)  ///< Use User defined DMA microcode arg1 provides address
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

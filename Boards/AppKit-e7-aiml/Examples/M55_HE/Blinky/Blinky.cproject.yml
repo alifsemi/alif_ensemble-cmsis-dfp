@@ -1,0 +1,63 @@
+# A project translates into one executable or library.
+project:
+
+  # Processor features used in this project.
+  processor:
+    trustzone: off
+
+  # List of #define statements passed via the command line to the build tool.
+  define:
+    - OS_IDLE_THREAD_NAME: \"Idle\"
+    - OS_TIMER_THREAD_NAME: \"Timer\"
+
+  # List components to use for your application.
+  # A software component is a re-usable unit that may be configurable.
+  components:
+    - component: Device:Startup
+    - component: Device:SOC Peripherals:PINCONF
+    - component: Device:SOC Peripherals:MHU
+
+    - component: Services:Retarget IO:STDOUT
+
+    - component: Services:Secure Enclave:core&Source
+    - component: Services:Secure Enclave:Initialization Helper&Source
+
+    - component: BSP:Board Config
+
+    - component: CMSIS:CORE
+    - component: CMSIS:OS Tick:SysTick
+    - component: CMSIS:RTOS2:Keil RTX5&Source
+
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDOUT:Custom
+
+    - component: CMSIS Driver:GPIO
+    - component: CMSIS Driver:USART
+    - component: CMSIS Driver:VIO:Board&AppKit-E7-AIML
+
+  # List of include paths passed via the command line to the build tool.
+  add-path:
+    - ./ConductorTool
+
+  # List of source groups and files added to a project or a layer.
+  groups:
+    - group: Documentation
+      files:
+        - file: ./README.md
+
+    - group: Source Files
+      files:
+        - file: ./Blinky.c
+
+    - group: Board
+      files:
+        - file: ./main.c
+        - file: ./main.h
+
+  # List executable file formats to be generated.
+  output:
+    type:
+      - elf
+      - bin
+      - hex
+      - map

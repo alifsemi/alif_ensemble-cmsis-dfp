@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_HWSEM_Private.h
  * @author   Khushboo Singh
  * @email    khushboo.singh@alifsemi.com
@@ -30,14 +30,12 @@
 
 #include CMSIS_device_header
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Hardware Sem IDs */
-typedef enum _HWSEM_ID
-{
+typedef enum _HWSEM_ID {
     HWSEMID0,
     HWSEMID1,
     HWSEMID2,
@@ -54,25 +52,25 @@ typedef enum _HWSEM_ID
     HWSEMID13,
     HWSEMID14,
     HWSEMID15
-}HWSEM_ID;
+} HWSEM_ID;
 
 /** \brief Hw Semaphore driver state */
 typedef volatile struct _HWSEM_DRIVER_STATE {
-    uint32_t initialized : 1;                    /**< Driver Initialized */
-    uint32_t reserved    : 31;                   /**< Reserved           */
+    uint32_t initialized: 1;  /**< Driver Initialized */
+    uint32_t reserved   : 31; /**< Reserved           */
 } HWSEM_DRIVER_STATE;
 
 /** \brief Representation of Hw Semaphore. */
 typedef struct {
-    HWSEM_Type *regs;                   /**< IOMEM base address of the Hw Semaphore module */
-    ARM_HWSEM_SignalEvent_t cb_event;   /**< Registered callback function */
-    IRQn_Type irq;                      /**< IRQ number of the HSEM instance */
-    HWSEM_DRIVER_STATE state;           /**< HSEM driver state */
-    uint8_t irq_priority;               /**< IRQ priority can be modified by user */
-    uint8_t sem_id;                     /**< HWSEM ID */
+    HWSEM_Type             *regs;         /**< IOMEM base address of the Hw Semaphore module */
+    ARM_HWSEM_SignalEvent_t cb_event;     /**< Registered callback function */
+    IRQn_Type               irq;          /**< IRQ number of the HSEM instance */
+    HWSEM_DRIVER_STATE      state;        /**< HSEM driver state */
+    uint8_t                 irq_priority; /**< IRQ priority can be modified by user */
+    uint8_t                 sem_id;       /**< HWSEM ID */
 } HWSEM_RESOURCES;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif /* DRIVER_HWSEM_PRIVATE_H_ */

@@ -11,14 +11,25 @@
 #include "cmp.h"
 
 /**
-  @fn          void cmp_irq_handler(CMP_Type *cmp)
+  @fn          void cmp_irq_handler(CMP_Type *cmp, const uint8_t int_mask)
   @brief       Clear the interrupt status
-  @param[in]   cmp    Pointer to the CMP register map
+  @param[in]   cmp      Pointer to the CMP register map
+  @param[in]   int_mask HSCMP device specific window function macro value
   @return      none
 */
-void cmp_irq_handler(CMP_Type *cmp)
+void cmp_irq_handler(CMP_Type *cmp, const uint8_t int_mask)
 {
-    /* clear the interrupt before re-starting */
-    if(cmp->CMP_INTERRUPT_STATUS == 1)
-        cmp->CMP_INTERRUPT_STATUS = CMP_INTERRUPT_CLEAR;
+    uint8_t int_status = (cmp->CMP_INTERRUPT_STATUS & (int_mask));
+
+    if (int_status == CMP_FILTER_EVENT0_CLEAR) {
+        cmp->CMP_INTERRUPT_STATUS = CMP_FILTER_EVENT0_CLEAR;
+    }
+
+    if (int_status == CMP_FILTER_EVENT1_CLEAR) {
+        cmp->CMP_INTERRUPT_STATUS = CMP_FILTER_EVENT1_CLEAR;
+    }
+
+    if (int_status == CMP_FILTER_EVENTS_CLEAR_ALL) {
+        cmp->CMP_INTERRUPT_STATUS = CMP_FILTER_EVENTS_CLEAR_ALL;
+    }
 }

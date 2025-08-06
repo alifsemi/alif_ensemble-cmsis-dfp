@@ -21,7 +21,7 @@
 
   \return          0 on success, or -1 on error.
 */
-int stderr_init (void);
+int stderr_init(void);
 
 /**
   Put a character to the stderr
@@ -29,4 +29,4 @@ int stderr_init (void);
   \param[in]   ch  Character to output
   \return          The character written, or -1 on write error.
 */
-int stderr_putchar (int ch);
+int stderr_putchar(int ch);

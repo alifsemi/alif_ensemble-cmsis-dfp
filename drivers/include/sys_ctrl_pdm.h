@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_pdm.h
  * @author   Nisarga A M
  * @email    nisarga.am@alifsemi.com
@@ -22,12 +22,14 @@
 #ifndef SYS_CTRL_PDM_H_
 #define SYS_CTRL_PDM_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+#define EXPMST0_CTRL_PDM_CKEN (1U << 8) /* PDM Clock Enable   */
+#define HE_CLK_ENA_PDM_CKEN   (1U << 8) /* Enable LPPDM clock */
 
 /**
  @fn          void enable_pdm_periph_clk(void)

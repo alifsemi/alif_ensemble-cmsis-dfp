@@ -8,8 +8,8 @@
  *
  */
 
-/**************************************************************************//**
- * @file     Driver_LPRTC_Private.h
+/*******************************************************************************
+ * @file     Driver_RTC_Private.h
  * @author   Tanay Rami, Manoj A Murudi
  * @email    tanay@alifsemi.com, manoj.murudi@alifsemi.com
  * @version  V1.0.0
@@ -20,9 +20,8 @@
 #ifndef DRIVER_RTC_PRIVATE_H_
 #define DRIVER_RTC_PRIVATE_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include "RTE_Device.h"
@@ -32,24 +31,34 @@ extern "C"
 #include "Driver_RTC.h"
 #include "rtc.h"
 
+/**
+ * enum LPRTC_INSTANCE.
+ * LPRTC instances.
+ */
+typedef enum _LPRTC_INSTANCE {
+    LPRTC0_INSTANCE,
+    LPRTC1_INSTANCE
+} LPRTC_INSTANCE;
+
 /** \brief LPRTC Driver states. */
 typedef volatile struct _LPRTC_DRIVER_STATE {
-    uint32_t initialized : 1; /* Driver Initialized*/
-    uint32_t powered     : 1; /* Driver powered */
-    uint32_t alarm       : 1; /* Driver set alarm */
-    uint32_t reserved    : 29;/* Reserved */
+    uint32_t initialized: 1;  /* Driver Initialized*/
+    uint32_t powered    : 1;  /* Driver powered */
+    uint32_t alarm      : 1;  /* Driver set alarm */
+    uint32_t reserved   : 29; /* Reserved */
 } LPRTC_DRIVER_STATE;
 
 /** \brief Resources for a LPRTC instance. */
 typedef struct _LPRTC_RESOURCES {
-    LPRTC_Type                *regs;           /* LPRTC register address             */
-    ARM_RTC_SignalEvent_t     cb_event;        /* LPRTC Application Event callback   */
-    LPRTC_DRIVER_STATE        state;           /* LPRTC Driver state                 */
-    IRQn_Type                 irq_num;         /* LPRTC interrupt vector number      */
-    uint16_t                  irq_priority;    /* LPRTC interrupt priority           */
-}LPRTC_RESOURCES;
+    LPRTC_Type           *regs;         /* LPRTC register address             */
+    ARM_RTC_SignalEvent_t cb_event;     /* LPRTC Application Event callback   */
+    LPRTC_DRIVER_STATE    state;        /* LPRTC Driver state                 */
+    IRQn_Type             irq_num;      /* LPRTC interrupt vector number      */
+    uint16_t              irq_priority; /* LPRTC interrupt priority           */
+    LPRTC_INSTANCE        inst;         /* LPRTC instances                    */
+} LPRTC_RESOURCES;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

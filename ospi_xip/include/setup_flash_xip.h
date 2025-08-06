@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     setup_flash_xip.h
  * @version  V1.0.0
  * @brief    Header file for API to set up flash in XIP mode
@@ -19,9 +19,8 @@
 #ifndef SETUP_FLASH_XIP_H
 #define SETUP_FLASH_XIP_H
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /**
@@ -40,9 +39,8 @@ int setup_flash_xip(void);
  */
 bool flash_xip_enabled(void);
 
-
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif/* SETUP_FLASH_XIP_H */
+#endif /* SETUP_FLASH_XIP_H */

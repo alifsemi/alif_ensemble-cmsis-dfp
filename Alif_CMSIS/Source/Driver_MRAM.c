@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_MRAM.c
  * @author   Tanay Rami
  * @email    tanay@alifsemi.com
@@ -25,35 +25,27 @@
 /* Project Includes */
 #include "Driver_MRAM_Private.h"
 #include "mram.h"
+#include "sys_utils.h"
+
+#if defined(RTE_Drivers_MRAM)
 
 #if !(RTE_MRAM)
 #error "MRAM is not enabled in the RTE_Device.h"
 #endif
 
-#if (defined(RTE_Drivers_MRAM) && !RTE_MRAM)
-#error "MRAM not configured in RTE_Device.h!"
-#endif
-
-#define ARM_MRAM_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
+#define ARM_MRAM_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
 
 /* MRAM Device Resources. */
-static MRAM_RESOURCES mram =
-{
-    .state  = {0}
-};
+static MRAM_RESOURCES mram                    = {.state = {0}};
 
 /* Driver Version */
-static const ARM_DRIVER_VERSION DriverVersion = {
-    ARM_MRAM_API_VERSION,
-    ARM_MRAM_DRV_VERSION
-};
+static const ARM_DRIVER_VERSION DriverVersion = {ARM_MRAM_API_VERSION, ARM_MRAM_DRV_VERSION};
 
 /* Driver Capabilities */
 static const ARM_MRAM_CAPABILITIES DriverCapabilities = {
     0, /* data_width = 0:128-bit  */
     0  /* reserved (must be zero) */
 };
-
 
 /**
   \fn          ARM_DRIVER_VERSION MRAM_GetVersion(void)
@@ -82,12 +74,14 @@ static ARM_MRAM_CAPABILITIES MRAM_GetCapabilities(void)
 */
 static int32_t MRAM_Initialize(void)
 {
-    if (mram.state.initialized == 1)
+    if (mram.state.initialized == 1) {
         return ARM_DRIVER_OK;
+    }
 
     /* Validate User MRAM size. */
-    if (MRAM_USER_SIZE > MRAM_SIZE)
+    if (MRAM_USER_SIZE > MRAM_SIZE) {
         return ARM_DRIVER_ERROR;
+    }
 
     /* set the state as initialized. */
     mram.state.initialized = 1;
@@ -113,10 +107,9 @@ static int32_t MRAM_Uninitialize(void)
   \param[in]   state  Power state
   \return      \ref execution_status
 */
-static int32_t MRAM_PowerControl(ARM_POWER_STATE  state)
+static int32_t MRAM_PowerControl(ARM_POWER_STATE state)
 {
-    switch (state)
-    {
+    switch (state) {
     case ARM_POWER_OFF:
         /* Reset the power state. */
         mram.state.powered = 0;
@@ -126,18 +119,20 @@ static int32_t MRAM_PowerControl(ARM_POWER_STATE  state)
         break;
 
     case ARM_POWER_FULL:
-        if (mram.state.initialized == 0U)
-          return ARM_DRIVER_ERROR;
+        if (mram.state.initialized == 0U) {
+            return ARM_DRIVER_ERROR;
+        }
 
-        if (mram.state.powered)
-          break;
+        if (mram.state.powered) {
+            break;
+        }
 
         /* Set the state as powered */
         mram.state.powered = 1;
         break;
 
     default:
-      return ARM_DRIVER_ERROR_UNSUPPORTED;
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
 
     return ARM_DRIVER_OK;
@@ -153,22 +148,25 @@ static int32_t MRAM_PowerControl(ARM_POWER_STATE  state)
 */
 static int32_t MRAM_ReadData(uint32_t addr, void *data, uint32_t cnt)
 {
-    if(mram.state.powered == 0U)
+    if (mram.state.powered == 0U) {
         return ARM_DRIVER_ERROR;
+    }
 
     /* validate MRAM address and count. */
-    if(addr > MRAM_USER_SIZE)
+    if (addr > MRAM_USER_SIZE) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((addr + cnt) > MRAM_USER_SIZE)
+    if ((addr + cnt) > MRAM_USER_SIZE) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
     /* addr is MRAM address-offset,
      * so add MRAM Base-address to it. */
     addr += MRAM_BASE;
 
     /* read from MRAM */
-    mram_read(data, (void*)addr, cnt);
+    mram_read(data, (void *) addr, cnt);
 
     return cnt;
 }
@@ -199,7 +197,7 @@ static void MRAM_write(uint8_t *p_dst, const uint8_t *p_src)
     mram_write_128bit(p_dst, p_src);
 
     /* clean/flush Dcache. */
-    RTSS_CleanDCache_by_Addr((uint32_t *)p_dst, MRAM_SECTOR_SIZE);
+    RTSS_CleanDCache_by_Addr((uint32_t *) p_dst, MRAM_SECTOR_SIZE);
 }
 
 /**
@@ -212,43 +210,44 @@ static void MRAM_write(uint8_t *p_dst, const uint8_t *p_src)
 */
 static int32_t MRAM_ProgramData(uint32_t addr, const void *data, uint32_t cnt)
 {
-    if(mram.state.powered == 0U)
+    if (mram.state.powered == 0U) {
         return ARM_DRIVER_ERROR;
+    }
 
     /* validate MRAM address and count. */
-    if(addr > MRAM_USER_SIZE)
+    if (addr > MRAM_USER_SIZE) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((addr + cnt) > MRAM_USER_SIZE)
+    if ((addr + cnt) > MRAM_USER_SIZE) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
     /* addr is MRAM address-offset,
      * so add MRAM Base-address to it. */
-    addr += MRAM_BASE;
+    addr                                += MRAM_BASE;
 
     /* check address with aligned to 16-Bytes.*/
-    uint32_t aligned_addr   = addr & MRAM_ADDR_ALIGN_MASK;
-    uint8_t *p_aligned_addr = (uint8_t *) aligned_addr;
-    uint8_t *p_data         = (uint8_t *) data;
-    uint32_t count          = cnt;
+    uint32_t aligned_addr                = addr & MRAM_ADDR_ALIGN_MASK;
+    uint8_t *p_aligned_addr              = (uint8_t *) aligned_addr;
+    uint8_t *p_data                      = (uint8_t *) data;
+    uint32_t count                       = cnt;
 
     /* use temporary buffer to store data in case of unaligned memory.*/
-    uint8_t temp_buff[MRAM_SECTOR_SIZE] = {0}; /* 128-Bit */
+    uint8_t temp_buff[MRAM_SECTOR_SIZE]  = {0}; /* 128-Bit */
 
     /* is MRAM address aligned to 16-Byte? */
-    if(addr != aligned_addr)
-    {
+    if (addr != aligned_addr) {
         /* unaligned MRAM address:
          *  - make it to nearest aligned 16-Byte address,
          *     by writing only unaligned bytes.
          */
 
-        uint8_t offset           = addr & (~MRAM_ADDR_ALIGN_MASK);
-        uint8_t unaligned_bytes  = MRAM_SECTOR_SIZE - offset;
+        uint8_t offset          = addr & (~MRAM_ADDR_ALIGN_MASK);
+        uint8_t unaligned_bytes = MRAM_SECTOR_SIZE - offset;
 
         /* is unaligned bytes more than remaining count? */
-        if(unaligned_bytes > count)
-        {
+        if (unaligned_bytes > count) {
             /* then take only remaining count. */
             unaligned_bytes = count;
         }
@@ -268,11 +267,10 @@ static int32_t MRAM_ProgramData(uint32_t addr, const void *data, uint32_t cnt)
     }
 
     uint32_t sector_cnt    = count / MRAM_SECTOR_SIZE;
-    uint8_t unaligned_cnt  = count % MRAM_SECTOR_SIZE;
+    uint8_t  unaligned_cnt = count % MRAM_SECTOR_SIZE;
 
     /* program 128-bit to absolute sector. */
-    while(sector_cnt--)
-    {
+    while (sector_cnt--) {
         /* as MRAM address is 16-byte aligned,
          * directly copy 128bit from source-data to MRAM. */
         MRAM_write(p_aligned_addr, p_data);
@@ -282,8 +280,7 @@ static int32_t MRAM_ProgramData(uint32_t addr, const void *data, uint32_t cnt)
     }
 
     /* program remaining unaligned data. */
-    if(unaligned_cnt)
-    {
+    if (unaligned_cnt) {
         /* copy original one sector data from MRAM address to buffer.*/
         memcpy(temp_buff, p_aligned_addr, MRAM_SECTOR_SIZE);
 
@@ -324,14 +321,12 @@ static int32_t MRAM_EraseChip(void)
 }
 // End MRAM Interface
 
-
 /* MRAM Driver Instance */
 #if (RTE_MRAM)
 
 /* MRAM Driver Control Block */
 extern ARM_DRIVER_MRAM Driver_MRAM;
-ARM_DRIVER_MRAM Driver_MRAM =
-{
+ARM_DRIVER_MRAM        Driver_MRAM = {
     MRAM_GetVersion,
     MRAM_GetCapabilities,
     MRAM_Initialize,
@@ -345,3 +340,5 @@ ARM_DRIVER_MRAM Driver_MRAM =
 #endif /* RTE_MRAM */
 
 /************************ (C) COPYRIGHT ALIF SEMICONDUCTOR *****END OF FILE****/
+
+#endif /* defined(RTE_Drivers_MRAM) */

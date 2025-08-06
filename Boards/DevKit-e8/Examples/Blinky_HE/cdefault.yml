@@ -1,0 +1,29 @@
+
+default:
+
+  misc:
+    - for-compiler: AC6
+      C:
+        - -std=c99
+        - -fdata-sections
+        - -Wno-license-management
+      Link:
+        - --entry=Reset_Handler
+        - --map
+        - --verbose
+        - --info=sizes,totals,unused,summarysizes
+        - --diag_suppress=L6312W,L6314W
+
+    - for-compiler: GCC
+      C-CPP:
+        - -masm-syntax-unified
+        - -fomit-frame-pointer
+        - -fdata-sections
+      C:
+        - -std=gnu11
+      Link:
+        - --specs=nano.specs
+        - --specs=nosys.specs
+        - -Wl,-print-memory-usage
+        - -Wl,--gc-sections
+        - -Wl,--no-warn-rwx-segments

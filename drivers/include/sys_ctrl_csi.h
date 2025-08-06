@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_csi.h
  * @author   Chandra Bhushan Singh
  * @email    chandrabhushan.singh@alifsemi.com
@@ -20,21 +20,26 @@
 #ifndef SYS_CTRL_CSI_H_
 #define SYS_CTRL_CSI_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+#define PERIPH_CLK_ENA_CSI_CKEN     (1U << 24) /* Enable clock supply for CSI */
+
+#define CSI_PIXCLK_CTRL_CKEN        (0x1U << 0) /* CSI Pixel clock enables */
+#define CSI_PIXCLK_CTRL_CLK_SEL     (0x1U << 4) /* CSI Pixel clock select  */
+#define CSI_PIXCLK_CTRL_DIVISOR_Pos 16U         /* CSI Pixel clock divisor */
+#define CSI_PIXCLK_CTRL_DIVISOR_Msk (0x1FF << CSI_PIXCLK_CTRL_DIVISOR_Pos)
 
 /**
  * enum CSI_PIX_CLKSEL
  * CSI pixel clock source selection
  */
-typedef enum _CSI_PIX_CLKSEL
-{
-    CSI_PIX_CLKSEL_400MZ,                   /**< Select 400 MHz clock source (PLL_CLK1/2) */
-    CSI_PIX_CLKSEL_480MZ                    /**< Select 480 MHz clock source (PLL_CLK3)   */
+typedef enum _CSI_PIX_CLKSEL {
+    CSI_PIX_CLKSEL_400MZ, /**< Select 400 MHz clock source (PLL_CLK1/2) */
+    CSI_PIX_CLKSEL_480MZ  /**< Select 480 MHz clock source (PLL_CLK3)   */
 } CSI_PIX_CLKSEL;
 
 /**
@@ -70,21 +75,20 @@ static inline void set_csi_pixel_clk(CSI_PIX_CLKSEL clksel, uint32_t div)
     CLKCTL_PER_MST->CSI_PIXCLK_CTRL &= ~CSI_PIXCLK_CTRL_DIVISOR_Msk;
     CLKCTL_PER_MST->CSI_PIXCLK_CTRL |= (div << CSI_PIXCLK_CTRL_DIVISOR_Pos);
 
-    switch(clksel)
-    {
-        case CSI_PIX_CLKSEL_400MZ:
+    switch (clksel) {
+    case CSI_PIX_CLKSEL_400MZ:
         {
             CLKCTL_PER_MST->CSI_PIXCLK_CTRL &= ~CSI_PIXCLK_CTRL_CLK_SEL;
             break;
         }
 
-        case CSI_PIX_CLKSEL_480MZ:
+    case CSI_PIX_CLKSEL_480MZ:
         {
             CLKCTL_PER_MST->CSI_PIXCLK_CTRL |= CSI_PIXCLK_CTRL_CLK_SEL;
             break;
         }
 
-        default:
+    default:
         {
             break;
         }
@@ -103,7 +107,7 @@ static inline void clear_csi_pixel_clk(void)
     CLKCTL_PER_MST->CSI_PIXCLK_CTRL = 0;
 }
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

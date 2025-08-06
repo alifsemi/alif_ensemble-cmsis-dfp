@@ -8,26 +8,37 @@
  *
  */
 #include "lpi2c.h"
+#include "sys_utils.h"
 
 /**
- * @func   : void lpi2c_send(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
+ * @func   : void lpi2c_send(LPI2C_TYPE *lpi2c,
+ *                           LPI2C_XFER_INFO_T *transfer,
+ *                           const uint32_t delay)
  * @brief  : writing to the register for transmit data
  * @param  : lpi2c    : Pointer to lpi2c register map
  * @param  : transfer : Pointer to LPI2C_XFER_INFO_T
+ * @param  : delay    : delay in us
  * @retval : callback event
  */
-void lpi2c_send(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
+void lpi2c_send(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer, const uint32_t delay)
 {
-    /* check current count is less than total count */
-    while (transfer->tx_curr_cnt < transfer->tx_total_num)
-    {
-        /* Check for Fifo full */
-        if (!(lpi2c->LPI2C_OUTBOND_DATA & LPI2C_FIFO_FULL))
-        {
+    uint32_t len = transfer->tx_total_num;
+
+    while (len) {
+        /* Send a byte if FIFO is not FULL*/
+        if (!(lpi2c->LPI2C_OUTBOND_DATA & LPI2C_FIFO_FULL)) {
             /*writing data to fifo*/
-           lpi2c->LPI2C_DATA = transfer->tx_buf[transfer->tx_curr_cnt++];
+            lpi2c->LPI2C_DATA = transfer->tx_buf[transfer->tx_curr_cnt++];
+            len--;
         }
     }
+
+    /* Wait until all bytes are transferred */
+    while (!(lpi2c->LPI2C_OUTBOND_DATA & LPI2C_FIFO_EMPTY)) {
+    }
+
+    /* wait till 1 byte of xfer time*/
+    sys_busy_loop_us(delay);
 
     /* transfer complete */
     transfer->status = LPI2C_XFER_STAT_COMPLETE;
@@ -42,11 +53,19 @@ void lpi2c_send(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
  */
 void lpi2c_irq_handler(LPI2C_TYPE *lpi2c, LPI2C_XFER_INFO_T *transfer)
 {
-  /* Storing receive value to the buffer */
-  transfer->rx_buf[transfer->rx_curr_cnt++] = lpi2c->LPI2C_DATA;
+    uint8_t rx_len = 0;
 
-  if (transfer->rx_curr_cnt == (transfer->rx_total_num))
-  {
-     transfer->status = LPI2C_XFER_STAT_COMPLETE;
-  }
+    rx_len         = (lpi2c->LPI2C_INBOND_DATA & LPI2C_AVL_DATA);
+
+    if (rx_len <= (transfer->rx_total_num - transfer->rx_curr_cnt)) {
+        while (rx_len--) {
+            /* Storing receive value to the buffer */
+            transfer->rx_buf[transfer->rx_curr_cnt++] = lpi2c->LPI2C_DATA;
+        }
+
+        /* If complete data is received, then success */
+        if (transfer->rx_curr_cnt == (transfer->rx_total_num)) {
+            transfer->status = LPI2C_XFER_STAT_COMPLETE;
+        }
+    }
 }

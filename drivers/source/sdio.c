@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sdio.c
  * @author   Deepak Kumar
  * @email    deepak@alifsemi.com
@@ -34,10 +34,12 @@ extern sd_handle_t Hsd;
   \param[in]    Function offset(0x00 - 0xFF)
   \return       SD driver status
   */
-SD_DRV_STATUS sdio_read_cia(uint8_t *pcia, uint8_t fn, uint8_t offset){
-    sd_handle_t *pHsd =  &Hsd;
-    if(hc_io_rw_direct(pHsd, 0, fn, offset, 0, pcia) != SDMMC_HC_STATUS_OK)
+SD_DRV_STATUS sdio_read_cia(uint8_t *pcia, uint8_t fn, uint8_t offset)
+{
+    sd_handle_t *pHsd = &Hsd;
+    if (hc_io_rw_direct(pHsd, 0, fn, offset, 0, pcia) != SDMMC_HC_STATUS_OK) {
         return SD_DRV_STATUS_RD_ERR;
+    }
     return SD_DRV_STATUS_OK;
 }
 
@@ -49,10 +51,12 @@ SD_DRV_STATUS sdio_read_cia(uint8_t *pcia, uint8_t fn, uint8_t offset){
   \param[in]    Function offset(0x00 - 0xFF)
   \return       SD driver status
   */
-SD_DRV_STATUS sdio_write_cia(uint8_t cia, uint8_t fn, uint8_t offset){
-    sd_handle_t *pHsd =  &Hsd;
-    if(hc_io_rw_direct(pHsd, 1, fn, offset, cia, 0) != SDMMC_HC_STATUS_OK)
+SD_DRV_STATUS sdio_write_cia(uint8_t cia, uint8_t fn, uint8_t offset)
+{
+    sd_handle_t *pHsd = &Hsd;
+    if (hc_io_rw_direct(pHsd, 1, fn, offset, cia, 0) != SDMMC_HC_STATUS_OK) {
         return SD_DRV_STATUS_RD_ERR;
+    }
     return SD_DRV_STATUS_OK;
 }
 
@@ -64,10 +68,12 @@ SD_DRV_STATUS sdio_write_cia(uint8_t cia, uint8_t fn, uint8_t offset){
   \param[in]    Function offset(0x00 - 0xFF)
   \return       SD driver status
   */
-SD_DRV_STATUS sdio_read_cccr(uint8_t *pcccr){
-    sd_handle_t *pHsd =  &Hsd;
-    if(hc_io_rw_direct(pHsd, 0, 0, 0, 0, pcccr) != SDMMC_HC_STATUS_OK)
+SD_DRV_STATUS sdio_read_cccr(uint8_t *pcccr)
+{
+    sd_handle_t *pHsd = &Hsd;
+    if (hc_io_rw_direct(pHsd, 0, 0, 0, 0, pcccr) != SDMMC_HC_STATUS_OK) {
         return SD_DRV_STATUS_RD_ERR;
+    }
     return SD_DRV_STATUS_OK;
 }
 
@@ -77,10 +83,11 @@ SD_DRV_STATUS sdio_read_cccr(uint8_t *pcccr){
   \param[in]    cccr to be written
   \return       SD driver status
   */
-SD_DRV_STATUS sdio_write_cccr(uint8_t cccr){
-    sd_handle_t *pHsd =  &Hsd;
-    if(hc_io_rw_direct(pHsd, 1, 0, 0, cccr, 0) != SDMMC_HC_STATUS_OK)
+SD_DRV_STATUS sdio_write_cccr(uint8_t cccr)
+{
+    sd_handle_t *pHsd = &Hsd;
+    if (hc_io_rw_direct(pHsd, 1, 0, 0, cccr, 0) != SDMMC_HC_STATUS_OK) {
         return SD_DRV_STATUS_RD_ERR;
+    }
     return SD_DRV_STATUS_OK;
 }
-

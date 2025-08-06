@@ -19,39 +19,38 @@
 
 #include <RTE_Components.h>
 #include CMSIS_device_header
+#include "sys_utils.h"
 
 #include "se_services_port.h"
 
-#define SE_SERVICES_DEBUG             0           /* Enable debug logs            */
+#define SE_SERVICES_DEBUG          0 /* Enable debug logs            */
 
-#define SE_SERVICES_MHU_COUNT         1           /* We are using only Secure MHU */
-#define SE_SERVICES_S_MHU             0           /* Secure MHU index             */
-#define SE_SERVICES_S_MHU_CHANNEL     0           /* Secure MHU channel number    */
-#define SE_SERVICES_MAX_TIMEOUT       0x01000000  /* Max timeout waiting for resp */
+#define SE_SERVICES_MHU_COUNT      1          /* We are using only Secure MHU */
+#define SE_SERVICES_S_MHU          0          /* Secure MHU index             */
+#define SE_SERVICES_S_MHU_CHANNEL  0          /* Secure MHU channel number    */
+#define SE_SERVICES_MAX_TIMEOUT    0x01000000 /* Max timeout waiting for resp */
 
 /* Set the IRQ Priority for MHU TX and RX IRQs */
-#define MHU_SESS_S_TX_IRQ_PRIORITY        2
-#define MHU_SESS_S_RX_IRQ_PRIORITY        2
+#define MHU_SESS_S_TX_IRQ_PRIORITY 2
+#define MHU_SESS_S_RX_IRQ_PRIORITY 2
 
 /* Secure SE Service handle which will be used across the application */
-uint32_t        se_services_s_handle = 0xFFFFFFFF;
+uint32_t se_services_s_handle = 0xFFFFFFFF;
 
 /* SE MHU driver structures */
 static mhu_driver_in_t  se_services_mhu_driver_in;
 static mhu_driver_out_t se_services_mhu_driver_out;
 
 /* Buffer allocation for the SE data transfer */
-static uint8_t
-  se_services_packet_buffer[SERVICES_MAX_PACKET_BUFFER_SIZE] __attribute__ ((aligned (4)));
+static uint8_t se_services_packet_buffer[SERVICES_MAX_PACKET_BUFFER_SIZE]
+    __attribute__((aligned(4)));
 
 /* Array holding the MHU Secure TX and RX address */
-static uint32_t se_services_sender_base_address_list[SE_SERVICES_MHU_COUNT] =
-{
+static uint32_t se_services_sender_base_address_list[SE_SERVICES_MHU_COUNT] = {
     MHU_SESS_S_TX_BASE,
 };
 
-static uint32_t se_services_receiver_base_address_list[SE_SERVICES_MHU_COUNT] =
-{
+static uint32_t se_services_receiver_base_address_list[SE_SERVICES_MHU_COUNT] = {
     MHU_SESS_S_RX_BASE,
 };
 
@@ -63,8 +62,9 @@ static uint32_t se_services_receiver_base_address_list[SE_SERVICES_MHU_COUNT] =
  */
 static int32_t se_services_wait_ms(uint32_t wait_time_ms)
 {
-    for(uint32_t count = 0; count < wait_time_ms; count++)
+    for (uint32_t count = 0; count < wait_time_ms; count++) {
         sys_busy_loop_us(1000);
+    }
 
     return 0;
 }
@@ -75,25 +75,25 @@ static int32_t se_services_wait_ms(uint32_t wait_time_ms)
   @param[in]    fmt formatted string
   @return       0
  */
-static int se_services_print(const char * fmt, ...)
+static int se_services_print(const char *fmt, ...)
 {
 #if SE_SERVICES_DEBUG
-  va_list args;
-  static char se_services_log_buffer[256];
+    va_list     args;
+    static char se_services_log_buffer[256];
 
-  /*
-   * @todo Handle long strings bigger than buffer size
-   */
-  va_start(args,fmt);
-  vsprintf(se_services_log_buffer, fmt, args);
-  va_end(args);
+    /*
+     * @todo Handle long strings bigger than buffer size
+     */
+    va_start(args, fmt);
+    vsprintf(se_services_log_buffer, fmt, args);
+    va_end(args);
 
-  printf("%s", se_services_log_buffer);
+    printf("%s", se_services_log_buffer);
 #else
-  (void)fmt;
-#endif // SE_SERVICES_DEBUG
+    (void) fmt;
+#endif  // SE_SERVICES_DEBUG
 
-  return 0;
+    return 0;
 }
 
 /**
@@ -104,13 +104,12 @@ static int se_services_print(const char * fmt, ...)
  */
 static void se_services_initialize(MHU_send_message_t send_message)
 {
-    services_lib_t  services_init_params =
-    {
-         .packet_buffer_address = (uint32_t)se_services_packet_buffer,
-         .fn_send_mhu_message   = send_message,
-         .fn_wait_ms            = &se_services_wait_ms,
-         .wait_timeout          = SE_SERVICES_MAX_TIMEOUT,
-         .fn_print_msg          = &se_services_print,
+    services_lib_t services_init_params = {
+        .packet_buffer_address = (uint32_t) se_services_packet_buffer,
+        .fn_send_mhu_message   = send_message,
+        .fn_wait_ms            = &se_services_wait_ms,
+        .wait_timeout          = SE_SERVICES_MAX_TIMEOUT,
+        .fn_print_msg          = &se_services_print,
     };
 
     SERVICES_initialize(&services_init_params);

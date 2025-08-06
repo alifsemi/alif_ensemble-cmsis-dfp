@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_MRAM_Private.h
  * @author   Tanay Rami
  * @email    tanay@alifsemi.com
@@ -36,24 +36,24 @@ extern "C" {
 /**
 \brief MRAM(On-Chip NVM) Total Size
 */
-#define MRAM_USER_SIZE            RTE_MRAM_SIZE
+#define MRAM_USER_SIZE RTE_MRAM_SIZE
+#define MRAM_BASE      SOC_FEAT_MRAM_BASE
+#define MRAM_SIZE      SOC_FEAT_MRAM_SIZE
 
 /**
 \brief MRAM Driver states.
 */
-typedef volatile struct _MRAM_DRIVER_STATE
-{
-  uint32_t initialized    : 1; /* Driver initialized    */
-  uint32_t powered        : 1; /* Driver powered        */
-  uint32_t reserved       : 30;/* Reserved              */
+typedef volatile struct _MRAM_DRIVER_STATE {
+    uint32_t initialized: 1;  /* Driver initialized    */
+    uint32_t powered    : 1;  /* Driver powered        */
+    uint32_t reserved   : 30; /* Reserved              */
 } MRAM_DRIVER_STATE;
 
 /**
 \brief MRAM(On-Chip NVM) Device Resources
 */
-typedef struct _MRAM_RESOURCES
-{
-  MRAM_DRIVER_STATE  state;    /* MRAM driver state  */
+typedef struct _MRAM_RESOURCES {
+    MRAM_DRIVER_STATE state; /* MRAM driver state  */
 } MRAM_RESOURCES;
 
 #ifdef __cplusplus

@@ -21,26 +21,41 @@
 #ifndef DRIVER_IMU_H_
 #define DRIVER_IMU_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include "Driver_Common.h"
 
-#define ARM_IMU_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1,0) /* API version */
+#define ARM_IMU_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* API version */
 
 /****** IMU Control Codes *****/
-#define IMU_GET_ACCELEROMETER_DATA              (1UL << 0)  ///< Get Accelerometer data; arg: addr of variable (of type ARM_IMU_COORDINATES)
-#define IMU_GET_GYROSCOPE_DATA                  (1UL << 1)  ///< Get Gyroscope data; arg: addr of variable (of type ARM_IMU_COORDINATES)
-#define IMU_GET_MAGNETOMETER_DATA               (1UL << 2)  ///< Get Magnetometer data; arg: addr of variable (of type ARM_IMU_COORDINATES)
-#define IMU_GET_TEMPERATURE_DATA                (1UL << 3)  ///< Get Temperature sensor data; arg: addr of variable (of type float)
+#define IMU_GET_ACCELEROMETER_DATA                                                                 \
+    (1UL << 0)  ///< Get Accelerometer data; arg: addr of variable (of type ARM_IMU_COORDINATES)
+#define IMU_GET_GYROSCOPE_DATA                                                                     \
+    (1UL << 1)  ///< Get Gyroscope data; arg: addr of variable (of type ARM_IMU_COORDINATES)
+#define IMU_GET_MAGNETOMETER_DATA                                                                  \
+    (1UL << 2)  ///< Get Magnetometer data; arg: addr of variable (of type ARM_IMU_COORDINATES)
+#define IMU_GET_TEMPERATURE_DATA                                                                   \
+    (1UL << 3)  ///< Get Temperature sensor data; arg: addr of variable (of type float)
+#define IMU_SET_INTERRUPT            (1UL << 4)  ///< Set the IMU interrupts; arg:1-turn on, 0:turn off
+/**
+ \ IMU Data ready status
+ */
+#define IMU_ACCELEROMETER_DATA_READY (1UL << 0)  ///< Accelerometer data is ready
+#define IMU_GYRO_DATA_READY          (1UL << 1)  ///< Gyroscope data is ready
+#define IMU_MAGNETOMETER_DATA_READY  (1UL << 2)  ///< Magnetometer data is ready
+#define IMU_TEMPERATURE_DATA_READY   (1UL << 3)  ///< Temperature data is ready
+
+/*
+ * IMU event info
+ */
+#define IMU_EVENT_NONE               (0UL << 0)  ///< Event none
 
 /**
 \brief IMU Coordinates
 */
-typedef struct _ARM_IMU_COORDINATES
-{
+typedef struct _ARM_IMU_COORDINATES {
     int16_t x;
     int16_t y;
     int16_t z;
@@ -49,22 +64,21 @@ typedef struct _ARM_IMU_COORDINATES
 /**
 \brief IMU Status
 */
-typedef struct _ARM_IMU_STATUS
-{
-  uint32_t data_rcvd       :1;         ///< Flag to indicate data reception
-  uint32_t reserved        :31;        ///< Reserved (must be zero)
+typedef struct _ARM_IMU_STATUS {
+    uint32_t data_rcvd  : 1;   ///< Flag to indicate data reception
+    uint32_t drdy_status: 8;   ///< Data ready status Ref "IMU Data ready status"
+    uint32_t reserved   : 23;  ///< Reserved (must be zero)
 } ARM_IMU_STATUS;
 
 /**
 \brief IMU Driver Capabilities.
 */
-typedef struct _ARM_IMU_CAPABILITIES
-{
-    uint32_t accel      : 1;          ///< Accelerometer data support
-    uint32_t gyro       : 1;          ///< Gyroscope data support
-    uint32_t magneto    : 1;          ///< Magnetometer data support
-    uint32_t temp_sens  : 1;          ///< Temperature sensor data support (Add-on feature)
-    uint32_t reserved   : 28;         ///< Reserved (must be zero)
+typedef struct _ARM_IMU_CAPABILITIES {
+    uint32_t accel    : 1;   ///< Accelerometer data support
+    uint32_t gyro     : 1;   ///< Gyroscope data support
+    uint32_t magneto  : 1;   ///< Magnetometer data support
+    uint32_t temp_sens: 1;   ///< Temperature sensor data support (Add-on feature)
+    uint32_t reserved : 28;  ///< Reserved (must be zero)
 } ARM_IMU_CAPABILITIES;
 
 // Function documentation
@@ -105,17 +119,24 @@ typedef struct _ARM_IMU_CAPABILITIES
 /**
  \brief IMU Operations.
 */
-typedef struct _ARM_DRIVER_IMU{
-    ARM_DRIVER_VERSION          (*GetVersion)      (void);                              ///< Pointer to \ref ARM_IMU_GetVersion      : Get driver version.
-    ARM_IMU_CAPABILITIES        (*GetCapabilities) (void);                              ///< Pointer to \ref ARM_IMU_GetCapabilities : Get driver capabilities.
-    ARM_IMU_STATUS              (*GetStatus)       (void);                              ///< Pointer to \ref ARM_IMU_GetStatus       : Get driver status.
-    int32_t                     (*Initialize)      (void);                              ///< Pointer to \ref ARM_IMU_Initialize      : Initialize IMU Interface.
-    int32_t                     (*Uninitialize)    (void);                              ///< Pointer to \ref ARM_IMU_Uninitialize    : Un-initialize IMU Interface.
-    int32_t                     (*PowerControl)    (ARM_POWER_STATE state);             ///< Pointer to \ref ARM_IMU_PowerControl    : Control IMU Interface Power.
-    int32_t                     (*Control)         (uint32_t control, uint32_t arg);    ///< Pointer to \ref ARM_IMU_Control         : Control IMU Interface.
+typedef struct _ARM_DRIVER_IMU {
+    /* Pointer to \ref ARM_IMU_GetVersion      : Get driver version              */
+    ARM_DRIVER_VERSION          (*GetVersion)      (void);
+    /* Pointer to \ref ARM_IMU_GetCapabilities : Get driver capabilities         */
+    ARM_IMU_CAPABILITIES        (*GetCapabilities) (void);
+    /* Pointer to \ref ARM_IMU_GetStatus       : Get driver status               */
+    ARM_IMU_STATUS              (*GetStatus)       (void);
+    /* Pointer to \ref ARM_IMU_Initialize      : Initialize IMU Interface       */
+    int32_t                     (*Initialize)      (void);
+    /* Pointer to \ref ARM_IMU_Uninitialize    : Un-initialize IMU Interface    */
+    int32_t                     (*Uninitialize)    (void);
+    /* Pointer to \ref ARM_IMU_PowerControl    : Control IMU Interface Power    */
+    int32_t                     (*PowerControl)    (ARM_POWER_STATE state);
+    /* Pointer to \ref ARM_IMU_Control         : Control IMU Interface          */
+    int32_t                     (*Control)         (uint32_t control, uint32_t arg);
 } const ARM_DRIVER_IMU;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

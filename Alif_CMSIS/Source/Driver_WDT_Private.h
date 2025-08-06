@@ -8,8 +8,8 @@
  *
  */
 
-/**************************************************************************//**
- * @file     WDT_Private.h
+/*******************************************************************************
+ * @file     Driver_WDT_Private.h
  * @author   Tanay Rami
  * @email    tanay@alifsemi.com
  * @version  V1.0.0
@@ -20,9 +20,8 @@
 #ifndef WDT_PRIVATE_H_
 #define WDT_PRIVATE_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Includes --------------------------------------------------------------------------- */
@@ -34,9 +33,9 @@ extern "C"
 #include <wdt.h>
 
 /* Watchdog state definitions */
-#define WATCHDOG_INITIALIZED       (1ul << 0)
-#define WATCHDOG_STARTED           (1ul << 1)
-#define WATCHDOG_POWERED           (1ul << 2)
+#define WATCHDOG_INITIALIZED (1ul << 0)
+#define WATCHDOG_STARTED     (1ul << 1)
+#define WATCHDOG_POWERED     (1ul << 2)
 
 /*
  * struct WDT_RESOURCES: structure representing a Watchdog device
@@ -45,12 +44,12 @@ extern "C"
  * @timeout         : Timeout in msec, must be > 0.
  */
 typedef struct _WDT_RESOURCES {
-    WDT_CTRL_Type          *regs;             /* Watchdog physical address             */
-    uint8_t                flags;             /* Watchdog Driver Flags                 */
-    uint32_t               timeout;           /* Watchdog Timeout to reset in msec   */
+    WDT_CTRL_Type *regs;    /* Watchdog physical address             */
+    uint8_t        flags;   /* Watchdog Driver Flags                 */
+    uint32_t       timeout; /* Watchdog Timeout to reset in msec     */
 } WDT_RESOURCES;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

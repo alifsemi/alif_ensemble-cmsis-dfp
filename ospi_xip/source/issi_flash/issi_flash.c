@@ -8,14 +8,15 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     issi_flash.c
  * @version  V1.0.0
  * @brief    Flash driver to set up flash in XIP mode
  * @bug      None.
  * @Note     None
  ******************************************************************************/
-
+#include "RTE_Components.h"
+#include CMSIS_device_header
 #include "issi_flash_private.h"
 #include "ospi_drv.h"
 #include "ospi_xip_user.h"
@@ -46,14 +47,11 @@ static uint8_t issi_decode_id(ospi_flash_cfg_t *ospi_cfg, uint8_t *buffer)
 {
     uint8_t iter, id = 0;
 
-    for (iter = 0 ; iter < 8; iter++)
-    {
-        if (*buffer & 0x2)
-        {
+    for (iter = 0; iter < 8; iter++) {
+        if (*buffer & 0x2) {
             id |= 1;
         }
-        if (iter < 7)
-        {
+        if (iter < 7) {
             id <<= 1;
         }
         buffer++;
@@ -81,21 +79,21 @@ static uint8_t issi_flash_ReadID(ospi_flash_cfg_t *ospi_cfg)
 }
 
 /**
-  \fn      static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg, uint8_t cmd, uint8_t address, uint8_t value)
-  \brief   This function sets the configuration register of the ISSI NOR Flash in SDR mode
-  \param[in] ospi_cfg : OSPI configuration structure
-  \param[in] cmd : Command
-  \param[in] address : Address of register
-  \param[in] value : Value to be set
-  \return    none
+  \fn      static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg, uint8_t
+  cmd, uint8_t address, uint8_t value) \brief   This function sets the configuration register of the
+  ISSI NOR Flash in SDR mode \param[in] ospi_cfg : OSPI configuration structure \param[in] cmd :
+  Command \param[in] address : Address of register \param[in] value : Value to be set \return none
  */
-static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg, uint8_t cmd, uint8_t address, uint8_t value)
+static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg, uint8_t cmd,
+                                                      uint8_t address, uint8_t value)
 {
     issi_write_enable(ospi_cfg);
     ospi_setup_write_sdr(ospi_cfg, ADDR_LENGTH_24_BITS);
     ospi_push(ospi_cfg, cmd);
+#if (SOC_FEAT_OSPI_ADDR_IN_SINGLE_FIFO_LOCATION == 0)
     ospi_push(ospi_cfg, 0x00);
     ospi_push(ospi_cfg, 0x00);
+#endif
     ospi_push(ospi_cfg, address);
     ospi_send_blocking(ospi_cfg, value);
 }
@@ -106,19 +104,27 @@ static void issi_flash_set_configuration_register_SDR(ospi_flash_cfg_t *ospi_cfg
   \param[in]  ospi_cfg : OSPI Flash Configuration
   \return     Success or Fail
  */
-static int issi_flash_probe (ospi_flash_cfg_t *ospi_cfg)
+static int issi_flash_probe(ospi_flash_cfg_t *ospi_cfg)
 {
     /* Initialize SPI in Single mode 1-1-1 and read Flash ID */
-    if (issi_flash_ReadID(ospi_cfg) == DEVICE_ID_ISSI_FLASH_IS25WX256)
-    {
+    if (issi_flash_ReadID(ospi_cfg) == DEVICE_ID_ISSI_FLASH_IS25WX256) {
         /* Set wrap configuration to 32 bytes */
-        issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x07, WRAP_32_BYTE);
+        issi_flash_set_configuration_register_SDR(ospi_cfg,
+                                                  ISSI_WRITE_VOLATILE_CONFIG_REG,
+                                                  0x07,
+                                                  WRAP_32_BYTE);
 
         /* Set the wait cycles needed for read operations */
-        issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x01, ospi_cfg->wait_cycles);
+        issi_flash_set_configuration_register_SDR(ospi_cfg,
+                                                  ISSI_WRITE_VOLATILE_CONFIG_REG,
+                                                  0x01,
+                                                  ospi_cfg->wait_cycles);
 
         /* Switch the flash to Octal DDR mode */
-        issi_flash_set_configuration_register_SDR(ospi_cfg, ISSI_WRITE_VOLATILE_CONFIG_REG, 0x00, OCTAL_DDR_DQS);
+        issi_flash_set_configuration_register_SDR(ospi_cfg,
+                                                  ISSI_WRITE_VOLATILE_CONFIG_REG,
+                                                  0x00,
+                                                  OCTAL_DDR_DQS);
 
         return 0;
     }
@@ -138,7 +144,6 @@ static int flash_xip_init(ospi_flash_cfg_t *ospi_cfg)
     return 0;
 }
 
-
 /**
   \fn         bool flash_xip_enabled(void)
   \brief      Return the status of xip initialization
@@ -148,7 +153,7 @@ static int flash_xip_init(ospi_flash_cfg_t *ospi_cfg)
 bool flash_xip_enabled(void)
 {
     ospi_flash_cfg_t *ospi_cfg = &ospi_flash_config;
-#if OSPI_XIP_INSTANCE == OSPI0
+#if (OSPI_XIP_INSTANCE == 0)
     ospi_cfg->aes_regs = (aes_regs_t *) AES0_BASE;
 #else
     ospi_cfg->aes_regs = (aes_regs_t *) AES1_BASE;
@@ -165,34 +170,35 @@ bool flash_xip_enabled(void)
 int setup_flash_xip(void)
 {
     ospi_flash_cfg_t *ospi_cfg = &ospi_flash_config;
+    OSPI_INSTANCE     drv_instance;
 
-#if OSPI_XIP_INSTANCE == OSPI0
-    ospi_cfg->regs = (ssi_regs_t *) OSPI0_BASE;
+#if (OSPI_XIP_INSTANCE == 0)
+    ospi_cfg->regs     = (ssi_regs_t *) OSPI0_BASE;
     ospi_cfg->aes_regs = (aes_regs_t *) AES0_BASE;
     ospi_cfg->xip_base = (volatile void *) OSPI0_XIP_BASE;
+    drv_instance       = OSPI_INSTANCE_0;
 #else
-    ospi_cfg->regs = (ssi_regs_t *) OSPI1_BASE;
+    ospi_cfg->regs     = (ssi_regs_t *) OSPI1_BASE;
     ospi_cfg->aes_regs = (aes_regs_t *) AES1_BASE;
     ospi_cfg->xip_base = (volatile void *) OSPI1_XIP_BASE;
+    drv_instance       = OSPI_INSTANCE_1;
 #endif
 
-    ospi_cfg->ser = 1;
-    ospi_cfg->addrlen = ADDR_LENGTH_32_BITS;
-    ospi_cfg->ospi_clock = OSPI_CLOCK;
-    ospi_cfg->ddr_en = 0;
+    ospi_cfg->ser         = 1;
+    ospi_cfg->addrlen     = ADDR_LENGTH_32_BITS;
+    ospi_cfg->ospi_clock  = OSPI_CLOCK;
+    ospi_cfg->ddr_en      = 0;
     ospi_cfg->wait_cycles = OSPI_XIP_FLASH_WAIT_CYCLES;
 
-    ospi_init(ospi_cfg);
+    ospi_init(ospi_cfg, drv_instance);
 
-    if (issi_flash_probe(ospi_cfg))
-    {
+    if (issi_flash_probe(ospi_cfg)) {
         return -1;
     }
 
     ospi_cfg->ddr_en = 1;
 
-    if (flash_xip_init(ospi_cfg))
-    {
+    if (flash_xip_init(ospi_cfg)) {
         return -1;
     }
 

@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     tty_user.c
  * @author   Raj Ranjan
  * @email    raj.ranjan@alifsemi.com
@@ -21,13 +21,14 @@
 
 #if defined(RTE_Compiler_IO_TTY)
 #include "retarget_tty.h"
-#endif  /* RTE_Compiler_IO_TTY */
+#endif /* RTE_Compiler_IO_TTY */
 
 /**
   Put a character to the teletypewritter
 
   \param[in]   ch  Character to output
 */
-void _ttywrch(int ch){
-    (void)ch;
+void _ttywrch(int ch)
+{
+    (void) ch;
 }

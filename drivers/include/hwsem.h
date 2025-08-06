@@ -11,25 +11,20 @@
 #ifndef HWSEM_H_
 #define HWSEM_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include <stdint.h>
-
-typedef struct {                                     /*!< (@ HWSEM Structure                                                       */
-    volatile uint32_t  HWSEM_REQ_REG;                /*!< (@ 0x00000000) Request register                                           */
-    volatile uint32_t  HWSEM_REL_REG;                /*!< (@ 0x00000004) Release register                                           */
-    volatile uint32_t  HWSEM_RST_REG;                /*!< (@ 0x00000008) Reset register                                             */
-} HWSEM_Type;
+#include "soc.h"
 
 /**
   \fn          static inline uint32_t hwsem_request(HWSEM_Type *hwsem, uint32_t master_id)
   \brief       Request ownership of a hwsem instance.
   \param[in]   hwsem     Pointer to the HWSEM register map
   \param[in]   master_id The master id to be used to request the ownership
-  \return      Current master id. Will be same as the parameter master_id if the request was successful.
+  \return      Current master id. Will be same as the parameter master_id if the request was
+  successful.
 */
 static inline uint32_t hwsem_request(HWSEM_Type *hwsem, uint32_t master_id)
 {

@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Open-CMSIS-Pack/devtools/tools/projmgr/2.6.0/tools/projmgr/schemas/cdefault.schema.json
+default:
+  misc:
+    - for-compiler: GCC
+      C:
+      #  - -mcmse
+        - -std=gnu11
+        - -fdata-sections
+        - -Wall
+      Link:
+        - --specs=nosys.specs
+      #  - --specs=rdimon.specs
+        - --entry=Reset_Handler
+        - -Wl,-Map=linker.map,--cref,-print-memory-usage,--gc-sections,--no-warn-rwx-segments
+        # generate linker map
+        # output a cross reference table
+        # print memory usage to console
+        # exclude unused sections from the iamge
+        # suppress executable write segment warnings (used for ITCM)
+      Library:
+        - -lm -lc -lgcc
+
+    - for-compiler: IAR
+      C:
+        - -DCLOCKS_PER_SEC=1000
+        - -e
+        - --vectorize
+        - --char-is-unsigned
+        - --dlib_config normal
+
+      Link:
+        - --entry=Reset_Handler
+        - --map linker.map
+
+    - for-compiler: AC6
+      C:
+        - -std=c99
+        - -fdata-sections
+        - -Wno-license-management
+      Link:
+        - --entry=Reset_Handler
+        - --map
+        - --verbose
+        - --info=sizes,totals,unused,summarysizes
+        - --diag_suppress=L6312W,L6314W

@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_DMA.c
  * @author   Sudhir Sreedharan
  * @email    sudhir@alifsemi.com
@@ -23,13 +23,9 @@
 #include <evtrtr.h>
 #include <dma_op.h>
 #include <string.h>
+#include "sys_utils.h"
 
-#define ARM_DMA_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(2, 1) /*!< DMA Driver Version */
-
-static const ARM_DRIVER_VERSION DriverVersion = {
-        ARM_DMA_API_VERSION,
-        ARM_DMA_DRV_VERSION
-};
+#if defined(RTE_Drivers_DMA)
 
 #if ((RTE_DMA1) || (RTE_DMA2))
 #define RTE_DMALOCAL 1
@@ -39,135 +35,58 @@ static const ARM_DRIVER_VERSION DriverVersion = {
 #error "DMA is not enabled in the RTE_Device.h"
 #endif
 
-#if !defined(RTE_Drivers_DMA)
-#error "DMA not defined in RTE_Components.h!"
-#endif
+#define ARM_DMA_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(2, 2) /*!< DMA Driver Version */
 
-#if RTE_GPIO3
-#define GPIO3_DMA_GLITCH_FILTER ((RTE_GPIO3_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
-                                 (RTE_GPIO3_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
-                                 (RTE_GPIO3_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
-                                 (RTE_GPIO3_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
-                                 (RTE_GPIO3_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
-                                 (RTE_GPIO3_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
-                                 (RTE_GPIO3_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
-                                 (RTE_GPIO3_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
-#else
-#define GPIO3_DMA_GLITCH_FILTER 0
-#endif
-#if RTE_GPIO4
-#define GPIO4_DMA_GLITCH_FILTER ((RTE_GPIO4_PIN0_DMA_GLITCH_FILTER_ENABLE << 8)|\
-                                 (RTE_GPIO4_PIN1_DMA_GLITCH_FILTER_ENABLE << 9)|\
-                                 (RTE_GPIO4_PIN2_DMA_GLITCH_FILTER_ENABLE << 10)|\
-                                 (RTE_GPIO4_PIN3_DMA_GLITCH_FILTER_ENABLE << 11)|\
-                                 (RTE_GPIO4_PIN4_DMA_GLITCH_FILTER_ENABLE << 12)|\
-                                 (RTE_GPIO4_PIN5_DMA_GLITCH_FILTER_ENABLE << 13)|\
-                                 (RTE_GPIO4_PIN6_DMA_GLITCH_FILTER_ENABLE << 14)|\
-                                 (RTE_GPIO4_PIN7_DMA_GLITCH_FILTER_ENABLE << 15))
-#else
-#define GPIO4_DMA_GLITCH_FILTER 0
-#endif
-#if RTE_GPIO7
-#define GPIO7_DMA_GLITCH_FILTER ((RTE_GPIO7_PIN0_DMA_GLITCH_FILTER_ENABLE << 16)|\
-                                 (RTE_GPIO7_PIN1_DMA_GLITCH_FILTER_ENABLE << 17)|\
-                                 (RTE_GPIO7_PIN2_DMA_GLITCH_FILTER_ENABLE << 18)|\
-                                 (RTE_GPIO7_PIN3_DMA_GLITCH_FILTER_ENABLE << 19)|\
-                                 (RTE_GPIO7_PIN4_DMA_GLITCH_FILTER_ENABLE << 20)|\
-                                 (RTE_GPIO7_PIN5_DMA_GLITCH_FILTER_ENABLE << 21)|\
-                                 (RTE_GPIO7_PIN6_DMA_GLITCH_FILTER_ENABLE << 22)|\
-                                 (RTE_GPIO7_PIN7_DMA_GLITCH_FILTER_ENABLE << 23))
-#else
-#define GPIO7_DMA_GLITCH_FILTER 0
-#endif
-#if RTE_GPIO8
-#define GPIO8_DMA_GLITCH_FILTER ((RTE_GPIO8_PIN0_DMA_GLITCH_FILTER_ENABLE << 24)|\
-                                 (RTE_GPIO8_PIN1_DMA_GLITCH_FILTER_ENABLE << 25)|\
-                                 (RTE_GPIO8_PIN2_DMA_GLITCH_FILTER_ENABLE << 26)|\
-                                 (RTE_GPIO8_PIN3_DMA_GLITCH_FILTER_ENABLE << 27)|\
-                                 (RTE_GPIO8_PIN4_DMA_GLITCH_FILTER_ENABLE << 28)|\
-                                 (RTE_GPIO8_PIN5_DMA_GLITCH_FILTER_ENABLE << 29)|\
-                                 (RTE_GPIO8_PIN6_DMA_GLITCH_FILTER_ENABLE << 30)|\
-                                 (RTE_GPIO8_PIN7_DMA_GLITCH_FILTER_ENABLE << 31))
-#else
-#define GPIO8_DMA_GLITCH_FILTER 0
-#endif
-
-#define DMA0_GLITCH_FILTER     (GPIO3_DMA_GLITCH_FILTER | \
-                                GPIO4_DMA_GLITCH_FILTER | \
-                                GPIO7_DMA_GLITCH_FILTER | \
-                                GPIO8_DMA_GLITCH_FILTER)
+static const ARM_DRIVER_VERSION DriverVersion = {ARM_DMA_API_VERSION, ARM_DMA_DRV_VERSION};
 
 /* ----------  Local DMA Driver Access Struct Alias & RTE alias  ---------- */
-#if defined(M55_HP)
-#define Driver_DMALOCAL                    Driver_DMA1
+#if defined(RTSS_HP)
+#define Driver_DMALOCAL                   Driver_DMA1
 
-#define RTE_DMALOCAL_APB_INTERFACE         RTE_DMA1_APB_INTERFACE
-#define RTE_DMALOCAL_ABORT_IRQ_PRI         RTE_DMA1_ABORT_IRQ_PRI
-#define RTE_DMALOCAL_BOOT_IRQ_NS_STATE     RTE_DMA1_BOOT_IRQ_NS_STATE
-#define RTE_DMALOCAL_BOOT_PERIPH_NS_STATE  RTE_DMA1_BOOT_PERIPH_NS_STATE
+#define RTE_DMALOCAL_APB_INTERFACE        RTE_DMA1_APB_INTERFACE
+#define RTE_DMALOCAL_ABORT_IRQ_PRI        RTE_DMA1_ABORT_IRQ_PRI
+#define RTE_DMALOCAL_BOOT_IRQ_NS_STATE    RTE_DMA1_BOOT_IRQ_NS_STATE
+#define RTE_DMALOCAL_BOOT_PERIPH_NS_STATE RTE_DMA1_BOOT_PERIPH_NS_STATE
 
-#if RTE_GPIO9
-#define DMALOCAL_GLITCH_FILTER ((RTE_GPIO9_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
-                                (RTE_GPIO9_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
-                                (RTE_GPIO9_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
-                                (RTE_GPIO9_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
-                                (RTE_GPIO9_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
-                                (RTE_GPIO9_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
-                                (RTE_GPIO9_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
-                                (RTE_GPIO9_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
+#elif defined(RTSS_HE)
+#define Driver_DMALOCAL                   Driver_DMA2
+
+#define RTE_DMALOCAL_APB_INTERFACE        RTE_DMA2_APB_INTERFACE
+#define RTE_DMALOCAL_ABORT_IRQ_PRI        RTE_DMA2_ABORT_IRQ_PRI
+#define RTE_DMALOCAL_BOOT_IRQ_NS_STATE    RTE_DMA2_BOOT_IRQ_NS_STATE
+#define RTE_DMALOCAL_BOOT_PERIPH_NS_STATE RTE_DMA2_BOOT_PERIPH_NS_STATE
+
 #else
-#define DMALOCAL_GLITCH_FILTER 0
-#endif
-
-#elif defined(M55_HE)
-#define Driver_DMALOCAL                    Driver_DMA2
-
-#define RTE_DMALOCAL_APB_INTERFACE         RTE_DMA2_APB_INTERFACE
-#define RTE_DMALOCAL_ABORT_IRQ_PRI         RTE_DMA2_ABORT_IRQ_PRI
-#define RTE_DMALOCAL_BOOT_IRQ_NS_STATE     RTE_DMA2_BOOT_IRQ_NS_STATE
-#define RTE_DMALOCAL_BOOT_PERIPH_NS_STATE  RTE_DMA2_BOOT_PERIPH_NS_STATE
-
-#if RTE_LPGPIO
-#define DMALOCAL_GLITCH_FILTER ((RTE_LPGPIO_PIN0_DMA_GLITCH_FILTER_ENABLE << 0)|\
-                                (RTE_LPGPIO_PIN1_DMA_GLITCH_FILTER_ENABLE << 1)|\
-                                (RTE_LPGPIO_PIN2_DMA_GLITCH_FILTER_ENABLE << 2)|\
-                                (RTE_LPGPIO_PIN3_DMA_GLITCH_FILTER_ENABLE << 3)|\
-                                (RTE_LPGPIO_PIN4_DMA_GLITCH_FILTER_ENABLE << 4)|\
-                                (RTE_LPGPIO_PIN5_DMA_GLITCH_FILTER_ENABLE << 5)|\
-                                (RTE_LPGPIO_PIN6_DMA_GLITCH_FILTER_ENABLE << 6)|\
-                                (RTE_LPGPIO_PIN7_DMA_GLITCH_FILTER_ENABLE << 7))
-#else
-#define DMALOCAL_GLITCH_FILTER 0
-#endif
+#error device not specified!
 #endif
 
 /* Driver Capabilities */
 static const ARM_DMA_CAPABILITIES DriverCapabilities = {
-    1,   /* supports memory to memory operation */
-    1,   /* supports memory to peripheral operation */
-    1,   /* supports peripheral to memory operation */
-    0,   /* supports Scatter Gather */
-    1,   /* supports Secure/Non-Secure mode operation */
-    0    /* reserved (must be zero) */
+    1, /* supports memory to memory operation */
+    1, /* supports memory to peripheral operation */
+    1, /* supports peripheral to memory operation */
+    0, /* supports Scatter Gather */
+    1, /* supports Secure/Non-Secure mode operation */
+    0  /* reserved (must be zero) */
 };
 
 #if (RTE_DMA0)
 static DMA_RESOURCES DMA0 = {
-    .regs       = NULL,
-    .state      = {0},
-    .irq_start  = DMA0_IRQ0_IRQn,
+    .regs               = NULL,
+    .state              = {0},
+    .irq_start          = DMA0_IRQ0_IRQn,
     .abort_irq_priority = RTE_DMA0_ABORT_IRQ_PRI,
-    .instance   = DMA_INSTANCE_0,
+    .instance           = DMA_INSTANCE_0,
 };
 #endif
 
 #if (RTE_DMALOCAL)
 static DMA_RESOURCES DMALOCAL = {
-    .regs       = NULL,
-    .state      = {0},
-    .irq_start  = DMALOCAL_IRQ0_IRQn,
+    .regs               = NULL,
+    .state              = {0},
+    .irq_start          = DMALOCAL_IRQ0_IRQn,
     .abort_irq_priority = RTE_DMALOCAL_ABORT_IRQ_PRI,
-    .instance   = DMA_INSTANCE_LOCAL,
+    .instance           = DMA_INSTANCE_LOCAL,
 };
 #endif
 
@@ -199,10 +118,9 @@ static ARM_DMA_CAPABILITIES DMA_GetCapabilities(void)
 */
 static DMA_SECURE_STATE DMA_GetSecureState(uint8_t value)
 {
-    DMA_SECURE_STATE  sec_state;
+    DMA_SECURE_STATE sec_state;
 
-    switch(value)
-    {
+    switch (value) {
     case 0:
         sec_state = DMA_STATE_SECURE;
         break;
@@ -223,19 +141,15 @@ static DMA_SECURE_STATE DMA_GetSecureState(uint8_t value)
 */
 static void DMA_InitDescDefaults(uint8_t channel_num, DMA_RESOURCES *DMA)
 {
-    DMA_SECURE_STATE  sec_state;
+    DMA_SECURE_STATE   sec_state;
     dma_config_info_t *dma_cfg = &DMA->cfg;
 
-    sec_state = DMA_GetSecureState(dma_manager_is_nonsecure(DMA->regs));
+    sec_state                  = DMA_GetSecureState(dma_manager_is_nonsecure(DMA->regs));
     dma_set_secure_state(dma_cfg, channel_num, sec_state);
 
-    dma_set_cache_ctrl(dma_cfg, channel_num,
-                       DMA_SRC_CACHE_CTRL,
-                       DMA_DEST_CACHE_CTRL);
+    dma_set_cache_ctrl(dma_cfg, channel_num, DMA_SRC_CACHE_CTRL, DMA_DEST_CACHE_CTRL);
 
-    dma_set_prot_ctrl(dma_cfg, channel_num,
-                      DMA_SRC_PROT_CTRL,
-                      DMA_DEST_PROT_CTRL);
+    dma_set_prot_ctrl(dma_cfg, channel_num, DMA_SRC_PROT_CTRL, DMA_DEST_PROT_CTRL);
 
     dma_set_endian_swap_size(dma_cfg, channel_num, DMA_SWAP_NONE);
 }
@@ -252,8 +166,7 @@ static int32_t DMA_GetEndianSwapSize(ARM_DMA_ESS_Type swap_size, uint8_t *ess)
 {
     uint8_t val = 0;
 
-    switch(swap_size)
-    {
+    switch (swap_size) {
     case ESS_SWAP_NONE:
         val = 0;
         break;
@@ -285,67 +198,58 @@ static int32_t DMA_GetEndianSwapSize(ARM_DMA_ESS_Type swap_size, uint8_t *ess)
   \param[in]   DMA  Pointer to DMA resources
   \return      \ref execution_status
 */
-static int32_t DMA_CopyDesc(uint8_t         channel_num,
-                            ARM_DMA_PARAMS *params,
-                            DMA_RESOURCES  *DMA)
+static int32_t DMA_CopyDesc(uint8_t channel_num, ARM_DMA_PARAMS *params, DMA_RESOURCES *DMA)
 {
     dma_config_info_t *dma_cfg = &DMA->cfg;
     dma_desc_info_t    dma_desc;
 
-    if(((1 << params->burst_size) > DMA_MAX_BURST_SIZE) ||
-       (params->burst_len > DMA_MAX_BURST_LEN) ||
-       (!params->burst_len) ||
-       (!params->cb_event) ||
-       (!params->num_bytes))
+    if (((1 << params->burst_size) > DMA_MAX_BURST_SIZE) ||
+        (params->burst_len > DMA_MAX_BURST_LEN) || (!params->burst_len) || (!params->cb_event) ||
+        (!params->num_bytes)) {
         return ARM_DRIVER_ERROR_PARAMETER;
-
-    if(params->dir == ARM_DMA_MEM_TO_MEM)
-        dma_desc.direction = DMA_TRANSFER_MEM_TO_MEM;
-    else if(params->dir == ARM_DMA_MEM_TO_DEV)
-        dma_desc.direction = DMA_TRANSFER_MEM_TO_DEV;
-    else if(params->dir == ARM_DMA_DEV_TO_MEM)
-        dma_desc.direction = DMA_TRANSFER_DEV_TO_MEM;
-    else
-        return ARM_DRIVER_ERROR_PARAMETER;
-
-    if((dma_desc.direction == DMA_TRANSFER_DEV_TO_MEM) ||
-       (dma_desc.direction == DMA_TRANSFER_MEM_TO_DEV))
-    {
-        if(params->peri_reqno >= DMA_MAX_PERIPH_REQ)
-            return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    dma_desc.periph_num  = (uint8_t)params->peri_reqno;
-    dma_desc.dst_addr    = LocalToGlobal(params->dst_addr);
-    dma_desc.src_addr    = LocalToGlobal(params->src_addr);
-    dma_desc.dst_blen    = params->burst_len;
-    dma_desc.src_blen    = params->burst_len;
-    dma_desc.total_len   = params->num_bytes;
+    if (params->dir == ARM_DMA_MEM_TO_MEM) {
+        dma_desc.direction = DMA_TRANSFER_MEM_TO_MEM;
+    } else if (params->dir == ARM_DMA_MEM_TO_DEV) {
+        dma_desc.direction = DMA_TRANSFER_MEM_TO_DEV;
+    } else if (params->dir == ARM_DMA_DEV_TO_MEM) {
+        dma_desc.direction = DMA_TRANSFER_DEV_TO_MEM;
+    } else {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    dma_desc.dst_bsize   = params->burst_size;
+    if ((dma_desc.direction == DMA_TRANSFER_DEV_TO_MEM) ||
+        (dma_desc.direction == DMA_TRANSFER_MEM_TO_DEV)) {
+        if (params->peri_reqno >= DMA_MAX_PERIPH_REQ) {
+            return ARM_DRIVER_ERROR_PARAMETER;
+        }
+    }
 
-    if(params->dir == ARM_DMA_MEM_TO_MEM)
-    {
-        while((dma_desc.dst_addr |
-               dma_desc.src_addr |
-               dma_desc.total_len) &
+    dma_desc.periph_num = (uint8_t) params->peri_reqno;
+    dma_desc.dst_addr   = LocalToGlobal(params->dst_addr);
+    dma_desc.src_addr   = LocalToGlobal(params->src_addr);
+    dma_desc.dst_blen   = params->burst_len;
+    dma_desc.src_blen   = params->burst_len;
+    dma_desc.total_len  = params->num_bytes;
+
+    dma_desc.dst_bsize  = params->burst_size;
+
+    if (params->dir == ARM_DMA_MEM_TO_MEM) {
+        while ((dma_desc.dst_addr | dma_desc.src_addr | dma_desc.total_len) &
                ((1 << dma_desc.dst_bsize) - 1))
         {
             dma_desc.dst_bsize = dma_desc.dst_bsize - 1;
         }
-    }
-    else
-    {
-        if((dma_desc.dst_addr |
-            dma_desc.src_addr |
-            dma_desc.total_len) &
-           ((1 << dma_desc.dst_bsize) - 1))
+    } else {
+        if ((dma_desc.dst_addr | dma_desc.src_addr | dma_desc.total_len) &
+            ((1 << dma_desc.dst_bsize) - 1))
         {
             return ARM_DMA_ERROR_UNALIGNED;
         }
     }
 
-    dma_desc.src_bsize   = dma_desc.dst_bsize;
+    dma_desc.src_bsize = dma_desc.dst_bsize;
 
     dma_copy_desc_info(dma_cfg, channel_num, &dma_desc);
 
@@ -360,11 +264,11 @@ static int32_t DMA_CopyDesc(uint8_t         channel_num,
 */
 __STATIC_INLINE void DMA_InvalidateDCache(dma_desc_info_t *desc_info)
 {
-    if((desc_info->direction == DMA_TRANSFER_MEM_TO_MEM) ||
-       (desc_info->direction == DMA_TRANSFER_DEV_TO_MEM))
+    if ((desc_info->direction == DMA_TRANSFER_MEM_TO_MEM) ||
+        (desc_info->direction == DMA_TRANSFER_DEV_TO_MEM))
     {
         RTSS_InvalidateDCache_by_Addr(GlobalToLocal(desc_info->dst_addr),
-                                      (int32_t)desc_info->total_len);
+                                      (int32_t) desc_info->total_len);
     }
 }
 
@@ -376,11 +280,11 @@ __STATIC_INLINE void DMA_InvalidateDCache(dma_desc_info_t *desc_info)
 */
 __STATIC_INLINE void DMA_CleanDCache(dma_desc_info_t *desc_info)
 {
-    if((desc_info->direction == DMA_TRANSFER_MEM_TO_MEM) ||
-       (desc_info->direction == DMA_TRANSFER_MEM_TO_DEV))
+    if ((desc_info->direction == DMA_TRANSFER_MEM_TO_MEM) ||
+        (desc_info->direction == DMA_TRANSFER_MEM_TO_DEV))
     {
         RTSS_CleanDCache_by_Addr(GlobalToLocal(desc_info->src_addr),
-                                 (int32_t)desc_info->total_len);
+                                 (int32_t) desc_info->total_len);
     }
 }
 
@@ -392,38 +296,39 @@ __STATIC_INLINE void DMA_CleanDCache(dma_desc_info_t *desc_info)
   \param[in]   DMA  Pointer to DMA resources
   \return      \ref execution_status
 */
-__STATIC_INLINE int32_t DMA_DeAllocate(DMA_Handle_Type *handle,
-                                       DMA_RESOURCES   *DMA)
+__STATIC_INLINE int32_t DMA_DeAllocate(DMA_Handle_Type *handle, DMA_RESOURCES *DMA)
 {
     dma_config_info_t *dma_cfg = &DMA->cfg;
     uint8_t            event_index;
     uint8_t            channel_num;
 
-    if(!DMA->state.powered)
+    if (!DMA->state.powered) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle)
+    if (!handle) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((*handle > DMA_MAX_CHANNELS) || (*handle < 0))
+    if ((*handle > DMA_MAX_CHANNELS) || (*handle < 0)) {
         return ARM_DMA_ERROR_HANDLE;
+    }
 
     __disable_irq();
 
-    channel_num = (uint8_t)*handle;
+    channel_num = (uint8_t) *handle;
 
     /* If the Channel is busy then return error so that app can call Stop */
-    if(dma_get_channel_status(DMA->regs, channel_num) != DMA_THREAD_STATUS_STOPPED)
-    {
+    if (dma_get_channel_status(DMA->regs, channel_num) != DMA_THREAD_STATUS_STOPPED) {
         __enable_irq();
         return ARM_DRIVER_ERROR_BUSY;
     }
 
     event_index = dma_get_event_index(dma_cfg, channel_num);
 
-    NVIC_DisableIRQ((IRQn_Type)(DMA->irq_start + event_index));
+    NVIC_DisableIRQ((IRQn_Type) (DMA->irq_start + event_index));
 
-    DMA->cb_event[event_index] = (void *)0;
+    DMA->cb_event[event_index] = (void *) 0;
 
     dma_release_event(dma_cfg, event_index);
     dma_release_channel(dma_cfg, channel_num);
@@ -444,47 +349,47 @@ __STATIC_INLINE int32_t DMA_DeAllocate(DMA_Handle_Type *handle,
   \param[in]   DMA  Pointer to DMA resources
   \return      \ref execution_status
 */
-static int32_t DMA_GetStatus(DMA_Handle_Type *handle,
-                             uint32_t        *count,
-                             DMA_RESOURCES   *DMA)
+static int32_t DMA_GetStatus(DMA_Handle_Type *handle, uint32_t *count, DMA_RESOURCES *DMA)
 {
-    dma_config_info_t  *dma_cfg        = &DMA->cfg;
-    dma_desc_info_t    *desc;
-    uint32_t            curr_addr;
-    uint8_t             channel_num;
-    DMA_THREAD_STATUS   thread_status;
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    dma_desc_info_t   *desc;
+    uint32_t           curr_addr;
+    uint8_t            channel_num;
+    DMA_THREAD_STATUS  thread_status;
 
-    if(!DMA->state.powered)
+    if (!DMA->state.powered) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle || !count)
+    if (!handle || !count) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((*handle > DMA_MAX_CHANNELS) || (*handle < 0))
+    if ((*handle > DMA_MAX_CHANNELS) || (*handle < 0)) {
         return ARM_DMA_ERROR_HANDLE;
+    }
 
     __disable_irq();
 
-    channel_num = (uint8_t)*handle;
+    channel_num = (uint8_t) *handle;
 
-    desc = dma_get_desc_info(dma_cfg, channel_num);
+    desc        = dma_get_desc_info(dma_cfg, channel_num);
 
-    if((desc->direction == DMA_TRANSFER_MEM_TO_DEV) ||
-       (desc->direction == DMA_TRANSFER_MEM_TO_MEM))
+    if ((desc->direction == DMA_TRANSFER_MEM_TO_DEV) ||
+        (desc->direction == DMA_TRANSFER_MEM_TO_MEM))
     {
         curr_addr = dma_get_channel_src_addr(DMA->regs, channel_num);
-        *count = curr_addr - desc->src_addr;
-    }
-    else if((desc->direction == DMA_TRANSFER_DEV_TO_MEM) ||
-            (desc->direction == DMA_TRANSFER_MEM_TO_MEM))
+        *count    = curr_addr - desc->src_addr;
+    } else if ((desc->direction == DMA_TRANSFER_DEV_TO_MEM) ||
+               (desc->direction == DMA_TRANSFER_MEM_TO_MEM))
     {
         curr_addr = dma_get_channel_dest_addr(DMA->regs, channel_num);
-        *count = curr_addr - desc->dst_addr;
+        *count    = curr_addr - desc->dst_addr;
     }
 
     thread_status = dma_get_channel_status(DMA->regs, channel_num);
-    if((thread_status == DMA_THREAD_STATUS_FAULTING_COMPLETING) ||
-       (thread_status == DMA_THREAD_STATUS_FAULTING))
+    if ((thread_status == DMA_THREAD_STATUS_FAULTING_COMPLETING) ||
+        (thread_status == DMA_THREAD_STATUS_FAULTING))
     {
         __enable_irq();
         return ARM_DMA_ERROR_FAULT;
@@ -503,62 +408,56 @@ static int32_t DMA_GetStatus(DMA_Handle_Type *handle,
 */
 static int32_t DMA_Stop(DMA_Handle_Type *handle, DMA_RESOURCES *DMA)
 {
-    dma_config_info_t  *dma_cfg = &DMA->cfg;
-    dma_dbginst0_t      dma_dbginst0;
-    dma_desc_info_t    *desc_info;
-    uint8_t             kill_opcode_buf =  {0};
-    uint8_t             channel_num;
-    uint8_t             event_index;
-    DMA_THREAD_STATUS   thread_status;
-    dma_opcode_buf      kill_opcode =
-    {
-        .buf = &kill_opcode_buf,
-        .buf_size = DMA_OP_1BYTE_LEN,
-        .off = 0
-    };
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    dma_dbginst0_t     dma_dbginst0;
+    dma_desc_info_t   *desc_info;
+    uint8_t            kill_opcode_buf = {0};
+    uint8_t            channel_num;
+    uint8_t            event_index;
+    DMA_THREAD_STATUS  thread_status;
+    dma_opcode_buf kill_opcode = {.buf = &kill_opcode_buf, .buf_size = DMA_OP_1BYTE_LEN, .off = 0};
 
-    if(!DMA->state.powered)
+    if (!DMA->state.powered) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle)
+    if (!handle) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((*handle > DMA_MAX_CHANNELS) || (*handle < 0))
+    if ((*handle > DMA_MAX_CHANNELS) || (*handle < 0)) {
         return ARM_DMA_ERROR_HANDLE;
+    }
 
     __disable_irq();
 
-    channel_num = (uint8_t)*handle;
-    event_index = dma_get_event_index(dma_cfg, channel_num);
+    channel_num   = (uint8_t) *handle;
+    event_index   = dma_get_event_index(dma_cfg, channel_num);
 
     thread_status = dma_get_channel_status(DMA->regs, channel_num);
-    if(thread_status == DMA_THREAD_STATUS_STOPPED)
-    {
+    if (thread_status == DMA_THREAD_STATUS_STOPPED) {
         __enable_irq();
         return ARM_DRIVER_OK;
     }
 
-    if(dma_debug_is_busy(DMA->regs))
-    {
+    if (dma_debug_is_busy(DMA->regs)) {
         __enable_irq();
         return ARM_DRIVER_ERROR_BUSY;
     }
 
     dma_construct_kill(&kill_opcode);
 
-    dma_dbginst0.dbginst0               = 0;
-    dma_dbginst0.dbginst0_b.ins_byte0   = kill_opcode_buf;
-    dma_dbginst0.dbginst0_b.chn_num     = channel_num;
-    dma_dbginst0.dbginst0_b.dbg_thrd    = true;
+    dma_dbginst0.dbginst0             = 0;
+    dma_dbginst0.dbginst0_b.ins_byte0 = kill_opcode_buf;
+    dma_dbginst0.dbginst0_b.chn_num   = channel_num;
+    dma_dbginst0.dbginst0_b.dbg_thrd  = true;
 
     dma_execute(DMA->regs, dma_dbginst0.dbginst0, 0);
 
     /* Wait for the Channel to be in the STOP state */
-    while(1)
-    {
+    while (1) {
         thread_status = dma_get_channel_status(DMA->regs, channel_num);
-        if(thread_status == DMA_THREAD_STATUS_STOPPED)
-        {
+        if (thread_status == DMA_THREAD_STATUS_STOPPED) {
             break;
         }
     }
@@ -566,7 +465,7 @@ static int32_t DMA_Stop(DMA_Handle_Type *handle, DMA_RESOURCES *DMA)
     dma_disable_interrupt(DMA->regs, event_index);
     dma_clear_interrupt(DMA->regs, event_index);
 
-    NVIC_DisableIRQ((IRQn_Type)(DMA->irq_start + event_index));
+    NVIC_DisableIRQ((IRQn_Type) (DMA->irq_start + event_index));
 
     /* Invalidate the data from cache */
     desc_info = dma_get_desc_info(dma_cfg, channel_num);
@@ -587,102 +486,88 @@ static int32_t DMA_Stop(DMA_Handle_Type *handle, DMA_RESOURCES *DMA)
   \param[in]   DMA  Pointer to DMA resources
   \return      \ref execution_status
 */
-static int32_t DMA_Start(DMA_Handle_Type *handle,
-                         ARM_DMA_PARAMS  *params,
-                         DMA_RESOURCES   *DMA)
+static int32_t DMA_Start(DMA_Handle_Type *handle, ARM_DMA_PARAMS *params, DMA_RESOURCES *DMA)
 {
-    dma_config_info_t  *dma_cfg = &DMA->cfg;
-    dma_dbginst0_t      dma_dbginst0;
-    dma_dbginst1_t      dma_dbginst1;
-    dma_desc_info_t     desc_info;
-    dma_desc_info_t    *channel_desc_info;
-    uint8_t             go_opcode_buf[DMA_OP_6BYTE_LEN] =  {0};
-    uint8_t            *opcode_buf;
-    uint8_t             channel_num;
-    uint8_t             event_index;
-    int32_t             ret = 0;
-    dma_opcode_buf go_opcode =
-    {
-        .buf = go_opcode_buf,
-        .buf_size = DMA_OP_6BYTE_LEN,
-        .off = 0
-    };
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    dma_dbginst0_t     dma_dbginst0;
+    dma_dbginst1_t     dma_dbginst1;
+    dma_desc_info_t    desc_info;
+    dma_desc_info_t   *channel_desc_info;
+    uint8_t            go_opcode_buf[DMA_OP_6BYTE_LEN] = {0};
+    uint8_t           *opcode_buf;
+    uint8_t            channel_num;
+    uint8_t            event_index;
+    int32_t            ret       = 0;
+    dma_opcode_buf     go_opcode = {.buf = go_opcode_buf, .buf_size = DMA_OP_6BYTE_LEN, .off = 0};
 
-    if(!DMA->state.powered)
+    if (!DMA->state.powered) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle || !params)
+    if (!handle || !params) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((*handle > DMA_MAX_CHANNELS) || (*handle < 0))
+    if ((*handle > DMA_MAX_CHANNELS) || (*handle < 0)) {
         return ARM_DMA_ERROR_HANDLE;
+    }
 
     __disable_irq();
 
-    channel_num = (uint8_t)*handle;
+    channel_num = (uint8_t) *handle;
     event_index = dma_get_event_index(dma_cfg, channel_num);
 
-    if(dma_debug_is_busy(DMA->regs))
-    {
+    if (dma_debug_is_busy(DMA->regs)) {
         __enable_irq();
         return ARM_DRIVER_ERROR_BUSY;
     }
 
-    if(dma_get_channel_status(DMA->regs, channel_num) != DMA_THREAD_STATUS_STOPPED)
-    {
+    if (dma_get_channel_status(DMA->regs, channel_num) != DMA_THREAD_STATUS_STOPPED) {
         __enable_irq();
         return ARM_DMA_ERROR_BUSY;
     }
 
-    memset((void*)&desc_info, 0, sizeof(desc_info));
+    memset((void *) &desc_info, 0, sizeof(desc_info));
 
     /* Check for user provided microcode */
-    if(dma_get_channel_flags(dma_cfg, channel_num)
-       & DMA_CHANNEL_FLAG_USE_USER_MCODE)
-    {
+    if (dma_get_channel_flags(dma_cfg, channel_num) & DMA_CHANNEL_FLAG_USE_USER_MCODE) {
         opcode_buf = dma_get_opcode_buf(dma_cfg, channel_num);
 
-        if(params->dir == ARM_DMA_MEM_TO_MEM)
+        if (params->dir == ARM_DMA_MEM_TO_MEM) {
             desc_info.direction = DMA_TRANSFER_MEM_TO_MEM;
-        else if(params->dir == ARM_DMA_MEM_TO_DEV)
+        } else if (params->dir == ARM_DMA_MEM_TO_DEV) {
             desc_info.direction = DMA_TRANSFER_MEM_TO_DEV;
-        else if(params->dir == ARM_DMA_DEV_TO_MEM)
+        } else if (params->dir == ARM_DMA_DEV_TO_MEM) {
             desc_info.direction = DMA_TRANSFER_DEV_TO_MEM;
-        else
-        {
+        } else {
             __enable_irq();
             return ARM_DRIVER_ERROR_PARAMETER;
         }
 
-        if((desc_info.direction == DMA_TRANSFER_DEV_TO_MEM) ||
-           (desc_info.direction == DMA_TRANSFER_MEM_TO_DEV))
+        if ((desc_info.direction == DMA_TRANSFER_DEV_TO_MEM) ||
+            (desc_info.direction == DMA_TRANSFER_MEM_TO_DEV))
         {
-            if(params->peri_reqno >= DMA_MAX_PERIPH_REQ)
-            {
+            if (params->peri_reqno >= DMA_MAX_PERIPH_REQ) {
                 __enable_irq();
                 return ARM_DRIVER_ERROR_PARAMETER;
             }
         }
 
-        desc_info.src_addr    = LocalToGlobal(params->src_addr);
-        desc_info.dst_addr    = LocalToGlobal(params->dst_addr);
-        desc_info.total_len   = params->num_bytes;
-        desc_info.periph_num  = (uint8_t)params->peri_reqno;
+        desc_info.src_addr   = LocalToGlobal(params->src_addr);
+        desc_info.dst_addr   = LocalToGlobal(params->dst_addr);
+        desc_info.total_len  = params->num_bytes;
+        desc_info.periph_num = (uint8_t) params->peri_reqno;
 
         dma_copy_desc_info(dma_cfg, channel_num, &desc_info);
-    }
-    else
-    {
+    } else {
         ret = DMA_CopyDesc(channel_num, params, DMA);
-        if(ret < 0)
-        {
+        if (ret < 0) {
             __enable_irq();
             return ret;
         }
 
         ret = dma_generate_opcode(dma_cfg, channel_num);
-        if(!ret)
-        {
+        if (!ret) {
             __enable_irq();
             return ARM_DMA_ERROR_BUFFER;
         }
@@ -695,7 +580,7 @@ static int32_t DMA_Start(DMA_Handle_Type *handle,
     /* Assign the callback against the allocated event_index */
     DMA->cb_event[event_index] = params->cb_event;
 
-    channel_desc_info = dma_get_desc_info(dma_cfg, channel_num);
+    channel_desc_info          = dma_get_desc_info(dma_cfg, channel_num);
     /* Src: Clean the data from the cache */
     DMA_CleanDCache(channel_desc_info);
 
@@ -710,15 +595,13 @@ static int32_t DMA_Start(DMA_Handle_Type *handle,
     dma_enable_interrupt(DMA->regs, event_index);
 
     /* Disable it first */
-    NVIC_DisableIRQ((IRQn_Type)(DMA->irq_start + event_index));
+    NVIC_DisableIRQ((IRQn_Type) (DMA->irq_start + event_index));
     /* Clear Any Pending IRQ */
-    NVIC_ClearPendingIRQ((IRQn_Type)(DMA->irq_start + event_index));
+    NVIC_ClearPendingIRQ((IRQn_Type) (DMA->irq_start + event_index));
     /* Set the priority of this particular IRQ */
-    NVIC_SetPriority((IRQn_Type)(DMA->irq_start + event_index),
-                     params->irq_priority);
+    NVIC_SetPriority((IRQn_Type) (DMA->irq_start + event_index), params->irq_priority);
     /* Enable the IRQ */
-    NVIC_EnableIRQ((IRQn_Type)(DMA->irq_start + event_index));
-
+    NVIC_EnableIRQ((IRQn_Type) (DMA->irq_start + event_index));
 
     dma_dbginst0.dbginst0             = 0;
     dma_dbginst0.dbginst0_b.ins_byte0 = go_opcode_buf[0];
@@ -750,35 +633,36 @@ static int32_t DMA_Start(DMA_Handle_Type *handle,
   \param[in]   DMA     Pointer to DMA resources
   \return      \ref execution_status and driver specific \ref dma exec status
 */
-static int32_t DMA_Control (DMA_Handle_Type *handle,
-                            uint32_t         control,
-                            uint32_t         arg,
-                            DMA_RESOURCES   *DMA)
+static int32_t DMA_Control(DMA_Handle_Type *handle, uint32_t control, uint32_t arg,
+                           DMA_RESOURCES *DMA)
 {
-    dma_config_info_t  *dma_cfg = &DMA->cfg;
-    uint8_t             channel_num;
-    int32_t             ret = ARM_DRIVER_OK;
-    uint8_t             ess = 0;
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    uint8_t            channel_num;
+    int32_t            ret = ARM_DRIVER_OK;
+    uint8_t            ess = 0;
 
     /* Verify whether the driver is initialized */
-    if(!DMA->state.initialized)
+    if (!DMA->state.initialized) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle)
+    if (!handle) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
-    if((*handle > DMA_MAX_CHANNELS) || (*handle < 0))
+    if ((*handle > DMA_MAX_CHANNELS) || (*handle < 0)) {
         return ARM_DMA_ERROR_HANDLE;
+    }
 
-    channel_num = (uint8_t)*handle;
+    channel_num = (uint8_t) *handle;
 
     /* Handle Control Codes */
-    switch(control & ARM_DMA_CONTROL_Msk)
-    {
+    switch (control & ARM_DMA_CONTROL_Msk) {
     case ARM_DMA_USER_PROVIDED_MCODE:
-        if(!arg)
+        if (!arg) {
             return ARM_DRIVER_ERROR_PARAMETER;
-        dma_assign_user_opcode(dma_cfg, channel_num, (void*)arg);
+        }
+        dma_assign_user_opcode(dma_cfg, channel_num, (void *) arg);
         break;
     case ARM_DMA_I2S_MONO_MODE:
         dma_set_i2s_mono_mode(dma_cfg, channel_num);
@@ -788,8 +672,9 @@ static int32_t DMA_Control (DMA_Handle_Type *handle,
         break;
     case ARM_DMA_ENDIAN_SWAP_SIZE:
         ret = DMA_GetEndianSwapSize(arg, &ess);
-        if(ret)
+        if (ret) {
             return ret;
+        }
 
         dma_set_swap_size(dma_cfg, channel_num, ess);
         break;
@@ -809,30 +694,30 @@ static int32_t DMA_Control (DMA_Handle_Type *handle,
 */
 static int32_t DMA_Allocate(DMA_Handle_Type *handle, DMA_RESOURCES *DMA)
 {
-    dma_config_info_t *dma_cfg  = &DMA->cfg;
-    int8_t             event    = 0;
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    int8_t             event   = 0;
     uint8_t            channel_num;
 
-    if(!DMA->state.powered)
+    if (!DMA->state.powered) {
         return ARM_DRIVER_ERROR;
+    }
 
-    if(!handle)
+    if (!handle) {
         return ARM_DRIVER_ERROR_PARAMETER;
+    }
 
     __disable_irq();
 
     *handle = dma_allocate_channel(dma_cfg);
-    if(*handle < 0)
-    {
+    if (*handle < 0) {
         __enable_irq();
         return ARM_DMA_ERROR_HANDLE;
     }
 
-    channel_num = (uint8_t)*handle;
+    channel_num = (uint8_t) *handle;
 
-    event = dma_allocate_event(dma_cfg, channel_num);
-    if(event < 0)
-    {
+    event       = dma_allocate_event(dma_cfg, channel_num);
+    if (event < 0) {
         dma_release_channel(dma_cfg, channel_num);
         __enable_irq();
         return ARM_DMA_ERROR_EVENT;
@@ -857,14 +742,14 @@ static int32_t DMA_Initialize(DMA_RESOURCES *DMA)
     dma_config_info_t *dma_cfg = &DMA->cfg;
     uint8_t            count;
 
-    if(DMA->state.initialized)
+    if (DMA->state.initialized) {
         return ARM_DRIVER_OK;
+    }
 
     __disable_irq();
 
-    for(count = 0; count < DMA_MAX_EVENTS; count++)
-    {
-        DMA->cb_event[count] = (void *)0;
+    for (count = 0; count < DMA_MAX_EVENTS; count++) {
+        DMA->cb_event[count] = (void *) 0;
     }
 
     dma_reset_all_events(dma_cfg);
@@ -893,8 +778,7 @@ static int32_t DMA_Uninitialize(DMA_RESOURCES *DMA)
 
     __disable_irq();
 
-    if(!DMA->state.powered)
-    {
+    if (!DMA->state.powered) {
         DMA->state.initialized = 0;
     }
 
@@ -912,34 +796,30 @@ static int32_t DMA_Uninitialize(DMA_RESOURCES *DMA)
 */
 static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
 {
-    if(!DMA->state.initialized)
-    {
+    if (!DMA->state.initialized) {
         return ARM_DRIVER_ERROR;
     }
 
-    switch(state)
-    {
+    switch (state) {
     case ARM_POWER_OFF:
         __disable_irq();
 
-        if(!DMA->state.powered)
-        {
+        if (!DMA->state.powered) {
             __enable_irq();
             return ARM_DRIVER_OK;
         }
 
         /* Decrement the consumer count */
         DMA->consumer_cnt--;
-        if(DMA->consumer_cnt)
-        {
+        if (DMA->consumer_cnt) {
             __enable_irq();
             return ARM_DRIVER_OK;
         }
 
-        NVIC_DisableIRQ((IRQn_Type)(DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
+        NVIC_DisableIRQ((IRQn_Type) (DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
 
-        switch(DMA->instance)
-        {
+        switch (DMA->instance) {
+#if (RTE_DMA0)
         case DMA_INSTANCE_0:
             evtrtr0_disable_dma_req();
             dma0_disable_periph_clk();
@@ -947,6 +827,8 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
             DMA->state.powered = 0;
 
             break;
+#endif
+#if (RTE_DMALOCAL)
         case DMA_INSTANCE_LOCAL:
             evtrtrlocal_disable_dma_req();
             dmalocal_disable_periph_clk();
@@ -954,6 +836,7 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
             DMA->state.powered = 0;
 
             break;
+#endif
         default:
             break;
         }
@@ -967,14 +850,13 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
         /* Increment the consumer count */
         DMA->consumer_cnt++;
 
-        if(DMA->state.powered)
-        {
+        if (DMA->state.powered) {
             __enable_irq();
             return ARM_DRIVER_OK;
         }
 
-        switch(DMA->instance)
-        {
+        switch (DMA->instance) {
+#if (RTE_DMA0)
         case DMA_INSTANCE_0:
             dma0_set_glitch_filter(DMA0_GLITCH_FILTER);
 
@@ -992,13 +874,21 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
             lpuart_select_dma0();
 #endif
 
+#if RTE_LPI3C_SELECT_DMA0
+            lpi3c_select_dma0();
+#endif
+
+#if RTE_LPI2C1_SELECT_DMA0
+            lpi2c1_select_dma0();
+#endif
             dma0_enable_periph_clk();
             evtrtr0_enable_dma_req();
 
-            if(DMA->ns_iface)
+            if (DMA->ns_iface) {
                 dma0_set_boot_manager_nonsecure();
-            else
+            } else {
                 dma0_set_boot_manager_secure();
+            }
 
             dma0_set_boot_irq_ns_mask(RTE_DMA0_BOOT_IRQ_NS_STATE);
             dma0_set_boot_periph_ns_mask(RTE_DMA0_BOOT_PERIPH_NS_STATE);
@@ -1008,15 +898,29 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
             DMA->state.powered = 1;
 
             break;
+#endif
+#if (RTE_DMALOCAL)
         case DMA_INSTANCE_LOCAL:
+#if SOC_FEAT_HAS_FLT_ENA_IN_DMA_SEL_REG
             dmalocal_set_glitch_filter(DMALOCAL_GLITCH_FILTER);
+#endif
+#if SOC_FEAT_DMA2_HAS_FLT_ENA0_REG
+            dma2_set_glitch_filter0(DMA2_GLITCH_FILTER0);
+#endif
+#if SOC_FEAT_DMA2_HAS_FLT_ENA1_REG
+            dma2_set_glitch_filter1(DMA2_GLITCH_FILTER1);
+#endif
+#if RTE_LPSPI_SELECT_DMA2_GROUP
+            lpspi_select_dma2_group(RTE_LPSPI_SELECT_DMA2_GROUP);
+#endif
             dmalocal_enable_periph_clk();
             evtrtrlocal_enable_dma_req();
 
-            if(DMA->ns_iface)
+            if (DMA->ns_iface) {
                 dmalocal_set_boot_manager_nonsecure();
-            else
+            } else {
                 dmalocal_set_boot_manager_secure();
+            }
 
             dmalocal_set_boot_irq_ns_mask(RTE_DMALOCAL_BOOT_IRQ_NS_STATE);
             dmalocal_set_boot_periph_ns_mask(RTE_DMALOCAL_BOOT_PERIPH_NS_STATE);
@@ -1026,17 +930,18 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
             DMA->state.powered = 1;
 
             break;
+#endif
         default:
             break;
         }
 
         /* Clear Any Pending IRQ */
-        NVIC_ClearPendingIRQ((IRQn_Type)(DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
+        NVIC_ClearPendingIRQ((IRQn_Type) (DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
         /* Set the priority of this particular IRQ */
-        NVIC_SetPriority((IRQn_Type)(DMA->irq_start + DMA_IRQ_ABORT_OFFSET),
+        NVIC_SetPriority((IRQn_Type) (DMA->irq_start + DMA_IRQ_ABORT_OFFSET),
                          DMA->abort_irq_priority);
         /* Enable the Abort IRQ */
-        NVIC_EnableIRQ((IRQn_Type)(DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
+        NVIC_EnableIRQ((IRQn_Type) (DMA->irq_start + DMA_IRQ_ABORT_OFFSET));
 
         __enable_irq();
 
@@ -1045,7 +950,6 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
     case ARM_POWER_LOW:
     default:
         return ARM_DRIVER_ERROR_UNSUPPORTED;
-
     }
     return ARM_DRIVER_OK;
 }
@@ -1059,9 +963,9 @@ static int32_t DMA_PowerControl(ARM_POWER_STATE state, DMA_RESOURCES *DMA)
 */
 static void DMA_IRQHandler(uint8_t event_idx, DMA_RESOURCES *DMA)
 {
-    dma_config_info_t   *dma_cfg     = &DMA->cfg;
-    dma_desc_info_t     *desc_info;
-    uint8_t              channel_num = dma_cfg->event_map[event_idx];
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    dma_desc_info_t   *desc_info;
+    uint8_t            channel_num = dma_cfg->event_map[event_idx];
 
     dma_clear_interrupt(DMA->regs, event_idx);
 
@@ -1070,9 +974,9 @@ static void DMA_IRQHandler(uint8_t event_idx, DMA_RESOURCES *DMA)
     /* Invalidate the data from cache */
     DMA_InvalidateDCache(desc_info);
 
-    if(DMA->cb_event[event_idx])
-        DMA->cb_event[event_idx](ARM_DMA_EVENT_COMPLETE,
-                                 (int8_t)desc_info->periph_num);
+    if (DMA->cb_event[event_idx]) {
+        DMA->cb_event[event_idx](ARM_DMA_EVENT_COMPLETE, (int8_t) desc_info->periph_num);
+    }
 }
 
 /**
@@ -1083,40 +987,36 @@ static void DMA_IRQHandler(uint8_t event_idx, DMA_RESOURCES *DMA)
 */
 static void DMA_AbortIRQHandler(DMA_RESOURCES *DMA)
 {
-    dma_config_info_t   *dma_cfg      = &DMA->cfg;
-    dma_desc_info_t     *desc_info;
-    DMA_Handle_Type      handle       = 0;
-    uint8_t              channel_num;
-    uint8_t              event_idx;
+    dma_config_info_t *dma_cfg = &DMA->cfg;
+    dma_desc_info_t   *desc_info;
+    DMA_Handle_Type    handle = 0;
+    uint8_t            channel_num;
+    uint8_t            event_idx;
 
     /* Get Manager Fault Status */
-    if(dma_manager_is_faulting(DMA->regs))
-    {
+    if (dma_manager_is_faulting(DMA->regs)) {
         /*
          * It requires software reset to the DMA controller to come out this
          * state and this can be achieved if ARM_POWER_FULL is called (make sure
          * all the consumers did call ARM_POWER_OFF before this)
          */
-        for(channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++)
-        {
+        for (channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++) {
             desc_info = dma_get_desc_info(dma_cfg, channel_num);
             event_idx = dma_get_event_index(dma_cfg, channel_num);
 
             /* Invalidate the data from cache */
             DMA_InvalidateDCache(desc_info);
 
-            if(DMA->cb_event[event_idx])
-                DMA->cb_event[event_idx](ARM_DMA_EVENT_ABORT,
-                                         (int8_t)desc_info->periph_num);
+            if (DMA->cb_event[event_idx]) {
+                DMA->cb_event[event_idx](ARM_DMA_EVENT_ABORT, (int8_t) desc_info->periph_num);
+            }
         }
     }
 
-    for(channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++)
-    {
-        if(dma_get_channel_fault_status(DMA->regs, channel_num))
-        {
+    for (channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++) {
+        if (dma_get_channel_fault_status(DMA->regs, channel_num)) {
             handle = channel_num;
-            DMA_Stop (&handle, DMA);
+            DMA_Stop(&handle, DMA);
 
             desc_info = dma_get_desc_info(dma_cfg, channel_num);
             event_idx = dma_get_event_index(dma_cfg, channel_num);
@@ -1124,9 +1024,9 @@ static void DMA_AbortIRQHandler(DMA_RESOURCES *DMA)
             /* Invalidate the data from cache */
             DMA_InvalidateDCache(desc_info);
 
-            if(DMA->cb_event[event_idx])
-                DMA->cb_event[event_idx](ARM_DMA_EVENT_ABORT,
-                                         (int8_t)desc_info->periph_num);
+            if (DMA->cb_event[event_idx]) {
+                DMA->cb_event[event_idx](ARM_DMA_EVENT_ABORT, (int8_t) desc_info->periph_num);
+            }
         }
     }
 }
@@ -1143,11 +1043,12 @@ static int32_t DMA0_Initialize(void)
     DMA_RESOURCES *DMA = &DMA0;
 
     /* set the apb interface for accessing registers */
-    DMA->ns_iface = DMA_GetSecureState(RTE_DMA0_APB_INTERFACE);
-    if(DMA->ns_iface)
-        DMA->regs = (DMA_Type*)DMA0_NS_BASE;
-    else
-        DMA->regs = (DMA_Type*)DMA0_SEC_BASE;
+    DMA->ns_iface      = DMA_GetSecureState(RTE_DMA0_APB_INTERFACE);
+    if (DMA->ns_iface) {
+        DMA->regs = (DMA_Type *) DMA0_NS_BASE;
+    } else {
+        DMA->regs = (DMA_Type *) DMA0_SEC_BASE;
+    }
 
     return DMA_Initialize(DMA);
 }
@@ -1194,9 +1095,7 @@ static int32_t DMA0_Allocate(DMA_Handle_Type *handle)
   \param[in]   arg     Argument 1 of operation
   \return      \ref execution_status and driver specific \ref dma exec status
 */
-static int32_t DMA0_Control(DMA_Handle_Type *handle,
-                            uint32_t         control,
-                            uint32_t         arg)
+static int32_t DMA0_Control(DMA_Handle_Type *handle, uint32_t control, uint32_t arg)
 {
     return DMA_Control(handle, control, arg, &DMA0);
 }
@@ -1546,9 +1445,8 @@ void DMA0_IRQ_ABORT_Handler(void)
 /**
 \brief Access structure of the DMA0 Driver.
 */
-extern \
-ARM_DRIVER_DMA Driver_DMA0;
-ARM_DRIVER_DMA Driver_DMA0 = {
+extern ARM_DRIVER_DMA Driver_DMA0;
+ARM_DRIVER_DMA        Driver_DMA0 = {
     DMA_GetVersion,
     DMA_GetCapabilities,
     DMA0_Initialize,
@@ -1575,11 +1473,12 @@ static int32_t DMALOCAL_Initialize(void)
     DMA_RESOURCES *DMA = &DMALOCAL;
 
     /* set the apb interface for accessing registers */
-    DMA->ns_iface = DMA_GetSecureState(RTE_DMALOCAL_APB_INTERFACE);
-    if(DMA->ns_iface)
-        DMA->regs = (DMA_Type*)DMALOCAL_NS_BASE;
-    else
-        DMA->regs = (DMA_Type*)DMALOCAL_SEC_BASE;
+    DMA->ns_iface      = DMA_GetSecureState(RTE_DMALOCAL_APB_INTERFACE);
+    if (DMA->ns_iface) {
+        DMA->regs = (DMA_Type *) DMALOCAL_NS_BASE;
+    } else {
+        DMA->regs = (DMA_Type *) DMALOCAL_SEC_BASE;
+    }
 
     return DMA_Initialize(DMA);
 }
@@ -1593,7 +1492,6 @@ static int32_t DMALOCAL_Uninitialize(void)
 {
     return DMA_Uninitialize(&DMALOCAL);
 }
-
 
 /**
   \fn          int32_t DMALOCAL_PowerControl(ARM_POWER_STATE state)
@@ -1627,9 +1525,7 @@ static int32_t DMALOCAL_Allocate(DMA_Handle_Type *handle)
   \param[in]   arg     Argument 1 of operation
   \return      \ref execution_status and driver specific \ref dma exec status
 */
-static int32_t DMALOCAL_Control(DMA_Handle_Type *handle,
-                                uint32_t         control,
-                                uint32_t         arg)
+static int32_t DMALOCAL_Control(DMA_Handle_Type *handle, uint32_t control, uint32_t arg)
 {
     return DMA_Control(handle, control, arg, &DMALOCAL);
 }
@@ -1875,7 +1771,7 @@ void DMALOCAL_IRQ20Handler(void)
 */
 void DMALOCAL_IRQ21Handler(void)
 {
-    DMA_IRQHandler (21, &DMALOCAL);
+    DMA_IRQHandler(21, &DMALOCAL);
 }
 
 /**
@@ -1979,9 +1875,8 @@ void DMALOCAL_IRQ_ABORT_Handler(void)
 /**
 \brief Access structure of the LOCAL DMA Driver.
 */
-extern \
-ARM_DRIVER_DMA Driver_DMALOCAL;
-ARM_DRIVER_DMA Driver_DMALOCAL = {
+extern ARM_DRIVER_DMA Driver_DMALOCAL;
+ARM_DRIVER_DMA        Driver_DMALOCAL = {
     DMA_GetVersion,
     DMA_GetCapabilities,
     DMALOCAL_Initialize,
@@ -1995,3 +1890,5 @@ ARM_DRIVER_DMA Driver_DMALOCAL = {
     DMALOCAL_DeAllocate
 };
 #endif
+
+#endif /* defined(RTE_Drivers_DMA) */

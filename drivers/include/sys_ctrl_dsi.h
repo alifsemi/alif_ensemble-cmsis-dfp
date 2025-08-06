@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_dsi.h
  * @author   Prasanna Ravi
  * @email    prasanna.ravi@alifsemi.com
@@ -19,12 +19,13 @@
 #ifndef SYS_CTRL_DSI_H_
 #define SYS_CTRL_DSI_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+#define PERIPH_CLK_ENA_DSI_CKEN (1U << 28) /* Enable clock supply for DSI */
 
 /**
   \fn          static inline void enable_dsi_periph_clk(void)

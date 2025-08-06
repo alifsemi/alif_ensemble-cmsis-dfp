@@ -1,0 +1,236 @@
+/*-----------------------------------------------------------------------*/
+/* Low level disk I/O module SKELETON for FatFs     (C)ChaN, 2019        */
+/*-----------------------------------------------------------------------*/
+/* If a working storage control module is available, it should be        */
+/* attached to the FatFs via a glue function rather than modifying it.   */
+/* This is an example of glue functions to attach various exsisting      */
+/* storage control modules to the FatFs module with a defined API.       */
+/*-----------------------------------------------------------------------*/
+
+#include "ff.h"     /* Obtains integer types */
+#include "diskio.h" /* Declarations of disk functions */
+#include "string.h"
+#include "stdio.h"
+#include "board_config.h"
+#include "app_utils.h"
+#ifdef BOARD_SD_RESET_GPIO_PORT
+#include "Driver_IO.h"
+#endif
+
+/* Definitions of physical drive number for each drive */
+#define DEV_MMC 0 /* Example: Map MMC/SD card to physical drive 1 */
+#define DEV_USB 1 /* Example: Map USB MSD to physical drive 2 */
+
+/* SD Card Instance */
+extern sd_handle_t Hsd;
+const diskio_t    *p_SD_Driver = &SD_Driver;
+
+/* Interrupt Handler callback */
+volatile uint32_t dma_done_irq;
+void              sd_cb(uint16_t cmd_status, uint16_t xfer_status)
+{
+    ARG_UNUSED(cmd_status);
+
+    if (xfer_status) {
+        dma_done_irq = 1;
+    }
+}
+
+/**
+ * \fn           sd_reset(void)
+ * \brief        Perform SD reset sequence
+ * \return       none
+ */
+#ifdef BOARD_SD_RESET_GPIO_PORT
+extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+void sd_reset_cb(void)
+{
+    int status;
+
+    ARM_DRIVER_GPIO *sd_rst_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+
+    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to toggle sd reset pin\n");
+#endif
+    }
+
+    sys_busy_loop_us(SDMMC_RESET_DELAY_US);
+
+    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to toggle sd reset pin\n");
+#endif
+    }
+
+    return;
+}
+#endif
+
+/*-----------------------------------------------------------------------*/
+/* Get Drive Status                                                      */
+/*-----------------------------------------------------------------------*/
+
+DSTATUS disk_status(BYTE pdrv /* Physical drive number to identify the drive */
+)
+{
+    ARG_UNUSED(pdrv);
+
+    return RES_OK;
+}
+
+/*-----------------------------------------------------------------------*/
+/* Inidialize a Drive                                                    */
+/*-----------------------------------------------------------------------*/
+
+DSTATUS disk_initialize(BYTE drivenum)  // FATFS *p_sd_card, char *MEDIA_NAME, void * media_memory,
+                                        // uint32_t media_size)
+{
+    int        status;
+    sd_param_t sd_param;
+
+    ARG_UNUSED(drivenum);
+
+#ifdef BOARD_SD_RESET_GPIO_PORT
+    ARM_DRIVER_GPIO *sd_rst_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+
+    status = sd_rst_gpio->Initialize(BOARD_SD_RESET_GPIO_PIN, NULL);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to initialize SD RST GPIO\n");
+#endif
+    }
+
+    status = sd_rst_gpio->PowerControl(BOARD_SD_RESET_GPIO_PIN, ARM_POWER_FULL);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to powered full\n");
+#endif
+    }
+
+    status = sd_rst_gpio->SetDirection(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_DIRECTION_OUTPUT);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to configure\n");
+#endif
+    }
+
+    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
+    if (status) {
+#ifdef SDMMC_PRINT_ERR
+        printf("ERROR: Failed to toggle sd reset pin\n");
+#endif
+    }
+
+#endif
+
+    sd_param.dev_id       = SDMMC_DEV_ID;
+    sd_param.clock_id     = RTE_SDC_CLOCK_SELECT;
+    sd_param.bus_width    = RTE_SDC_BUS_WIDTH;
+    sd_param.dma_mode     = RTE_SDC_DMA_SELECT;
+    sd_param.app_callback = sd_cb;
+
+#ifdef BOARD_SD_RESET_GPIO_PORT
+    sd_param.reset_cb     = sd_reset_cb;
+#else
+    sd_param.reset_cb     = 0;
+#endif
+
+    status                = p_SD_Driver->disk_initialize(&sd_param);
+
+    if (status) {
+        return STA_NOINIT;
+    }
+
+    sys_busy_loop_us(2000);
+
+    return RES_OK;
+}
+
+/*-----------------------------------------------------------------------*/
+/* Read Sector(s)                                                        */
+/*-----------------------------------------------------------------------*/
+
+DRESULT disk_read(BYTE  pdrv,   /* Physical drive number to identify the drive */
+                  BYTE *buff,   /* Data buffer to store read data */
+                  LBA_t sector, /* Start sector in LBA */
+                  UINT  count   /* Number of sectors to read */
+)
+{
+    ARG_UNUSED(pdrv);
+
+    dma_done_irq = 0;
+
+    (void) p_SD_Driver->disk_read(sector, count, buff);
+
+    while (!dma_done_irq) {
+    }
+
+    RTSS_InvalidateDCache_by_Addr((volatile void *) buff, count * SDMMC_BLK_SIZE_512_Msk);
+
+    return RES_OK;
+}
+
+/*-----------------------------------------------------------------------*/
+/* Write Sector(s)                                                       */
+/*-----------------------------------------------------------------------*/
+
+#if FF_FS_READONLY == 0
+
+DRESULT disk_write(BYTE        pdrv,   /* Physical drive number to identify the drive */
+                   const BYTE *buff,   /* Data to be written */
+                   LBA_t       sector, /* Start sector in LBA */
+                   UINT        count   /* Number of sectors to write */
+)
+{
+    DRESULT res = RES_OK;
+
+    ARG_UNUSED(pdrv);
+
+    dma_done_irq = 0;
+    RTSS_CleanDCache_by_Addr((volatile void *) buff, count * SDMMC_BLK_SIZE_512_Msk);
+
+    if (p_SD_Driver->disk_write(sector, count, (volatile uint8_t *) buff) != SD_DRV_STATUS_OK) {
+        res = RES_ERROR;
+    }
+
+    while (!dma_done_irq) {
+    }
+
+    return res;
+}
+
+#endif
+
+/*-----------------------------------------------------------------------*/
+/* Miscellaneous Functions                                               */
+/*-----------------------------------------------------------------------*/
+
+DRESULT disk_ioctl(BYTE  pdrv, /* Physical drive number (0..) */
+                   BYTE  cmd,  /* Control code */
+                   void *buff  /* Buffer to send/receive control data */
+)
+{
+    DRESULT res = 0;
+
+    ARG_UNUSED(cmd);
+    ARG_UNUSED(buff);
+
+    switch (pdrv) {
+    case DEV_MMC:
+
+        // Process of the command for the MMC/SD card
+
+        return res;
+
+    case DEV_USB:
+
+        // Process of the command the USB drive
+
+        return res;
+    }
+
+    return RES_PARERR;
+}

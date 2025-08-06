@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_CMP.h
  * @author   Nisarga A M
  * @email    nisarga.am@alifsemi.com
@@ -20,30 +20,36 @@
 #ifndef DRIVER_CMP_H_
 #define DRIVER_CMP_H_
 
-#include"Driver_Common.h"
+#include "Driver_Common.h"
 
-#ifdef _cplusplus
-extern "c"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define ARM_CMP_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1,0)  /* API version */
+#define ARM_CMP_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* API version */
+
+#define _ARM_Driver_CMP(n)  Driver_CMP##n
+#define ARM_Driver_CMP(n)   _ARM_Driver_CMP(n)
 
 /* Control code for Analog Comparator */
-#define ARM_CMP_POLARITY_CONTROL               (0X01UL)  /* Used to invert the comparator input signal before processing */
-#define ARM_CMP_WINDOW_CONTROL_ENABLE          (0X02UL)  /* Window control used to define when to look at the comparator input */
-#define ARM_CMP_WINDOW_CONTROL_DISABLE         (0X03UL)  /* Disable the window control */
-#define ARM_CMP_FILTER_CONTROL                 (0X04UL)  /* Used to define how many times the comparator input must be sampled */
-#define ARM_CMP_PRESCALER_CONTROL              (0X05UL)  /* comparator input will be sampled for every prescaler value */
+#define ARM_CMP_POLARITY_CONTROL                                                                   \
+    (0X01UL) /* Used to invert the comparator input signal before processing */
+#define ARM_CMP_WINDOW_CONTROL_ENABLE                                                              \
+    (0X02UL) /* Window control used to define when to look at the comparator input */
+#define ARM_CMP_WINDOW_CONTROL_DISABLE (0X03UL) /* Disable the window control */
+#define ARM_CMP_FILTER_CONTROL                                                                     \
+    (0X04UL) /* Used to define how many times the comparator input must be sampled */
+#define ARM_CMP_PRESCALER_CONTROL                                                                  \
+    (0X05UL) /* comparator input will be sampled for every prescaler value */
 
 /* Comparator event */
-#define ARM_CMP_FILTER_EVENT_OCCURRED          (0x01UL)  /* Filter event occurred */
+#define ARM_CMP_FILTER_EVENT_OCCURRED (0x01UL) /* Filter event occurred */
 
 /* CMP window control macros */
-#define ARM_CMP_WINDOW_CONTROL_SRC_0           (0x0UL)   /* ARM CMP Window control SOURCE 0 */
-#define ARM_CMP_WINDOW_CONTROL_SRC_1           (0x01UL)  /* ARM CMP Window control SOURCE 1 */
-#define ARM_CMP_WINDOW_CONTROL_SRC_2           (0x02UL)  /* ARM CMP Window control SOURCE 2 */
-#define ARM_CMP_WINDOW_CONTROL_SRC_3           (0x03UL)  /* ARM CMP Window control SOURCE 3 */
+#define ARM_CMP_WINDOW_CONTROL_SRC_0  (0x0UL)  /* ARM CMP Window control SOURCE 0 */
+#define ARM_CMP_WINDOW_CONTROL_SRC_1  (0x01UL) /* ARM CMP Window control SOURCE 1 */
+#define ARM_CMP_WINDOW_CONTROL_SRC_2  (0x02UL) /* ARM CMP Window control SOURCE 2 */
+#define ARM_CMP_WINDOW_CONTROL_SRC_3  (0x03UL) /* ARM CMP Window control SOURCE 3 */
 
 /* Function documentation */
 /**
@@ -89,29 +95,39 @@ extern "c"
   @return        \ref execution_status
 */
 
-typedef void (*ARM_Comparator_SignalEvent_t) (uint32_t event);  /*Pointer to \ref Comparator_SignalEvent : Signal Comparator Event*/
+typedef void (*ARM_Comparator_SignalEvent_t)(
+    uint32_t event); /*Pointer to \ref Comparator_SignalEvent : Signal Comparator Event*/
 
-typedef struct _ARM_COMPARATOR_CAPABILITIES{
-    uint32_t Polarity_invert     :1;  /* Ability to invert the input signal */
-    uint32_t Windowing           :1;  /* Used to define when to look at the comparator input */
-    uint32_t Filter_Control      :1;  /* Supports Filter function */
-    uint32_t Prescaler           :1;  /* Supports Prescaler function */
-    uint32_t Reserved            :28; /* Reserved */
-}ARM_COMPARATOR_CAPABILITIES;
+typedef struct _ARM_COMPARATOR_CAPABILITIES {
+    uint32_t Polarity_invert: 1;  /* Ability to invert the input signal */
+    uint32_t Windowing      : 1;  /* Used to define when to look at the comparator input */
+    uint32_t Filter_Control : 1;  /* Supports Filter function */
+    uint32_t Prescaler      : 1;  /* Supports Prescaler function */
+    uint32_t Reserved       : 28; /* Reserved */
+} ARM_COMPARATOR_CAPABILITIES;
 
 /**
  @brief  Access Structure of Analog Comparator Driver
 */
-typedef struct ARM_DRIVER_COMPARATOR{
-    ARM_DRIVER_VERSION            (*GetVersion)        (void);                                   /* pointer is pointing to CMP_GetVersion : used to get the driver version */
-    ARM_COMPARATOR_CAPABILITIES   (*GetCapabilities)   (void);                                   /* pointer is pointing to CMP_Capabilities : used to get the driver capabilities */
-    int32_t                       (*Initialize)        (ARM_Comparator_SignalEvent_t cb_event);  /* Pointer pointing to \ref CMP_intialize */
-    int32_t                       (*Uninitialize)      (void);                                   /* Pointer to CMP_Uninitialize : Un-initialize comparator Interface */
-    int32_t                       (*PowerControl)      (ARM_POWER_STATE state);                  /* Pointer to CMP_PowerControl : Control Comparator Interface Power */
-    int32_t                       (*Control)           (uint32_t control, uint32_t arg);         /* Pointer to CMP_Control : Control Comparator Interface */
-    int32_t                       (*Start)             (void);                                   /* Pointer to start Comparator */
-    int32_t                       (*Stop)              (void);                                   /* Pointer to Stop the Comparator */
-}const ARM_DRIVER_CMP;
+typedef struct ARM_DRIVER_COMPARATOR {
+    ARM_DRIVER_VERSION (*GetVersion)
+    (void); /* pointer is pointing to CMP_GetVersion : used to get the driver version */
+    ARM_COMPARATOR_CAPABILITIES (*GetCapabilities)
+    (void); /* pointer is pointing to CMP_Capabilities : used to get the driver capabilities */
+    int32_t (*Initialize)(ARM_Comparator_SignalEvent_t cb_event); /* Pointer pointing to \ref
+                                                                     CMP_intialize */
+    int32_t (*Uninitialize)(void); /* Pointer to CMP_Uninitialize : Un-initialize comparator
+                                      Interface */
+    int32_t (*PowerControl)(ARM_POWER_STATE state); /* Pointer to CMP_PowerControl : Control
+                                                       Comparator Interface Power */
+    int32_t (*Control)(uint32_t control,
+                       uint32_t arg); /* Pointer to CMP_Control : Control Comparator Interface */
+    int32_t (*Start)(void);           /* Pointer to start Comparator */
+    int32_t (*Stop)(void);            /* Pointer to Stop the Comparator */
+} const ARM_DRIVER_CMP;
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DRIVER_CMP_H_ */

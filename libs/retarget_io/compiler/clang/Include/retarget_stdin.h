@@ -21,11 +21,11 @@
 
   \return          0 on success, or -1 on error.
 */
-int stdin_init (void);
+int stdin_init(void);
 
 /**
   Get a character from the stdio
 
   \return     The next character from the input, or -1 on read error.
 */
-int stdin_getchar (void);
+int stdin_getchar(void);

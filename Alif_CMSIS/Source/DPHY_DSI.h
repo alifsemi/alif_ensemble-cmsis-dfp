@@ -29,13 +29,13 @@
   \param[in]   n_lanes number of lanes.
   \return      \ref execution_status
   */
-int32_t DSI_DPHY_Initialize (uint32_t frequency,  uint8_t n_lanes);
+int32_t DSI_DPHY_Initialize(uint32_t frequency, uint8_t n_lanes);
 
 /**
   \fn          int32_t DSI_DPHY_Uninitialize (void)
   \brief       Uninitialize MIPI DSI DPHY Interface.
   \return      \ref execution_status
   */
-int32_t DSI_DPHY_Uninitialize (void);
+int32_t DSI_DPHY_Uninitialize(void);
 
 #endif /* DPHY_DSI_H_ */

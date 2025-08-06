@@ -1,0 +1,49 @@
+# A solution is a collection of related projects that share same base configuration.
+solution:
+  created-for: CMSIS-Toolbox@2.9.0
+  cdefault:
+
+  # Compilers that can be selected
+  select-compiler:
+    - compiler: AC6
+    - compiler: GCC
+
+  # Miscellaneous toolchain controls directly passed to the tools
+  misc:
+    - for-compiler: AC6
+      C-CPP:
+        - -gdwarf-5
+
+  # List the packs that define the device and/or board.
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.0.0-0
+    - pack: ARM::CMSIS@^6.1.0
+    - pack: ARM::CMSIS-RTX@^5.9.0
+    - pack: ARM::CMSIS-Compiler@^2.1.0
+
+  # List different hardware targets that are used to deploy the solution.
+  target-types:
+    - type: AppKit-E7
+      board: Alif Semiconductor::AppKit-E7-AIML
+      device: Alif Semiconductor::AE722F80F55D5LS:M55_HP
+      target-set:
+        - set:
+          debugger:
+            name: JLink Server
+            start-pname: M55_HP
+          images:
+            - project-context: Blinky.Debug
+
+  # List of different build configurations.
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: none
+
+    - type: Release
+      debug: off
+      optimize: balanced
+
+  # List related projects.
+  projects:
+    - project: Blinky.cproject.yml

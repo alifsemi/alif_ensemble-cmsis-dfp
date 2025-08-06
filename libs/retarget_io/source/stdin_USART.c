@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     stdin_USART.c
  * @author   Raj Ranjan
  * @email    raj.ranjan@alifsemi.com
@@ -19,17 +19,18 @@
  * @Note     None
  ******************************************************************************/
 
-#if defined(RTE_Compiler_IO_STDIN)
+#if defined(RTE_CMSIS_Compiler_STDIN)
 #include "retarget_stdin.h"
-#endif  /* RTE_Compiler_IO_STDIN */
+#endif /* RTE_CMSIS_Compiler_STDIN */
 #include <RTE_Components.h>
 #include CMSIS_device_header
+#include "sys_utils.h"
 
 //-------- <<< Use Configuration Wizard in Context Menu >>> --------------------
 
 // <h>STDIN USART Interface
 
-#if defined(RTE_Compiler_IO_STDIN_User)
+#if defined(RTE_CMSIS_Compiler_STDIN_Custom)
 
 /* UART Includes */
 #include "retarget_config.h"
@@ -37,20 +38,20 @@
 #include "pinconf.h"
 
 /* UART Driver */
-extern ARM_DRIVER_USART ARM_Driver_USART_(PRINTF_UART_CONSOLE)  ;
-static ARM_DRIVER_USART *USARTdrv   = &ARM_Driver_USART_(PRINTF_UART_CONSOLE);
+extern ARM_DRIVER_USART  ARM_Driver_USART_(PRINTF_UART_CONSOLE);
+static ARM_DRIVER_USART *USARTdrv = &ARM_Driver_USART_(PRINTF_UART_CONSOLE);
 
 /**
   @fn           void stdin_uart_error_uninitialize()
   @brief        UART un-initializtion:
   @return       none
 */
-static int stdin_uart_error_uninitialize()
+static int stdin_uart_error_uninitialize(void)
 {
     int ret = -1;
 
     /* Un-initialize UART driver */
-    ret = USARTdrv->Uninitialize();
+    ret     = USARTdrv->Uninitialize();
     return ret;
 }
 
@@ -59,13 +60,13 @@ static int stdin_uart_error_uninitialize()
   @brief        UART power-off:
   @return       none
 */
-static int stdin_uart_error_power_off()
+static int stdin_uart_error_power_off(void)
 {
     int ret = -1;
 
     /* Power off UART peripheral */
-    ret = USARTdrv->PowerControl(ARM_POWER_OFF);
-    if(ret != ARM_DRIVER_OK){
+    ret     = USARTdrv->PowerControl(ARM_POWER_OFF);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -85,39 +86,38 @@ int stdin_init(void)
 
     /*Initialize the USART driver */
     /* RX PIN */
-    ret = pinconf_set(PRINTF_UART_CONSOLE_PORT_NUM,  PRINTF_UART_CONSOLE_RX_PIN,  \
-            PRINTF_UART_CONSOLE_RX_PINMUX_FUNCTION, PRINTF_UART_CONSOLE_RX_PADCTRL);
-    if(ret != ARM_DRIVER_OK)
+    ret         = pinconf_set(PRINTF_UART_CONSOLE_RX_PORT_NUM,
+                      PRINTF_UART_CONSOLE_RX_PIN,
+                      PRINTF_UART_CONSOLE_RX_PINMUX_FUNCTION,
+                      PRINTF_UART_CONSOLE_RX_PADCTRL);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
+    }
 
     /*Initialize the USART driver */
     ret = USARTdrv->Initialize(NULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
     /* Enable the power for UART */
     ret = USARTdrv->PowerControl(ARM_POWER_FULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         ret = stdin_uart_error_uninitialize();
         return ret;
     }
 
-    ret =  USARTdrv->Control(ARM_USART_MODE_ASYNCHRONOUS            |
-                ARM_USART_DATA_BITS_8 | ARM_USART_PARITY_NONE       |
-                ARM_USART_STOP_BITS_1 | ARM_USART_FLOW_CONTROL_NONE,\
-                PRINTF_UART_CONSOLE_BAUD_RATE);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = USARTdrv->Control(ARM_USART_MODE_ASYNCHRONOUS | ARM_USART_DATA_BITS_8 |
+                                ARM_USART_PARITY_NONE | ARM_USART_STOP_BITS_1 |
+                                ARM_USART_FLOW_CONTROL_NONE,
+                            PRINTF_UART_CONSOLE_BAUD_RATE);
+    if (ret != ARM_DRIVER_OK) {
         ret = stdin_uart_error_power_off();
         return ret;
     }
 
-    ret =  USARTdrv->Control(ARM_USART_CONTROL_RX, 1);  /* RX must be enable. */
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = USARTdrv->Control(ARM_USART_CONTROL_RX, 1); /* RX must be enable. */
+    if (ret != ARM_DRIVER_OK) {
         ret = stdin_uart_error_power_off();
         return ret;
     }
@@ -134,11 +134,11 @@ int stdin_getchar(void)
 {
     uint8_t buf[1];
 
-    if (USARTdrv->Receive(buf, 1) != ARM_DRIVER_OK)
-    {
+    if (USARTdrv->Receive(buf, 1) != ARM_DRIVER_OK) {
         return (-1);
     }
-    while (USARTdrv->GetRxCount() != 1);
+    while (USARTdrv->GetRxCount() != 1) {
+    }
     return (buf[0]);
 }
-#endif  /* defined(RTE_Compiler_IO_STDIN_User)  */
+#endif /* defined(RTE_CMSIS_Compiler_STDIN_Custom)  */

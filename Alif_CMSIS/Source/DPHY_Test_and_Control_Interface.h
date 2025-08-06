@@ -32,7 +32,7 @@
   \param[in]   mode is to select the DPHY mode(CSI2/DSI).
   \return      ret register value.
 */
-uint8_t MIPI_DPHY_Read (uint16_t address, DPHY_MODE_CFG mode);
+uint8_t MIPI_DPHY_Read(uint16_t address, DPHY_MODE_CFG mode);
 
 /**
   \fn          static void MIPI_CSI2_DPHY_Write (uint16_t address, uint8_t data)
@@ -41,6 +41,6 @@ uint8_t MIPI_DPHY_Read (uint16_t address, DPHY_MODE_CFG mode);
   \param[in]   data register value.
   \param[in]   mode is to  select the DPHY mode(CSI2/DSI).
 */
-void MIPI_DPHY_Write (uint16_t address, uint8_t data, DPHY_MODE_CFG mode);
+void MIPI_DPHY_Write(uint16_t address, uint8_t data, DPHY_MODE_CFG mode);
 
 #endif /* DPHY_TEST_AND_CONTROL_INTERFACE_H_ */

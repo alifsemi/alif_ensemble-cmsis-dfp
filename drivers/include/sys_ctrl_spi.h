@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_spi.h
  * @author   Manoj A Murudi
  * @email    manoj.murudi@alifsemi.com
@@ -20,34 +20,46 @@
 #ifndef SYS_CTRL_SPI_H_
 #define SYS_CTRL_SPI_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+#define HE_CLK_ENA_SPI_CKEN (1U << 16) /* Enable LPSPI clock */
+
+#if SOC_FEAT_LPSPI_HAS_MASTER_SLAVE
+#define HE_CLK_ENA_SPI_MODE_SLAVE (1U << 15) /* Configure LPSPI as slave */
+#endif
+
+#define SSI_CTRL_SS_IN_SEL_0 (1U << 0U)  /* SPI0 Slave select mode */
+#define SSI_CTRL_SS_IN_SEL_1 (1U << 1U)  /* SPI1 Slave select mode */
+#define SSI_CTRL_SS_IN_SEL_2 (1U << 2U)  /* SPI2 Slave select mode */
+#define SSI_CTRL_SS_IN_SEL_3 (1U << 3U)  /* SPI3 Slave select mode */
+#define SSI_CTRL_SS_IN_VAL_0 (1U << 8U)  /* SPI0 Slave select value */
+#define SSI_CTRL_SS_IN_VAL_1 (1U << 9U)  /* SPI1 Slave select value */
+#define SSI_CTRL_SS_IN_VAL_2 (1U << 10U) /* SPI2 Slave select value */
+#define SSI_CTRL_SS_IN_VAL_3 (1U << 11U) /* SPI3 Slave select value */
 
 /**
  * enum SS_IN_SEL.
  * SPI SS_IN Mode Select.
  */
-typedef enum _SS_IN_SEL
-{
-    SS_IN_IO_PIN,                         /**< SS_IN from I/O pin */
-    SS_IN_SS_IN_VAL                       /**< SS_IN from SS_IN_VAL */
+typedef enum _SS_IN_SEL {
+    SS_IN_IO_PIN,   /**< SS_IN from I/O pin */
+    SS_IN_SS_IN_VAL /**< SS_IN from SS_IN_VAL */
 } SS_IN_SEL;
 
 /**
  * enum SPI_INSTANCE.
  * SPI instances.
  */
-typedef enum _SPI_INSTANCE
-{
-    SPI_INSTANCE_0,                         /**< SPI instance - 0 */
-    SPI_INSTANCE_1,                         /**< SPI instance - 1 */
-    SPI_INSTANCE_2,                         /**< SPI instance - 2 */
-    SPI_INSTANCE_3,                         /**< SPI instance - 3 */
-    LPSPI_INSTANCE                          /**< Low Power SPI instance */
+typedef enum _SPI_INSTANCE {
+    SPI_INSTANCE_0, /**< SPI instance - 0 */
+    SPI_INSTANCE_1, /**< SPI instance - 1 */
+    SPI_INSTANCE_2, /**< SPI instance - 2 */
+    SPI_INSTANCE_3, /**< SPI instance - 3 */
+    LPSPI_INSTANCE  /**< Low Power SPI instance */
 } SPI_INSTANCE;
 
 /**
@@ -57,59 +69,50 @@ typedef enum _SPI_INSTANCE
   \param[in]   ss_in_sel    ss_in signal selection
   \return      none
 */
-static inline void ctrl_ss_in (SPI_INSTANCE instance, SS_IN_SEL ss_in_sel)
+static inline void ctrl_ss_in(SPI_INSTANCE instance, SS_IN_SEL ss_in_sel)
 {
-    switch (instance)
-    {
-        case SPI_INSTANCE_0:
+    switch (instance) {
+    case SPI_INSTANCE_0:
         {
-            if (ss_in_sel == SS_IN_SS_IN_VAL)
-            {
+            if (ss_in_sel == SS_IN_SS_IN_VAL) {
                 CLKCTL_PER_SLV->SSI_CTRL |= (SSI_CTRL_SS_IN_VAL_0 | SSI_CTRL_SS_IN_SEL_0);
             }
-            if (ss_in_sel == SS_IN_IO_PIN)
-            {
+            if (ss_in_sel == SS_IN_IO_PIN) {
                 CLKCTL_PER_SLV->SSI_CTRL &= ~(SSI_CTRL_SS_IN_VAL_0 | SSI_CTRL_SS_IN_SEL_0);
             }
             break;
         }
-        case SPI_INSTANCE_1:
+    case SPI_INSTANCE_1:
         {
-            if (ss_in_sel == SS_IN_SS_IN_VAL)
-            {
+            if (ss_in_sel == SS_IN_SS_IN_VAL) {
                 CLKCTL_PER_SLV->SSI_CTRL |= (SSI_CTRL_SS_IN_VAL_1 | SSI_CTRL_SS_IN_SEL_1);
             }
-            if (ss_in_sel == SS_IN_IO_PIN)
-            {
+            if (ss_in_sel == SS_IN_IO_PIN) {
                 CLKCTL_PER_SLV->SSI_CTRL &= ~(SSI_CTRL_SS_IN_VAL_1 | SSI_CTRL_SS_IN_SEL_1);
             }
             break;
         }
-        case SPI_INSTANCE_2:
+    case SPI_INSTANCE_2:
         {
-            if (ss_in_sel == SS_IN_SS_IN_VAL)
-            {
+            if (ss_in_sel == SS_IN_SS_IN_VAL) {
                 CLKCTL_PER_SLV->SSI_CTRL |= (SSI_CTRL_SS_IN_VAL_2 | SSI_CTRL_SS_IN_SEL_2);
             }
-            if (ss_in_sel == SS_IN_IO_PIN)
-            {
+            if (ss_in_sel == SS_IN_IO_PIN) {
                 CLKCTL_PER_SLV->SSI_CTRL &= ~(SSI_CTRL_SS_IN_VAL_2 | SSI_CTRL_SS_IN_SEL_2);
             }
             break;
         }
-        case SPI_INSTANCE_3:
+    case SPI_INSTANCE_3:
         {
-            if (ss_in_sel == SS_IN_SS_IN_VAL)
-            {
+            if (ss_in_sel == SS_IN_SS_IN_VAL) {
                 CLKCTL_PER_SLV->SSI_CTRL |= (SSI_CTRL_SS_IN_VAL_3 | SSI_CTRL_SS_IN_SEL_3);
             }
-            if (ss_in_sel == SS_IN_IO_PIN)
-            {
+            if (ss_in_sel == SS_IN_IO_PIN) {
                 CLKCTL_PER_SLV->SSI_CTRL &= ~(SSI_CTRL_SS_IN_VAL_3 | SSI_CTRL_SS_IN_SEL_3);
             }
             break;
         }
-        default:
+    default:
         {
             break;
         }
@@ -121,7 +124,7 @@ static inline void ctrl_ss_in (SPI_INSTANCE instance, SS_IN_SEL ss_in_sel)
   \brief       enable LPSPI clock
   \return      none
 */
-static inline void enable_lpspi_clk (void)
+static inline void enable_lpspi_clk(void)
 {
     M55HE_CFG->HE_CLK_ENA |= HE_CLK_ENA_SPI_CKEN;
 }
@@ -131,10 +134,32 @@ static inline void enable_lpspi_clk (void)
   \brief       disable LPSPI clock
   \return      none
 */
-static inline void disable_lpspi_clk (void)
+static inline void disable_lpspi_clk(void)
 {
     M55HE_CFG->HE_CLK_ENA &= ~HE_CLK_ENA_SPI_CKEN;
 }
+
+#if SOC_FEAT_LPSPI_HAS_MASTER_SLAVE
+/**
+  \fn          static inline void lpspi_config_master (void)
+  \brief       LPSPI configure as master
+  \return      none
+*/
+static inline void lpspi_config_master(void)
+{
+    M55HE_CFG->HE_CLK_ENA &= ~HE_CLK_ENA_SPI_MODE_SLAVE;
+}
+
+/**
+  \fn          static inline void lpspi_config_slave (void)
+  \brief       LPSPI configure as slave
+  \return      none
+*/
+static inline void lpspi_config_slave(void)
+{
+    M55HE_CFG->HE_CLK_ENA |= HE_CLK_ENA_SPI_MODE_SLAVE;
+}
+#endif
 
 #ifdef __cplusplus
 }

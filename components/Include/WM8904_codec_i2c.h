@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     WM8904_codec_i2c.h
  * @author   Manoj A Murudi
  * @email    manoj.murudi@alifsemi.com
@@ -22,9 +22,8 @@
 #ifndef WM8904_CODEC_I2C_H_
 #define WM8904_CODEC_I2C_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include <stdint.h>
@@ -34,11 +33,10 @@ extern "C"
 \brief WM8904 Codec Slave i2c Configuration
 */
 typedef struct _WM8904_CODEC_SLAVE_I2C_CONFIG {
-    ARM_DRIVER_I2C                        *drv_i2c;                   /* WM8904 Codec i2C driver instance   */
-    uint16_t                              bus_speed;                  /* WM8904 Codec i2c Bus Speed         */
-    uint8_t                               wm8904_codec_slave_addr;    /* WM8904 Codec slave address         */
+    ARM_DRIVER_I2C *drv_i2c;                 /* WM8904 Codec i2C driver instance   */
+    uint16_t        bus_speed;               /* WM8904 Codec i2c Bus Speed         */
+    uint8_t         wm8904_codec_slave_addr; /* WM8904 Codec slave address         */
 } WM8904_CODEC_SLAVE_I2C_CONFIG;
-
 
 /**
   \fn           int32_t WM8904_codec_i2c_init(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c)
@@ -69,9 +67,8 @@ int32_t WM8904_codec_i2c_uninit(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c);
   \param[in]    reg_value  : register value
   \return       \ref execution_status
 */
-int32_t WM8904_codec_i2c_write(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c,
-                               uint8_t                        reg_addr,
-                               uint16_t                       reg_value);
+int32_t WM8904_codec_i2c_write(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c, uint8_t reg_addr,
+                               uint16_t reg_value);
 
 /**
   \fn           int32_t WM8904_codec_i2c_read(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c,
@@ -84,11 +81,10 @@ int32_t WM8904_codec_i2c_write(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c,
   \param[in]    reg_value  : pointer to register value
   \return       \ref execution_status
 */
-int32_t WM8904_codec_i2c_read(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c,
-                              uint8_t                        reg_addr,
-                              uint16_t                      *reg_value);
+int32_t WM8904_codec_i2c_read(WM8904_CODEC_SLAVE_I2C_CONFIG *i2c, uint8_t reg_addr,
+                              uint16_t *reg_value);
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
