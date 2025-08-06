@@ -1423,11 +1423,11 @@
       <book category="overview"  name="https://alifsemi.com/support/kits/ai-ml-appkit/" title="Ensemble AI/ML AppKit Gen 2 Web Page"/>
       <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE722F80F55D5LS"/>
       <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F55D5LS"/>
-      <compatibleDevice deviceIndex="1" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
-      <compatibleDevice deviceIndex="2" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
-      <compatibleDevice deviceIndex="3" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
-      <compatibleDevice deviceIndex="4" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
-      <compatibleDevice deviceIndex="5" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <feature type="XTAL" n="38400000"/>
