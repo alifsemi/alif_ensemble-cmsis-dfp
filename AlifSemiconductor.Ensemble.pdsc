@@ -177,7 +177,7 @@
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="400000000" Pname="M55_HP"/>
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
         <!-- DebugConfig for E8 -->
-        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/>
+        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/> <!-- File does not exist -->
         <!-- Debug sequences -->
         <sequences>
           <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
@@ -297,7 +297,7 @@
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="400000000" Pname="M55_HP"/>
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
         <!-- DebugConfig for E8 -->
-        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/>
+        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/> <!-- file does not exist and I would expect E4/Ensemble E4.sdf which does not exist either --> 
         <!-- Debug sequences -->
         <sequences>
           <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
