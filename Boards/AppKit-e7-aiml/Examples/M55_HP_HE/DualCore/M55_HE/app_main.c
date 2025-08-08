@@ -44,11 +44,11 @@ __NO_RETURN void app_main_thread(void *argument)
         /* Switch LED1 on */
         vioSetSignal(vioLED1, vioLEDon);
         /* Wait a bit */
-        osDelay(500);
+        osDelay(250);
         /* Switch LED1 off */
         vioSetSignal(vioLED1, vioLEDoff);
         /* Wait a bit */
-        osDelay(500);
+        osDelay(250);
 
         /* Increment loop counter */
         core1_loop_counter += 1;

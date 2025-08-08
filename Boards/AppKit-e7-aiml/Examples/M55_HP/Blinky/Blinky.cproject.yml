@@ -1,5 +1,6 @@
 # A project translates into one executable or library.
 project:
+  device: :M55_HP
 
   # Processor features used in this project.
   processor:

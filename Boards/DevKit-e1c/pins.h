@@ -100,7 +100,7 @@ const struct pinconf board_pinconf[] = {
 
     /* P2_0 on pin K9. Functions: [0]: GPIO2_0, [1]: OSPI0_SS0_B, [2]: >>>LPUART_RX_A<<<, [3]: I2S1_SDI_A, [4]: LPSPI_SS_A, [5]: LPCAM_HSYNC_B, [6]: ANA_S8, [7]: CX_MWS_SF4 */
     /* Selected: LPUART_RX_A */
-    {PORT_2, PIN_0, PINMUX_ALTERNATE_FUNCTION_2, PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP | PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+    {PORT_2, PIN_0, PINMUX_ALTERNATE_FUNCTION_2, PADCTRL_READ_ENABLE},
 
     /* P2_1 on pin K7. Functions: [0]: GPIO2_1, [1]: >>>OSPI0_SS1_B<<<, [2]: LPUART_TX_A, [3]: I2S1_SDO_A, [4]: LPI2C_SCL_B, [5]: LPCAM_PCLK_B, [6]: ANA_S9, [7]: CX_MWS_PAT0 */
     /* Selected:  OSPI0_SS1_B for "ISSI RAM" */
@@ -326,9 +326,11 @@ const struct pinconf board_pinconf[] = {
     /* Selected:  LPI2S_SDI_C */
     {PORT_9, PIN_0, PINMUX_ALTERNATE_FUNCTION_2, PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_BUS_REPEATER | PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
-    /* P9_1 on pin N2. Functions: [0]: >>>GPIO9_1<<<, [1]: LPUART_TX_C, [2]: LPI2S_SDO_C, [3]: SPI1_SS2_C, [4]: FAULT1_C, [5]: LPCAM_D1_C, [6]: SD_D1_C */
+    /* P9_1 on pin N2. Functions: [0]: GPIO9_1, [1]: >>>LPUART_TX_C<<<, [2]: LPI2S_SDO_C, [3]:
+     * SPI1_SS2_C,[4]: FAULT1_C, [5]: LPCAM_D1_C, [6]: SD_D1_C
+     */
     /* Selected:  LPUART_TX_C */
-    {PORT_9, PIN_1, PINMUX_ALTERNATE_FUNCTION_0,  PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+    {PORT_9, PIN_1, PINMUX_ALTERNATE_FUNCTION_1, PADCTRL_OUTPUT_DRIVE_STRENGTH_2MA},
 
     /* P9_2 on pin M3. Functions: [0]: GPIO9_2, [1]: LPUART_RTS_C, [2]: >>>LPI2S_SCLK_C<<<, [3]: SPI2_MISO_C, [4]: FAULT2_C, [5]: LPCAM_D2_C, [6]: SD_D2_C */
     /* Selected: LPI2S_SCLK_C */

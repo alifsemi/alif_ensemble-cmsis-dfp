@@ -39,7 +39,7 @@ static ARM_DRIVER_CDC200 *DriverCDC = &Driver_CDC200;
 
 /* Stream Buffer Type */
 typedef struct {
-    void    *data;       /* Data buffer pointer             */
+    uint8_t    *data;       /* Data buffer pointer             */
     uint32_t block_num;  /* Number of blocks in data buffer */
     uint32_t block_size; /* Size of block in data buffer    */
 } StreamBuf_t;
@@ -151,7 +151,7 @@ static int32_t Initialize(vStreamEvent_t event_cb)
             }
 
             /* Configure display */
-            status = DriverCDC->Control(CDC200_CONFIGURE_DISPLAY, NULL);
+            status = DriverCDC->Control(CDC200_CONFIGURE_DISPLAY, 0U);
             if (status != ARM_DRIVER_OK) {
                 rval = VSTREAM_ERROR;
             }
@@ -202,7 +202,7 @@ static int32_t SetBuf(void *buf, uint32_t buf_size, uint32_t block_size)
         rval = VSTREAM_ERROR;
     } else {
         /* Set buffer */
-        hVideoOut.buf.data        = buf;
+        hVideoOut.buf.data        = (uint8_t *)buf;
         hVideoOut.buf.block_num   = buf_size / block_size;
         hVideoOut.buf.block_size  = block_size;
 

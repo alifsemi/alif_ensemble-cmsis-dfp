@@ -1,3 +1,4 @@
+# A project translates into one executable or library.
 project:
   device: :M55_HE
 

@@ -52,7 +52,7 @@
 extern ARM_DRIVER_SAI ARM_Driver_SAI_(AUDIO_CFG_SAI_INSTANCE);
 
 typedef struct audio_buf_s {
-    void    *data;       /* Data buffer pointer     */
+    uint8_t    *data;       /* Data buffer pointer     */
     uint32_t block_num;  /* Number of data blocks   */
     uint32_t block_size; /* Data block size         */
 } AudioBuf_t;
@@ -78,7 +78,6 @@ static AudioInHandle_t hAudioIn;
 */
 static void Driver_SAI_Callback(uint32_t event)
 {
-    uint32_t buf_block;
     uint32_t buf_index;
     uint32_t num;
 
@@ -190,7 +189,7 @@ static int32_t SetBuf(void *buf, uint32_t buf_size, uint32_t block_size)
     } else if ((buf_size == 0U) || (block_size == 0U)) {
         status = VSTREAM_ERROR_PARAMETER;
     } else {
-        hAudioIn.buf.data       = buf;
+        hAudioIn.buf.data       = (uint8_t *)buf;
         hAudioIn.buf.block_num  = buf_size / block_size;
         hAudioIn.buf.block_size = block_size;
 

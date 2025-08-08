@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<package xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.7.49" xs:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Open-CMSIS-Pack/Open-CMSIS-Pack-Spec/v1.7.49/schema/PACK.xsd">
+<package xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.7.50" xs:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Open-CMSIS-Pack/Open-CMSIS-Pack-Spec/v1.7.50/schema/PACK.xsd">
   <vendor>AlifSemiconductor</vendor>
   <name>Ensemble</name>
   <description overview="docs/Overview.md">Alif Semiconductor Ensemble Device Family Pack</description>
@@ -8,7 +8,10 @@
   <license>License.txt</license>
 
   <releases>
-     <release version="2.0.0"  tag="v2.0.0" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.0.0/AlifSemiconductor.Ensemble.2.0.0.pack" date="2025-08-04">
+    <release version="2.0.1"  tag="v2.0.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.0.1/AlifSemiconductor.Ensemble.2.0.1.pack" date="2025-08-07">
+      - Update layers and examples for AppKit-E7-AIML and DevKit-E7
+    </release>
+    <release version="2.0.0"  tag="v2.0.0" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.0.0/AlifSemiconductor.Ensemble.2.0.0.pack" date="2025-08-04">
       - Add Cropping Support for CPI
       - Update E4 SOC part Numbers
       - Add High Speed mode in I2C
@@ -177,7 +180,8 @@
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="400000000" Pname="M55_HP"/>
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
         <!-- DebugConfig for E8 -->
-        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/>
+        <!-- <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/> --> <!-- disabling till SDF file is added -->
+        <debugconfig dormant="true"/>
         <!-- Debug sequences -->
         <sequences>
           <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
@@ -296,8 +300,9 @@
         <!-- Device processor attributes -->
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="400000000" Pname="M55_HP"/>
         <processor Dcore="Cortex-M55" DcoreVersion="r1p0" Dfpu="DP_FPU" Dmpu="MPU" Dmve="FP_MVE" Ddsp="DSP" Dtz="TZ" Dendian="Little-endian" Dclock="160000000" Pname="M55_HE"/>
-        <!-- DebugConfig for E8 -->
-        <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/>
+        <!-- DebugConfig for E4 -->
+        <!-- <debugconfig sdf="Debug/SDF/E4/Ensemble E4.sdf" dormant="true"/> --> <!-- disabling till SDF file is added -->
+        <debugconfig dormant="true"/>
         <!-- Debug sequences -->
         <sequences>
           <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
@@ -1239,7 +1244,7 @@
       </attributes>
     </example>
 
-    <example name="DualCore (M55_HE/M55_HP)" folder="Boards/DevKit-e7/Examples/Dual_Core" doc="README.md">
+    <example name="DualCore_HE_HP" folder="Boards/DevKit-e7/Examples/Dual_Core" doc="README.md">
       <description>Dual Core example running on M55 High Efficiency and High Performance core</description>
       <board name="DevKit-E7" vendor="Alif Semiconductor"/>
       <project>
@@ -1261,7 +1266,31 @@
       </attributes>
     </example>
 
-    <example name="Blinky (M55_HE)" folder="Boards/AppKit-e7-aiml/Examples/M55_HE/Blinky" doc="README.md">
+    <example name="Zephyr_HE" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HE" doc="README.md">
+      <description>Zephyr configuration for CMSIS-Debugger on M55 High Efficiency core</description>
+      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
+    <example name="Zephyr_HP" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HP" doc="README.md">
+      <description> Zephyr configuration for CMSIS-Debugger on M55 High Performance core</description>
+      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
+    <example name="Zephyr_DualCore_HE_HP" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HP_HE" doc="README.md">
+      <description> Zephyr configuration for CMSIS-Debugger on M55 High Efficiency and High Performance core</description>
+      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
+    <example name="Blinky_HE" folder="Boards/AppKit-e7-aiml/Examples/M55_HE/Blinky" doc="README.md">
       <description>CMSIS-RTOS2 Blinky example with VIO running on M55 High Efficiency core</description>
       <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
       <project>
@@ -1269,7 +1298,7 @@
       </project>
     </example>
 
-    <example name="Blinky (M55_HP)" folder="Boards/AppKit-e7-aiml/Examples/M55_HP/Blinky" doc="README.md">
+    <example name="Blinky_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP/Blinky" doc="README.md">
       <description>CMSIS-RTOS2 Blinky example with VIO running on M55 High Performance core</description>
       <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
       <project>
@@ -1277,13 +1306,38 @@
       </project>
     </example>
 
-    <example name="DualCore (M55_HE/M55_HP)" folder="Boards/AppKit-e7-aiml/Examples/M55_HP_HE/DualCore" doc="README.md">
+    <example name="DualCore_HE_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP_HE/DualCore" doc="README.md">
       <description>Dual Core example running on M55 High Efficiency and High Performance core</description>
       <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
       <project>
         <environment name="csolution" load="DualCore.csolution.yml"/>
       </project>
     </example>
+
+    <example name="Zephyr_HE" folder="Boards/AppKit-e7-aiml/Examples/M55_HE/Zephyr" doc="README.md">
+      <description>Zephyr configuration for CMSIS-Debugger on M55 High Efficiency core</description>
+      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
+    <example name="Zephyr_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP/Zephyr" doc="README.md">
+      <description> Zephyr configuration for CMSIS-Debugger on M55 High Performance core</description>
+      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
+    <example name="Zephyr_DualCore_HE_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP_HE/Zephyr" doc="README.md">
+      <description> Zephyr configuration for CMSIS-Debugger on M55 High Efficiency and High Performance core</description>
+      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="Zephyr.csolution.yml"/>
+      </project>
+    </example>
+
   </examples>
   <!-- conditions section -->
   <boards>
@@ -1293,13 +1347,14 @@
       <description>Development Kit E7 Gen 2 (FBGA194)</description>
       <image small="docs/images/DK-E7_Gen-2_small.jpg" large="docs/images/DK-E7_Gen-2.jpg"/>
       <book category="overview"  name="https://alifsemi.com/support/kits/ensemble-devkit-gen2/" title="Ensemble DevKit Gen 2 Web Page"/>
+      <book category="other"     name="Boards/DevKit-e7/Doc/README.md"                          title="Guide" public="true"/>
       <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE722F80F55D5LS"/>
       <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F55D5LS"/>
-      <compatibleDevice deviceIndex="1" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
-      <compatibleDevice deviceIndex="2" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
-      <compatibleDevice deviceIndex="3" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
-      <compatibleDevice deviceIndex="4" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
-      <compatibleDevice deviceIndex="5" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <feature type="XTAL" n="38400000"/>
@@ -1342,10 +1397,8 @@
       <!--book category="overview"  name="https://alifsemi.com/support/kits/eagle-devkit-gen1/" title="Eagle DevKit Gen 1 Web Page"/-->
       <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE822FA0E5597LS0" />
       <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE822FA0E5597BS0"/>
-      <compatibleDevice deviceIndex="1" Dvendor="Alif Semiconductor:165" Dname="AE612FA0E5597BS0"/>
-      <compatibleDevice deviceIndex="2" Dvendor="Alif Semiconductor:165" Dname="AE612FA0E5597LS0"/>
-      <compatibleDevice deviceIndex="3" Dvendor="Alif Semiconductor:165" Dname="AE402FA0E5597BE0"/>
-      <compatibleDevice deviceIndex="4" Dvendor="Alif Semiconductor:165" Dname="AE402FA0E5597LE0"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE402FA0E5597BE0"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE402FA0E5597LE0"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <feature type="XTAL" n="38400000"/>
@@ -1386,14 +1439,6 @@
       <description>Development Kit E1C</description>
       <!--book category="overview"  name="https://alifsemi.com/support/kits/ensemble-devkit-gen2/" title=" DevKit Gen 2 Web Page"/-->
       <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE1C1F4051920PH"  />
-      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE1C1F4051920HH"/>
-      <compatibleDevice deviceIndex="1" Dvendor="Alif Semiconductor:165" Dname="AE1C1F40319205H"/>
-      <compatibleDevice deviceIndex="2" Dvendor="Alif Semiconductor:165" Dname="AE1C1F1041010PH"/>
-      <compatibleDevice deviceIndex="3" Dvendor="Alif Semiconductor:165" Dname="AE1C1F1041010HH"/>
-      <compatibleDevice deviceIndex="4" Dvendor="Alif Semiconductor:165" Dname="AE1C1F10410105H"/>
-      <compatibleDevice deviceIndex="5" Dvendor="Alif Semiconductor:165" Dname="AE1C1F1040505HH"/>
-      <compatibleDevice deviceIndex="6" Dvendor="Alif Semiconductor:165" Dname="AE1C1F1040505PH"/>
-      <compatibleDevice deviceIndex="7" Dvendor="Alif Semiconductor:165" Dname="AE1C1F104050525H"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <feature type="XTAL" n="38400000"/>
@@ -1431,15 +1476,17 @@
       <description>AI/ML Applications Kit E7 Gen 2 (FBGA194)</description>
       <image small="docs/images/AK-E7-AIML_Gen-2_small.jpg" large="docs/images/AK-E7-AIML_Gen-2.jpg"/>
       <book category="overview"  name="https://alifsemi.com/support/kits/ai-ml-appkit/" title="Ensemble AI/ML AppKit Gen 2 Web Page"/>
+      <book category="other"     name="Boards/AppKit-e7-aiml/Doc/README.md"             title="Guide" public="true"/>
       <mountedDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE722F80F55D5LS"/>
       <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F55D5LS"/>
-      <compatibleDevice deviceIndex="1" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
-      <compatibleDevice deviceIndex="2" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
-      <compatibleDevice deviceIndex="3" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
-      <compatibleDevice deviceIndex="4" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
-      <compatibleDevice deviceIndex="5" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE512F80F5582LS"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F55D5LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80F5582LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F80C1557LE"/>
+      <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE302F40C1537LE"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
-      <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
+      <debugInterface adapter="J-Link"  connector="Micro-USB"/>
+      <debugProbe name="JLink Server" debugLink="swd" debugClock="10000000" connector="Micro-USB"/>
       <feature type="XTAL" n="38400000"/>
       <feature type="PWR" n="4.75" m="5.25"/>
       <feature type="Curr" n="0.6" m="1"/>
@@ -1518,10 +1565,12 @@
       <accept Pname="M55_HP" Dname="AE402FA0*"/>
     </condition>
 
-    <condition id="CMSIS-Core">
+    <condition id="Ensemble CMSIS-Core">
       <description>Generic Alif Semiconductor M55_HP and M55_HE device startup and depends on CMSIS Core</description>
+      <require condition="Ensemble"/>
       <require Cclass="CMSIS" Cgroup="CORE"/>
     </condition>
+
     <condition id="Ensemble">
       <description>Alif Semiconductor Ensemble Series devices</description>
       <require Dvendor="Alif Semiconductor:165"/>
@@ -1830,7 +1879,7 @@
   </conditions>
 <!-- component section -->
   <components>
-    <component Cclass="Device" Cgroup="Startup" Cversion="2.0.0" condition="CMSIS-Core">
+    <component Cclass="Device" Cgroup="Startup" Cversion="2.0.0" condition="Ensemble CMSIS-Core">
       <description>System and Startup file for M55_HP, M55_HP and SOC </description>
       <files>
         <!-- include folder / device header file -->
@@ -2027,7 +2076,7 @@
        </files>
      </component>
 
-<!-- Driver components  -->
+    <!-- Driver components  -->
     <component Cclass="CMSIS Driver" Cgroup="GPIO" Cversion="1.0.0" Capiversion="1.0.0" condition="Ensemble CMSIS_Driver">
       <description>GPIO driver for Alif Semiconductor SOC</description>
       <RTE_Components_h>
@@ -2863,7 +2912,7 @@
     </component>
 
 
-    <component Cclass="BSP" Cgroup="Board Config" Cversion="2.0.0">
+    <component Cclass="BSP" Cgroup="Board Config" Cversion="2.0.0" condition="Ensemble">
       <description>Conductor Tool based board configuration for Board Config</description>
       <files>
         <file category="source" name="libs/board_config/board_config.c"/>

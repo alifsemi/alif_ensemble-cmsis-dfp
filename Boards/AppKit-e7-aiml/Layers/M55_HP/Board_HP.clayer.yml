@@ -7,7 +7,7 @@ layer:
 
   # Processor features used in this project.
   processor:
-    trustzone: secure
+    trustzone: off
 
   # List connections used to identify compatible software layers.
   connections:

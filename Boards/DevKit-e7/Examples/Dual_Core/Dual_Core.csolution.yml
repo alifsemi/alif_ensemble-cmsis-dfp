@@ -1,5 +1,6 @@
+# A solution is a collection of related projects that share same base configuration.
 solution:
-  created-for: CMSIS-Toolbox@2.9.0
+  created-for: CMSIS-Toolbox@2.10.0
   cdefault:
 
   # Compilers that can be selected.
@@ -19,9 +20,6 @@ solution:
       device: Alif Semiconductor::AE722F80F55D5LS
       target-set:
         - set:
-          debugger:
-            name: JLink Server
-            start-pname: M55_HP
           images:
             - project-context: M55_HP.Debug
             - project-context: M55_HE.Debug

@@ -40,7 +40,7 @@ static ARM_DRIVER_CPI *DriverCPI = &Driver_CPI;
 
 /* Stream Buffer Type */
 typedef struct {
-    void    *data;       /* Data buffer pointer             */
+    uint8_t    *data;       /* Data buffer pointer             */
     uint32_t block_num;  /* Number of blocks in data buffer */
     uint32_t block_size; /* Size of block in data buffer    */
 } StreamBuf_t;
@@ -65,9 +65,7 @@ static StreamHandle_t hVideoIn = {0};
 static void DriverCPI_Callback(uint32_t cb_event)
 {
     uint32_t event;
-    uint32_t buf_block;
     uint32_t buf_index;
-    uint32_t num;
 
     event = 0U;
 
@@ -232,7 +230,7 @@ static int32_t SetBuf(void *buf, uint32_t buf_size, uint32_t block_size)
         rval = VSTREAM_ERROR;
     } else {
         /* Set buffer */
-        hVideoIn.buf.data        = buf;
+        hVideoIn.buf.data        = (uint8_t *)buf;
         hVideoIn.buf.block_num   = buf_size / block_size;
         hVideoIn.buf.block_size  = block_size;
 

@@ -7,7 +7,7 @@ layer:
 
   # Processor features used in this project.
   processor:
-    trustzone: secure
+    trustzone: off
 
   # List connections used to identify compatible software layers.
   connections:
@@ -88,12 +88,15 @@ layer:
 
     - component: Device:SOC Peripherals:DMA
     - component: Device:SOC Peripherals:PINCONF
+    - component: Device:SOC Peripherals:MHU
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
 
     - component: Services:Retarget IO:STDERR
     - component: Services:Retarget IO:STDIN
     - component: Services:Retarget IO:STDOUT
+    - component: Services:Secure Enclave:core&Source
+    - component: Services:Secure Enclave:Initialization Helper&Source
 
   # List of source groups and files added to a project or a layer.
   groups:
