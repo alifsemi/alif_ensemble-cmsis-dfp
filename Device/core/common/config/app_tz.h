@@ -1136,7 +1136,7 @@ extern const uint32_t NS_REGION_0$$Limit;
         SAU->RNR  = (n & SAU_RNR_REGION_Msk);                                                      \
         SAU->RBAR = (SAU_INIT_START##n & SAU_RBAR_BADDR_Msk);                                      \
         SAU->RLAR = (SAU_INIT_END##n & SAU_RLAR_LADDR_Msk) |                                       \
-                    ((SAU_INIT_NSC##n << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U                \
+                    ((SAU_INIT_NSC##n << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U;               \
     } while (0)
 
 /**

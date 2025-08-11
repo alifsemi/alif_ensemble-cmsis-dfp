@@ -661,7 +661,7 @@ const struct pinconf board_pinconf[] = {
     /* Selected: OSPI1_RXDS_C for "ISSI Flash" */
     {PORT_10,
      PIN_7,
-     PINMUX_ALTERNATE_FUNCTION_1,
+     PINMUX_ALTERNATE_FUNCTION_7,
      PADCTRL_READ_ENABLE | PADCTRL_SLEW_RATE_FAST | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA},
 
     /* P11_0 on pin P2. Functions: [0]: GPIO11_0, [1]: OSPI1_D0_A, [2]: UART7_TX_A, [3]: I2S2_WS_B,

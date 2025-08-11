@@ -8,6 +8,11 @@
   <license>License.txt</license>
 
   <releases>
+    <release version="2.0.2"  tag="v2.0.2" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.0.2/AlifSemiconductor.Ensemble.2.0.2.pack" date="2025-08-11">
+      - Fix ospi1 rxds pinmux
+      - retarget_config.h in layer and example updated to reflect 2.0.0 config file version
+      - Fix compilation error in tz config
+    </release>
     <release version="2.0.1"  tag="v2.0.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.0.1/AlifSemiconductor.Ensemble.2.0.1.pack" date="2025-08-07">
       - Update layers and examples for AppKit-E7-AIML and DevKit-E7
     </release>
