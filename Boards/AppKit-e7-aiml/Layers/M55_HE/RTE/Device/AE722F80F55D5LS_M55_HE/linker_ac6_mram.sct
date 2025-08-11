@@ -1,0 +1,110 @@
+#! armclang -E --target=arm-arm-none-eabi -mcpu=cortex-m55 -xc
+; command above MUST be in first line (no comment above!)
+
+#include "app_mem_regions.h"
+
+#define __ROM_BASE      APP_MRAM_HE_BASE
+#define __ROM_SIZE      APP_MRAM_HE_SIZE
+
+#define __ITCM_BASE     APP_ITCM_BASE
+#define __ITCM_SIZE     APP_HE_ITCM_SIZE
+
+#define __RAM_BASE      APP_DTCM_BASE
+#define __RAM_SIZE      APP_HE_DTCM_SIZE
+
+#define __STACK_SIZE    APP_HE_STACK_SIZE
+#define __HEAP_SIZE     APP_HE_HEAP_SIZE
+#define __APP_HEAP_SIZE 0x00008000
+
+/*----------------------------------------------------------------------------
+  User Stack & Heap boundary definition
+ *----------------------------------------------------------------------------*/
+#define __STACK_TOP     (__RAM_BASE + __RAM_SIZE)    /* starts at end of RAM */
+#define __HEAP_BASE     (AlignExpr(+0, 8))           /* starts after RW_RAM section, 8 byte aligned */
+#define __APP_HEAP_BASE (AlignExpr(+0, 8))           /* starts after HEAP, 8 byte aligned */
+
+
+/*----------------------------------------------------------------------------
+  Scatter File Definitions definition
+ *----------------------------------------------------------------------------*/
+
+#define __RW_BASE       __RAM_BASE
+#define __RW_SIZE      (__RAM_SIZE - __STACK_SIZE - __HEAP_SIZE - __APP_HEAP_SIZE)
+
+LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
+  ER_ROM_VECTORS  (AlignExpr(__ROM_BASE, 2048))  {   ; Vector Table
+    *vectors.o (RESET, +First)
+  }
+
+  ER_ROM (AlignExpr(+0, 8))  {                 ; load address = execution address
+   *(InRoot$$Sections)
+
+   ; These should be part of primary load region
+   *startup*.o (+RO)
+   *system*.o (+RO)
+   *sys_*.o (+RO)
+   *pm*.o (+RO)
+   *tgu*.o (+RO)
+   *mpu*.o (+RO)
+   *sau_tcm_ns_setup*.o (+RO)
+
+   .ANY (+RO)
+   .ANY (+XO)
+  }
+
+  ITCM_RAM __ITCM_BASE __ITCM_SIZE  {                     ; RW code
+   ; Specify objects intended to execute out of ITCM
+   * (.itcm*)                             ; Objects targeting ITCM
+  }
+
+  RW_RAM __RW_BASE __RW_SIZE  {                     ; RW data
+   * (.*dtcm*)                            ; Objects targeting DTCM
+   .ANY (+RW +ZI)
+  }
+
+  NS_REGION_0  (AlignExpr(+0, TGU_BLOCK_SIZE)) { ; Non secure region 0
+    * (eth_buf)
+    * (usb_dma_buf)
+    * (sd_dma_buf)
+  }
+
+  NS_REGION_0_PAD  (AlignExpr(ImageLimit(NS_REGION_0), TGU_BLOCK_SIZE)) { ; Non secure region 0 Padding
+  }
+  ScatterAssert((ImageBase(NS_REGION_0_PAD) - ImageBase(NS_REGION_0) + ImageLength(RW_RAM)) < __RW_SIZE)
+
+#if __HEAP_SIZE > 0
+  ARM_LIB_HEAP  __HEAP_BASE EMPTY  __HEAP_SIZE  {   ; Reserve empty region for heap
+  }
+#endif
+
+  APP_HEAP  __APP_HEAP_BASE EMPTY  __APP_HEAP_SIZE {; Reserve empty region for application heap
+  }
+
+  ARM_LIB_STACK __STACK_TOP EMPTY -__STACK_SIZE {   ; Reserve empty region for stack
+  }
+
+#if __HAS_BULK_SRAM
+  RW_SRAM0 APP_SRAM0_BASE APP_SRAM0_SIZE  {  ; Update sections as needed
+   * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and intrepolate image processing buffer.
+   * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.
+   * (.bss.camera_frame_buf)              ; Camera Frame Buffer
+   * (.bss.camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion
+   * (.bss.*)
+  }
+
+  /*
+   * Note:
+   * The below empty regions are ON by default, but may have been released
+   * by some example applications. So make sure your application requests
+   * power for these regions before adding contents.
+   */
+
+  RW_SRAM1 APP_SRAM1_BASE APP_SRAM1_SIZE  {  ; Update sections as needed
+
+  }
+#endif
+
+  PADDING +0 OVERLAY ALIGN 16 FILL 0 16
+  {
+  }
+}

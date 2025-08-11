@@ -1,0 +1,40 @@
+# A solution is a collection of related projects that share same base configuration.
+solution:
+  created-for: CMSIS-Toolbox@2.10.0
+  cdefault:
+
+  # Compilers that can be selected.
+  select-compiler:
+    - compiler: AC6
+    - compiler: GCC
+
+  # List the packs that define the device and/or board.
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.0.0-0
+    - pack: ARM::CMSIS@^6.1.0
+
+  # List different hardware targets that are used to deploy the solution.
+  target-types:
+    - type: Alif-DevKit-E7
+      board: Alif Semiconductor::DevKit-E7
+      device: Alif Semiconductor::AE722F80F55D5LS
+      target-set:
+        - set:
+          images:
+            - project-context: M55_HP.Debug
+            - project-context: M55_HE.Debug
+
+  # List of different build configurations.
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: none
+
+    - type: Release
+      debug: off
+      optimize: balanced
+
+  # List related projects.
+  projects:
+    - project: ./M55_HP/M55_HP.cproject.yml
+    - project: ./M55_HE/M55_HE.cproject.yml

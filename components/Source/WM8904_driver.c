@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     WM8904_driver.c
  * @author   Manoj A Murudi
  * @email    manoj.murudi@alifsemi.com
@@ -26,18 +26,16 @@
 #include "RTE_Components.h"
 #include CMSIS_device_header
 
-#if (defined(RTE_WM8904_CODEC) && defined(RTE_Driver_WM8904))
+#if (defined(RTE_WM8904_CODEC) && defined(RTE_Drivers_WM8904_CODEC))
 
 static uint8_t volatile drv_state = 0;
 
 extern ARM_DRIVER_I2C ARM_Driver_I2C_(RTE_WM8904_CODEC_I2C_INSTANCE);
 
-WM8904_CODEC_SLAVE_I2C_CONFIG i2c_cnfg =
-{
-    .drv_i2c                        = &ARM_Driver_I2C_(RTE_WM8904_CODEC_I2C_INSTANCE),
-    .bus_speed                      = ARM_I2C_BUS_SPEED_STANDARD,
-    .wm8904_codec_slave_addr        = WM8904_SLAVE
-};
+WM8904_CODEC_SLAVE_I2C_CONFIG i2c_cnfg = {.drv_i2c =
+                                              &ARM_Driver_I2C_(RTE_WM8904_CODEC_I2C_INSTANCE),
+                                          .bus_speed               = ARM_I2C_BUS_SPEED_STANDARD,
+                                          .wm8904_codec_slave_addr = WM8904_SLAVE};
 
 /**
   \fn        int32_t WM8904_UpdateVolume(uint8_t volume)
@@ -106,12 +104,12 @@ static int32_t WM8904_Config(void)
         }
     } while (((reg_val & 1U) != 0U));
 
-    reg_val = 0x0050U;  /* AIFADCR_SRC = AIFDACR_SRC = 1 */
+    reg_val = 0x0050U; /* AIFADCR_SRC = AIFDACR_SRC = 1 */
     if (WM8904_codec_i2c_write(&i2c_cnfg, WM8904_AUDIO_INTERFACE0, reg_val) != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
-    reg_val = 0x0040U;  /* DAC_OSR128 = 1 */
+    reg_val = 0x0040U; /* DAC_OSR128 = 1 */
     if (WM8904_codec_i2c_write(&i2c_cnfg, WM8904_DAC_DIGITAL1, reg_val) != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -127,7 +125,7 @@ static int32_t WM8904_Config(void)
     }
 
     /* update voulme to default value */
-    return WM8904_UpdateVolume((uint8_t)DEFAULT_VOLUME_VALUE);
+    return WM8904_UpdateVolume((uint8_t) DEFAULT_VOLUME_VALUE);
 }
 
 /**
@@ -137,7 +135,7 @@ static int32_t WM8904_Config(void)
 */
 static int32_t ARM_WM8904_Initialize(void)
 {
-    int32_t ret;
+    int32_t  ret;
     uint16_t reg_id;
 
     ret = WM8904_codec_i2c_init(&i2c_cnfg);
@@ -188,9 +186,8 @@ static int32_t ARM_WM8904_PowerControl(ARM_POWER_STATE state)
 {
     uint16_t reg_val;
 
-    switch (state)
-    {
-        case ARM_POWER_OFF:
+    switch (state) {
+    case ARM_POWER_OFF:
         {
             if (drv_state & WM8904_DRIVER_POWERED) {
                 return ARM_DRIVER_OK;
@@ -205,21 +202,21 @@ static int32_t ARM_WM8904_PowerControl(ARM_POWER_STATE state)
             drv_state &= ~WM8904_DRIVER_POWERED;
             break;
         }
-        case ARM_POWER_FULL:
+    case ARM_POWER_FULL:
         {
             if (!(drv_state & WM8904_DRIVER_INITIALIZED)) {
                 return ARM_DRIVER_ERROR;
             }
 
-            if(WM8904_Config() != ARM_DRIVER_OK) {
+            if (WM8904_Config() != ARM_DRIVER_OK) {
                 return ARM_DRIVER_ERROR;
             }
 
             drv_state |= WM8904_DRIVER_POWERED;
             break;
         }
-        case ARM_POWER_LOW:
-        default:
+    case ARM_POWER_LOW:
+    default:
         {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
@@ -294,8 +291,7 @@ static int32_t ARM_WM8904_SetVolume(uint8_t volume)
     return WM8904_UpdateVolume(volume);
 }
 
-ARM_DRIVER_WM8904 WM8904 =
-{
+ARM_DRIVER_WM8904 WM8904 = {
     ARM_WM8904_Initialize,
     ARM_WM8904_Uninitialize,
     ARM_WM8904_PowerControl,

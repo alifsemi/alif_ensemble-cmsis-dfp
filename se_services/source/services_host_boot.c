@@ -61,21 +61,18 @@
  * @return
  * @ingroup services-host-boot
  */
-uint32_t SERVICES_boot_process_toc_entry(uint32_t services_handle, 
-                                         const uint8_t *image_id,
+uint32_t SERVICES_boot_process_toc_entry(uint32_t services_handle, const uint8_t *image_id,
                                          uint32_t *error_code)
 {
-  process_toc_entry_svc_t * p_svc = (process_toc_entry_svc_t *)
-    SERVICES_prepare_packet_buffer(sizeof(process_toc_entry_svc_t));
+    process_toc_entry_svc_t *p_svc =
+        (process_toc_entry_svc_t *) SERVICES_prepare_packet_buffer(sizeof(process_toc_entry_svc_t));
 
-  strncpy((char *)p_svc->send_entry_id, (const char *)image_id,
-          IMAGE_NAME_LENGTH);
+    strncpy((char *) p_svc->send_entry_id, (const char *) image_id, IMAGE_NAME_LENGTH);
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_BOOT_PROCESS_TOC_ENTRY,
-                                       DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
-  return ret;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_BOOT_PROCESS_TOC_ENTRY, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
+    return ret;
 }
 
 /**
@@ -87,23 +84,19 @@ uint32_t SERVICES_boot_process_toc_entry(uint32_t services_handle,
  * @return
  * @ingroup services-host-boot
  */
-uint32_t SERVICES_boot_cpu(uint32_t services_handle, 
-                           uint32_t cpu_id,
-                           uint32_t address,
+uint32_t SERVICES_boot_cpu(uint32_t services_handle, uint32_t cpu_id, uint32_t address,
                            uint32_t *error_code)
 {
-  boot_cpu_svc_t * p_svc = (boot_cpu_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(boot_cpu_svc_t)); /* Srvc bucket */
+    boot_cpu_svc_t *p_svc =
+        (boot_cpu_svc_t *) SERVICES_prepare_packet_buffer(sizeof(boot_cpu_svc_t)); /* Srvc bucket */
 
-  p_svc->send_cpu_id = cpu_id;
-  p_svc->send_address = address;
+    p_svc->send_cpu_id  = cpu_id;
+    p_svc->send_address = address;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_BOOT_CPU,
-                                       DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
+    uint32_t ret        = SERVICES_send_request(services_handle, SERVICE_BOOT_CPU, DEFAULT_TIMEOUT);
+    *error_code         = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }
 
 /**
@@ -121,21 +114,18 @@ uint32_t SERVICES_boot_cpu(uint32_t services_handle,
  * @return
  * @ingroup services-host-boot
  */
-uint32_t SERVICES_boot_set_vtor(uint32_t services_handle,
-                                uint32_t cpu_id,
-                                uint32_t address,
+uint32_t SERVICES_boot_set_vtor(uint32_t services_handle, uint32_t cpu_id, uint32_t address,
                                 uint32_t *error_code)
 {
-  boot_cpu_svc_t * p_svc = (boot_cpu_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(boot_cpu_svc_t));
+    boot_cpu_svc_t *p_svc =
+        (boot_cpu_svc_t *) SERVICES_prepare_packet_buffer(sizeof(boot_cpu_svc_t));
 
-  p_svc->send_cpu_id = cpu_id;
-  p_svc->send_address = address;
+    p_svc->send_cpu_id  = cpu_id;
+    p_svc->send_address = address;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_BOOT_SET_VTOR, DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
-  return ret;
+    uint32_t ret = SERVICES_send_request(services_handle, SERVICE_BOOT_SET_VTOR, DEFAULT_TIMEOUT);
+    *error_code  = p_svc->resp_error_code;
+    return ret;
 }
 
 /**
@@ -151,19 +141,16 @@ uint32_t SERVICES_boot_set_vtor(uint32_t services_handle,
  * @return
  * @ingroup services-host-boot
  */
-uint32_t SERVICES_boot_reset_cpu(uint32_t services_handle,
-                                 uint32_t cpu_id,
-                                 uint32_t *error_code)
+uint32_t SERVICES_boot_reset_cpu(uint32_t services_handle, uint32_t cpu_id, uint32_t *error_code)
 {
-  control_cpu_svc_t * p_svc = (control_cpu_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(control_cpu_svc_t));
+    control_cpu_svc_t *p_svc =
+        (control_cpu_svc_t *) SERVICES_prepare_packet_buffer(sizeof(control_cpu_svc_t));
 
-  p_svc->send_cpu_id = cpu_id;
+    p_svc->send_cpu_id = cpu_id;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                               SERVICE_BOOT_RESET_CPU, DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
-  return ret;
+    uint32_t ret = SERVICES_send_request(services_handle, SERVICE_BOOT_RESET_CPU, DEFAULT_TIMEOUT);
+    *error_code  = p_svc->resp_error_code;
+    return ret;
 }
 
 /**
@@ -174,7 +161,8 @@ uint32_t SERVICES_boot_reset_cpu(uint32_t services_handle,
  * it just releases the core.
  *
  * If the CPU is not running, this function can be called to release it.
- * If the CPU is running, SERVICES_boot_reset_cpu() must be called before this function to stop the core.
+ * If the CPU is running, SERVICES_boot_reset_cpu() must be called before this function to stop the
+ * core.
  *
  * @param services_handle
  * @param cpu_id
@@ -182,19 +170,17 @@ uint32_t SERVICES_boot_reset_cpu(uint32_t services_handle,
  * @return
  * @ingroup services-host-boot
  */
-uint32_t SERVICES_boot_release_cpu(uint32_t services_handle,
-                                   uint32_t cpu_id,
-                                   uint32_t *error_code)
+uint32_t SERVICES_boot_release_cpu(uint32_t services_handle, uint32_t cpu_id, uint32_t *error_code)
 {
-  control_cpu_svc_t * p_svc = (control_cpu_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(control_cpu_svc_t));
+    control_cpu_svc_t *p_svc =
+        (control_cpu_svc_t *) SERVICES_prepare_packet_buffer(sizeof(control_cpu_svc_t));
 
-  p_svc->send_cpu_id = cpu_id;
+    p_svc->send_cpu_id = cpu_id;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_BOOT_RELEASE_CPU, DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
-  return ret;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_BOOT_RELEASE_CPU, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
+    return ret;
 }
 
 /**
@@ -208,7 +194,6 @@ uint32_t SERVICES_boot_release_cpu(uint32_t services_handle,
  */
 uint32_t SERVICES_boot_reset_soc(uint32_t services_handle)
 {
-  SERVICES_prepare_packet_buffer(sizeof(service_header_t));
-  return SERVICES_send_request(services_handle, 
-                               SERVICE_BOOT_RESET_SOC, DEFAULT_TIMEOUT);
+    SERVICES_prepare_packet_buffer(sizeof(service_header_t));
+    return SERVICES_send_request(services_handle, SERVICE_BOOT_RESET_SOC, DEFAULT_TIMEOUT);
 }

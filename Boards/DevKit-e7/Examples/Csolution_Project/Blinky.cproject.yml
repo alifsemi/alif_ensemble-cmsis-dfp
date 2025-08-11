@@ -1,0 +1,24 @@
+project:
+ output:
+    base-name: $Project$
+    type:
+      - elf
+      - bin
+      
+ components:
+
+    - component: AlifSemiconductor::Device:SOC Peripherals:GPIO
+    - component: ARM::CMSIS:CORE
+    - component: AlifSemiconductor::Device:SOC Peripherals:PINCONF
+    - component: AlifSemiconductor::Device:Startup
+    - component: AlifSemiconductor::Device:SKU&AE722F80F55D5
+    - component: AlifSemiconductor::Services:Retarget IO:STDOUT
+    - component: CMSIS Driver:USART
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDOUT:Custom
+
+ groups:
+    - group: app
+      files:
+        - file: ./LED_blink_baremetal.c
+

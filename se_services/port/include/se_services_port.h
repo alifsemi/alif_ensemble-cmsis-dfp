@@ -23,7 +23,7 @@
 #include "services_lib_bare_metal.h"
 
 /* Secure SE Service handle which will be used across the application */
-extern uint32_t        se_services_s_handle;
+extern uint32_t se_services_s_handle;
 
 /**
   @fn           void se_services_port_init(void)

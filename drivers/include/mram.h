@@ -20,8 +20,8 @@ extern "C" {
 /**
 \brief MRAM(On-Chip NVM) Sector Size: 16-Byte(128-bit)
 */
-#define MRAM_SECTOR_SIZE         (0x10)
-#define MRAM_ADDR_ALIGN_MASK     (uint32_t)(0xFFFFFFF0)
+#define MRAM_SECTOR_SIZE     (0x10)
+#define MRAM_ADDR_ALIGN_MASK (uint32_t)(0xFFFFFFF0)
 
 /**
   \fn          void mram_read(void *p_dst, const void *p_src, uint32_t cnt)

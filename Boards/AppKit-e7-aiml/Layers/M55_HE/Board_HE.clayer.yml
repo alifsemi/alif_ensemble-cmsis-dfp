@@ -1,0 +1,117 @@
+layer:
+  type: Board
+  description: AppKit-E7-AIML board setup using M55_HE
+  for-board: Alif Semiconductor::AppKit-E7-AIML
+  for-device: Alif Semiconductor::AE722F80F55D5LS:M55_HE
+  device: :M55_HE
+
+  # Processor features used in this project.
+  processor:
+    trustzone: off
+
+  # List connections used to identify compatible software layers.
+  connections:
+    - connect: AppKit-E7-AIML Board
+      provides:
+        - CMSIS_USART
+        - CMSIS_VIO
+        - CMSIS_VSTREAM_AUDIO_IN
+        - CMSIS_VSTREAM_VIDEO_IN
+        - CMSIS_VSTREAM_VIDEO_OUT
+        - STDIN
+        - STDOUT
+        - STDERR
+        - Heap: 32768
+
+  # List of #define statements passed via the command line to the build tool.
+  define:
+    - CMSIS_target_header: \"AppKit-E7-AIML.h\"
+    - ETHOSU55
+    - NPU_QCONFIG: 1
+    - NPU_REGIONCFG_0: 1
+    - NPU_REGIONCFG_1: 0
+    - NPU_REGIONCFG_2: 1
+    - AXI_LIMIT0_MEM_TYPE: 3
+    - AXI_LIMIT1_MEM_TYPE: 3
+    - AXI_LIMIT2_MEM_TYPE: 3
+    - AXI_LIMIT3_MEM_TYPE: 3
+
+  # List the packs used in the layer.
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.0.0-0
+    - pack: ARM::CMSIS@^6.2.0-0
+    - pack: ARM::CMSIS-Compiler@^2.1.0
+    - pack: ARM::CMSIS-Driver@^2.8.0
+    - pack: ARM::ethos-u-core-driver@^1.24.8
+
+  # List of include paths passed via the command line to the build tool.
+  add-path:
+    - ./ConductorTool
+
+  # List miscelaneous options passed via the command line to the build tool.
+  misc:
+    - for-compiler: AC6
+      Link:
+        - '--diag_suppress 6312,6329,6848'
+
+  # List components to use for your application.
+  # A software component is a re-usable unit that may be configurable.
+  components:
+    - component: BSP:External peripherals:CAMERA Sensor MT9M114
+    - component: BSP:External peripherals:ILI9806E LCD panel
+
+    - component: CMSIS:CORE
+
+    - component: CMSIS Driver:GPIO
+      define:
+        - CMSIS_GPIO_DISABLE_EVENTS
+    - component: CMSIS Driver:I2C
+    - component: CMSIS Driver:SAI
+    - component: CMSIS Driver:USART
+    - component: CMSIS Driver:VIO:Board&AppKit-E7-AIML
+    - component: CMSIS Driver:vStream:AudioIn&AppKit-E7-AIML
+    - component: CMSIS Driver:vStream:VideoIn&AppKit-E7-AIML
+    - component: CMSIS Driver:vStream:VideoOut&AppKit-E7-AIML
+
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDERR:Custom
+    - component: CMSIS-Compiler:STDIN:Custom
+    - component: CMSIS-Compiler:STDOUT:Custom
+
+    - component: Device:Startup
+    - component: BSP:Board Config
+
+    - component: Device:SOC Peripherals:CDC
+    - component: Device:SOC Peripherals:CPI
+    - component: Device:SOC Peripherals:DMA
+    - component: Device:SOC Peripherals:GPIO
+    - component: Device:SOC Peripherals:MHU
+    - component: Device:SOC Peripherals:MIPI CSI2
+    - component: Device:SOC Peripherals:MIPI DSI
+    - component: Device:SOC Peripherals:MIPI DSI CSI2 DPHY
+    - component: Device:SOC Peripherals:PINCONF
+
+    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
+
+    - component: Services:Secure Enclave:core&Source
+    - component: Services:Secure Enclave:Initialization Helper&Source
+
+    - component: Services:Retarget IO:STDERR
+    - component: Services:Retarget IO:STDIN
+    - component: Services:Retarget IO:STDOUT
+
+  # List of source groups and files added to a project or a layer.
+  groups:
+    - group: Board
+      files:
+        - file: ./main.c
+        - file: ./main.h
+        - file: ./AppKit-E7-AIML.h
+        - file: ./retarget_stdio.c
+        - file: ./ext_init.c
+        - file: ./ext_init.h
+
+    - group: Ethos Interface
+      files:
+        - file: ./ethosu_cb_dcache.c
+        - file: ./ethosu_cb_os_rtos2.c

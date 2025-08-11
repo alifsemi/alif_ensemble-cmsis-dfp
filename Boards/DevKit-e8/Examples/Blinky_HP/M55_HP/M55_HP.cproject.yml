@@ -1,0 +1,31 @@
+# A project translates into one executable or library.
+project:
+  device: :M55_HP
+
+  groups:
+    - group: Source Files
+      files:
+        - file: ./main.c
+        - file: ./app_utils.h
+
+  # List components to use for your application.
+  # A software component is a re-usable unit that may be configurable.
+  components:
+    - component: AlifSemiconductor::Device:SOC Peripherals:GPIO
+    - component: ARM::CMSIS:CORE
+    - component: AlifSemiconductor::Device:SOC Peripherals:PINCONF
+    - component: AlifSemiconductor::Device:Startup
+    - component: AlifSemiconductor::BSP:DevKit Config&DevKit-e8
+    - component: AlifSemiconductor::BSP:Board Config
+    - component: AlifSemiconductor::Services:Retarget IO:STDOUT
+    - component: AlifSemiconductor::Services:Secure Enclave:Initialization Helper&Source
+    - component: AlifSemiconductor::Services:Secure Enclave:core&Source
+    - component: AlifSemiconductor::Device:SOC Peripherals:MHU
+    - component: CMSIS Driver:USART
+    - component: CMSIS-Compiler:CORE
+    - component: CMSIS-Compiler:STDOUT:Custom
+  # List executable file formats to be generated.
+  output:
+    type:
+      - elf
+      - bin

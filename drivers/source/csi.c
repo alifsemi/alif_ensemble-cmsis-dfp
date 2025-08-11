@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     csi.c
  * @author   Chandra Bhushan Singh
  * @email    chandrabhushan.singh@alifsemi.com
@@ -30,27 +30,28 @@ CSI_LANE_STOPSTATE csi_get_lane_stopstate_status(CSI_Type *csi, CSI_LANE lane)
 {
     CSI_LANE_STOPSTATE ret = 0;
 
-    switch (lane)
-    {
-        case CSI_LANE_CLOCK:
+    switch (lane) {
+    case CSI_LANE_CLOCK:
         {
             ret = (csi->CSI_PHY_STOPSTATE & CSI_PHY_STOPSTATECLK_Msk) >> CSI_PHY_STOPSTATECLK_Pos;
             break;
         }
 
-        case CSI_LANE_0:
+    case CSI_LANE_0:
         {
-            ret = (csi->CSI_PHY_STOPSTATE & CSI_PHY_STOPSTATEDATA_0_Msk) >> CSI_PHY_STOPSTATEDATA_0_Pos;
+            ret = (csi->CSI_PHY_STOPSTATE & CSI_PHY_STOPSTATEDATA_0_Msk) >>
+                  CSI_PHY_STOPSTATEDATA_0_Pos;
             break;
         }
 
-        case CSI_LANE_1:
+    case CSI_LANE_1:
         {
-            ret = (csi->CSI_PHY_STOPSTATE & CSI_PHY_STOPSTATEDATA_1_Msk) >> CSI_PHY_STOPSTATEDATA_1_Pos;
+            ret = (csi->CSI_PHY_STOPSTATE & CSI_PHY_STOPSTATEDATA_1_Msk) >>
+                  CSI_PHY_STOPSTATEDATA_1_Pos;
             break;
         }
 
-        default:
+    default:
         {
             break;
         }
@@ -69,12 +70,9 @@ CSI_LANE_STOPSTATE csi_get_lane_stopstate_status(CSI_Type *csi, CSI_LANE lane)
 */
 void csi_set_ipi_mode(CSI_Type *csi, CSI_IPI_MODE mode)
 {
-    if(mode == CSI_IPI_MODE_CAM_TIMIMG)
-    {
+    if (mode == CSI_IPI_MODE_CAM_TIMIMG) {
         csi->CSI_IPI_MODE &= ~CSI_IPI_MOD;
-    }
-    else
-    {
+    } else {
         csi->CSI_IPI_MODE |= CSI_IPI_MOD;
     }
 }
@@ -89,12 +87,9 @@ void csi_set_ipi_mode(CSI_Type *csi, CSI_IPI_MODE mode)
 */
 void csi_set_ipi_color_cop(CSI_Type *csi, CSI_IPI_COLOR_COM_TYPE color_component)
 {
-    if(color_component == CSI_IPI_COLOR_COM_TYPE_COLOR16)
-    {
+    if (color_component == CSI_IPI_COLOR_COM_TYPE_COLOR16) {
         csi->CSI_IPI_MODE |= CSI_IPI_COLOR_COM;
-    }
-    else
-    {
+    } else {
         csi->CSI_IPI_MODE &= ~CSI_IPI_COLOR_COM;
     }
 }
@@ -111,38 +106,32 @@ void csi_set_ipi_color_cop(CSI_Type *csi, CSI_IPI_COLOR_COM_TYPE color_component
   \return      none.
 */
 void csi_set_horizontal_timing(CSI_Type *csi, uint16_t hsa_time, uint16_t hbp_time,
-                                              uint16_t hsd_time, uint16_t hline_time)
+                               uint16_t hsd_time, uint16_t hline_time)
 {
-    csi->CSI_IPI_HSA_TIME &= ~CSI_IPI_HSA_TIME_Msk;
-    csi->CSI_IPI_HSA_TIME = hsa_time;
+    csi->CSI_IPI_HSA_TIME   &= ~CSI_IPI_HSA_TIME_Msk;
+    csi->CSI_IPI_HSA_TIME    = hsa_time;
 
-    csi->CSI_IPI_HBP_TIME &= ~CSI_IPI_HBP_TIME_Msk;
-    csi->CSI_IPI_HBP_TIME = hbp_time;
+    csi->CSI_IPI_HBP_TIME   &= ~CSI_IPI_HBP_TIME_Msk;
+    csi->CSI_IPI_HBP_TIME    = hbp_time;
 
-    csi->CSI_IPI_HSD_TIME &= ~CSI_IPI_HSD_TIME_Msk;
-    csi->CSI_IPI_HSD_TIME = hsd_time;
+    csi->CSI_IPI_HSD_TIME   &= ~CSI_IPI_HSD_TIME_Msk;
+    csi->CSI_IPI_HSD_TIME    = hsd_time;
 
     csi->CSI_IPI_HLINE_TIME &= ~CSI_IPI_HLINE_TIME_Msk;
-    csi->CSI_IPI_HLINE_TIME = hline_time;
+    csi->CSI_IPI_HLINE_TIME  = hline_time;
 }
 
 /**
-  \fn          void csi_set_ipi_line_event_selection(CSI_Type *csi, CSI_IPI_LINE_EVENT_SELECT line_event)
-  \brief       Set CSI IPI line event.
-  \param[in]   csi        Pointer to the CSI register map.
-  \param[in]   line_event 0: Controller selects it automatically.
-                          1: Select packets from list programmed in bits [21-17] of this
-                             register.
-  \return      none.
+  \fn          void csi_set_ipi_line_event_selection(CSI_Type *csi, CSI_IPI_LINE_EVENT_SELECT
+  line_event) \brief       Set CSI IPI line event. \param[in]   csi        Pointer to the CSI
+  register map. \param[in]   line_event 0: Controller selects it automatically. 1: Select packets
+  from list programmed in bits [21-17] of this register. \return      none.
 */
 void csi_set_ipi_line_event_selection(CSI_Type *csi, CSI_IPI_LINE_EVENT_SELECT line_event)
 {
-    if(line_event == CSI_IPI_LINE_EVENT_SELECT_AUTO)
-    {
+    if (line_event == CSI_IPI_LINE_EVENT_SELECT_AUTO) {
         csi->CSI_IPI_ADV_FEATURES &= ~CSI_IPI_LINE_EVENT_SELECTION;
-    }
-    else
-    {
+    } else {
         csi->CSI_IPI_ADV_FEATURES |= CSI_IPI_LINE_EVENT_SELECTION;
     }
 }
@@ -157,39 +146,34 @@ void csi_set_ipi_line_event_selection(CSI_Type *csi, CSI_IPI_LINE_EVENT_SELECT l
 */
 void csi_set_ipi_sync_event_type(CSI_Type *csi, CSI_IPI_SYNC_EVENT sync_event_type)
 {
-    if(sync_event_type == CSI_IPI_SYNC_EVENT_FSN)
-    {
+    if (sync_event_type == CSI_IPI_SYNC_EVENT_FSN) {
         csi->CSI_IPI_ADV_FEATURES &= ~CSI_IPI_SYNC_EVENT_MODE;
-    }
-    else
-    {
+    } else {
         csi->CSI_IPI_ADV_FEATURES |= CSI_IPI_SYNC_EVENT_MODE;
     }
 }
 
 /**
   \fn          void csi_set_vertical_timing(CSI_Type *csi, uint16_t vsa_line, uint16_t vbp_line,
-                                                             uint16_t vfp_line, uint16_t vactive_line)
-  \brief       Set CSI IPI VSA, VBP, VFP and VACTIVE lines.
-  \param[in]   csi           Pointer to the CSI register map.
-  \param[in]   vsa_lines     VSA period measured in number of horizontal lines.
-  \param[in]   vbp_lines     VBP period measured in number of horizontal lines.
-  \param[in]   vfp_lines     VFP period measured in number of horizontal lines.
-  \param[in]   vactive_lines Vertical Active period measured in number of horizontal lines.
-  \return      none.
+                                                             uint16_t vfp_line, uint16_t
+  vactive_line) \brief       Set CSI IPI VSA, VBP, VFP and VACTIVE lines. \param[in]   csi Pointer
+  to the CSI register map. \param[in]   vsa_lines     VSA period measured in number of horizontal
+  lines. \param[in]   vbp_lines     VBP period measured in number of horizontal lines. \param[in]
+  vfp_lines     VFP period measured in number of horizontal lines. \param[in]   vactive_lines
+  Vertical Active period measured in number of horizontal lines. \return      none.
 */
 void csi_set_vertical_timing(CSI_Type *csi, uint16_t vsa_lines, uint16_t vbp_lines,
-                                            uint16_t vfp_lines, uint16_t vactive_lines)
+                             uint16_t vfp_lines, uint16_t vactive_lines)
 {
-    csi->CSI_IPI_VSA_LINES &= ~CSI_IPI_VSA_LINE_Msk;
-    csi->CSI_IPI_VSA_LINES = vsa_lines;
+    csi->CSI_IPI_VSA_LINES     &= ~CSI_IPI_VSA_LINE_Msk;
+    csi->CSI_IPI_VSA_LINES      = vsa_lines;
 
-    csi->CSI_IPI_VBP_LINES &= ~CSI_IPI_VBP_LINE_Msk;
-    csi->CSI_IPI_VBP_LINES = vbp_lines;
+    csi->CSI_IPI_VBP_LINES     &= ~CSI_IPI_VBP_LINE_Msk;
+    csi->CSI_IPI_VBP_LINES      = vbp_lines;
 
-    csi->CSI_IPI_VFP_LINES &= ~CSI_IPI_VFP_LINE_Msk;
-    csi->CSI_IPI_VFP_LINES = vfp_lines;
+    csi->CSI_IPI_VFP_LINES     &= ~CSI_IPI_VFP_LINE_Msk;
+    csi->CSI_IPI_VFP_LINES      = vfp_lines;
 
     csi->CSI_IPI_VACTIVE_LINES &= ~CSI_IPI_VACTIVE_LINE_Msk;
-    csi->CSI_IPI_VACTIVE_LINES = vactive_lines;
+    csi->CSI_IPI_VACTIVE_LINES  = vactive_lines;
 }

@@ -30,7 +30,7 @@
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 
-#define SERVICES_PAD_CONTROL_PAYLOAD_LENGTH    3
+#define SERVICES_PAD_CONTROL_PAYLOAD_LENGTH 3
 
 /*******************************************************************************
  *  T Y P E D E F S
@@ -54,23 +54,19 @@
  * @return
  * @ingroup services-host-padcontrol
  */
-uint32_t SERVICES_padcontrol(uint32_t services_handle,
-                             uint8_t port_number,
-                             uint8_t pin_number,
-                             uint8_t config_data,
-                             uint32_t * error_code)
+uint32_t SERVICES_padcontrol(uint32_t services_handle, uint8_t port_number, uint8_t pin_number,
+                             uint8_t config_data, uint32_t *error_code)
 
 {
-  pad_control_svc_t *p_svc = (pad_control_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(pad_control_svc_t));
+    pad_control_svc_t *p_svc =
+        (pad_control_svc_t *) SERVICES_prepare_packet_buffer(sizeof(pad_control_svc_t));
 
-  p_svc->send_port_num = port_number;
-  p_svc->send_pin_num = pin_number;
-  p_svc->send_config_data = config_data;
+    p_svc->send_port_num    = port_number;
+    p_svc->send_pin_num     = pin_number;
+    p_svc->send_config_data = config_data;
 
-  uint32_t ret =  SERVICES_send_request(services_handle,
-                                        SERVICE_APPLICATION_PAD_CONTROL_ID,
-                                        DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
-  return ret;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_APPLICATION_PAD_CONTROL_ID, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
+    return ret;
 }

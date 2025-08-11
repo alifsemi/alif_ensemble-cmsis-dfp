@@ -30,9 +30,10 @@
 #include "DPHY_CSI2.h"
 #include "csi.h"
 #include "sys_ctrl_csi.h"
+#include "sys_utils.h"
 
 /*DPHY initialize status global variables*/
-static volatile uint32_t csi2_init_status = 0;
+static volatile uint32_t csi2_init_status;
 
 /*hsfreqrange and osc_freq_target range*/
 extern const DPHY_FREQ_RANGE frequency_range[];
@@ -42,15 +43,12 @@ extern const DPHY_FREQ_RANGE frequency_range[];
   \brief       PHY shutdown line control callback function.
   \param[in]   state ENABLE/DISABLE the line.
 */
-static void MIPI_CSI2_DPHY_Shutdown (uint8_t state)
+static void MIPI_CSI2_DPHY_Shutdown(uint8_t state)
 {
-    if(state == ENABLE)
-    {
-        csi_enable_dphy_shutdown_line((CSI_Type *)CSI_BASE);
-    }
-    else
-    {
-        csi_disable_dphy_shutdown_line((CSI_Type *)CSI_BASE);
+    if (state == ENABLE) {
+        csi_enable_dphy_shutdown_line((CSI_Type *) CSI_BASE);
+    } else {
+        csi_disable_dphy_shutdown_line((CSI_Type *) CSI_BASE);
     }
 }
 
@@ -59,15 +57,12 @@ static void MIPI_CSI2_DPHY_Shutdown (uint8_t state)
   \brief       PHY testclr line control callback function.
   \param[in]   state ENABLE/DISABLE the line.
 */
-static void MIPI_CSI2_DPHY_Testclr (uint8_t state)
+static void MIPI_CSI2_DPHY_Testclr(uint8_t state)
 {
-    if(state == ENABLE)
-    {
-        csi_enable_dphy_testclr_line((CSI_Type *)CSI_BASE);
-    }
-    else
-    {
-        csi_disable_dphy_testclr_line((CSI_Type *)CSI_BASE);
+    if (state == ENABLE) {
+        csi_enable_dphy_testclr_line((CSI_Type *) CSI_BASE);
+    } else {
+        csi_disable_dphy_testclr_line((CSI_Type *) CSI_BASE);
     }
 }
 
@@ -76,15 +71,12 @@ static void MIPI_CSI2_DPHY_Testclr (uint8_t state)
   \brief       PHY reset line control callback function.
   \param[in]   state ENABLE/DISABLE the line.
 */
-static void MIPI_CSI2_DPHY_Rst (uint8_t state)
+static void MIPI_CSI2_DPHY_Rst(uint8_t state)
 {
-    if(state == ENABLE)
-    {
-        csi_enable_dphy_reset_line((CSI_Type *)CSI_BASE);
-    }
-    else
-    {
-        csi_disable_dphy_reset_line((CSI_Type *)CSI_BASE);
+    if (state == ENABLE) {
+        csi_enable_dphy_reset_line((CSI_Type *) CSI_BASE);
+    } else {
+        csi_disable_dphy_reset_line((CSI_Type *) CSI_BASE);
     }
 }
 
@@ -93,22 +85,21 @@ static void MIPI_CSI2_DPHY_Rst (uint8_t state)
   \brief       status of stopstate from PHY
   \return      ret status of stopstate.
 */
-static DPHY_STOPSTATE MIPI_CSI2_DPHY_Stopstate (void)
+static DPHY_STOPSTATE MIPI_CSI2_DPHY_Stopstate(void)
 {
     uint8_t ret = 0;
 
-    if(csi_get_lane_stopstate_status((CSI_Type *)CSI_BASE, CSI_LANE_CLOCK) == CSI_LANE_STOPSTATE_ON)
+    if (csi_get_lane_stopstate_status((CSI_Type *) CSI_BASE, CSI_LANE_CLOCK) ==
+        CSI_LANE_STOPSTATE_ON)
     {
         ret |= DPHY_STOPSTATE_CLOCK;
     }
 
-    if(csi_get_lane_stopstate_status((CSI_Type *)CSI_BASE, CSI_LANE_0) == CSI_LANE_STOPSTATE_ON)
-    {
+    if (csi_get_lane_stopstate_status((CSI_Type *) CSI_BASE, CSI_LANE_0) == CSI_LANE_STOPSTATE_ON) {
         ret |= DPHY_STOPSTATE_LANE0;
     }
 
-    if(csi_get_lane_stopstate_status((CSI_Type *)CSI_BASE, CSI_LANE_1) == CSI_LANE_STOPSTATE_ON)
-    {
+    if (csi_get_lane_stopstate_status((CSI_Type *) CSI_BASE, CSI_LANE_1) == CSI_LANE_STOPSTATE_ON) {
         ret |= DPHY_STOPSTATE_LANE1;
     }
 
@@ -125,9 +116,7 @@ static DPHY_STOPSTATE MIPI_CSI2_DPHY_Stopstate (void)
   \param[in]   width is number bits to read.
   \return      return received data from DPHY register.
 */
-uint8_t DPHY_CSI2_Read_Mask (uint16_t address,
-                             uint8_t  pos,
-                             uint8_t  width)
+uint8_t DPHY_CSI2_Read_Mask(uint16_t address, uint8_t pos, uint8_t width)
 {
     return (MIPI_DPHY_Read(address, DPHY_MODE_CFG_CSI2) >> pos) & ((1 << width) - 1);
 }
@@ -143,17 +132,14 @@ uint8_t DPHY_CSI2_Read_Mask (uint16_t address,
   \param[in]   pos  is start bit position.
   \param[in]   width is number bits to write.
 */
-void DPHY_CSI2_Write_Mask (uint16_t address,
-                           uint8_t  data,
-                           uint8_t  pos,
-                           uint8_t  width)
+void DPHY_CSI2_Write_Mask(uint16_t address, uint8_t data, uint8_t pos, uint8_t width)
 {
-    uint8_t reg_data = 0;
-    uint8_t mask = (1U << width) - 1;
+    uint8_t reg_data  = 0;
+    uint8_t mask      = (1U << width) - 1;
 
-    reg_data = MIPI_DPHY_Read(address, DPHY_MODE_CFG_CSI2);
-    reg_data &= ~(mask << pos);
-    reg_data |= (data & mask) << pos;
+    reg_data          = MIPI_DPHY_Read(address, DPHY_MODE_CFG_CSI2);
+    reg_data         &= ~(mask << pos);
+    reg_data         |= (data & mask) << pos;
     MIPI_DPHY_Write(address, reg_data, DPHY_MODE_CFG_CSI2);
 }
 
@@ -161,25 +147,23 @@ void DPHY_CSI2_Write_Mask (uint16_t address,
   \fn          void DPHY_PowerEnable (void)
   \brief       Enable DPHY Interface Power.
 */
-static void DPHY_PowerEnable (void)
+static void DPHY_PowerEnable(void)
 {
     enable_csi_periph_clk();
 
     enable_rxdphy_configure_clock();
-
 }
 
 /**
   \fn          void DPHY_PowerDisable (void)
   \brief       Disable DPHY Interface Power.
 */
-static void DPHY_PowerDisable (void)
+static void DPHY_PowerDisable(void)
 {
 
     disable_csi_periph_clk();
 
     disable_rxdphy_configure_clock();
-
 }
 
 /**
@@ -189,27 +173,26 @@ static void DPHY_PowerDisable (void)
   \param[in]   n_lanes number of lanes.
   \return      \ref execution_status
 */
-static int32_t DPHY_SlaveSetup (uint32_t clock_frequency, uint8_t n_lanes)
+static int32_t DPHY_SlaveSetup(uint32_t clock_frequency, uint8_t n_lanes)
 {
-    uint32_t bitrate_mbps = (clock_frequency * 2)/1000000;
-    uint8_t hsfreqrange = 0;
-    uint8_t cfgclkfreqrange = 0;
+    uint32_t bitrate_mbps    = (clock_frequency * 2) / 1000000;
+    uint8_t  hsfreqrange     = 0;
+    uint8_t  cfgclkfreqrange = 0;
     uint32_t osc_freq_target = 0;
-    uint8_t range = 0;
-    uint8_t stopstate_check =0;
-    uint32_t lp_count = 0;
+    uint8_t  range           = 0;
+    uint8_t  stopstate_check = 0;
+    uint32_t lp_count        = 0;
 
-    csi_set_n_active_lanes((CSI_Type *)CSI_BASE, (n_lanes - 1));
+    csi_set_n_active_lanes((CSI_Type *) CSI_BASE, (n_lanes - 1));
 
-    if(bitrate_mbps < 80 || bitrate_mbps > 2500)
-    {
+    if (bitrate_mbps < 80 || bitrate_mbps > 2500) {
         return ARM_DRIVER_ERROR;
     }
 
-    for(range = 0; (bitrate_mbps > frequency_range[range].bitrate_in_mbps);
-        ++range);
+    for (range = 0; (bitrate_mbps > frequency_range[range].bitrate_in_mbps); ++range) {
+    }
 
-    hsfreqrange = frequency_range[range].hsfreqrange;
+    hsfreqrange     = frequency_range[range].hsfreqrange;
     osc_freq_target = frequency_range[range].osc_freq_target;
 
     MIPI_CSI2_DPHY_Rst(DISABLE);
@@ -244,14 +227,19 @@ static int32_t DPHY_SlaveSetup (uint32_t clock_frequency, uint8_t n_lanes)
 
     DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_CLKLANE_LANE_6, 0x1, 7, 1);
 
-    if((bitrate_mbps) == 80)
-    {
+    if ((bitrate_mbps) == 80) {
         DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RD_RX_SYS_1, 0x85, 0, 8);
     }
 
-    DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_RX_STARTUP_OVR_2, (uint8_t)osc_freq_target, 0, 8);
+    DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_RX_STARTUP_OVR_2,
+                         (uint8_t) osc_freq_target,
+                         0,
+                         8);
 
-    DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_RX_STARTUP_OVR_3, (uint8_t)(osc_freq_target >> 8), 0, 4);
+    DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_RX_STARTUP_OVR_3,
+                         (uint8_t) (osc_freq_target >> 8),
+                         0,
+                         4);
 
     DPHY_CSI2_Write_Mask(dphy4rxtester_DIG_RDWR_RX_RX_STARTUP_OVR_4, 0x1, 0, 1);
 
@@ -271,17 +259,14 @@ static int32_t DPHY_SlaveSetup (uint32_t clock_frequency, uint8_t n_lanes)
 
     MIPI_CSI2_DPHY_Rst(ENABLE);
 
-    stopstate_check |= DPHY_STOPSTATE_CLOCK | (n_lanes == 1 ? (DPHY_STOPSTATE_LANE0) :
-                                              (DPHY_STOPSTATE_LANE0) | (DPHY_STOPSTATE_LANE1) );
+    stopstate_check |=
+        DPHY_STOPSTATE_CLOCK |
+        (n_lanes == 1 ? (DPHY_STOPSTATE_LANE0) : (DPHY_STOPSTATE_LANE0) | (DPHY_STOPSTATE_LANE1));
 
-    while(MIPI_CSI2_DPHY_Stopstate() != stopstate_check)
-    {
-        if(lp_count++ < 1000000)
-        {
+    while (MIPI_CSI2_DPHY_Stopstate() != stopstate_check) {
+        if (lp_count++ < 1000000) {
             sys_busy_loop_us(1);
-        }
-        else
-        {
+        } else {
             return ARM_DRIVER_ERROR;
         }
     }
@@ -298,21 +283,18 @@ static int32_t DPHY_SlaveSetup (uint32_t clock_frequency, uint8_t n_lanes)
   \param[in]   n_lanes number of lanes.
   \return      \ref execution_status
   */
-int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
+int32_t CSI2_DPHY_Initialize(uint32_t frequency, uint8_t n_lanes)
 {
     int32_t ret = ARM_DRIVER_OK;
 
-    if(csi2_init_status == DPHY_INIT_STATUS_INITIALIZED)
-    {
+    if (csi2_init_status == DPHY_INIT_STATUS_INITIALIZED) {
         return ARM_DRIVER_OK;
-
     }
 
     DPHY_PowerEnable();
 
     ret = DPHY_SlaveSetup(frequency, n_lanes);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -326,10 +308,9 @@ int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
   \brief       Uninitialize MIPI CSI2 DPHY Interface.
   \return      \ref execution_status
   */
-int32_t CSI2_DPHY_Uninitialize (void)
+int32_t CSI2_DPHY_Uninitialize(void)
 {
-    if(csi2_init_status == DPHY_INIT_STATUS_UNINITIALIZED)
-    {
+    if (csi2_init_status == DPHY_INIT_STATUS_UNINITIALIZED) {
         return ARM_DRIVER_OK;
     }
 

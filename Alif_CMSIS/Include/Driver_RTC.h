@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_RTC.h
  * @author   Tanay Rami
  * @email    tanay@alifsemi.com
@@ -20,23 +20,21 @@
 #ifndef DRIVER_RTC_H_
 #define DRIVER_RTC_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Includes --------------------------------------------------------------------------- */
 #include "Driver_Common.h"
 
-#define ARM_RTC_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1,0)  /* API version */
+#define ARM_RTC_API_VERSION         ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* API version */
 
 /*----- RTC Control Codes -----*/
-#define ARM_RTC_SET_PRESCALER             (0x01UL)    ///< RTC Set Prescaler; arg = Prescaler Value
-#define ARM_RTC_SET_ALARM                 (0x02UL)    ///< RTC Set Alarm;     arg = Alarm Value
+#define ARM_RTC_SET_PRESCALER       (0x01UL)  ///< RTC Set Prescaler; arg = Prescaler Value
+#define ARM_RTC_SET_ALARM           (0x02UL)  ///< RTC Set Alarm;     arg = Alarm Value
 
 /****** RTC Event *****/
-#define ARM_RTC_EVENT_ALARM_TRIGGER       (1UL << 0)  ///< Alarm Triggered;
-
+#define ARM_RTC_EVENT_ALARM_TRIGGER (1UL << 0)  ///< Alarm Triggered;
 
 // Function documentation
 /**
@@ -75,32 +73,40 @@ extern "C"
   \return      \ref execution_status
 */
 
-typedef void (*ARM_RTC_SignalEvent_t) (uint32_t event);   ///< Pointer to \ref RTC_SignalEvent : Signal RTC Event.
+typedef void (*ARM_RTC_SignalEvent_t)(uint32_t event);  ///< Pointer to \ref RTC_SignalEvent :
+                                                        ///< Signal RTC Event.
 
 /**
 \brief RTC Device Driver Capabilities.
 */
 typedef struct _ARM_RTC_CAPABILITIES {
-  uint32_t alarm              : 1;      ///< supports RTC Alarm Event Callback
-  uint32_t reserved           : 31;     ///< Reserved (must be zero)
+    uint32_t alarm   : 1;   ///< supports RTC Alarm Event Callback
+    uint32_t reserved: 31;  ///< Reserved (must be zero)
 } ARM_RTC_CAPABILITIES;
-
 
 /**
 \brief Access structure of the RTC Driver.
 */
 typedef struct _ARM_DRIVER_RTC {
-  ARM_DRIVER_VERSION     (*GetVersion)      (void);                            ///< Pointer to \ref RTC_GetVersion : Get driver version.
-  ARM_RTC_CAPABILITIES   (*GetCapabilities) (void);                            ///< Pointer to \ref RTC_GetCapabilities : Get driver capabilities.
-  int32_t                (*Initialize)      (ARM_RTC_SignalEvent_t cb_event);  ///< Pointer to \ref RTC_Initialize : Initialize RTC Interface.
-  int32_t                (*Uninitialize)    (void);                            ///< Pointer to \ref RTC_Uninitialize : De-initialize RTC Interface.
-  int32_t                (*PowerControl)    (ARM_POWER_STATE state);           ///< Pointer to \ref RTC_PowerControl : Control RTC Interface Power.
-  int32_t                (*Control)         (uint32_t control, uint32_t arg);  ///< Pointer to \ref RTC_Control : Control RTC Interface.
-  int32_t                (*ReadCounter)     (uint32_t *val);                   ///< Pointer to \ref RTC_ReadCounter : Read the RTC current counter.
-  int32_t                (*LoadCounter)     (uint32_t loadval);                ///< Pointer to \ref RTC_LoadCounter : Load  new RTC counter Value.
+    ARM_DRIVER_VERSION (*GetVersion)
+    (void);  ///< Pointer to \ref RTC_GetVersion : Get driver version.
+    ARM_RTC_CAPABILITIES (*GetCapabilities)
+    (void);  ///< Pointer to \ref RTC_GetCapabilities : Get driver capabilities.
+    int32_t (*Initialize)(ARM_RTC_SignalEvent_t cb_event);  ///< Pointer to \ref RTC_Initialize :
+                                                            ///< Initialize RTC Interface.
+    int32_t (*Uninitialize)(void);  ///< Pointer to \ref RTC_Uninitialize : De-initialize RTC
+                                    ///< Interface.
+    int32_t (*PowerControl)(ARM_POWER_STATE state);  ///< Pointer to \ref RTC_PowerControl : Control
+                                                     ///< RTC Interface Power.
+    int32_t (*Control)(uint32_t control,
+                       uint32_t arg);  ///< Pointer to \ref RTC_Control : Control RTC Interface.
+    int32_t (*ReadCounter)(uint32_t *val);     ///< Pointer to \ref RTC_ReadCounter : Read the RTC
+                                               ///< current counter.
+    int32_t (*LoadCounter)(uint32_t loadval);  ///< Pointer to \ref RTC_LoadCounter : Load  new RTC
+                                               ///< counter Value.
 } const ARM_DRIVER_RTC;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

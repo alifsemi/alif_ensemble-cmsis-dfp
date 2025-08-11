@@ -24,7 +24,6 @@ extern "C" {
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 
-
 /*******************************************************************************
  *  T Y P E D E F S
  ******************************************************************************/
@@ -34,8 +33,8 @@ extern "C" {
  * @struct services_lib_t
  */
 typedef struct {
-	uint32_t             packet_buffer_address;
-	print_msg_t          fn_print_msg;
+    uint32_t    packet_buffer_address;
+    print_msg_t fn_print_msg;
 } services_lib_t;
 
 /*******************************************************************************
@@ -50,7 +49,7 @@ typedef struct {
 void SERVICES_initialize(services_lib_t *init_params);
 int  SERVICES_synchronize_with_se(uint32_t services_handle);
 
-#define SERVICES_LIB_ERROR   0xFFFFFFFFul
+#define SERVICES_LIB_ERROR 0xFFFFFFFFul
 
 #ifdef __cplusplus
 }

@@ -11,9 +11,8 @@
 #ifndef DRIVER_DAC_PRIVATE_H_
 #define DRIVER_DAC_PRIVATE_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* System includes */
@@ -29,11 +28,11 @@ extern "C"
 /**
  @brief   : DAC flags to check the DAC initialization, DAC power done and DAC started.
  */
-typedef struct _DAC_DRIVER_STATE{
-    uint32_t    initialized       :1;           /* Driver Initialized */
-    uint32_t    powered           :1;           /* Driver Powered up  */
-    uint32_t    dac_drv_start     :1;           /* Driver is Started  */
-    uint32_t    reserved          :29;          /* Reserved           */
+typedef struct _DAC_DRIVER_STATE {
+    uint32_t initialized  : 1;  /* Driver Initialized */
+    uint32_t powered      : 1;  /* Driver Powered up  */
+    uint32_t dac_drv_start: 1;  /* Driver is Started  */
+    uint32_t reserved     : 29; /* Reserved           */
 } DAC_DRIVER_STATE;
 
 /**
@@ -42,16 +41,15 @@ typedef struct _DAC_DRIVER_STATE{
  * @flags    : DAC driver flags
  * @config   : DAC configuration information
  */
-typedef struct _DAC_resources
-{
-    DAC_Type            *regs;            /* DAC register address                             */
-    DAC_DRIVER_STATE     flags;           /* DAC Driver Flags                                 */
-    DAC_INSTANCE         instance;        /* DAC Driver instance                              */
-    bool                 dac_twoscomp_in; /* Convert two's complement to unsigned binary data */
-    uint8_t              input_mux_val;   /* DAC input data source                            */
-}DAC_RESOURCES;
+typedef struct _DAC_resources {
+    DAC_Type        *regs;            /* DAC register address                             */
+    DAC_DRIVER_STATE flags;           /* DAC Driver Flags                                 */
+    DAC_INSTANCE     instance;        /* DAC Driver instance                              */
+    bool             dac_twoscomp_in; /* Convert two's complement to unsigned binary data */
+    uint8_t          input_mux_val;   /* DAC input data source                            */
+} DAC_RESOURCES;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

@@ -10,8 +10,8 @@
 
 /******************************************************************************
  * @file     ospi_hyperram_xip.h
- * @author   Silesh C V
- * @email    silesh@alifsemi.com
+ * @author   Silesh C V, Manoj A Murudi
+ * @email    silesh@alifsemi.com, manoj.murudi@alifsemi.com
  * @version  V1.0.0
  * @date     19-Jul-2023
  * @brief    Public header file for OSPI hyperram XIP init library.
@@ -22,19 +22,22 @@
 
 #include <stdint.h>
 
-#ifdef  __cplusplus
-extern "C"
-{
+#include "soc.h"
+#include "soc_features.h"
+#include "sys_ctrl_ospi.h"
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /**
- * enum OSPI_INSTANCE.
- * OSPI instances.
+ * enum OSPI_SPI_MODE.
+ * OSPI spi mode.
  */
-typedef enum _OSPI_INSTANCE {
-    OSPI_INSTANCE_0,
-    OSPI_INSTANCE_1,
-} OSPI_INSTANCE;
+typedef enum _OSPI_SPI_MODE {
+    OSPI_SPI_MODE_OCTAL,
+    OSPI_SPI_MODE_DUAL_OCTAL
+} OSPI_SPI_MODE;
 
 typedef struct _ospi_hyperram_xip_config {
     /**< The OSPI instance to be setup in hyperram XIP mode */
@@ -44,7 +47,7 @@ typedef struct _ospi_hyperram_xip_config {
     uint32_t bus_speed;
 
     /**< Optional device specific initialization needed by the hyperram device  */
-    void (*hyperram_init)(void);
+    void (*hyperram_init)(OSPI_Type *, uint8_t);
 
     /**< Drive edge configuration for the OSPI */
     uint8_t ddr_drive_edge;
@@ -60,6 +63,14 @@ typedef struct _ospi_hyperram_xip_config {
 
     /**< Data Frame Size used for the hyperram device */
     uint8_t dfs;
+
+    /**< OSPI transfer type for the hyperram device */
+    OSPI_SPI_MODE spi_mode;
+
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    /**< Delay applied to the OSPI baud2 signal delay */
+    uint8_t signal_delay;
+#endif
 } ospi_hyperram_xip_config;
 
 /**
@@ -72,8 +83,7 @@ typedef struct _ospi_hyperram_xip_config {
   \return      -1 on configuration error, 0 on success
 */
 int ospi_hyperram_xip_init(const ospi_hyperram_xip_config *config);
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 #endif /* OSPI_HYPERRAM_XIP_H */
-

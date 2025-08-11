@@ -1,0 +1,421 @@
+def allRecipientEmails = ""
+def rebaseNeeded = "-1"
+
+def gDevices   = ['AE722F80F55D5', 'AE1C1F4051920', 'AE822FA0E5597', 'AE402FA0E5597']
+
+def buildDevice(deviceList) {
+    def stagesMap = [:]
+
+    for (devicePartNumber in deviceList) {
+        def currentDev = devicePartNumber
+
+        stagesMap[currentDev] = {
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                echo "Starting build for ${currentDev}"
+
+                stage("Build ${currentDev}") {
+                    sh """
+                        #!/bin/bash
+                        set -x
+                        mkdir -pv ${currentDev}
+                        cp -r \${REPO_NAME}  ${currentDev}/
+                        cd "${currentDev}/$REPO_NAME/scripts/cmake" || { echo -e "🚫Error: $REPO_NAME/scripts/cmake folder/dir not found."; exit 1; }
+                        echo "PWD : \${PWD}"
+                        chmod -Rv 777 *.sh
+
+                        total_cfg_run_cnt=0
+                        skipped_cfg_run_cnt=0
+                        actual_cfg_run_cnt=0
+                        fail_cfg_run_cnt=0
+                        success_cfg_run_cnt=0
+                        total_cmakeError=-1
+                        collective_total_Error=0
+                        number_of_iter=0
+                        cdc200_run_cnt=0
+                        cdc200_fail_cnt=0
+                        cdc200_success_cnt=0
+                        parallel_dis_run_cnt=0
+                        parallel_dis_fail_cnt=0
+                        parallel_dis_success_cnt=0
+                        retargeting_status=-1
+
+                        CURR_OS=("NONE")
+                        CURR_COMPILER=("armclang" "gcc")
+                        CURR_BOARDS=("DevKit-e7" "DevKit-e1c" "DevKit-e8" "DevKit-e4")
+                        CURR_RTSS=("HE" "HP")
+                        CURR_BOOT=("TCM" "MRAM")
+
+                        for comp in \${!CURR_COMPILER[@]} ; do
+                            for bootType in \${!CURR_BOOT[@]} ; do
+                                for rtssType in \${!CURR_RTSS[@]} ; do
+                                    for brdName in \${!CURR_BOARDS[@]} ; do
+                                        devShortName="\${CURR_BOARDS[brdName]#*-}"
+                                        alifDevShortName="A\$(echo "\${devShortName}" | tr '[:lower:]' '[:upper:]')"
+                                        echo "Device : ${currentDev}, Board: \${CURR_BOARDS[brdName]}, ShortName:\${alifDevShortName}."
+                                        number_of_iter=\$((number_of_iter + 1))
+
+                                        echo "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱 # \${number_of_iter} starts 🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱"
+                                        if [[ "${currentDev}" == "\$alifDevShortName"* ]]; then
+                                            for osName in \${!CURR_OS[@]} ; do
+                                                echo "=================================================================================="
+                                                if [ -d build ]; then
+                                                    echo -e "Deleting Build directory..."
+                                                    rm -rf build
+                                                fi
+
+                                                total_cfg_run_cnt=\$((total_cfg_run_cnt + 1))
+                                                echo "🚩 Building for \${CURR_COMPILER[comp]}, ${currentDev}, \${CURR_OS[osName]}, \${CURR_BOOT[bootType]} \${CURR_RTSS[rtssType]} \${CURR_BOARDS[brdName]}"
+
+                                                if [ "${currentDev}" = "AE1C1F4051920" ] && [ "\${CURR_RTSS[rtssType]}" = "HP" ]; then
+                                                    echo -e "🚨 ${currentDev} does not have \${CURR_RTSS[rtssType]} subsystem"
+                                                    skipped_cfg_run_cnt=\$((skipped_cfg_run_cnt + 1))
+                                                    continue
+                                                fi
+
+                                                actual_cfg_run_cnt=\$((actual_cfg_run_cnt + 1))
+                                                ./run.sh -p \${CURR_COMPILER[comp]},\${CURR_COMPILER[comp]}_build,\${CURR_COMPILER[comp]}_build_test -c --fresh -DBOOT=\${CURR_BOOT[bootType]} -DDEVICE=${currentDev} -DBOARD_NAME=\${CURR_BOARDS[brdName]} -DOS=\${CURR_OS[osName]} -DRTSS=\${CURR_RTSS[rtssType]} -b --clean-first
+
+                                                tmp=\$?
+                                                if [[ "\$total_cmakeError" -eq -1 ]] ; then
+                                                    total_cmakeError=\$tmp
+                                                else
+                                                    total_cmakeError=\$((total_cmakeError + tmp))
+                                                fi
+
+                                                echo -e "🚫Error Status total_cmakeError: \$total_cmakeError and tmp: \$tmp"
+                                                if [ "\$tmp" -ne 0 ] ; then
+                                                    fail_cfg_run_cnt=\$((fail_cfg_run_cnt + 1))
+                                                fi
+
+                                                #CDC200
+                                                cdc200_run_cnt=\$((cdc200_run_cnt + 1))
+                                                echo "🚩 Building for \${CURR_COMPILER[comp]}, ${currentDev}, \${CURR_OS[osName]}, \${CURR_BOOT[bootType]} \${CURR_RTSS[rtssType]} \${CURR_BOARDS[brdName]}, demo_cdc200"
+                                                ./run.sh -f -c -DENABLE_MIPI_DSI_ILI9806E_PANEL=OFF -DENABLE_MIPI_DSI_ILI9488E_PANEL=ON -DENABLE_CDC_ILI6122E_PANEL=OFF -DTEST_APP=demo_cdc200 --fresh -DBOOT=\${CURR_BOOT[bootType]} -DDEVICE=${currentDev} -DBOARD_NAME=\${CURR_BOARDS[brdName]} -DOS=\${CURR_OS[osName]} -DRTSS=\${CURR_RTSS[rtssType]} -b --clean-first
+
+                                                tmp=\$?
+                                                if [ "\$tmp" -ne 0 ] ; then
+                                                    cdc200_fail_cnt=\$((cdc200_fail_cnt + 1))
+                                                else
+                                                    cdc200_success_cnt=\$((cdc200_success_cnt + 1))
+                                                fi
+                                                total_cmakeError=\$((total_cmakeError + tmp))
+
+                                                cdc200_run_cnt=\$((cdc200_run_cnt + 1))
+
+                                                ./run.sh -f -c -DENABLE_MIPI_DSI_ILI9806E_PANEL=ON -DENABLE_MIPI_DSI_ILI9488E_PANEL=OFF -DENABLE_CDC_ILI6122E_PANEL=OFF -DTEST_APP=demo_cdc200 --fresh -DBOOT=\${CURR_BOOT[bootType]} -DDEVICE=${currentDev} -DBOARD_NAME=\${CURR_BOARDS[brdName]} -DOS=\${CURR_OS[osName]} -DRTSS=\${CURR_RTSS[rtssType]} -b --clean-first
+                                                tmp=\$?
+
+                                                if [ "\$tmp" -ne 0 ] ; then
+                                                    cdc200_fail_cnt=\$((cdc200_fail_cnt + 1))
+                                                else
+                                                    cdc200_success_cnt=\$((cdc200_success_cnt + 1))
+                                                fi
+                                                total_cmakeError=\$((total_cmakeError + tmp))
+
+                                                #Parallel Display
+                                                parallel_dis_run_cnt=\$((parallel_dis_run_cnt + 1))
+                                                echo "🚩 Building for \${CURR_COMPILER[comp]}, ${currentDev}, \${CURR_OS[osName]}, \${CURR_BOOT[bootType]} \${CURR_RTSS[rtssType]} \${CURR_BOARDS[brdName]}, demo_parallel_display"
+
+                                                ./run.sh -f -c -DENABLE_MIPI_DSI_ILI9806E_PANEL=OFF -DENABLE_MIPI_DSI_ILI9488E_PANEL=OFF -DENABLE_MIPI_DSI_CSI2_DPHY=OFF -DENABLE_MIPI_DSI=OFF -DTEST_APP=demo_parallel_display --fresh -DBOOT=\${CURR_BOOT[bootType]} -DDEVICE=${currentDev} -DBOARD_NAME=\${CURR_BOARDS[brdName]} -DOS=\${CURR_OS[osName]} -DRTSS=\${CURR_RTSS[rtssType]} -b --clean-first
+
+                                                tmp=\$?
+                                                if [ "\$tmp" -ne 0 ] ; then
+                                                    parallel_dis_fail_cnt=\$((parallel_dis_fail_cnt + 1))
+                                                else
+                                                    parallel_dis_success_cnt=\$((parallel_dis_success_cnt + 1))
+                                                fi
+                                                total_cmakeError=\$((total_cmakeError + tmp))
+
+                                                echo "=================================================================================="
+                                            done
+                                        fi
+                                        echo "🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩 # \${number_of_iter} ends 🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩"
+                                        echo -e ""
+                                    done
+                                done
+                            done
+                        done
+
+                        echo -e ""
+                        # Check Retargetting
+                        ./run.sh -c --fresh -DENABLE_STDOUT=1 -DENABLE_STDIN=1 -DENABLE_STDERR=1
+                        tmp=\$?
+                        retargeting_status=\$tmp
+                        total_cmakeError=\$((total_cmakeError + tmp))
+
+                        echo -e ""
+                        echo -e " 🏆Success   : \$((actual_cfg_run_cnt - fail_cfg_run_cnt)), Failed: \$fail_cfg_run_cnt, Skipped: \$skipped_cfg_run_cnt"
+                        echo -e " 🏆CDC       : success \$cdc200_success_cnt/\$cdc200_run_cnt, Failed: \$cdc200_fail_cnt/\$cdc200_run_cnt"
+                        echo -e " 🏆Retarting : \$retargeting_status"
+                        echo -e " 🏆Parallel_Display : success \$parallel_dis_success_cnt/\$parallel_dis_run_cnt, Failed: \$parallel_dis_fail_cnt/\$parallel_dis_run_cnt"
+                        echo -e " 🔥Total Run => (\$actual_cfg_run_cnt/\$total_cfg_run_cnt)"
+                        collective_total_Error=\$((total_cmakeError))
+                        exit \$collective_total_Error
+                    """
+				}
+			}
+		}
+	}
+	return stagesMap
+}
+
+pipeline {
+    agent any
+
+    environment {
+        REPO_NAME='ensemble-cmsis-dfp_DEV'
+        REF_BRANCH="main"
+    }
+
+    options {
+        skipDefaultCheckout(true)
+    }
+
+    stages {
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh """#!/bin/bash -x
+                    echo -e "✔️ None."
+                    """
+                }
+            }
+        }
+
+        stage('Display Environment Variables') {
+            steps {
+                script {
+                    sh """#!/bin/bash -x
+                        printenv
+                        echo -e "✔️ Displayed all environment setting."
+                    """
+                }
+            }
+        }
+
+        stage('checkout') {
+            steps {
+                cleanWs()
+
+                dir("${REPO_NAME}") {
+                    echo  "⏳ Checkout Repo 'ensemble-cmsis-dfp_DEV', CHANGE_BRANCH: '$CHANGE_BRANCH' BRANCH_NAME: '$BRANCH_NAME'"
+                    checkout scm
+                    echo  "✅ checkout operation is completed."
+                }
+
+                script {
+                    rebaseNeeded = sh(
+                        script: '''#!/bin/bash
+                            set -x
+                            cd ${REPO_NAME}
+                            git fetch origin refs/heads/${REF_BRANCH}:refs/remotes/origin/${REF_BRANCH}
+
+                            if ! git rebase origin/${REF_BRANCH} ; then
+                                echo -e "Rebase could not happen succesfully"
+                                exit 1
+                            fi
+
+                            commitCnt=$(git rev-list --count origin/${REF_BRANCH}..HEAD)
+                            commits=$(git log -n ${commitCnt} --pretty=format:"%H")
+
+                            if [[ "$commitCnt" -lt "1" ]] ; then
+                                echo 0
+                                exit 0
+                            fi
+
+                            firstCommit=$(git log -n 1 --pretty=format:"%H")
+                            firstCommit_author_name=$(git show -s --format="%an" "$firstCommit")
+                            firstCommit_author_email=$(git show -s --format="%ae" "$firstCommit")
+                            firstCommit_body=$(git show -s --format="%b" "$firstCommit" | tail -n +1 | awk '!/^[A-Za-z-]+:/ {print}' | sed '/^$/d')
+                            parentCnt=$(git log -n 1 --pretty=format:"%p"  | wc -w)
+
+                            if [[ "$firstCommit_author_name" == "Jenkins" || "$firstCommit_author_email" == "nobody@nowhere" || "$firstCommit_body" == "*Merge commit \'$firstCommit\' into HEAD*" || "$parentCnt" -gt "1" ]] ; then
+                                git reset --soft HEAD~1
+                                echo 1
+                            else
+                                echo 0
+                            fi
+                            ''',
+                        returnStdout: true
+                    ).trim()
+                     echo  " 🎯Git Rebase Needed  =>  ${rebaseNeeded}"
+                }
+            }
+        }
+
+        stage('Get PR Authors') {
+            steps {
+                script {
+                    allRecipientEmails = sh(
+                        script: '''#!/bin/bash
+                            set -x
+                            cd ${REPO_NAME}
+                            commitCnt=$(git rev-list --count origin/${REF_BRANCH}..HEAD)
+
+                            # Get all author emails for this PR
+                            culpritEmails=$(git log -n $commitCnt --pretty=format:'%ae' | sort | uniq | paste -sd";" -)
+
+                            # Replace all commas with semicolons
+                            defaultEmails=$(echo "$DEFAULT_OWNER_EMAILS" | tr ',' ';')
+
+                            all_emails="$culpritEmails;$defaultEmails"
+                            echo "$all_emails" | tr ';' '\n' | grep -v '^$' | sort -u | paste -sd ";" -
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    echo "📤 Mail will be sent to: [${allRecipientEmails}]..."
+                }
+            }
+        }
+
+        stage('verifying patch') {
+            steps {
+                script {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        sh '''#!/bin/bash
+                        set -x
+                        license_status=$($ARMCLANG_PATH/../../bin/armlm inspect)
+
+                        case "$license_status" in
+                          *"No licenses found"*)
+                            $ARMCLANG_PATH/../../bin/armlm activate --server http://10.10.60.10:7070 --product HWSKT-EAC0
+                            ;;
+                          *)
+                            echo "ARM License is available."
+                            ;;
+                        esac
+
+                        if [ ! -d ${REPO_NAME} ] ; then
+                            echo -e "🚫Error: ${REPO_NAME} not found ...\n"
+                            exit -1
+                        fi
+
+                        cd ${REPO_NAME} || { echo -e "🚫Error: ${REPO_NAME} folder/dir not found."; exit 1; }
+
+                        commitCnt=$(git rev-list --count origin/${REF_BRANCH}..HEAD)
+                        commits=$(git log -n ${commitCnt} --pretty=format:"%H")
+                        totalCommitCnt=$(git rev-list --count origin/${REF_BRANCH})
+
+                        if [[ "$totalCommitCnt" < "$commitCnt" ]] ; then
+                            checkGitLog=${commitCnt}
+                        else
+                            checkGitLog=6
+                        fi
+
+                        git log -${checkGitLog}
+                        echo -e "🎯 we have $commitCnt commits in ${CHANGE_BRANCH} ($BRANCH_NAME) review"
+                        echo -e "☑️ git operation is completed."
+
+                        if [[ "$commitCnt" =~ ^[0-9]+$ && "$commitCnt" -gt "0" ]] ; then
+                            git format-patch -${commitCnt}
+
+                            grep -rnP "\t" *.patch | sed $'s/\t/→/g'
+                            tabCnt=$(grep -roP "\t" *.patch  | wc -l)
+                            echo -e "Total tabs: $tabCnt"
+
+                            export CODE_BASE=$PWD
+                            if [[ -d "$VALIDATION_SCRIPT_DIR" ]] ; then
+                                cp -rv $VALIDATION_SCRIPT_DIR/* scripts/
+                            else
+                                echo -e "🚫Error: VALIDATION_SCRIPT_DIR is null"
+                            fi
+
+                            check_patch_output=$(./scripts/scripts/checkpatch.pl --patch *.patch  --ignore CODE_INDENT,C99_COMMENTS,LEADING_SPACE)
+                            echo -e "$check_patch_output"
+                            check_patch_output_summary=$(echo "$check_patch_output" | grep "total:")
+                            echo -e "$check_patch_output_summary"
+
+                            check_patch_errors=0
+                            check_patch_warnings=0
+                            check_patch_lines=0
+
+                            while read -r line; do
+                              # Extract numbers using regex or field parsing
+                              err=$(echo "$line"  | awk '{for(i=1;i<=NF;i++) if($i=="total:") print $(i+1)}')
+                              warn=$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i=="errors,") print $(i+1)}')
+                              ln=$(echo "$line"   | awk '{for(i=1;i<=NF;i++) if($i=="warnings,") print $(i+1)}')
+
+                              if [[ "$err" =~ ^[0-9]+$ ]]; then
+                                check_patch_errors=$((check_patch_errors + err))
+                              else
+                                echo "Skipping non-numeric error: $err"
+                              fi
+
+                              if [[ "$warn" =~ ^[0-9]+$ ]]; then
+                                check_patch_warnings=$((check_patch_warnings + warn))
+                              else
+                                echo "Skipping non-numeric warning: $warn"
+                              fi
+
+                              if [[ "$ln" =~ ^[0-9]+$ ]]; then
+                                check_patch_lines=$((check_patch_lines + ln))
+                              else
+                                echo "Skipping non-numeric lines: $ln"
+                              fi
+
+                            done <<< "$check_patch_output_summary"
+
+                            echo -e "🎯Check-Patch has=> Errors: ${check_patch_errors} Warnings: ${check_patch_warnings}, Lines: ${check_patch_lines}\n\n"
+
+                            pr_checker_log=$(${VALIDATION_SCRIPT_DIR}/pr_commit_checker.sh  ${commitCnt})
+                            pr_checker_err=$?
+                            echo -e "🎯PR Checker=>\n$pr_checker_log"
+
+                        else
+                            pr_checker_err=0
+                            check_patch_errors=0
+                        fi
+                        echo -e ""
+                        echo -e " 🏆Check-Patch Result =>  Error: $check_patch_errors, Warnings: $check_patch_warnings, Tabs: $tabCnt"
+                        exit $check_patch_errors
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('build') {
+            steps {
+                script {
+                    try {
+                        def buildDeviceStatus = buildDevice(gDevices)
+                        parallel buildDeviceStatus
+                        if (!buildDeviceStatus || buildDeviceStatus.isEmpty()) {
+                            error "❌ buildDevice returned empty or null stages!"
+                        }
+                        echo "✅ Generated ${buildDeviceStatus.size()} tstages."
+                    } catch (err) {
+                        error "❌ Failed to generate ttages: ${err}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "🚫 Build failed. Sending email..."
+            script {
+                emailext (
+                    subject: "🚨 Jenkins Job Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+                    body: """
+                       <p>Build failed for job: <b>${env.CHANGE_URL}</b></p>
+                       <p>Build Number: <b>${env.BUILD_NUMBER}</b></p>
+                       <p>View details: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                    """,
+                    to: "raj.ranjan@alifsemi.com",
+                    mimeType: 'text/html'
+                )
+            }
+        }
+
+        success {
+            echo 'Build succeeded.'
+        }
+
+        cleanup {
+            echo "Cleaning up workspace..."
+            deleteDir()
+        }
+    }
+}

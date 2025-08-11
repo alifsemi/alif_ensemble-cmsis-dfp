@@ -26,7 +26,7 @@
 #include "services_lib_api.h"
 #include "services_lib_protocol.h"
 
-#define MAX_ERROR_STRING_LENGTH     38
+#define MAX_ERROR_STRING_LENGTH 38
 
 /*******************************************************************************
  *  T Y P E D E F S
@@ -49,27 +49,32 @@
  */
 char *SERVICES_error_to_string(uint32_t error_code)
 {
-  static char err_string[MAX_ERROR_STRING_LENGTH] = { 0 }; /* return string */
-  char *p_str = NULL; /* Error string */
+    static char err_string[MAX_ERROR_STRING_LENGTH] = {0};  /* return string */
+    char       *p_str                               = NULL; /* Error string */
 
-  switch (error_code)
-   {
-       case SERVICES_REQ_SUCCESS:
-         p_str = "SERVICES_REQ_SUCCESS          "; break;
-       case SERVICES_REQ_NOT_ACKNOWLEDGE:
-         p_str = "SERVICES_REQ_NOT_ACKNOWLEDGE  "; break;
-       case SERVICES_REQ_TIMEOUT:
-         p_str = "SERVICES_REQ_TIMEOUT          "; break;
-       case SERVICES_RESP_UNKNOWN_COMMAND:
-         p_str = "SERVICES_RESP_UNKNOWN_COMMAND "; break;
-       case SERVICE_INVALID_PARAMETER:
-           p_str = "SERVICES_INVALID_PARAMETER   "; break;
-       default:
-         p_str = ">>  Error UNKNOWN  <<"; break;
-  }
-  strncpy(err_string, p_str, sizeof(err_string));
+    switch (error_code) {
+    case SERVICES_REQ_SUCCESS:
+        p_str = "SERVICES_REQ_SUCCESS          ";
+        break;
+    case SERVICES_REQ_NOT_ACKNOWLEDGE:
+        p_str = "SERVICES_REQ_NOT_ACKNOWLEDGE  ";
+        break;
+    case SERVICES_REQ_TIMEOUT:
+        p_str = "SERVICES_REQ_TIMEOUT          ";
+        break;
+    case SERVICES_RESP_UNKNOWN_COMMAND:
+        p_str = "SERVICES_RESP_UNKNOWN_COMMAND ";
+        break;
+    case SERVICE_INVALID_PARAMETER:
+        p_str = "SERVICES_INVALID_PARAMETER   ";
+        break;
+    default:
+        p_str = ">>  Error UNKNOWN  <<";
+        break;
+    }
+    strncpy(err_string, p_str, sizeof(err_string));
 
-  return (char *)&err_string[0];
+    return (char *) &err_string[0];
 }
 
 /**
@@ -80,6 +85,5 @@ char *SERVICES_error_to_string(uint32_t error_code)
  */
 const char *SERVICES_version(void)
 {
-  return SE_SERVICES_VERSION_STRING;
+    return SE_SERVICES_VERSION_STRING;
 }
-

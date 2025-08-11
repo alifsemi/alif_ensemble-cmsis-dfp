@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     cpi.h
  * @author   Chandra Bhushan Singh
  * @email    chandrabhushan.singh@alifsemi.com
@@ -20,229 +20,245 @@
 #ifndef CPI_H_
 #define CPI_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include <stdint.h>
-
-typedef struct {                                      /*!< LPCPI/CPI Structure                                                    */
-    volatile       uint32_t  CAM_CTRL;                /*!< (@ 0x00000000) Camera Control Register                                 */
-    volatile       uint32_t  CAM_INTR;                /*!< (@ 0x00000004) Camera Interrupt Status Register                        */
-    volatile       uint32_t  CAM_INTR_ENA;            /*!< (@ 0x00000008) Camera Interrupt Enable Register                        */
-    volatile const uint32_t  RESERVED;                /*!< (@ 0x0000000C) Camera reserved Register                                */
-    volatile       uint32_t  CAM_CFG;                 /*!< (@ 0x00000010) Camera Configuration Register                           */
-    volatile       uint32_t  CAM_FIFO_CTRL;           /*!< (@ 0x00000014) Camera FIFO Control Register                            */
-    volatile const uint32_t  CAM_AXI_ERR_STAT;        /*!< (@ 0x00000018) Camera AXI Error Status Register                        */
-    volatile const uint32_t  RESERVED1[3];            /*!< (@ 0x0000001C) Camera Reserved Register                                */
-    volatile       uint32_t  CAM_VIDEO_FCFG;          /*!< (@ 0x00000028) Camera Video Frame Configuration Register               */
-    volatile       uint32_t  CAM_CSI_CMCFG;           /*!< (@ 0x0000002C) Camera MIPI CSI Color Mode Configuration Register       */
-    volatile       uint32_t  CAM_FRAME_ADDR;          /*!< (@ 0x00000030) Camera Video Frame A Start Address Register             */
-} CPI_Type;                                           /*!< Size = 52 (0x34)                                                       */
+#include <stdbool.h>
+#include <soc.h>
+#include "soc_features.h"
 
 /* Camera Control Register (CAM_CTRL) bit Definition, Macros, Offsets and Masks
- * these include CPI capture mode, capture status, software reset, start/stop capture and FIFO clock select.
+ * these include CPI capture mode, capture status, software reset, start/stop capture and FIFO clock
+ * select.
  */
 /* CAM_CTRL Start Capture bit[0] */
-#define CAM_CTRL_START                                 (1U << 0)
+#define CAM_CTRL_START              (1U << 0)
 
 /* CAM_CTRL Capture Status bit[2] */
-#define CAM_CTRL_BUSY                                  (1U << 2)
+#define CAM_CTRL_BUSY               (1U << 2)
 
 /* CAM_CTRL Capture Mode bit[4] */
-#define CAM_CTRL_SNAPSHOT                              (1U << 4)
+#define CAM_CTRL_SNAPSHOT           (1U << 4)
 
 /* CAM_CTRL Software Reset bit[8] */
-#define CAM_CTRL_SW_RESET                              (1U << 8)
+#define CAM_CTRL_SW_RESET           (1U << 8)
 
 /* CAM_CTRL CAM_CTRL FIFO clock select bit[12] */
-#define CAM_CTRL_FIFO_CLK_SEL                          (1U << 12)
+#define CAM_CTRL_FIFO_CLK_SEL       (1U << 12)
 
 /* CAM_INTR control  bit parameters */
 /* Frame Capture Stop IRQ bit[0] */
-#define CAM_INTR_STOP                                  (1U << 0)
+#define CAM_INTR_STOP               (1U << 0)
 
 /* Input FIFO overrun Warning IRQ bit[4] */
-#define CAM_INTR_INFIFO_OVERRUN                        (1U << 4)
+#define CAM_INTR_INFIFO_OVERRUN     (1U << 4)
 
 /* Output FIFO Overrun Warning IRQ bit[5] */
-#define CAM_INTR_OUTFIFO_OVERRUN                       (1U << 5)
+#define CAM_INTR_OUTFIFO_OVERRUN    (1U << 5)
 
 /* Bus error IRQ bit[6] */
-#define CAM_INTR_BRESP_ERR                             (1U << 6)
+#define CAM_INTR_BRESP_ERR          (1U << 6)
 
 /* VSYNC Detected IRQ bit[16] */
-#define CAM_INTR_VSYNC                                 (1U << 16)
+#define CAM_INTR_VSYNC              (1U << 16)
 
 /* HSYNC Detected IRQ bit[20] */
-#define CAM_INTR_HSYNC                                 (1U << 20)
+#define CAM_INTR_HSYNC              (1U << 20)
 
 /* Camera Configuration Register (CAM_CFG) bit Definition, Macros, Offsets and Masks
  * these include data mode, data mask etc
  */
+/* CAM_CFG AXI port bit[2] */
+#define CAM_CFG_AXI_PORT_Pos                           2U
+
+/* CAM_CFG ISP port bit[3] */
+#define CAM_CFG_ISP_PORT_Pos                           3U
+
 /* CAM_CFG vsync wait bit[4] */
-#define CAM_CFG_VSYNC_WAIT_Pos                         4U
+#define CAM_CFG_VSYNC_WAIT_Pos      4U
 
 /* CAM_CFG vsync mode bit[5] */
-#define CAM_CFG_VSYNC_MODE_Pos                         5U
+#define CAM_CFG_VSYNC_MODE_Pos      5U
 
 /* CAM_CFG row roundup bit[8] */
-#define CAM_CFG_ROW_ROUNDUP_Pos                        8U
+#define CAM_CFG_ROW_ROUNDUP_Pos     8U
 
 /* CAM_CFG pixel clock polarity bit[12] */
-#define CAM_CFG_PIXELCLK_POL_Pos                       12U
+#define CAM_CFG_PIXELCLK_POL_Pos    12U
 
 /* CAM_CFG hsync polarity bit[13] */
-#define CAM_CFG_HSYNC_POL_Pos                          13U
+#define CAM_CFG_HSYNC_POL_Pos       13U
 
 /* CAM_CFG vsync polarity bit[14] */
-#define CAM_CFG_VSYNC_POL_Pos                          14U
+#define CAM_CFG_VSYNC_POL_Pos       14U
 
 /* CAM_CFG Data Mode bit[18-16] */
-#define CAM_CFG_DATA_MODE_Pos                          16U
-#define CAM_CFG_DATA_MODE_Msk                          (0x7U << CAM_CFG_DATA_MODE_Pos)
+#define CAM_CFG_DATA_MODE_Pos       16U
+#define CAM_CFG_DATA_MODE_Msk       (0x7U << CAM_CFG_DATA_MODE_Pos)
 
 /* CAM_CFG Data endianness bit[20] */
-#define CAM_CFG_DATA_ENDIANNESS_Pos                    20U
+#define CAM_CFG_DATA_ENDIANNESS_Pos 20U
 
 /* CAM_CFG code10on8 bit[24] */
-#define CAM_CFG_CODE10ON8_Pos                          24U
+#define CAM_CFG_CODE10ON8_Pos       24U
 
 /* CAM_CFG Data Mask bit[29-28] */
-#define CAM_CFG_DATA_MASK_Pos                          28U
-#define CAM_CFG_DATA_MASK_Msk                          (0x3U << CAM_CFG_DATA_MASK_Pos)
+#define CAM_CFG_DATA_MASK_Pos       28U
+#define CAM_CFG_DATA_MASK_Msk       (0x3U << CAM_CFG_DATA_MASK_Pos)
 
 /* Camera FIFO Control Register (CAM_FIFO_CTRL) bit Definition, Macros, Offsets and Masks
  * these include FIFO read and write watermark.
  */
 /* CAM_FIFO_CTRL FIFO read watermark bit[4:0] */
-#define CAM_FIFO_CTRL_RD_WMARK_Pos                     0U
-#define CAM_FIFO_CTRL_RD_WMARK_Msk                     (0X1FU << CAM_FIFO_CTRL_RD_WMARK_Pos)
+#define CAM_FIFO_CTRL_RD_WMARK_Pos  0U
+#define CAM_FIFO_CTRL_RD_WMARK_Msk  (0X1FU << CAM_FIFO_CTRL_RD_WMARK_Pos)
 
 /* CAM_FIFO_CTRL FIFO write watermark bit[12:8] */
-#define CAM_FIFO_CTRL_WR_WMARK_Pos                     8U
-#define CAM_FIFO_CTRL_WR_WMARK_Msk                     (0X1FU << CAM_FIFO_CTRL_WR_WMARK_Pos)
+#define CAM_FIFO_CTRL_WR_WMARK_Pos  8U
+#define CAM_FIFO_CTRL_WR_WMARK_Msk  (0X1FU << CAM_FIFO_CTRL_WR_WMARK_Pos)
 
 /* Camera AXI Error Status Register (CAM_AXI_ERR_STAT) bit Definition, Macros, Offsets and Masks
  * these include CPI BRESP error counter and code.
  */
 /* CAM_AXI_ERR_STAT frame width bit[1:0] */
-#define CAM_AXI_ERR_STAT_BRESP_Pos                     0U
-#define CAM_AXI_ERR_STAT_BRESP_Msk                     (0x3U << CAM_AXI_ERR_STAT_BRESP_Pos)
+#define CAM_AXI_ERR_STAT_BRESP_Pos  0U
+#define CAM_AXI_ERR_STAT_BRESP_Msk  (0x3U << CAM_AXI_ERR_STAT_BRESP_Pos)
 
 /* CAM_AXI_ERR_STAT frame height bit[15:8] */
-#define CAM_AXI_ERR_STAT_CNT_Pos                       8U
-#define CAM_AXI_ERR_STAT_CNT_Msk                       (0xFF00U << CAM_AXI_ERR_STAT_CNT_Pos)
+#define CAM_AXI_ERR_STAT_CNT_Pos    8U
+#define CAM_AXI_ERR_STAT_CNT_Msk    (0xFF00U << CAM_AXI_ERR_STAT_CNT_Pos)
 
-/* Camera Video Frame Configuration Register (CAM_VIDEO_FCFG) bit Definition, Macros, Offsets and Masks
- * these include CPI frame width and frame height.
+/* Camera Video Horizontal Configuration Register (CAM_VIDEO_HCFG) bit Definition, Macros,
+ * Offsets and Masks. these include CPI HBP, HFP and HFP Enable.
+ */
+/* CAM_VIDEO_HCFG HBP bit[13:0] */
+#define CAM_VIDEO_HCFG_HBP_Pos                         0U
+#define CAM_VIDEO_HCFG_HBP_Msk                         (0x3FFFU << CAM_VIDEO_HCFG_HBP_Pos)
+
+/* CAM_VIDEO_HCFG HFP bit[29:16] */
+#define CAM_VIDEO_HCFG_HFP_Pos                         16U
+#define CAM_VIDEO_HCFG_HFP_Msk                         (0x3FFFU << CAM_VIDEO_HCFG_HFP_Pos)
+
+/* CAM_VIDEO_HCFG HFP_EN bit[31] */
+#define CAM_VIDEO_HCFG_HFP_EN_Pos                      31U
+
+/* Camera Video Vertical Configuration Register (CAM_VIDEO_VCFG) bit Definition, Macros,
+ * Offsets and Masks. these include CPI VBP, VFP and VFP Enable.
+ */
+/* CAM_VIDEO_HCFG VBP bit[13:0] */
+#define CAM_VIDEO_VCFG_VBP_Pos                         0U
+#define CAM_VIDEO_VCFG_VBP_Msk                         (0xFFFU << CAM_VIDEO_VCFG_VBP_Pos)
+
+/* CAM_VIDEO_VCFG VFP bit[29:16] */
+#define CAM_VIDEO_VCFG_VFP_Pos                         16U
+#define CAM_VIDEO_VCFG_VFP_Msk                         (0xFFFU << CAM_VIDEO_VCFG_VFP_Pos)
+
+/* CAM_VIDEO_VCFG VFP_EN bit[31] */
+#define CAM_VIDEO_VCFG_VFP_EN_Pos                      31U
+
+/* Camera Video Frame Configuration Register (CAM_VIDEO_FCFG) bit Definition, Macros,
+ * Offsets and Masks. these include CPI frame width and frame height.
  */
 /* CAM_VIDEO_FCFG frame width bit[13:0] */
-#define CAM_VIDEO_FCFG_DATA_Pos                        0U
-#define CAM_VIDEO_FCFG_DATA_Msk                        (0x3FFFU << CAM_VIDEO_FCFG_DATA_Pos)
+#define CAM_VIDEO_FCFG_DATA_Pos     0U
+#define CAM_VIDEO_FCFG_DATA_Msk     (0x3FFFU << CAM_VIDEO_FCFG_DATA_Pos)
 
 /* CAM_VIDEO_FCFG frame height bit[27:16] */
-#define CAM_VIDEO_FCFG_ROW_Pos                         16U
-#define CAM_VIDEO_FCFG_ROW_Msk                         (0xFFFU << CAM_VIDEO_FCFG_ROW_Pos)
+#define CAM_VIDEO_FCFG_ROW_Pos      16U
+#define CAM_VIDEO_FCFG_ROW_Msk      (0xFFFU << CAM_VIDEO_FCFG_ROW_Pos)
 
-/* Camera MIPI CSI Color Mode Configuration Register (CAM_CSI_CMCFG) bit Definition, Macros, Offsets and Masks
- * these include color encode mode.
+/* Camera MIPI CSI Color Mode Configuration Register (CAM_CSI_CMCFG) bit Definition, Macros,
+ * Offsets and Masks these include color encode mode.
  */
 /* Camera MIPI CSI color mode 16-bit encode bit[3:0] */
-#define CAM_CSI_CMCFG_MODE_Pos                         0U
-#define CAM_CSI_CMCFG_MODE_Msk                         (0XFU << CAM_CSI_CMCFG_MODE_Pos)
+#define CAM_CSI_CMCFG_MODE_Pos      0U
+#define CAM_CSI_CMCFG_MODE_Msk      (0XFU << CAM_CSI_CMCFG_MODE_Pos)
 
-/* Camera Video Frame Start Address Register (CAM_FRAME_ADDR) bit Definition, Macros, Offsets and Masks
- * these include CPI framebuffer start address.
+/* Camera Video Frame Start Address Register (CAM_FRAME_ADDR) bit Definition, Macros,
+ * Offsets and Masks these include CPI framebuffer start address.
  */
 /* CAM_FRAME_ADDR framebuffer start address bit[31:3] */
-#define CAM_FRAME_ADDR_ADDR_Pos                        0U
-#define CAM_FRAME_ADDR_ADDR_Msk                        (0xFFFFFFF8U << CAM_FRAME_ADDR_ADDR_Pos)
+#define CAM_FRAME_ADDR_ADDR_Pos     0U
+#define CAM_FRAME_ADDR_ADDR_Msk     (0xFFFFFFF8U << CAM_FRAME_ADDR_ADDR_Pos)
 
 /**
  * enum  CPI_VIDEO_CAPTURE_STATUS
  * CPI Video Capture Status.
  */
-typedef enum _CPI_VIDEO_CAPTURE_STATUS
-{
-    CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING,         /**< not capturing video                                             */
-    CPI_VIDEO_CAPTURE_STATUS_CAPTURING              /**< capturing video                                                 */
+typedef enum _CPI_VIDEO_CAPTURE_STATUS {
+    CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING, /**< not capturing video */
+    CPI_VIDEO_CAPTURE_STATUS_CAPTURING      /**< capturing video      */
 } CPI_VIDEO_CAPTURE_STATUS;
 
 /**
  * enum CPI_MODE_SELECT.
  * CPI capture mode.
-*/
-typedef enum _CPI_MODE_SELECT
-{
-    CPI_MODE_SELECT_VIDEO,                          /**< Capture video data frames continuously                          */
-    CPI_MODE_SELECT_SNAPSHOT                        /**< Capture one frame then stop (snapshot mode)                     */
+ */
+typedef enum _CPI_MODE_SELECT {
+    CPI_MODE_SELECT_VIDEO,   /**< Capture video data frames continuously                          */
+    CPI_MODE_SELECT_SNAPSHOT /**< Capture one frame then stop (snapshot mode)                     */
 } CPI_MODE_SELECT;
 
 /**
  * enum  CPI_INTERFACE
  * CPI interface.
  */
-typedef enum _CPI_INTERFACE
-{
-    CPI_INTERFACE_PARALLEL,                         /**< select video data from parallel camera interface                */
-    CPI_INTERFACE_MIPI_CSI                          /**< select video data from MIPI_CSI interface (Not valid for LPCPI) */
+typedef enum _CPI_INTERFACE {
+    CPI_INTERFACE_PARALLEL, /**< select video data from parallel camera interface                */
+    CPI_INTERFACE_MIPI_CSI  /**< select video data from MIPI_CSI interface (Not valid for LPCPI) */
 } CPI_INTERFACE;
 
 /**
  * enum  CPI_WAIT_VSYNC
  * CPI wait for vsync to start capture frame.
  */
-typedef enum _CPI_WAIT_VSYNC
-{
-    CPI_WAIT_VSYNC_DISABLE,                         /**< CPI Start video capture without waiting for VSYNC               */
-    CPI_WAIT_VSYNC_ENABLE                           /**< CPI Start video capture on rising edge of VSYNC                 */
+typedef enum _CPI_WAIT_VSYNC {
+    CPI_WAIT_VSYNC_DISABLE, /**< CPI Start video capture without waiting for VSYNC               */
+    CPI_WAIT_VSYNC_ENABLE   /**< CPI Start video capture on rising edge of VSYNC                 */
 } CPI_WAIT_VSYNC;
 
 /**
  * enum  CPI_CAPTURE_DATA_ENABLE
  * CPI vsync signal mode for capturing data.
  */
-typedef enum _CPI_CAPTURE_DATA_ENABLE
-{
-    CPI_CAPTURE_DATA_ENABLE_IF_HSYNC_HIGH,          /**< Capture data when HSYNC is high                                 */
-    CPI_CAPTURE_DATA_ENABLE_IF_VSYNC_AND_HSYNC_HIGH /**< Capture data when both VSYNC and HSYNC are high                 */
+typedef enum _CPI_CAPTURE_DATA_ENABLE {
+    CPI_CAPTURE_DATA_ENABLE_IF_HSYNC_HIGH,          /**< Capture data when HSYNC is high          */
+    CPI_CAPTURE_DATA_ENABLE_IF_VSYNC_AND_HSYNC_HIGH /**< Capture data when both VSYNC and HSYNC are
+                                                       high                 */
 } CPI_CAPTURE_DATA_ENABLE;
 
 /**
  * enum CPI_ROW_ROUNDUP.
  * CPI round up pixel data to 64 bit at end of each row.
-*/
-typedef enum _CPI_ROW_ROUNDUP
-{
-    CPI_ROW_ROUNDUP_DISABLE,                        /**< CPI round up pixel data to 64 bit at end of each row disable    */
-    CPI_ROW_ROUNDUP_ENABLE                          /**< CPI round up pixel data to 64 bit at end of each row            */
+ */
+typedef enum _CPI_ROW_ROUNDUP {
+    CPI_ROW_ROUNDUP_DISABLE, /**< CPI round up pixel data to 64 bit at end of each row disable    */
+    CPI_ROW_ROUNDUP_ENABLE   /**< CPI round up pixel data to 64 bit at end of each row            */
 } CPI_ROW_ROUNDUP;
 
 /**
  * enum  CPI_SIG_POLARITY
  * CPI signal polarity.
  */
-typedef enum _CPI_SIG_POLARITY
-{
-    CPI_SIG_POLARITY_INVERT_DISABLE,                /**< Disable invert signal polarity                                  */
-    CPI_SIG_POLARITY_INVERT_ENABLE                  /**< Enable invert signal polarity                                   */
+typedef enum _CPI_SIG_POLARITY {
+    CPI_SIG_POLARITY_INVERT_DISABLE, /**< Disable invert signal polarity */
+    CPI_SIG_POLARITY_INVERT_ENABLE   /**< Enable invert signal polarity   */
 } CPI_SIG_POLARITY;
 
 /**
  * enum  CPI_DATA_MODE
  * CPI data mode selection.
  */
-typedef enum _CPI_DATA_MODE
-{
-    CPI_DATA_MODE_BIT_1,                            /**< Select 1 bit data mode                                          */
-    CPI_DATA_MODE_BIT_2,                            /**< Select 2 bit data mode                                          */
-    CPI_DATA_MODE_BIT_4,                            /**< Select 4 bit data mode                                          */
-    CPI_DATA_MODE_BIT_8,                            /**< Select 8 bit data mode                                          */
-    CPI_DATA_MODE_BIT_16,                           /**< Select 16 bit data mode (Not valid for LPCPI)                   */
-    CPI_DATA_MODE_BIT_32,                           /**< Select 32 bit data mode (Valid for MIPI CSI interface)          */
-    CPI_DATA_MODE_BIT_64                            /**< Select 64 bit data mode (Valid for MIPI CSI interface)          */
+typedef enum _CPI_DATA_MODE {
+    CPI_DATA_MODE_BIT_1,  /**< Select 1 bit data mode                                          */
+    CPI_DATA_MODE_BIT_2,  /**< Select 2 bit data mode                                          */
+    CPI_DATA_MODE_BIT_4,  /**< Select 4 bit data mode                                          */
+    CPI_DATA_MODE_BIT_8,  /**< Select 8 bit data mode                                          */
+    CPI_DATA_MODE_BIT_16, /**< Select 16 bit data mode (Not valid for LPCPI)                   */
+    CPI_DATA_MODE_BIT_32, /**< Select 32 bit data mode (Valid for MIPI CSI interface)          */
+    CPI_DATA_MODE_BIT_64  /**< Select 64 bit data mode (Valid for MIPI CSI interface)          */
 } CPI_DATA_MODE;
 
 /**
@@ -250,8 +266,8 @@ typedef enum _CPI_DATA_MODE
  * CPI MSB/LSB to be stored first in memory.
  */
 typedef enum _CPI_DATA_ENDIANNESS {
-    CPI_DATA_ENDIANNESS_LSB_FIRST,                  /**< Select LSB first to be stored in memory                         */
-    CPI_DATA_ENDIANNESS_MSB_FIRST                   /**< Select MSB first to be stored in memory                         */
+    CPI_DATA_ENDIANNESS_LSB_FIRST, /**< Select LSB first to be stored in memory */
+    CPI_DATA_ENDIANNESS_MSB_FIRST  /**< Select MSB first to be stored in memory  */
 } CPI_DATA_ENDIANNESS;
 
 /**
@@ -259,8 +275,8 @@ typedef enum _CPI_DATA_ENDIANNESS {
  * CPI transfer 10 bit code on 8 bit data bus.
  */
 typedef enum _CPI_CODE10ON8_CODING {
-    CPI_CODE10ON8_CODING_DISABLE,                   /**< Disable special 10-bit coding                                   */
-    CPI_CODE10ON8_CODING_ENABLE                     /**< Enable special 10-bit coding                                    */
+    CPI_CODE10ON8_CODING_DISABLE, /**< Disable special 10-bit coding */
+    CPI_CODE10ON8_CODING_ENABLE   /**< Enable special 10-bit coding   */
 } CPI_CODE10ON8_CODING;
 
 /**
@@ -268,50 +284,86 @@ typedef enum _CPI_CODE10ON8_CODING {
  * CPI data mask.
  * Valid for 16 bit data mode only and not valid for LPCPI.
  */
-typedef enum _CPI_DATA_MASK
-{
-    CPI_DATA_MASK_BIT_16,                           /**< Select 16 bit data mask                                         */
-    CPI_DATA_MASK_BIT_10,                           /**< Select 10 bit data mask                                         */
-    CPI_DATA_MASK_BIT_12,                           /**< Select 12 bit data mask                                         */
-    CPI_DATA_MASK_BIT_14                            /**< Select 14 bit data mask                                         */
+typedef enum _CPI_DATA_MASK {
+    CPI_DATA_MASK_BIT_16, /**< Select 16 bit data mask                                         */
+    CPI_DATA_MASK_BIT_10, /**< Select 10 bit data mask                                         */
+    CPI_DATA_MASK_BIT_12, /**< Select 12 bit data mask                                         */
+    CPI_DATA_MASK_BIT_14  /**< Select 14 bit data mask                                         */
 } CPI_DATA_MASK;
 
 /**
  * @struct  _cpi_sensor_info_t
  * @brief    CPI camera sensor information.
  */
-typedef struct _cpi_sensor_info_t
-{
-    CPI_INTERFACE            interface;             /**< CPI Interface                                                  */
-    CPI_WAIT_VSYNC           vsync_wait;            /**< CPI VSYNC Wait                                                 */
-    CPI_CAPTURE_DATA_ENABLE  vsync_mode;            /**< CPI VSYNC Mode                                                 */
-    CPI_SIG_POLARITY         pixelclk_pol;          /**< CPI Pixel Clock Polarity                                       */
-    CPI_SIG_POLARITY         hsync_pol;             /**< CPI HSYNC Polarity                                             */
-    CPI_SIG_POLARITY         vsync_pol;             /**< CPI VSYNC Polarity                                             */
-    CPI_DATA_MODE            data_mode;             /**< CPI Data Mode                                                  */
-    CPI_DATA_ENDIANNESS      data_endianness;       /**< Select MSB/LSB                                                 */
-    CPI_CODE10ON8_CODING     code10on8;             /**< code10on8 enable/disable                                       */
-    CPI_DATA_MASK            data_mask;             /**< CPI Data Mask                                                  */
+typedef struct _cpi_sensor_info_t {
+    CPI_INTERFACE  interface; /**< CPI Interface                                                  */
+    CPI_WAIT_VSYNC vsync_wait;            /**< CPI VSYNC Wait            */
+    CPI_CAPTURE_DATA_ENABLE vsync_mode;   /**< CPI VSYNC Mode   */
+    CPI_SIG_POLARITY        pixelclk_pol; /**< CPI Pixel Clock Polarity */
+    CPI_SIG_POLARITY        hsync_pol;    /**< CPI HSYNC Polarity    */
+    CPI_SIG_POLARITY        vsync_pol;    /**< CPI VSYNC Polarity    */
+    CPI_DATA_MODE data_mode; /**< CPI Data Mode                                                  */
+    CPI_DATA_ENDIANNESS  data_endianness; /**< Select MSB/LSB */
+    CPI_CODE10ON8_CODING code10on8;       /**< code10on8 enable/disable       */
+    CPI_DATA_MASK data_mask; /**< CPI Data Mask                                                  */
 } cpi_sensor_info_t;
 
 /**
  * @struct  cpi_fifo_ctrl_cfg_t
  * @brief    CPI fifo control configuration.
  */
-typedef struct _cpi_fifo_ctrl_cfg_t
-{
-    uint8_t rd_wmark;                               /**< FIFO read watermark                                            */
-    uint8_t wr_wmark;                               /**< FIFO write watermark                                           */
+typedef struct _cpi_fifo_ctrl_cfg_t {
+    uint8_t rd_wmark; /**< FIFO read watermark                                            */
+    uint8_t wr_wmark; /**< FIFO write watermark                                           */
 } cpi_fifo_ctrl_cfg_t;
+
+#if SOC_FEAT_CPI_HAS_CROPPING
+/**
+ * enum  CPI_HORZ_CROP_MODE
+ * CPI horizontal cropping.
+ */
+typedef enum _CPI_HORZ_CROP_MODE {
+    CPI_HORZ_CROP_MODE_DISABLE,                     /**< disable horizontal cropping    */
+    CPI_HORZ_CROP_MODE_ENABLE                       /**< enable horizontal cropping     */
+} CPI_HORZ_CROP_MODE;
+
+/**
+ * @struct  _cpi_horizontal_cfg_t
+ * @brief    CPI horizontal configuration.
+ */
+typedef struct _cpi_horizontal_cfg_t {
+    uint16_t hbp;                                   /**< Horizontal Back Porch          */
+    uint16_t hfp;                                   /**< Horizontal Front Porch         */
+    CPI_HORZ_CROP_MODE hfp_en;                      /**< Horizontal cropping            */
+} cpi_horizontal_cfg_t;
+
+/**
+ * enum  CPI_VERT_CROP_MODE
+ * CPI vertical cropping.
+ */
+typedef enum _CPI_VERT_CROP_MODE {
+    CPI_VERT_CROP_MODE_DISABLE,                     /**< disable vertical cropping      */
+    CPI_VERT_CROP_MODE_ENABLE                       /**< enable vertical cropping       */
+} CPI_VERT_CROP_MODE;
+
+/**
+ * @struct  _cpi_vertical_cfg_t
+ * @brief    CPI vertical configuration.
+ */
+typedef struct _cpi_vertical_cfg_t {
+    uint16_t vbp;                                   /**< Vertical Back Porch            */
+    uint16_t vfp;                                   /**< Vertical Front Porch           */
+    CPI_VERT_CROP_MODE vfp_en;                      /**< Vertical cropping              */
+} cpi_vertical_cfg_t;
+#endif
 
 /**
  * @struct  _cpi_frame_cfg_t
  * @brief    CPI frame configuration.
  */
-typedef struct _cpi_frame_cfg_t
-{
-    uint16_t data;                               /**< Valid data in a row                                              */
-    uint16_t row;                               /**< Valid data rows in a frame                                        */
+typedef struct _cpi_frame_cfg_t {
+    uint16_t data; /**< Valid data in a row                                             */
+    uint16_t row;  /**< Valid data rows in a frame                                      */
 } cpi_frame_cfg_t;
 
 /**
@@ -320,36 +372,42 @@ typedef struct _cpi_frame_cfg_t
  * Not valid for LPCPI.
  */
 typedef enum _CPI_COLOR_MODE_CONFIG {
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW6,               /**< Select color encode mode  IPI-16 RAW 6                          */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW7,               /**< Select color encode mode  IPI-16 RAW 7                          */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW8,               /**< Select color encode mode  IPI-16 RAW 8                          */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW10,              /**< Select color encode mode  IPI-16 RAW 10                         */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW12,              /**< Select color encode mode  IPI-16 RAW 12                         */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW14,              /**< Select color encode mode  IPI-16 RAW 14                         */
-    CPI_COLOR_MODE_CONFIG_IPI16_RAW16,              /**< Select color encode mode  IPI-16 RAW 16                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_RGB444,             /**< Select color encode mode  IPI-48 RGB444                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_RGB555,             /**< Select color encode mode  IPI-48 RGB555                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_RGB565,             /**< Select color encode mode  IPI-48 RGB565                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_RGB666,             /**< Select color encode mode  IPI-48 RGB666                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_XRGB888,            /**< Select color encode mode  IPI-48 XRGB888                        */
-    CPI_COLOR_MODE_CONFIG_IPI48_RGBX888,            /**< Select color encode mode  IPI-48 RGBX888                        */
-    CPI_COLOR_MODE_CONFIG_IPI48_RAW32,              /**< Select color encode mode  IPI-48 RAW 32                         */
-    CPI_COLOR_MODE_CONFIG_IPI48_RAW48,              /**< Select color encode mode  IPI-48 RAW 48                         */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW6,    /**< Select color encode mode  IPI-16 RAW 6    */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW7,    /**< Select color encode mode  IPI-16 RAW 7    */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW8,    /**< Select color encode mode  IPI-16 RAW 8    */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW10,   /**< Select color encode mode  IPI-16 RAW 10   */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW12,   /**< Select color encode mode  IPI-16 RAW 12   */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW14,   /**< Select color encode mode  IPI-16 RAW 14   */
+    CPI_COLOR_MODE_CONFIG_IPI16_RAW16,   /**< Select color encode mode  IPI-16 RAW 16   */
+    CPI_COLOR_MODE_CONFIG_IPI48_RGB444,  /**< Select color encode mode  IPI-48 RGB444   */
+    CPI_COLOR_MODE_CONFIG_IPI48_RGB555,  /**< Select color encode mode  IPI-48 RGB555   */
+    CPI_COLOR_MODE_CONFIG_IPI48_RGB565,  /**< Select color encode mode  IPI-48 RGB565   */
+    CPI_COLOR_MODE_CONFIG_IPI48_RGB666,  /**< Select color encode mode  IPI-48 RGB666   */
+    CPI_COLOR_MODE_CONFIG_IPI48_XRGB888, /**< Select color encode mode  IPI-48 XRGB888  */
+    CPI_COLOR_MODE_CONFIG_IPI48_RGBX888, /**< Select color encode mode  IPI-48 RGBX888  */
+    CPI_COLOR_MODE_CONFIG_IPI48_RAW32,   /**< Select color encode mode  IPI-48 RAW 32   */
+    CPI_COLOR_MODE_CONFIG_IPI48_RAW48,   /**< Select color encode mode  IPI-48 RAW 48   */
 } CPI_COLOR_MODE_CONFIG;
 
 /**
  * @struct  _cpi_cfg_info_t
  * @brief    CPI configuration information.
  */
-typedef struct _cpi_cfg_info_t
-{
-    cpi_sensor_info_t      sensor_info;             /**< CPI sensor configuration                                        */
-    CPI_ROW_ROUNDUP        rw_roundup;              /**< CPI row roundup                                                 */
-    cpi_fifo_ctrl_cfg_t    fifo_ctrl;               /**< CPI FIFO control                                                */
-    cpi_frame_cfg_t        frame_cfg;               /**< CPI Frame                                                       */
-    CPI_COLOR_MODE_CONFIG  csi_ipi_color_mode;      /**< CPI CSI IPI color mode                                          */
+typedef struct _cpi_cfg_info_t {
+    cpi_sensor_info_t      sensor_info;             /**< CPI sensor configuration       */
+#if SOC_FEAT_HAS_ISP
+    bool                   axi_port_en;             /**< CPI AXI Port                   */
+    bool                   isp_port_en;             /**< CPI ISP Port                   */
+#endif
+    CPI_ROW_ROUNDUP        rw_roundup;              /**< CPI row roundup                */
+    cpi_fifo_ctrl_cfg_t    fifo_ctrl;               /**< CPI FIFO control               */
+#if SOC_FEAT_CPI_HAS_CROPPING
+    cpi_horizontal_cfg_t   horizontal_cfg;          /**< CPI horizontal configuration   */
+    cpi_vertical_cfg_t     vertical_cfg;            /**< CPI vertical configuration     */
+#endif
+    cpi_frame_cfg_t        frame_cfg;               /**< CPI Frame                      */
+    CPI_COLOR_MODE_CONFIG  csi_ipi_color_mode;      /**< CPI CSI IPI color mode         */
 } cpi_cfg_info_t;
-
 
 /**
   \fn          CPI_VIDEO_CAPTURE_STATUS cpi_get_capture_status(CPI_Type *cpi)
@@ -359,8 +417,8 @@ typedef struct _cpi_cfg_info_t
 */
 static inline CPI_VIDEO_CAPTURE_STATUS cpi_get_capture_status(CPI_Type *cpi)
 {
-    return (cpi->CAM_CTRL & CAM_CTRL_BUSY) ? \
-            CPI_VIDEO_CAPTURE_STATUS_CAPTURING : CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING;
+    return (cpi->CAM_CTRL & CAM_CTRL_BUSY) ? CPI_VIDEO_CAPTURE_STATUS_CAPTURING
+                                           : CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING;
 }
 
 /**
@@ -407,8 +465,8 @@ static inline void cpi_disable_interrupt(CPI_Type *cpi, uint32_t irq_bitmask)
 */
 static inline void cpi_irq_handler_clear_intr_status(CPI_Type *cpi, uint32_t irq_bitmask)
 {
-    cpi->CAM_INTR |= irq_bitmask;
-    (void)cpi->CAM_INTR;
+    cpi->CAM_INTR = irq_bitmask;
+    (void) cpi->CAM_INTR;
 }
 
 /**
@@ -454,8 +512,8 @@ void cpi_software_reset(CPI_Type *cpi);
                         -[SNAPSHOT] = 0—Capture video frames continuously
                         -[SNAPSHOT] = 1—Capture one frame then stop
   \param[in]   cpi      Pointer to the CPI register map.
-  \param[in]   mode     Select to capture one frame and stop/ or to capture video frames continuously
-  \return      none.
+  \param[in]   mode     Select to capture one frame and stop/ or to capture video frames
+  continuously \return      none.
 */
 void cpi_start_capture(CPI_Type *cpi, CPI_MODE_SELECT mode);
 

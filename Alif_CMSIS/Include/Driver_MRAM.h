@@ -7,7 +7,7 @@
  * contact@alifsemi.com, or visit: https://alifsemi.com/license
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     Driver_MRAM.h
  * @Author   Tanay Rami
  * @email    <tanay@alifsemi.com>
@@ -22,14 +22,13 @@
 #ifndef DRIVER_MRAM_H_
 #define DRIVER_MRAM_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #include "Driver_Common.h"
 
-#define ARM_MRAM_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1,0)  /* API version */
+#define ARM_MRAM_API_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* API version */
 
 // Function documentation
 /**
@@ -91,26 +90,36 @@ extern "C"
 \brief MRAM Driver Capabilities.
 */
 typedef struct _ARM_MRAM_CAPABILITIES {
-  uint32_t data_width   : 1;            ///< Data width: 0=128-bit
-  uint32_t reserved     : 31;           ///< Reserved (must be zero)
+    uint32_t data_width: 1;   ///< Data width: 0=128-bit
+    uint32_t reserved  : 31;  ///< Reserved (must be zero)
 } ARM_MRAM_CAPABILITIES;
 
 /**
 \brief Access structure of the MRAM Driver
 */
 typedef struct _ARM_DRIVER_MRAM {
-  ARM_DRIVER_VERSION     (*GetVersion)     (void);                                          ///< Pointer to \ref ARM_MRAM_GetVersion : Get driver version.
-  ARM_MRAM_CAPABILITIES  (*GetCapabilities)(void);                                          ///< Pointer to \ref ARM_MRAM_GetCapabilities : Get driver capabilities.
-  int32_t                (*Initialize)     (void);                                          ///< Pointer to \ref ARM_MRAM_Initialize : Initialize MRAM Interface.
-  int32_t                (*Uninitialize)   (void);                                          ///< Pointer to \ref ARM_MRAM_Uninitialize : De-initialize MRAM Interface.
-  int32_t                (*PowerControl)   (ARM_POWER_STATE state);                         ///< Pointer to \ref ARM_MRAM_PowerControl : Control MRAM Interface Power.
-  int32_t                (*ReadData)       (uint32_t addr,       void *data, uint32_t cnt); ///< Pointer to \ref ARM_MRAM_ReadData : Read data from MRAM.
-  int32_t                (*ProgramData)    (uint32_t addr, const void *data, uint32_t cnt); ///< Pointer to \ref ARM_MRAM_ProgramData : Program data to MRAM.
-  int32_t                (*EraseSector)    (uint32_t addr);                                 ///< Pointer to \ref ARM_MRAM_EraseSector : Erase MRAM Sector.
-  int32_t                (*EraseChip)      (void);                                          ///< Pointer to \ref ARM_MRAM_EraseChip : Erase complete MRAM.
+    ARM_DRIVER_VERSION (*GetVersion)
+    (void);  ///< Pointer to \ref ARM_MRAM_GetVersion : Get driver version.
+    ARM_MRAM_CAPABILITIES (*GetCapabilities)
+    (void);  ///< Pointer to \ref ARM_MRAM_GetCapabilities : Get driver capabilities.
+    int32_t (*Initialize)(void);    ///< Pointer to \ref ARM_MRAM_Initialize : Initialize MRAM
+                                    ///< Interface.
+    int32_t (*Uninitialize)(void);  ///< Pointer to \ref ARM_MRAM_Uninitialize : De-initialize MRAM
+                                    ///< Interface.
+    int32_t (*PowerControl)(ARM_POWER_STATE state);  ///< Pointer to \ref ARM_MRAM_PowerControl :
+                                                     ///< Control MRAM Interface Power.
+    int32_t (*ReadData)(uint32_t addr, void *data,
+                        uint32_t cnt);  ///< Pointer to \ref ARM_MRAM_ReadData : Read data from
+                                        ///< MRAM.
+    int32_t (*ProgramData)(uint32_t addr, const void *data,
+                           uint32_t cnt);   ///< Pointer to \ref ARM_MRAM_ProgramData : Program data
+                                            ///< to MRAM.
+    int32_t (*EraseSector)(uint32_t addr);  ///< Pointer to \ref ARM_MRAM_EraseSector : Erase MRAM
+                                            ///< Sector.
+    int32_t (*EraseChip)(void);  ///< Pointer to \ref ARM_MRAM_EraseChip : Erase complete MRAM.
 } const ARM_DRIVER_MRAM;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

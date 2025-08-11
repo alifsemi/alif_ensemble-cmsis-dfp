@@ -43,23 +43,20 @@ void mram_write_128bit(uint8_t *p_dst, const uint8_t *p_src)
     uint32_t temp_buf[4] = {0}; /* 128-bit.*/
 
     /* check source address is aligned to 16-bytes? */
-    uint8_t *aligned_src = (uint8_t*)((uint32_t)p_src & MRAM_ADDR_ALIGN_MASK);
+    uint8_t *aligned_src = (uint8_t *) ((uint32_t) p_src & MRAM_ADDR_ALIGN_MASK);
 
     /* is source data unaligned? */
-    if(p_src != aligned_src)
-    {
+    if (p_src != aligned_src) {
         /* unaligned source data,
          *  - copy source data first in temporary buffer
          *  - then copy buffer to destination/MRAM.
          */
         memcpy(temp_buf, p_src, MRAM_SECTOR_SIZE);
 
-        ((volatile uint64_t *)p_dst)[0] = ((volatile uint64_t *)temp_buf)[0];
-        ((volatile uint64_t *)p_dst)[1] = ((volatile uint64_t *)temp_buf)[1];
-    }
-    else
-    {
-        ((volatile uint64_t *)p_dst)[0] = ((volatile uint64_t *)p_src)[0];
-        ((volatile uint64_t *)p_dst)[1] = ((volatile uint64_t *)p_src)[1];
+        ((volatile uint64_t *) p_dst)[0] = ((volatile uint64_t *) temp_buf)[0];
+        ((volatile uint64_t *) p_dst)[1] = ((volatile uint64_t *) temp_buf)[1];
+    } else {
+        ((volatile uint64_t *) p_dst)[0] = ((volatile uint64_t *) p_src)[0];
+        ((volatile uint64_t *) p_dst)[1] = ((volatile uint64_t *) p_src)[1];
     }
 }

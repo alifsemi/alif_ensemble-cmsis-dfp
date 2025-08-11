@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     dma_ctrl.c
  * @author   Sudhir Sreedharan
  * @email    sudhir@alifsemi.com
@@ -34,17 +34,15 @@ int8_t dma_allocate_channel(dma_config_info_t *dma_cfg)
     dma_channel_info_t *channel_info;
     uint8_t             channel_num;
 
-    for(channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++)
-    {
-        if(channel_thread[channel_num].in_use == false)
-        {
-            channel_thread[channel_num].in_use = true;
-            channel_thread[channel_num].user_mcode = (void *)0;
+    for (channel_num = 0; channel_num < DMA_MAX_CHANNELS; channel_num++) {
+        if (channel_thread[channel_num].in_use == false) {
+            channel_thread[channel_num].in_use     = true;
+            channel_thread[channel_num].user_mcode = (void *) 0;
 
-            channel_info  = &channel_thread[channel_num].channel_info;
-            channel_info->flags = 0;
+            channel_info                           = &channel_thread[channel_num].channel_info;
+            channel_info->flags                    = 0;
 
-            return (int8_t)channel_num;
+            return (int8_t) channel_num;
         }
     }
 
@@ -61,17 +59,15 @@ int8_t dma_allocate_channel(dma_config_info_t *dma_cfg)
 */
 int8_t dma_allocate_event(dma_config_info_t *dma_cfg, uint8_t channel_num)
 {
-    dma_thread_info_t  *thread_info   = &dma_cfg->channel_thread[channel_num];
-    dma_channel_info_t *channel_info  = &thread_info->channel_info;
+    dma_thread_info_t  *thread_info  = &dma_cfg->channel_thread[channel_num];
+    dma_channel_info_t *channel_info = &thread_info->channel_info;
     uint8_t             event_index;
 
-    for(event_index = 0; event_index < DMA_MAX_EVENTS; event_index++)
-    {
-        if(dma_cfg->event_map[event_index] == 0xFF)
-        {
+    for (event_index = 0; event_index < DMA_MAX_EVENTS; event_index++) {
+        if (dma_cfg->event_map[event_index] == 0xFF) {
             dma_cfg->event_map[event_index] = channel_num;
             channel_info->event_index       = event_index;
-            return (int8_t)event_index;
+            return (int8_t) event_index;
         }
     }
 
@@ -88,30 +84,25 @@ int8_t dma_allocate_event(dma_config_info_t *dma_cfg, uint8_t channel_num)
   \param[in]   desc_info  Descriptor Information
   \return      None
 */
-void dma_copy_desc_info(dma_config_info_t *dma_cfg,
-                        uint8_t            channel_num,
-                        dma_desc_info_t   *desc_info)
+void dma_copy_desc_info(dma_config_info_t *dma_cfg, uint8_t channel_num, dma_desc_info_t *desc_info)
 {
     dma_thread_info_t  *thread_info       = &dma_cfg->channel_thread[channel_num];
     dma_channel_info_t *channel_info      = &thread_info->channel_info;
     dma_desc_info_t    *channel_desc_info = &channel_info->desc_info;
 
-    channel_desc_info->direction   = desc_info->direction;
-    channel_desc_info->total_len   = desc_info->total_len;
-    channel_desc_info->src_addr    = desc_info->src_addr;
-    channel_desc_info->dst_addr    = desc_info->dst_addr;
-    channel_desc_info->src_bsize   = desc_info->src_bsize;
-    channel_desc_info->dst_bsize   = desc_info->dst_bsize;
-    channel_desc_info->src_blen    = desc_info->src_blen;
-    channel_desc_info->dst_blen    = desc_info->dst_blen;
-    channel_desc_info->periph_num  = desc_info->periph_num;
+    channel_desc_info->direction          = desc_info->direction;
+    channel_desc_info->total_len          = desc_info->total_len;
+    channel_desc_info->src_addr           = desc_info->src_addr;
+    channel_desc_info->dst_addr           = desc_info->dst_addr;
+    channel_desc_info->src_bsize          = desc_info->src_bsize;
+    channel_desc_info->dst_bsize          = desc_info->dst_bsize;
+    channel_desc_info->src_blen           = desc_info->src_blen;
+    channel_desc_info->dst_blen           = desc_info->dst_blen;
+    channel_desc_info->periph_num         = desc_info->periph_num;
 
-    if(channel_desc_info->direction == DMA_TRANSFER_MEM_TO_DEV)
-    {
+    if (channel_desc_info->direction == DMA_TRANSFER_MEM_TO_DEV) {
         channel_desc_info->dst_cache_ctrl = 0x0;
-    }
-    else if(channel_desc_info->direction == DMA_TRANSFER_DEV_TO_MEM)
-    {
+    } else if (channel_desc_info->direction == DMA_TRANSFER_DEV_TO_MEM) {
         channel_desc_info->src_cache_ctrl = 0x0;
     }
 }
@@ -124,8 +115,7 @@ void dma_copy_desc_info(dma_config_info_t *dma_cfg,
   \param[in]   channel_num  Channel Number
   \return      dma_ccr_t channel Control Info (CCR)
 */
-dma_ccr_t dma_get_channel_ctrl_info(dma_config_info_t *dma_cfg,
-                                    uint8_t            channel_num)
+dma_ccr_t dma_get_channel_ctrl_info(dma_config_info_t *dma_cfg, uint8_t channel_num)
 {
     dma_thread_info_t  *thread_info       = &dma_cfg->channel_thread[channel_num];
     dma_channel_info_t *channel_info      = &thread_info->channel_info;
@@ -148,18 +138,13 @@ dma_ccr_t dma_get_channel_ctrl_info(dma_config_info_t *dma_cfg,
 
     dma_ccr.value_b.endian_swap_size = channel_desc_info->endian_swap_size;
 
-    if(channel_desc_info->direction == DMA_TRANSFER_MEM_TO_DEV)
-    {
+    if (channel_desc_info->direction == DMA_TRANSFER_MEM_TO_DEV) {
         dma_ccr.value_b.dst_inc = DMA_BURST_FIXED;
         dma_ccr.value_b.src_inc = DMA_BURST_INCREMENTING;
-    }
-    else if(channel_desc_info->direction == DMA_TRANSFER_DEV_TO_MEM)
-    {
+    } else if (channel_desc_info->direction == DMA_TRANSFER_DEV_TO_MEM) {
         dma_ccr.value_b.dst_inc = DMA_BURST_INCREMENTING;
         dma_ccr.value_b.src_inc = DMA_BURST_FIXED;
-    }
-    else
-    {
+    } else {
         dma_ccr.value_b.dst_inc = DMA_BURST_INCREMENTING;
         dma_ccr.value_b.src_inc = DMA_BURST_INCREMENTING;
     }

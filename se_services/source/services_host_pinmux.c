@@ -52,23 +52,18 @@
  * @return
  * @ingroup services-host-pinmux
  */
-uint32_t SERVICES_pinmux(uint32_t services_handle,
-                         uint8_t port_number,
-                         uint8_t pin_number,
-                         uint8_t config_data,
-                         uint32_t * error_code)
+uint32_t SERVICES_pinmux(uint32_t services_handle, uint8_t port_number, uint8_t pin_number,
+                         uint8_t config_data, uint32_t *error_code)
 {
-  pinmux_svc_t *p_svc = (pinmux_svc_t *)
-      SERVICES_prepare_packet_buffer(sizeof(pinmux_svc_t));
+    pinmux_svc_t *p_svc     = (pinmux_svc_t *) SERVICES_prepare_packet_buffer(sizeof(pinmux_svc_t));
 
-  p_svc->send_port_num = port_number;
-  p_svc->send_pin_num = pin_number;
-  p_svc->send_config_data = config_data;
+    p_svc->send_port_num    = port_number;
+    p_svc->send_pin_num     = pin_number;
+    p_svc->send_config_data = config_data;
 
-  uint32_t ret = SERVICES_send_request(services_handle,
-                                       SERVICE_APPLICATION_PINMUX_ID,
-                                       DEFAULT_TIMEOUT);
-  *error_code = p_svc->resp_error_code;
+    uint32_t ret =
+        SERVICES_send_request(services_handle, SERVICE_APPLICATION_PINMUX_ID, DEFAULT_TIMEOUT);
+    *error_code = p_svc->resp_error_code;
 
-  return ret;
+    return ret;
 }

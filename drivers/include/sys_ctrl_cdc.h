@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_cdc.h
  * @author   Prasanna Ravi
  * @email    prasanna.ravi@alifsemi.com
@@ -20,22 +20,28 @@
 #ifndef SYS_CTRL_CDC_H_
 #define SYS_CTRL_CDC_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+
+#define PERIPH_CLK_ENA_DPI_CKEN        (1U << 1) /* Enable clock supply for DPI controller (CDC) */
+
+/* CLKCTL_PER_MST CDC200_PIXCLK_CTRL field definitions */
+#define CDC200_PIXCLK_CTRL_CKEN        (1U << 0) /* CDC200 Pixel clock enables */
+#define CDC200_PIXCLK_CTRL_CLK_SEL     (1U << 4) /* CDC200 Pixel clock select  */
+#define CDC200_PIXCLK_CTRL_DIVISOR_Pos 16U       /* CDC200 Pixel clock divisor */
+#define CDC200_PIXCLK_CTRL_DIVISOR_Msk (0x1FFU << CDC200_PIXCLK_CTRL_DIVISOR_Pos)
 
 /**
  * enum CDC_PIX_CLKSEL
  * CDC pixel clock source selection
  */
-typedef enum _CDC_PIX_CLKSEL
-{
-    CDC_PIX_CLKSEL_400MZ,            /**< Select 400 MHz clock source (PLL_CLK1/2) */
-    CDC_PIX_CLKSEL_480MZ             /**< Select 480 MHz clock source (PLL_CLK3) */
-}CDC_PIX_CLKSEL;
+typedef enum _CDC_PIX_CLKSEL {
+    CDC_PIX_CLKSEL_400MZ, /**< Select 400 MHz clock source (PLL_CLK1/2) */
+    CDC_PIX_CLKSEL_480MZ  /**< Select 480 MHz clock source (PLL_CLK3) */
+} CDC_PIX_CLKSEL;
 
 /**
   \fn          static inline void enable_dpi_periph_clk(void)
@@ -70,16 +76,15 @@ static inline void set_cdc_pixel_clk(CDC_PIX_CLKSEL clksel, uint32_t div)
     CLKCTL_PER_MST->CDC200_PIXCLK_CTRL &= ~CDC200_PIXCLK_CTRL_DIVISOR_Msk;
     CLKCTL_PER_MST->CDC200_PIXCLK_CTRL |= (div << CDC200_PIXCLK_CTRL_DIVISOR_Pos);
 
-    switch(clksel)
-    {
-        case CDC_PIX_CLKSEL_400MZ:
-            CLKCTL_PER_MST->CDC200_PIXCLK_CTRL &= ~CDC200_PIXCLK_CTRL_CLK_SEL;
-            break;
-        case CDC_PIX_CLKSEL_480MZ:
-            CLKCTL_PER_MST->CDC200_PIXCLK_CTRL |= CDC200_PIXCLK_CTRL_CLK_SEL;
-            break;
-        default:
-            break;
+    switch (clksel) {
+    case CDC_PIX_CLKSEL_400MZ:
+        CLKCTL_PER_MST->CDC200_PIXCLK_CTRL &= ~CDC200_PIXCLK_CTRL_CLK_SEL;
+        break;
+    case CDC_PIX_CLKSEL_480MZ:
+        CLKCTL_PER_MST->CDC200_PIXCLK_CTRL |= CDC200_PIXCLK_CTRL_CLK_SEL;
+        break;
+    default:
+        break;
     }
 
     CLKCTL_PER_MST->CDC200_PIXCLK_CTRL |= CDC200_PIXCLK_CTRL_CKEN;

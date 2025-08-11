@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     WM8904_driver.h
  * @author   Manoj A Murudi
  * @email    manoj.murudi@alifsemi.com
@@ -24,9 +24,8 @@
 #ifndef WM8904_DRIVER_H_
 #define WM8904_DRIVER_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* project includes*/
@@ -34,8 +33,7 @@ extern "C"
 
 /* Default volume level for Headphone output
  * Range: 0-100 */
-#define DEFAULT_VOLUME_VALUE   60U
-
+#define DEFAULT_VOLUME_VALUE 60U
 
 /* Function description */
 /**
@@ -67,15 +65,15 @@ extern "C"
 */
 
 typedef struct _ARM_DRIVER_WM8904 {
-    int32_t         (*Initialize)      (void);                   ///< Pointer to \ref ARM_WM8904_Initialize
-    int32_t         (*Uninitialize)    (void);                   ///< Pointer to \ref ARM_WM8904_Uninitialize
-    int32_t         (*PowerControl)    (ARM_POWER_STATE state);  ///< Pointer to \ref ARM_WM8904_PowerControl
-    int32_t         (*Mute)            (void);                   ///< Pointer to \ref ARM_WM8904_Mute
-    int32_t         (*UnMute)          (void);                   ///< Pointer to \ref ARM_WM8904_Unmute
-    int32_t         (*SetVolume)       (uint8_t volume);         ///< Pointer to \ref ARM_WM8904_SetVolume
+    int32_t     (*Initialize)      (void);                   ///< Pointer to \ref ARM_WM8904_Initialize
+    int32_t     (*Uninitialize)    (void);                   ///< Pointer to \ref ARM_WM8904_Uninitialize
+    int32_t     (*PowerControl)    (ARM_POWER_STATE state);  ///< Pointer to \ref ARM_WM8904_PowerControl
+    int32_t     (*Mute)            (void);                   ///< Pointer to \ref ARM_WM8904_Mute
+    int32_t     (*UnMute)          (void);                   ///< Pointer to \ref ARM_WM8904_Unmute
+    int32_t     (*SetVolume)       (uint8_t volume);         ///< Pointer to \ref ARM_WM8904_SetVolume
 } const ARM_DRIVER_WM8904;
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

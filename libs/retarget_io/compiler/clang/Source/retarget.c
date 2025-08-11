@@ -35,92 +35,88 @@
 #if defined(RTE_Compiler_IO_STDIN)
 #include "retarget_stdin.h"
 
-#define RETARGET_STDIN_FUNC                 clang_fgetc
+#define RETARGET_STDIN_FUNC clang_fgetc
 int RETARGET_STDIN_FUNC(FILE *file);
 
-#endif  /* RTE_Compiler_IO_STDIN */
+#endif /* RTE_Compiler_IO_STDIN */
 
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_stdout.h"
 
-#define RETARGET_STDOUT_FUNC                 clang_fputc
+#define RETARGET_STDOUT_FUNC clang_fputc
 int RETARGET_STDOUT_FUNC(char c, FILE *file);
 
-#endif  /* RTE_Compiler_IO_STDOUT */
+#endif /* RTE_Compiler_IO_STDOUT */
 
 #if defined(RTE_Compiler_IO_STDERR)
 #include "retarget_stderr.h"
 
-#define RETARGET_STDERR_FUNC                 clang_ferrc
+#define RETARGET_STDERR_FUNC clang_ferrc
 int RETARGET_STDERR_FUNC(char c, FILE *file);
 
-#endif  /* RTE_Compiler_IO_STDERR */
+#endif /* RTE_Compiler_IO_STDERR */
 
 #ifndef RETARGET_STDIN_FUNC
-#define RETARGET_STDIN_FUNC                 NULL
-#endif      /* RETARGET_STDIN_FUNC */
+#define RETARGET_STDIN_FUNC NULL
+#endif /* RETARGET_STDIN_FUNC */
 
 #ifndef RETARGET_STDOUT_FUNC
-#define RETARGET_STDOUT_FUNC                NULL
-#endif      /*  RETARGET_STDOUT_FUNC */
+#define RETARGET_STDOUT_FUNC NULL
+#endif /*  RETARGET_STDOUT_FUNC */
 
 // Picolibc retarget
 // https://github.com/picolibc/picolibc/blob/main/doc/os.md
 
-#if ( ( defined(RTE_Compiler_IO_STDOUT)   || \
-        defined(RTE_Compiler_IO_STDERR) ) && \
-        defined(RTE_Compiler_IO_STDIN) )
+#if ((defined(RTE_Compiler_IO_STDOUT) || defined(RTE_Compiler_IO_STDERR)) &&                       \
+     defined(RTE_Compiler_IO_STDIN))
 
-    #define RETARGET_FLAG                       _FDEV_SETUP_RW
+#define RETARGET_FLAG _FDEV_SETUP_RW
 
-#elif ( defined(RTE_Compiler_IO_STDIN) && \
-        !( defined(RTE_Compiler_IO_STDOUT)   || \
-           defined(RTE_Compiler_IO_STDERR) ) )
+#elif (defined(RTE_Compiler_IO_STDIN) &&                                                           \
+       !(defined(RTE_Compiler_IO_STDOUT) || defined(RTE_Compiler_IO_STDERR)))
 
-    #define RETARGET_FLAG                       _FDEV_SETUP_READ
+#define RETARGET_FLAG _FDEV_SETUP_READ
 
-#elif ( !defined(RTE_Compiler_IO_STDIN) && \
-        ( defined(RTE_Compiler_IO_STDOUT)   || \
-          defined(RTE_Compiler_IO_STDERR) ) )
+#elif (!defined(RTE_Compiler_IO_STDIN) &&                                                          \
+       (defined(RTE_Compiler_IO_STDOUT) || defined(RTE_Compiler_IO_STDERR)))
 
-    #define RETARGET_FLAG                       _FDEV_SETUP_WRITE
+#define RETARGET_FLAG _FDEV_SETUP_WRITE
 
-#endif      /*  ((STDOUT || STDERR) && (STDIN)) */
+#endif /*  ((STDOUT || STDERR) && (STDIN)) */
 
-#if (   defined(RTE_Compiler_IO_STDOUT_User) ||  \
-        defined(RTE_Compiler_IO_STDERR_User) || \
-        defined(RTE_Compiler_IO_STDIN_User) )
+#if (defined(RTE_Compiler_IO_STDOUT_User) || defined(RTE_Compiler_IO_STDERR_User) ||               \
+     defined(RTE_Compiler_IO_STDIN_User))
 
-static FILE __stdio = FDEV_SETUP_STREAM(RETARGET_STDOUT_FUNC, \
-                            RETARGET_STDIN_FUNC, NULL, RETARGET_FLAG);
-FILE *const stdin   = &__stdio;
-__strong_reference(stdin, stdout);      // Needed stdout
+static FILE __stdio =
+    FDEV_SETUP_STREAM(RETARGET_STDOUT_FUNC, RETARGET_STDIN_FUNC, NULL, RETARGET_FLAG);
+FILE *const stdin = &__stdio;
+__strong_reference(stdin, stdout);  // Needed stdout
 
-#endif      /*  ( STDOUT || STDERR || STDIN ) */
+#endif /*  ( STDOUT || STDERR || STDIN ) */
 
 #if defined(RTE_Compiler_IO_STDIN_User)
 int RETARGET_STDIN_FUNC(FILE *file)
 {
-    (void)file;
+    (void) file;
     return stdin_getchar();
 }
-#endif      /*  RTE_Compiler_IO_STDIN_User */
+#endif /*  RTE_Compiler_IO_STDIN_User */
 
 #if defined(RTE_Compiler_IO_STDOUT_User)
 
 int RETARGET_STDOUT_FUNC(char c, FILE *file)
 {
-    (void)file;
+    (void) file;
     return stdout_putchar(c);
 }
-#endif      /*  RTE_Compiler_IO_STDOUT_User  */
+#endif /*  RTE_Compiler_IO_STDOUT_User  */
 
 #if defined(RTE_Compiler_IO_STDERR_User)
 __strong_reference(stdin, stderr);
 
 int RETARGET_STDERR_FUNC(char c, FILE *file)
 {
-    (void)file;
+    (void) file;
     return stderr_putchar(c);
 }
-#endif      /* RTE_Compiler_IO_STDERR_User */
+#endif /* RTE_Compiler_IO_STDERR_User */

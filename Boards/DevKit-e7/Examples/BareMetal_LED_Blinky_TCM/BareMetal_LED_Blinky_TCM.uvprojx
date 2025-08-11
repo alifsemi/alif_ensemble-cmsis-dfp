@@ -23,7 +23,7 @@
           <StartupFile></StartupFile>
           <FlashDriverDll>UL2V8M(-S0 -C0 -P0 -FD00000000 -FC20000 -FN1 -FF0Ensemble -FS080000000 -FL0580000 -FP0($$Device:AE722F80F55D5AS$Flash\algorithms\Ensemble.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
-          <RegisterFile>$$Device:AE722F80F55D5AS$Device\core\M55_HE\include\M55_HE.h</RegisterFile>
+          <RegisterFile>$$Device:AE722F80F55D5AS$Device\core\rtss_he\include\m55\core.h</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>

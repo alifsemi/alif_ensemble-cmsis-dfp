@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     DPHY_Loopback_test.h
  * @author   Prasanna Ravi
  * @email    prasanna.ravi@alifsemi.com
@@ -27,12 +27,11 @@
 #define TFAIL -1
 
 /**
-  \fn          int32_t DPHY_External_Loopback_Test (uint32_t frequency, uint32_t loopback_test_run_time_us)
-  \brief       External Loopback test.
-  \param[in]   frequency to configure DPHY PLL.
-  \param[in]   time in microseconds for which loopback test should run.
-  \return      return test status TPASS or TFAIL.
+  \fn          int32_t DPHY_External_Loopback_Test (uint32_t frequency, uint32_t
+  loopback_test_run_time_us) \brief       External Loopback test. \param[in]   frequency to
+  configure DPHY PLL. \param[in]   time in microseconds for which loopback test should run. \return
+  return test status TPASS or TFAIL.
   */
-int32_t DPHY_External_Loopback_Test (uint32_t frequency, uint32_t loopback_test_run_time_us);
+int32_t DPHY_External_Loopback_Test(uint32_t frequency, uint32_t loopback_test_run_time_us);
 
 #endif /* DPHY_LOOPBACK_TEST_H_ */

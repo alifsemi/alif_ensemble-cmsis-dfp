@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     sys_ctrl_rtc.h
  * @author   Manoj A Murudi
  * @email    manoj.murudi@alifsemi.com
@@ -20,33 +20,53 @@
 #ifndef SYS_CTRL_RTC_H_
 #define SYS_CTRL_RTC_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include "peripheral_types.h"
+#include "soc.h"
+#include "sys_utils.h"
+
+#define RTC_CLK_ENABLE (1U << 0U) /* Enable RTC clock */
 
 /**
-  \fn           static inline void enable_lprtc_clk (void)
+  \fn           static inline void enable_lprtc_clk (LPRTC_INSTANCE inst)
   \brief        VBAT clock enable for LPRTC
-  \param        none
+  \param        inst LPRTC instance number
   \return       none
 */
-static inline void enable_lprtc_clk (void)
+static inline void enable_lprtc_clk(LPRTC_INSTANCE inst)
 {
+#if SOC_FEAT_HAS_LPRTC1
+    if (inst == LPRTC0_INSTANCE) {
+        VBAT->RTCA_CLK_EN |= RTC_CLK_ENABLE;
+    } else {
+        VBAT->RTCB_CLK_EN |= RTC_CLK_ENABLE;
+    }
+#else
+    ARG_UNUSED(inst);
     VBAT->RTC_CLK_EN |= RTC_CLK_ENABLE;
+#endif
 }
 
 /**
-  \fn           static inline void disable_lprtc_clk (void)
+  \fn           static inline void disable_lprtc_clk (LPRTC_INSTANCE inst)
   \brief        VBAT clock disable for LPRTC
-  \param        none
+  \param        inst LPRTC instance number
   \return       none
 */
-static inline void disable_lprtc_clk (void)
+static inline void disable_lprtc_clk(LPRTC_INSTANCE inst)
 {
+#if SOC_FEAT_HAS_LPRTC1
+    if (inst == LPRTC0_INSTANCE) {
+        VBAT->RTCA_CLK_EN &= RTC_CLK_ENABLE;
+    } else {
+        VBAT->RTCB_CLK_EN &= RTC_CLK_ENABLE;
+    }
+#else
+    ARG_UNUSED(inst);
     VBAT->RTC_CLK_EN &= ~RTC_CLK_ENABLE;
+#endif
 }
 
 #ifdef __cplusplus

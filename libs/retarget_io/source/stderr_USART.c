@@ -8,7 +8,7 @@
  *
  */
 
-/**************************************************************************//**
+/*******************************************************************************
  * @file     stderr_USART.c
  * @author   Raj Ranjan
  * @email    raj.ranjan@alifsemi.com
@@ -20,16 +20,16 @@
  ******************************************************************************/
 
 #include "RTE_Components.h"
-#if defined(RTE_Compiler_IO_STDOUT)
-#include "retarget_stdout.h"
-#endif  /* RTE_Compiler_IO_STDOUT */
+#if defined(RTE_CMSIS_Compiler_STDERR)
+#include "retarget_stderr.h"
+#endif /* RTE_CMSIS_Compiler_STDERR */
 #include CMSIS_device_header
 
 //-------- <<< Use Configuration Wizard in Context Menu >>> --------------------
 
 // <h>STDERR USART Interface
 
-#if defined(RTE_Compiler_IO_STDERR_User)
+#if defined(RTE_CMSIS_Compiler_STDERR_Custom)
 
 /* UART Includes */
 #include "retarget_config.h"
@@ -37,20 +37,20 @@
 #include "pinconf.h"
 
 /* UART Driver */
-extern ARM_DRIVER_USART ARM_Driver_USART_(PRINTF_UART_CONSOLE)  ;
-static ARM_DRIVER_USART *USARTdrv   = &ARM_Driver_USART_(PRINTF_UART_CONSOLE);
+extern ARM_DRIVER_USART  ARM_Driver_USART_(PRINTF_UART_CONSOLE);
+static ARM_DRIVER_USART *USARTdrv = &ARM_Driver_USART_(PRINTF_UART_CONSOLE);
 
 /**
   @fn           void stderr_uart_error_uninitialize()
   @brief        UART un-initializtion:
   @return       none
 */
-static int stderr_uart_error_uninitialize()
+static int stderr_uart_error_uninitialize(void)
 {
     int ret = -1;
 
     /* Un-initialize UART driver */
-    ret = USARTdrv->Uninitialize();
+    ret     = USARTdrv->Uninitialize();
     return ret;
 }
 
@@ -59,13 +59,13 @@ static int stderr_uart_error_uninitialize()
   @brief        UART power-off:
   @return       none
 */
-static int stderr_uart_error_power_off()
+static int stderr_uart_error_power_off(void)
 {
     int ret = -1;
 
     /* Power off UART peripheral */
-    ret = USARTdrv->PowerControl(ARM_POWER_OFF);
-    if(ret != ARM_DRIVER_OK){
+    ret     = USARTdrv->PowerControl(ARM_POWER_OFF);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -86,40 +86,39 @@ int stderr_init(void)
     /*Initialize the USART driver */
 
     /* TX_PIN */
-    ret = pinconf_set(PRINTF_UART_CONSOLE_PORT_NUM,  PRINTF_UART_CONSOLE_TX_PIN,  \
-            PRINTF_UART_CONSOLE_TX_PINMUX_FUNCTION, PRINTF_UART_CONSOLE_TX_PADCTRL);
-    if(ret != ARM_DRIVER_OK)
+    ret         = pinconf_set(PRINTF_UART_CONSOLE_TX_PORT_NUM,
+                      PRINTF_UART_CONSOLE_TX_PIN,
+                      PRINTF_UART_CONSOLE_TX_PINMUX_FUNCTION,
+                      PRINTF_UART_CONSOLE_TX_PADCTRL);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
+    }
 
     /*Initialize the USART driver */
-    ret = USARTdrv->Initialize(NULL); //polling without isr callback
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = USARTdrv->Initialize(NULL);  // polling without isr callback
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
     /* Enable the power for UART */
     ret = USARTdrv->PowerControl(ARM_POWER_FULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         ret = stderr_uart_error_uninitialize();
         return ret;
     }
 
-    ret =  USARTdrv->Control(ARM_USART_MODE_ASYNCHRONOUS            |
-                ARM_USART_DATA_BITS_8 | ARM_USART_PARITY_NONE       |
-                ARM_USART_STOP_BITS_1 | ARM_USART_FLOW_CONTROL_NONE,\
-                PRINTF_UART_CONSOLE_BAUD_RATE);
+    ret = USARTdrv->Control(ARM_USART_MODE_ASYNCHRONOUS | ARM_USART_DATA_BITS_8 |
+                                ARM_USART_PARITY_NONE | ARM_USART_STOP_BITS_1 |
+                                ARM_USART_FLOW_CONTROL_NONE,
+                            PRINTF_UART_CONSOLE_BAUD_RATE);
 
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         ret = stderr_uart_error_power_off();
         return ret;
     }
 
-    ret =  USARTdrv->Control(ARM_USART_CONTROL_TX, 1);  /* TX must be enable. */
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = USARTdrv->Control(ARM_USART_CONTROL_TX, 1); /* TX must be enable. */
+    if (ret != ARM_DRIVER_OK) {
         ret = stderr_uart_error_power_off();
         return ret;
     }
@@ -133,7 +132,7 @@ int stderr_init(void)
   \param[in]   ch  Character to output
   \return          The character written, or -1 on write error.
 */
-int stderr_putchar (int ch)
+int stderr_putchar(int ch)
 {
     uint8_t buf[1];
 
@@ -141,7 +140,8 @@ int stderr_putchar (int ch)
     if (USARTdrv->Send(buf, 1) != ARM_DRIVER_OK) {
         return (-1);
     }
-    while (USARTdrv->GetTxCount() != 1);
-    return (ch);
+    while (USARTdrv->GetTxCount() != 1) {
+    }
+    return ch;
 }
-#endif /* defined(RTE_Compiler_IO_STDERR_User) */
+#endif /* defined(RTE_CMSIS_Compiler_STDERR_Custom) */

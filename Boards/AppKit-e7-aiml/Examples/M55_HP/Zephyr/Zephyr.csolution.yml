@@ -1,0 +1,42 @@
+# A solution is a collection of related projects that share same base configuration.
+solution:
+  created-for: CMSIS-Toolbox@2.10.0
+  cdefault: # use CMSIS-Toolbox default Compiler options
+
+  # Compilers that can be selected
+  select-compiler:
+    - compiler: AC6
+    - compiler: GCC
+
+  # List the packs that define the device and/or board.
+  packs:
+    - pack: AlifSemiconductor::Ensemble@^2.0.0-0
+    - pack: ARM::CMSIS
+
+  # List different hardware targets that are used to deploy the solution.
+  target-types:
+    - type: AppKit-E7
+      board: Alif Semiconductor::AppKit-E7-AIML
+      device: Alif Semiconductor::AE722F80F55D5LS
+      target-set:
+        - set:
+          images:
+            # Update path to point to the correct ELF file for your project.
+            - image: path/to/.../sdk-alif-main/zephyr/build/zephyr/zephyr.elf
+            # Dummy image to avoid errors.
+            - project-context: Zephyr.Debug
+              load: none
+
+  # List of different build configurations.
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: none
+
+    - type: Release
+      debug: off
+      optimize: balanced
+
+  # List related projects.
+  projects:
+    - project: Zephyr.cproject.yml

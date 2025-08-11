@@ -13,37 +13,68 @@
 #include "RTE_Components.h"
 #include CMSIS_device_header
 
-#if RTE_MIPI_DSI_ILI9488_PANEL
+#if defined(RTE_Drivers_MIPI_DSI_ILI9488_PANEL)
 
 #include "DSI_DCS.h"
-#include "Driver_GPIO.h"
+#include "Driver_IO.h"
 #include "display.h"
+#include "sys_utils.h"
 
 /* ILI9488 panel reset GPIO port */
-extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_ILI9488_PANEL_RESET_GPIO_PORT);
+extern ARM_DRIVER_GPIO  ARM_Driver_GPIO_(RTE_ILI9488_PANEL_RESET_GPIO_PORT);
 static ARM_DRIVER_GPIO *GPIO_Driver_Rst = &ARM_Driver_GPIO_(RTE_ILI9488_PANEL_RESET_GPIO_PORT);
 
 /* ILI9488 panel black light LED GPIO port */
-extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(RTE_ILI9488_PANEL_BL_LED_GPIO_PORT);
+extern ARM_DRIVER_GPIO  ARM_Driver_GPIO_(RTE_ILI9488_PANEL_BL_LED_GPIO_PORT);
 static ARM_DRIVER_GPIO *GPIO_Driver_BLED = &ARM_Driver_GPIO_(RTE_ILI9488_PANEL_BL_LED_GPIO_PORT);
 
-#define ILI9488_PANEL_MIPI_DATA_LANES       1
+#define ILI9488_PANEL_MIPI_DATA_LANES 1
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define ARRAY_SIZE(x)                 (sizeof(x) / sizeof((x)[0]))
 
 /* Panel long packet configurations */
 
-uint8_t pgam_ctrl[] = {0xE0,0x00,0x10,0x14,0x01,0x0E,0x04,0x33,0x56,0x48,0x03,0x0C,0x0B,0x2B,0x34,0x0F};
+uint8_t pgam_ctrl[]         = {0xE0,
+                               0x00,
+                               0x10,
+                               0x14,
+                               0x01,
+                               0x0E,
+                               0x04,
+                               0x33,
+                               0x56,
+                               0x48,
+                               0x03,
+                               0x0C,
+                               0x0B,
+                               0x2B,
+                               0x34,
+                               0x0F};
 
-uint8_t ngam_ctrl[] = {0xE1,0x00,0x12,0x18,0x05,0x12,0x06,0x40,0x34,0x57,0x06,0x10,0x0C,0x3B,0x3F,0x0F};
+uint8_t ngam_ctrl[]         = {0xE1,
+                               0x00,
+                               0x12,
+                               0x18,
+                               0x05,
+                               0x12,
+                               0x06,
+                               0x40,
+                               0x34,
+                               0x57,
+                               0x06,
+                               0x10,
+                               0x0C,
+                               0x3B,
+                               0x3F,
+                               0x0F};
 
-uint8_t power_ctrl1[] = {0xC0,0x0F,0x0C};
+uint8_t power_ctrl1[]       = {0xC0, 0x0F, 0x0C};
 
-uint8_t vcom_ctrl[] = {0xC5,0x00,0x25,0x80};
+uint8_t vcom_ctrl[]         = {0xC5, 0x00, 0x25, 0x80};
 
-uint8_t display_func_ctrl[] = {0xB6,0x02,0x02};
+uint8_t display_func_ctrl[] = {0xB6, 0x02, 0x02};
 
-uint8_t adjust_ctrl[] = {0xF7,0xA9,0x51,0x2C,0x82};
+uint8_t adjust_ctrl[]       = {0xF7, 0xA9, 0x51, 0x2C, 0x82};
 
 /**
   \fn           int32_t ILI9488_Display_Reset (void)
@@ -51,57 +82,45 @@ uint8_t adjust_ctrl[] = {0xF7,0xA9,0x51,0x2C,0x82};
   \param[in]    none
   \return       \ref execution_status
   */
-static int32_t ILI9488_Display_Reset (void)
+static int32_t ILI9488_Display_Reset(void)
 {
     int32_t ret = 0;
 
-    if(GPIO_Driver_Rst == NULL)
-    {
+    if (GPIO_Driver_Rst == NULL) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     ret = GPIO_Driver_Rst->Initialize(RTE_ILI9488_PANEL_RESET_PIN_NO, NULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
-    ret = GPIO_Driver_Rst->PowerControl(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                        ARM_POWER_FULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_Rst->PowerControl(RTE_ILI9488_PANEL_RESET_PIN_NO, ARM_POWER_FULL);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
-    ret = GPIO_Driver_Rst->SetDirection(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                        GPIO_PIN_DIRECTION_OUTPUT);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_Rst->SetDirection(RTE_ILI9488_PANEL_RESET_PIN_NO, GPIO_PIN_DIRECTION_OUTPUT);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
-    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                    GPIO_PIN_OUTPUT_STATE_HIGH);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO, GPIO_PIN_OUTPUT_STATE_HIGH);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
     sys_busy_loop_us(5000);
 
-    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                    GPIO_PIN_OUTPUT_STATE_LOW);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO, GPIO_PIN_OUTPUT_STATE_LOW);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
     sys_busy_loop_us(20000);
 
-    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                    GPIO_PIN_OUTPUT_STATE_HIGH);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO, GPIO_PIN_OUTPUT_STATE_HIGH);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
@@ -120,21 +139,17 @@ static int32_t ILI9488_BL_LED_Init(void)
 {
     int32_t ret = 0;
 
-    if(GPIO_Driver_BLED == NULL)
-    {
+    if (GPIO_Driver_BLED == NULL) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     ret = GPIO_Driver_BLED->Initialize(RTE_ILI9488_PANEL_BL_LED_PIN_NO, NULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
-    ret = GPIO_Driver_BLED->PowerControl(RTE_ILI9488_PANEL_BL_LED_PIN_NO,
-                                         ARM_POWER_FULL);
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret = GPIO_Driver_BLED->PowerControl(RTE_ILI9488_PANEL_BL_LED_PIN_NO, ARM_POWER_FULL);
+    if (ret != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
 
@@ -152,21 +167,16 @@ static int32_t ILI9488_BL_LED_Control(uint8_t state)
 {
     int32_t ret = 0;
 
-    if(state == ENABLE)
-    {
-        ret = GPIO_Driver_BLED->SetValue(RTE_ILI9488_PANEL_BL_LED_PIN_NO,
-                                         GPIO_PIN_OUTPUT_STATE_HIGH);
-        if(ret != ARM_DRIVER_OK)
-        {
+    if (state == ENABLE) {
+        ret =
+            GPIO_Driver_BLED->SetValue(RTE_ILI9488_PANEL_BL_LED_PIN_NO, GPIO_PIN_OUTPUT_STATE_HIGH);
+        if (ret != ARM_DRIVER_OK) {
             return ARM_DRIVER_ERROR;
         }
-    }
-    else
-    {
-        ret = GPIO_Driver_BLED->SetValue(RTE_ILI9488_PANEL_BL_LED_PIN_NO,
-                                         GPIO_PIN_OUTPUT_STATE_LOW);
-        if(ret != ARM_DRIVER_OK)
-        {
+    } else {
+        ret =
+            GPIO_Driver_BLED->SetValue(RTE_ILI9488_PANEL_BL_LED_PIN_NO, GPIO_PIN_OUTPUT_STATE_LOW);
+        if (ret != ARM_DRIVER_OK) {
             return ARM_DRIVER_ERROR;
         }
     }
@@ -235,9 +245,8 @@ static int32_t ILI9488_Init(void)
 {
     int32_t ret = ARM_DRIVER_OK;
 
-    ret = ILI9488_Display_Reset();
-    if(ret != ARM_DRIVER_OK)
-    {
+    ret         = ILI9488_Display_Reset();
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
@@ -251,8 +260,7 @@ static int32_t ILI9488_Init(void)
   */
 static int32_t ILI9488_Uninit(void)
 {
-    return GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO,
-                                     GPIO_PIN_OUTPUT_STATE_LOW);
+    return GPIO_Driver_Rst->SetValue(RTE_ILI9488_PANEL_RESET_PIN_NO, GPIO_PIN_OUTPUT_STATE_LOW);
 }
 
 /**
@@ -262,14 +270,13 @@ static int32_t ILI9488_Uninit(void)
   */
 static int32_t ILI9488_Control(uint32_t control)
 {
-    switch(control)
-    {
-        case DISPALY_PANEL_CONFIG:
+    switch (control) {
+    case DISPALY_PANEL_CONFIG:
         {
             ILI9488_Configure();
             break;
         }
-        default:
+    default:
         {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
@@ -298,8 +305,7 @@ static int32_t ILI9488_Stop(void)
     return ILI9488_BL_LED_Control(DISABLE);
 }
 
-static DISPLAY_PANEL_OPERATIONS ILI9488_display_ops =
-{
+static DISPLAY_PANEL_OPERATIONS ILI9488_display_ops = {
     .Init    = ILI9488_Init,
     .Uninit  = ILI9488_Uninit,
     .Control = ILI9488_Control,
@@ -307,16 +313,14 @@ static DISPLAY_PANEL_OPERATIONS ILI9488_display_ops =
     .Stop    = ILI9488_Stop
 };
 
-static DSI_INFO ILI9488_dsi_info =
-{
-    .max_bitrate      = RTE_ILI9488_PANEL_MAX_BITRATE_MBPS,
-    .n_lanes          = ILI9488_PANEL_MIPI_DATA_LANES,
-    .vc_id            = RTE_ILI9488_PANEL_DSI_VC_ID,
-    .color_coding     = RTE_ILI9488_PANEL_DSI_COLOR_MODE,
+static DSI_INFO ILI9488_dsi_info                    = {
+   .max_bitrate  = RTE_ILI9488_PANEL_MAX_BITRATE_MBPS,
+   .n_lanes      = ILI9488_PANEL_MIPI_DATA_LANES,
+   .vc_id        = RTE_ILI9488_PANEL_DSI_VC_ID,
+   .color_coding = RTE_ILI9488_PANEL_DSI_COLOR_MODE,
 };
 
-static DISPLAY_PANEL_DEVICE ILI9488_display_panel =
-{
+static DISPLAY_PANEL_DEVICE ILI9488_display_panel = {
     .hsync_time   = RTE_ILI9488_PANEL_HSYNC_TIME,
     .hbp_time     = RTE_ILI9488_PANEL_HBP_TIME,
     .hfp_time     = RTE_ILI9488_PANEL_HFP_TIME,
@@ -331,4 +335,4 @@ static DISPLAY_PANEL_DEVICE ILI9488_display_panel =
 
 /* Registering Display Panel */
 DISPLAY_PANEL(ILI9488_display_panel)
-#endif
+#endif  // RTE_Drivers_MIPI_DSI_ILI9488_PANEL

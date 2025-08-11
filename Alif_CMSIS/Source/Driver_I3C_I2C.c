@@ -22,6 +22,8 @@
 #include "Driver_I3C.h"
 #include "RTE_Device.h"
 
+#if defined(RTE_Drivers_I2C_I3C)
+
 #if !(RTE_I3C)
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
@@ -30,13 +32,10 @@
 #error "I2CI3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_I2C_DRV_VERSION    ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
+#define ARM_I3C_I2C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
 
 /* Driver Version */
-static const ARM_DRIVER_VERSION DriverVersion = {
-    ARM_I2C_API_VERSION,
-    ARM_I3C_I2C_DRV_VERSION
-};
+static const ARM_DRIVER_VERSION DriverVersion = {ARM_I2C_API_VERSION, ARM_I3C_I2C_DRV_VERSION};
 
 /* I3C driver instance */
 extern ARM_DRIVER_I3C Driver_I3C;
@@ -49,8 +48,8 @@ static ARM_I2C_STATUS i2c_status;
 
 /* Driver Capabilities */
 static const ARM_I2C_CAPABILITIES DriverCapabilities = {
-    0,  /* supports 10-bit addressing */
-    0   /* reserved */
+    0, /* supports 10-bit addressing */
+    0  /* reserved */
 };
 
 /**
@@ -59,15 +58,13 @@ static const ARM_I2C_CAPABILITIES DriverCapabilities = {
  * @param   none
  * @retval  none
  */
-static void i3c_driver_callback (uint32_t event)
+static void i3c_driver_callback(uint32_t event)
 {
-    if(event & ARM_I3C_EVENT_TRANSFER_DONE)
-    {
+    if (event & ARM_I3C_EVENT_TRANSFER_DONE) {
         i2c_event(ARM_I2C_EVENT_TRANSFER_DONE);
     }
 
-    if(event & ARM_I3C_EVENT_TRANSFER_ERROR)
-    {
+    if (event & ARM_I3C_EVENT_TRANSFER_ERROR) {
         i2c_event(ARM_I2C_EVENT_TRANSFER_INCOMPLETE);
     }
 }
@@ -78,7 +75,7 @@ static void i3c_driver_callback (uint32_t event)
  * @param   none
  * @retval  driver version
  */
-static ARM_DRIVER_VERSION ARM_I3C_I2C_GetVersion (void)
+static ARM_DRIVER_VERSION ARM_I3C_I2C_GetVersion(void)
 {
     return DriverVersion;
 }
@@ -89,7 +86,7 @@ static ARM_DRIVER_VERSION ARM_I3C_I2C_GetVersion (void)
  * @param   none
  * @retval  driver capabilities
  */
-static ARM_I2C_CAPABILITIES ARM_I3C_I2C_GetCapabilities (void)
+static ARM_I2C_CAPABILITIES ARM_I3C_I2C_GetCapabilities(void)
 {
     return DriverCapabilities;
 }
@@ -103,30 +100,29 @@ static ARM_I2C_CAPABILITIES ARM_I3C_I2C_GetCapabilities (void)
  *          ARM_I2C_BUS_SPEED_FAST_PLUS
  * @retval  none
  */
-static int32_t ConvertI2CBusSpeedToI3C (uint32_t i2c_bus_speed)
+static int32_t ConvertI2CBusSpeedToI3C(uint32_t i2c_bus_speed)
 {
     int32_t speed = 0;
 
-    switch (i2c_bus_speed)
-    {
-        case ARM_I2C_BUS_SPEED_STANDARD:
-            /* Standard Speed (100kHz) */
-            speed = I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS;
-            break;
-        case ARM_I2C_BUS_SPEED_FAST:
-            /* Fast Speed (400kHz) */
-            speed = I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS;
-            break;
-        case ARM_I2C_BUS_SPEED_FAST_PLUS:
-            /* Fast+ Speed (1MHz) */
-            speed = I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS;
-            break;
-        case ARM_I2C_BUS_SPEED_HIGH:
-            /* Fast+ Speed (3.4MHz) */
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-            break;
-        default:
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
+    switch (i2c_bus_speed) {
+    case ARM_I2C_BUS_SPEED_STANDARD:
+        /* Standard Speed (100kHz) */
+        speed = I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS;
+        break;
+    case ARM_I2C_BUS_SPEED_FAST:
+        /* Fast Speed (400kHz) */
+        speed = I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS;
+        break;
+    case ARM_I2C_BUS_SPEED_FAST_PLUS:
+        /* Fast+ Speed (1MHz) */
+        speed = I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS;
+        break;
+    case ARM_I2C_BUS_SPEED_HIGH:
+        /* Fast+ Speed (3.4MHz) */
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
+        break;
+    default:
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
     return speed;
 }
@@ -137,16 +133,15 @@ static int32_t ConvertI2CBusSpeedToI3C (uint32_t i2c_bus_speed)
  * @param   cb_event      : Pointer to \ref ARM_I2C_SignalEvent
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_Initialize (ARM_I2C_SignalEvent_t cb_event)
+static int32_t ARM_I3C_I2C_Initialize(ARM_I2C_SignalEvent_t cb_event)
 {
-    if (cb_event == NULL)
-    {
+    if (cb_event == NULL) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
     i2c_event = cb_event;
 
-    return Driver_I3C.Initialize (i3c_driver_callback);
+    return Driver_I3C.Initialize(i3c_driver_callback);
 }
 
 /**
@@ -155,11 +150,11 @@ static int32_t ARM_I3C_I2C_Initialize (ARM_I2C_SignalEvent_t cb_event)
  * @note    none
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_Uninitialize (void)
+static int32_t ARM_I3C_I2C_Uninitialize(void)
 {
     i2c_event = NULL;
 
-    return Driver_I3C.Uninitialize ();
+    return Driver_I3C.Uninitialize();
 }
 
 /**
@@ -168,9 +163,9 @@ static int32_t ARM_I3C_I2C_Uninitialize (void)
  * @param    state : Power state
  * @return   \ref execution_status
  */
-static int32_t ARM_I3C_I2C_PowerControl (ARM_POWER_STATE state)
+static int32_t ARM_I3C_I2C_PowerControl(ARM_POWER_STATE state)
 {
-    return Driver_I3C.PowerControl (state);
+    return Driver_I3C.PowerControl(state);
 }
 
 /**
@@ -185,12 +180,10 @@ static int32_t ARM_I3C_I2C_PowerControl (ARM_POWER_STATE state)
  * @param   num  : Number of data items to send
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_MasterTransmit (uint32_t        addr,
-                                           const uint8_t   *data,
-                                           uint32_t        num,
-                                           bool            xfer_pending)
+static int32_t ARM_I3C_I2C_MasterTransmit(uint32_t addr, const uint8_t *data, uint32_t num,
+                                          bool xfer_pending)
 {
-    int32_t ret, detach_ret;
+    int32_t             ret, detach_ret;
     ARM_I3C_DEVICE_TYPE dev_type = ARM_I3C_DEVICE_TYPE_I2C;
 
     /* Currently this feature is not supported */
@@ -199,22 +192,19 @@ static int32_t ARM_I3C_I2C_MasterTransmit (uint32_t        addr,
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret = Driver_I3C.AttachSlvDev(dev_type, addr);
-    if (ret != ARM_DRIVER_OK)
-    {
+    ret             = Driver_I3C.AttachSlvDev(dev_type, addr);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
-    ret = Driver_I3C.MasterTransmit (addr, data, num);
+    ret        = Driver_I3C.MasterTransmit(addr, data, num);
 
-    detach_ret = Driver_I3C.Detachdev (addr);
-    if(ret == ARM_DRIVER_OK)
-    {
+    detach_ret = Driver_I3C.Detachdev(addr);
+    if (ret == ARM_DRIVER_OK) {
         ret = detach_ret;
     }
 
     return ret;
-
 }
 
 /**
@@ -229,12 +219,10 @@ static int32_t ARM_I3C_I2C_MasterTransmit (uint32_t        addr,
  * @param   num  : Number of data items to receive
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_MasterReceive (uint32_t   addr,
-                                          uint8_t    *data,
-                                          uint32_t   num,
-                                          bool       xfer_pending)
+static int32_t ARM_I3C_I2C_MasterReceive(uint32_t addr, uint8_t *data, uint32_t num,
+                                         bool xfer_pending)
 {
-    int32_t ret, detach_ret;
+    int32_t             ret, detach_ret;
     ARM_I3C_DEVICE_TYPE dev_type = ARM_I3C_DEVICE_TYPE_I2C;
 
     /* Currently this feature is not supported */
@@ -243,17 +231,15 @@ static int32_t ARM_I3C_I2C_MasterReceive (uint32_t   addr,
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret = Driver_I3C.AttachSlvDev(dev_type, addr);
-    if (ret != ARM_DRIVER_OK)
-    {
+    ret             = Driver_I3C.AttachSlvDev(dev_type, addr);
+    if (ret != ARM_DRIVER_OK) {
         return ret;
     }
 
-    ret = Driver_I3C.MasterReceive (addr, data, num);
+    ret        = Driver_I3C.MasterReceive(addr, data, num);
 
-    detach_ret = Driver_I3C.Detachdev (addr);
-    if(ret == ARM_DRIVER_OK)
-    {
+    detach_ret = Driver_I3C.Detachdev(addr);
+    if (ret == ARM_DRIVER_OK) {
         ret = detach_ret;
     }
 
@@ -269,8 +255,7 @@ static int32_t ARM_I3C_I2C_MasterReceive (uint32_t   addr,
  * @param   num  : Number of data items to send
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_SlaveTransmit (const uint8_t *data,
-                                          uint32_t      num)
+static int32_t ARM_I3C_I2C_SlaveTransmit(const uint8_t *data, uint32_t num)
 {
     (void) data;
     (void) num;
@@ -287,8 +272,7 @@ static int32_t ARM_I3C_I2C_SlaveTransmit (const uint8_t *data,
  * @param   num  : Number of data items to receive
  * @retval  \ref execution_status
  */
-static int32_t ARM_I3C_I2C_SlaveReceive (uint8_t   *data,
-                                         uint32_t  num)
+static int32_t ARM_I3C_I2C_SlaveReceive(uint8_t *data, uint32_t num)
 {
     (void) data;
     (void) num;
@@ -301,7 +285,7 @@ static int32_t ARM_I3C_I2C_SlaveReceive (uint8_t   *data,
  * @brief   CMSIS-Driver i2c get transfer data count
  * @retval  transfer data count
  */
-static int32_t ARM_I3C_I2C_GetDataCount (void)
+static int32_t ARM_I3C_I2C_GetDataCount(void)
 {
     return ARM_DRIVER_ERROR_UNSUPPORTED;
 }
@@ -316,36 +300,35 @@ static int32_t ARM_I3C_I2C_GetDataCount (void)
  * @param   arg     : Argument of operation (optional)
  * @retval  common \ref execution_status and driver specific \ref i2c_execution_status
  */
-static int32_t ARM_I3C_I2C_Control (uint32_t   control,
-                                    uint32_t   arg)
+static int32_t ARM_I3C_I2C_Control(uint32_t control, uint32_t arg)
 {
-    int32_t ret = ARM_DRIVER_OK;
+    int32_t ret   = ARM_DRIVER_OK;
     int32_t speed = 0;
 
-    switch (control)
-    {
-        case ARM_I2C_OWN_ADDRESS:
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-            break;
-        case ARM_I2C_BUS_SPEED:
-            speed = ConvertI2CBusSpeedToI3C (arg);
+    switch (control) {
+    case ARM_I2C_OWN_ADDRESS:
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
+        break;
+    case ARM_I2C_BUS_SPEED:
+        speed = ConvertI2CBusSpeedToI3C(arg);
 
-            if (speed == ARM_DRIVER_ERROR_UNSUPPORTED)
-                return ARM_DRIVER_ERROR_UNSUPPORTED;
+        if (speed == ARM_DRIVER_ERROR_UNSUPPORTED) {
+            return ARM_DRIVER_ERROR_UNSUPPORTED;
+        }
 
-            ret = Driver_I3C.Control (I3C_MASTER_INIT, 0);
-            ret = Driver_I3C.Control (I3C_MASTER_SET_BUS_MODE, speed);
-            ret = Driver_I3C.Control (I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
-            ret = Driver_I3C.Control (I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
-            break;
-        case ARM_I2C_BUS_CLEAR:
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-            break;
-        case ARM_I2C_ABORT_TRANSFER:
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
-            break;
-        default:
-            return ARM_DRIVER_ERROR_UNSUPPORTED;
+        ret = Driver_I3C.Control(I3C_MASTER_INIT, 0);
+        ret = Driver_I3C.Control(I3C_MASTER_SET_BUS_MODE, speed);
+        ret = Driver_I3C.Control(I3C_MASTER_SETUP_HOT_JOIN_ACCEPTANCE, 0);
+        ret = Driver_I3C.Control(I3C_MASTER_SETUP_MR_ACCEPTANCE, 0);
+        break;
+    case ARM_I2C_BUS_CLEAR:
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
+        break;
+    case ARM_I2C_ABORT_TRANSFER:
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
+        break;
+    default:
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
     return ret;
 }
@@ -356,7 +339,7 @@ static int32_t ARM_I3C_I2C_Control (uint32_t   control,
  * @note    none
  * @retval  ARM_i2c_STATUS
  */
-static ARM_I2C_STATUS ARM_I3C_I2C_GetStatus (void)
+static ARM_I2C_STATUS ARM_I3C_I2C_GetStatus(void)
 {
     return i2c_status;
 }
@@ -366,7 +349,7 @@ static ARM_I2C_STATUS ARM_I3C_I2C_GetStatus (void)
 
 /* I2CI3C Driver Control Block */
 extern ARM_DRIVER_I2C Driver_I2CI3C;
-ARM_DRIVER_I2C Driver_I2CI3C = {
+ARM_DRIVER_I2C        Driver_I2CI3C = {
     ARM_I3C_I2C_GetVersion,
     ARM_I3C_I2C_GetCapabilities,
     ARM_I3C_I2C_Initialize,
@@ -382,3 +365,4 @@ ARM_DRIVER_I2C Driver_I2CI3C = {
 };
 
 #endif /* RTE_I2CI3C */
+#endif /* RTE_Drivers_I2C_I3C */

@@ -26,7 +26,7 @@
 
 /*
  * Default XIP addresses for cores:
- * By default M55_HE would boot from 0x8000_0000 (MRAM)
+ * By default RTSS_HE would boot from 0x8000_0000 (MRAM)
  * or 0xC000_0000 (OSPI FLASH). However, the user can choose
  * any other address.
  */

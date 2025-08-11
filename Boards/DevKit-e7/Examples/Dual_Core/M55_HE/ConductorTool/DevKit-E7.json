@@ -1,0 +1,1507 @@
+{
+"metadata": {
+	"device": "AE722F80F55D5LS",
+	"project": "DevKit Gen 2 (DK-E7)",
+	"external_clock_sources": [
+		{
+			"id": "OSC_HFXO",
+			"enabled": true,
+			"frequency": 38400000
+		},
+		{
+			"id": "OSC_LFXO",
+			"enabled": true,
+			"frequency": 32768
+		}
+	]
+},
+"firewall": {
+    "firewall_components": [],
+    "region_stitching": false
+},
+"pinmux": [
+    {
+        "pad_id": "P0_0",
+        "label": "",
+        "port": 0,
+        "pin": 0,
+        "location": "R19",
+        "function": "UT0_T0_A",
+        "mux_mode": 4,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603000"
+    },
+    {
+        "pad_id": "P0_1",
+        "label": "",
+        "port": 0,
+        "pin": 1,
+        "location": "R13",
+        "function": "UT0_T1_A",
+        "mux_mode": 4,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603004"
+    },
+    {
+        "pad_id": "P0_3",
+        "label": "CAMERA_XVCLK",
+        "port": 0,
+        "pin": 3,
+        "location": "R11",
+        "function": "LPCAM_XVCLK_B",
+        "mux_mode": 5,
+        "pad_config": "0x38",
+        "reg_address": "0x1A60300C"
+    },
+    {
+        "pad_id": "P0_4",
+        "label": "",
+        "port": 0,
+        "pin": 4,
+        "location": "R10",
+        "function": "UT2_T0_A",
+        "mux_mode": 5,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603010"
+    },
+    {
+        "pad_id": "P0_5",
+        "label": "",
+        "port": 0,
+        "pin": 5,
+        "location": "N15",
+        "function": "UT2_T1_A",
+        "mux_mode": 5,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603014"
+    },
+    {
+        "pad_id": "P0_6",
+        "label": "CLICKBOARD_ANA",
+        "port": 0,
+        "pin": 6,
+        "location": "P15",
+        "function": "ANA_S6",
+        "mux_mode": 7,
+        "pad_config": "0x00",
+        "reg_address": "0x1A603018"
+    },
+    {
+        "pad_id": "P0_7",
+        "label": "POTENTIOMETER",
+        "port": 0,
+        "pin": 7,
+        "location": "R15",
+        "function": "ANA_S7",
+        "mux_mode": 7,
+        "pad_config": "0x00",
+        "reg_address": "0x1A60301C"
+    },
+    {
+        "pad_id": "P1_0",
+        "label": "UART1",
+        "port": 1,
+        "pin": 0,
+        "location": "R14",
+        "function": "UART2_RX_A",
+        "mux_mode": 1,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603020"
+    },
+    {
+        "pad_id": "P1_1",
+        "label": "UART1",
+        "port": 1,
+        "pin": 1,
+        "location": "M15",
+        "function": "UART2_TX_A",
+        "mux_mode": 1,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603024"
+    },
+    {
+        "pad_id": "P1_4",
+        "label": "CLICKBOARD_UART",
+        "port": 1,
+        "pin": 4,
+        "location": "M19",
+        "function": "UART0_RX_B",
+        "mux_mode": 2,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603030"
+    },
+    {
+        "pad_id": "P1_5",
+        "label": "CLICKBOARD_UART",
+        "port": 1,
+        "pin": 5,
+        "location": "L18",
+        "function": "UART0_TX_B",
+        "mux_mode": 2,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603034"
+    },
+    {
+        "pad_id": "P1_6",
+        "label": "OSPI Hyper PSRAM",
+        "port": 1,
+        "pin": 6,
+        "location": "L19",
+        "function": "OSPI0_RXDS_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603038"
+    },
+    {
+        "pad_id": "P2_0",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 0,
+        "location": "K19",
+        "function": "OSPI0_D0_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603040"
+    },
+    {
+        "pad_id": "P2_1",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 1,
+        "location": "K18",
+        "function": "OSPI0_D1_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603044"
+    },
+    {
+        "pad_id": "P2_2",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 2,
+        "location": "J15",
+        "function": "OSPI0_D2_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603048"
+    },
+    {
+        "pad_id": "P2_3",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 3,
+        "location": "H15",
+        "function": "OSPI0_D3_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A60304C"
+    },
+    {
+        "pad_id": "P2_4",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 4,
+        "location": "G19",
+        "function": "OSPI0_D4_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603050"
+    },
+    {
+        "pad_id": "P2_5",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 5,
+        "location": "H19",
+        "function": "OSPI0_D5_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603054"
+    },
+    {
+        "pad_id": "P2_6",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 6,
+        "location": "H18",
+        "function": "OSPI0_D6_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603058"
+    },
+    {
+        "pad_id": "P2_7",
+        "label": "OSPI Hyper PSRAM",
+        "port": 2,
+        "pin": 7,
+        "location": "J19",
+        "function": "OSPI0_D7_B",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A60305C"
+    },
+    {
+        "pad_id": "P3_0",
+        "label": "OSPI Hyper PSRAM",
+        "port": 3,
+        "pin": 0,
+        "location": "B6",
+        "function": "OSPI0_SCLK_B",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A603060"
+    },
+    {
+        "pad_id": "P3_1",
+        "label": "OSPI Hyper PSRAM",
+        "port": 3,
+        "pin": 1,
+        "location": "A6",
+        "function": "OSPI0_SCLKN_B",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A603064"
+    },
+    {
+        "pad_id": "P3_2",
+        "label": "OSPI Hyper PSRAM",
+        "port": 3,
+        "pin": 2,
+        "location": "E2",
+        "function": "OSPI0_SS0_B",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A603068"
+    },
+    {
+        "pad_id": "P3_3",
+        "label": "SD_CARD_DETECT",
+        "port": 3,
+        "pin": 3,
+        "location": "G2",
+        "function": "GPIO3_3",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x1A60306C"
+    },
+    {
+        "pad_id": "P3_4",
+        "label": "CLICKBOARD_I2C",
+        "port": 3,
+        "pin": 4,
+        "location": "F2",
+        "function": "I2C0_SCL_B",
+        "mux_mode": 5,
+        "pad_config": "0x69",
+        "reg_address": "0x1A603070"
+    },
+    {
+        "pad_id": "P3_5",
+        "label": "CLICKBOARD_I2C",
+        "port": 3,
+        "pin": 5,
+        "location": "F1",
+        "function": "I2C0_SDA_B",
+        "mux_mode": 5,
+        "pad_config": "0x69",
+        "reg_address": "0x1A603074"
+    },
+    {
+        "pad_id": "P3_6",
+        "label": "LPPDM_TEST",
+        "port": 3,
+        "pin": 6,
+        "location": "V5",
+        "function": "LPPDM_C1_B",
+        "mux_mode": 3,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603078"
+    },
+    {
+        "pad_id": "P3_7",
+        "label": "LPPDM_TEST",
+        "port": 3,
+        "pin": 7,
+        "location": "L8",
+        "function": "LPPDM_D1_B",
+        "mux_mode": 3,
+        "pad_config": "0x21",
+        "reg_address": "0x1A60307C"
+    },
+    {
+        "pad_id": "P4_0",
+        "label": "TOUCH_RESET",
+        "port": 4,
+        "pin": 0,
+        "location": "F18",
+        "function": "GPIO4_0",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603080"
+    },
+    {
+        "pad_id": "P4_1",
+        "label": "UTIMER_GPO0",
+        "port": 4,
+        "pin": 1,
+        "location": "B19",
+        "function": "GPIO4_1",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603084"
+    },
+    {
+        "pad_id": "P4_2",
+        "label": "UTIMER_GPO1",
+        "port": 4,
+        "pin": 2,
+        "location": "C19",
+        "function": "GPIO4_2",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603088"
+    },
+    {
+        "pad_id": "P4_3",
+        "label": "UTIMER_GPO2",
+        "port": 4,
+        "pin": 3,
+        "location": "B18",
+        "function": "GPIO4_3",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A60308C"
+    },
+    {
+        "pad_id": "P4_4",
+        "label": null,
+        "port": 4,
+        "pin": 4,
+        "location": "B17",
+        "function": "JTAG_TCK",
+        "mux_mode": 1,
+        "pad_config": "0x63",
+        "reg_address": "0x1A603090"
+    },
+    {
+        "pad_id": "P4_5",
+        "label": null,
+        "port": 4,
+        "pin": 5,
+        "location": "A19",
+        "function": "JTAG_TMS",
+        "mux_mode": 1,
+        "pad_config": "0x63",
+        "reg_address": "0x1A603094"
+    },
+    {
+        "pad_id": "P4_6",
+        "label": null,
+        "port": 4,
+        "pin": 6,
+        "location": "A18",
+        "function": "JTAG_TDI",
+        "mux_mode": 1,
+        "pad_config": "0x63",
+        "reg_address": "0x1A603098"
+    },
+    {
+        "pad_id": "P4_7",
+        "label": null,
+        "port": 4,
+        "pin": 7,
+        "location": "B16",
+        "function": "JTAG_TDO",
+        "mux_mode": 1,
+        "pad_config": "0x62",
+        "reg_address": "0x1A60309C"
+    },
+    {
+        "pad_id": "P5_0",
+        "label": "SD_CARD",
+        "port": 5,
+        "pin": 0,
+        "location": "A16",
+        "function": "SD_D0_A",
+        "mux_mode": 7,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030A0"
+    },
+    {
+        "pad_id": "P5_1",
+        "label": "SD_CARD",
+        "port": 5,
+        "pin": 1,
+        "location": "B14",
+        "function": "SD_D1_A",
+        "mux_mode": 7,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030A4"
+    },
+    {
+        "pad_id": "P5_2",
+        "label": "SD_CARD",
+        "port": 5,
+        "pin": 2,
+        "location": "E12",
+        "function": "SD_D2_A",
+        "mux_mode": 7,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030A8"
+    },
+    {
+        "pad_id": "P5_3",
+        "label": "SD_CARD",
+        "port": 5,
+        "pin": 3,
+        "location": "B13",
+        "function": "SD_D3_A",
+        "mux_mode": 6,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030AC"
+    },
+    {
+        "pad_id": "P5_4",
+        "label": "PDM_MIC",
+        "port": 5,
+        "pin": 4,
+        "location": "E11",
+        "function": "PDM_D2_B",
+        "mux_mode": 3,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030B0"
+    },
+    {
+        "pad_id": "P5_5",
+        "label": "OSPI FLASH",
+        "port": 5,
+        "pin": 5,
+        "location": "E10",
+        "function": "OSPI1_SCLK_C",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A6030B4"
+    },
+    {
+        "pad_id": "P5_6",
+        "label": "CLICKBOARD_PWM",
+        "port": 5,
+        "pin": 6,
+        "location": "B12",
+        "function": "UT3_T0_B",
+        "mux_mode": 3,
+        "pad_config": "0x23",
+        "reg_address": "0x1A6030B8"
+    },
+    {
+        "pad_id": "P5_7",
+        "label": "OSPI FLASH",
+        "port": 5,
+        "pin": 7,
+        "location": "B11",
+        "function": "OSPI1_SS0_C",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A6030BC"
+    },
+    {
+        "pad_id": "P6_0",
+        "label": "ETH_PHY",
+        "port": 6,
+        "pin": 0,
+        "location": "A12",
+        "function": "ETH_TXD0_A",
+        "mux_mode": 6,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030C0"
+    },
+    {
+        "pad_id": "P6_1",
+        "label": "LCD_BACKLIGHT",
+        "port": 6,
+        "pin": 1,
+        "location": "E9",
+        "function": "GPIO6_1",
+        "mux_mode": 0,
+        "pad_config": "0x30",
+        "reg_address": "0x1A6030C4"
+    },
+    {
+        "pad_id": "P6_2",
+        "label": "LEDRGB1_R",
+        "port": 6,
+        "pin": 2,
+        "location": "A11",
+        "function": "GPIO6_2",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030C8"
+    },
+    {
+        "pad_id": "P6_3",
+        "label": "UTIMER_GPO3",
+        "port": 6,
+        "pin": 3,
+        "location": "B10",
+        "function": "GPIO6_3",
+        "mux_mode": 0,
+        "pad_config": "0x21",
+        "reg_address": "0x1A6030CC"
+    },
+    {
+        "pad_id": "P6_4",
+        "label": "LEDRGB1_G",
+        "port": 6,
+        "pin": 4,
+        "location": "E8",
+        "function": "GPIO6_4",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030D0"
+    },
+    {
+        "pad_id": "P6_6",
+        "label": "LEDRGB1_B",
+        "port": 6,
+        "pin": 6,
+        "location": "E6",
+        "function": "GPIO6_6",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030D8"
+    },
+    {
+        "pad_id": "P6_7",
+        "label": "PDM_MIC",
+        "port": 6,
+        "pin": 7,
+        "location": "A9",
+        "function": "PDM_C2_A",
+        "mux_mode": 3,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030DC"
+    },
+    {
+        "pad_id": "P7_0",
+        "label": "SD_CARD",
+        "port": 7,
+        "pin": 0,
+        "location": "B8",
+        "function": "SD_CMD_A",
+        "mux_mode": 6,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030E0"
+    },
+    {
+        "pad_id": "P7_1",
+        "label": "SD_CARD",
+        "port": 7,
+        "pin": 1,
+        "location": "B3",
+        "function": "SD_CLK_A",
+        "mux_mode": 6,
+        "pad_config": "0x38",
+        "reg_address": "0x1A6030E4"
+    },
+    {
+        "pad_id": "P7_2",
+        "label": "CAMERA_I2C",
+        "port": 7,
+        "pin": 2,
+        "location": "D1",
+        "function": "I2C1_SDA_C",
+        "mux_mode": 5,
+        "pad_config": "0x69",
+        "reg_address": "0x1A6030E8"
+    },
+    {
+        "pad_id": "P7_3",
+        "label": "CAMERA_I2C",
+        "port": 7,
+        "pin": 3,
+        "location": "A8",
+        "function": "I2C1_SCL_C",
+        "mux_mode": 5,
+        "pad_config": "0x69",
+        "reg_address": "0x1A6030EC"
+    },
+    {
+        "pad_id": "P7_4",
+        "label": "LEDRGB0_G",
+        "port": 7,
+        "pin": 4,
+        "location": "T1",
+        "function": "GPIO7_4",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6030F0"
+    },
+    {
+        "pad_id": "P7_5",
+        "label": "CAMERA_POWER",
+        "port": 7,
+        "pin": 5,
+        "location": "T2",
+        "function": "GPIO7_5",
+        "mux_mode": 0,
+        "pad_config": "0x21",
+        "reg_address": "0x1A6030F4"
+    },
+    {
+        "pad_id": "P7_6",
+        "label": "IMU_GYRO_ACCEL",
+        "port": 7,
+        "pin": 6,
+        "location": "U3",
+        "function": "I3C_SDA_D",
+        "mux_mode": 6,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030F8"
+    },
+    {
+        "pad_id": "P7_7",
+        "label": "IMU_GYRO_ACCEL",
+        "port": 7,
+        "pin": 7,
+        "location": "U1",
+        "function": "I3C_SCL_D",
+        "mux_mode": 6,
+        "pad_config": "0x29",
+        "reg_address": "0x1A6030FC"
+    },
+    {
+        "pad_id": "P8_0",
+        "label": "OSPI FLASH",
+        "port": 8,
+        "pin": 0,
+        "location": "B7",
+        "function": "OSPI1_SCLKN_C",
+        "mux_mode": 1,
+        "pad_config": "0x64",
+        "reg_address": "0x1A603100"
+    },
+    {
+        "pad_id": "P8_1",
+        "label": "CLICKBOARD_INT",
+        "port": 8,
+        "pin": 1,
+        "location": "C2",
+        "function": "GPIO8_1",
+        "mux_mode": 0,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603104"
+    },
+    {
+        "pad_id": "P8_3",
+        "label": "CLICKBOARD_RST",
+        "port": 8,
+        "pin": 3,
+        "location": "A7",
+        "function": "GPIO8_3",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x1A60310C"
+    },
+    {
+        "pad_id": "P8_4",
+        "label": "ICM_IMU_IRQ",
+        "port": 8,
+        "pin": 4,
+        "location": "B4",
+        "function": "GPIO8_4",
+        "mux_mode": 0,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603110"
+    },
+    {
+        "pad_id": "P8_5",
+        "label": "BMI_IMU_IRQ",
+        "port": 8,
+        "pin": 5,
+        "location": "H1",
+        "function": "GPIO8_5",
+        "mux_mode": 0,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603114"
+    },
+    {
+        "pad_id": "P8_6",
+        "label": "I2S_MIC",
+        "port": 8,
+        "pin": 6,
+        "location": "J2",
+        "function": "I2S3_SCLK_B",
+        "mux_mode": 2,
+        "pad_config": "0x38",
+        "reg_address": "0x1A603118"
+    },
+    {
+        "pad_id": "P8_7",
+        "label": "I2S_MIC",
+        "port": 8,
+        "pin": 7,
+        "location": "J1",
+        "function": "I2S3_WS_B",
+        "mux_mode": 2,
+        "pad_config": "0x20",
+        "reg_address": "0x1A60311C"
+    },
+    {
+        "pad_id": "P9_0",
+        "label": "I2S_MIC",
+        "port": 9,
+        "pin": 0,
+        "location": "K2",
+        "function": "I2S3_SDI_B",
+        "mux_mode": 2,
+        "pad_config": "0x39",
+        "reg_address": "0x1A603120"
+    },
+    {
+        "pad_id": "P9_1",
+        "label": "CAMERA_RESET",
+        "port": 9,
+        "pin": 1,
+        "location": "K1",
+        "function": "GPIO9_1",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603124"
+    },
+    {
+        "pad_id": "P9_2",
+        "label": "CAMERA_FLASH",
+        "port": 9,
+        "pin": 2,
+        "location": "G5",
+        "function": "GPIO9_2",
+        "mux_mode": 0,
+        "pad_config": "0x30",
+        "reg_address": "0x1A603128"
+    },
+    {
+        "pad_id": "P9_3",
+        "label": "CAMERA_TRIGGER",
+        "port": 9,
+        "pin": 3,
+        "location": "H5",
+        "function": "GPIO9_3",
+        "mux_mode": 0,
+        "pad_config": "0x30",
+        "reg_address": "0x1A60312C"
+    },
+    {
+        "pad_id": "P9_4",
+        "label": "TOUCH_INT",
+        "port": 9,
+        "pin": 4,
+        "location": "J5",
+        "function": "GPIO9_4",
+        "mux_mode": 0,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603130"
+    },
+    {
+        "pad_id": "P9_5",
+        "label": "OSPI FLASH",
+        "port": 9,
+        "pin": 5,
+        "location": "L1",
+        "function": "OSPI1_D0_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603134"
+    },
+    {
+        "pad_id": "P9_6",
+        "label": "OSPI FLASH",
+        "port": 9,
+        "pin": 6,
+        "location": "K5",
+        "function": "OSPI1_D1_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603138"
+    },
+    {
+        "pad_id": "P9_7",
+        "label": "OSPI FLASH",
+        "port": 9,
+        "pin": 7,
+        "location": "L5",
+        "function": "OSPI1_D2_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A60313C"
+    },
+    {
+        "pad_id": "P10_0",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 0,
+        "location": "M2",
+        "function": "OSPI1_D3_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603140"
+    },
+    {
+        "pad_id": "P10_1",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 1,
+        "location": "M1",
+        "function": "OSPI1_D4_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603144"
+    },
+    {
+        "pad_id": "P10_2",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 2,
+        "location": "N1",
+        "function": "OSPI1_D5_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603148"
+    },
+    {
+        "pad_id": "P10_3",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 3,
+        "location": "N2",
+        "function": "OSPI1_D6_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A60314C"
+    },
+    {
+        "pad_id": "P10_4",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 4,
+        "location": "M5",
+        "function": "OSPI1_D7_C",
+        "mux_mode": 1,
+        "pad_config": "0x65",
+        "reg_address": "0x1A603150"
+    },
+    {
+        "pad_id": "P10_5",
+        "label": "ETH_PHY",
+        "port": 10,
+        "pin": 5,
+        "location": "N5",
+        "function": "ETH_TXD1_B",
+        "mux_mode": 6,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603154"
+    },
+    {
+        "pad_id": "P10_6",
+        "label": "ETH_PHY",
+        "port": 10,
+        "pin": 6,
+        "location": "P5",
+        "function": "ETH_TXEN_B",
+        "mux_mode": 6,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603158"
+    },
+    {
+        "pad_id": "P10_7",
+        "label": "OSPI FLASH",
+        "port": 10,
+        "pin": 7,
+        "location": "P1",
+        "function": "OSPI1_RXDS_C",
+        "mux_mode": 1,
+        "pad_config": "0x21",
+        "reg_address": "0x1A60315C"
+    },
+    {
+        "pad_id": "P11_0",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 0,
+        "location": "P2",
+        "function": "ETH_REFCLK_B",
+        "mux_mode": 6,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603160"
+    },
+    {
+        "pad_id": "P11_1",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 1,
+        "location": "R1",
+        "function": "ETH_MDIO_B",
+        "mux_mode": 5,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603164"
+    },
+    {
+        "pad_id": "P11_2",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 2,
+        "location": "R2",
+        "function": "ETH_MDC_B",
+        "mux_mode": 6,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603168"
+    },
+    {
+        "pad_id": "P11_3",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 3,
+        "location": "R5",
+        "function": "ETH_RXD0_B",
+        "mux_mode": 6,
+        "pad_config": "0x21",
+        "reg_address": "0x1A60316C"
+    },
+    {
+        "pad_id": "P11_4",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 4,
+        "location": "K8",
+        "function": "ETH_RXD1_B",
+        "mux_mode": 6,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603170"
+    },
+    {
+        "pad_id": "P11_5",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 5,
+        "location": "J9",
+        "function": "ETH_CRS_DV_B",
+        "mux_mode": 6,
+        "pad_config": "0x21",
+        "reg_address": "0x1A603174"
+    },
+    {
+        "pad_id": "P11_6",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 6,
+        "location": "R6",
+        "function": "ETH_RST_B",
+        "mux_mode": 6,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603178"
+    },
+    {
+        "pad_id": "P11_7",
+        "label": "ETH_PHY",
+        "port": 11,
+        "pin": 7,
+        "location": "L9",
+        "function": "ETH_IRQ_B",
+        "mux_mode": 6,
+        "pad_config": "0x21",
+        "reg_address": "0x1A60317C"
+    },
+    {
+        "pad_id": "P12_0",
+        "label": "LEDRGB0_B",
+        "port": 12,
+        "pin": 0,
+        "location": "F19",
+        "function": "GPIO12_0",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603180"
+    },
+    {
+        "pad_id": "P12_1",
+        "label": "UART2",
+        "port": 12,
+        "pin": 1,
+        "location": "E18",
+        "function": "UART4_RX_B",
+        "mux_mode": 2,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603184"
+    },
+    {
+        "pad_id": "P12_2",
+        "label": "UART2",
+        "port": 12,
+        "pin": 2,
+        "location": "E15",
+        "function": "UART4_TX_B",
+        "mux_mode": 2,
+        "pad_config": "0x28",
+        "reg_address": "0x1A603188"
+    },
+    {
+        "pad_id": "P12_3",
+        "label": "LEDRGB0_R",
+        "port": 12,
+        "pin": 3,
+        "location": "D18",
+        "function": "GPIO12_3",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A60318C"
+    },
+    {
+        "pad_id": "P12_4",
+        "label": "CLICKBOARD_SPI",
+        "port": 12,
+        "pin": 4,
+        "location": "F5",
+        "function": "CAN_RXD_C",
+        "mux_mode": 4,
+        "pad_config": "0x29",
+        "reg_address": "0x1A603190"
+    },
+    {
+        "pad_id": "P12_5",
+        "label": "CLICKBOARD_SPI",
+        "port": 12,
+        "pin": 5,
+        "location": "A10",
+        "function": "CAN_TXD_C",
+        "mux_mode": 4,
+        "pad_config": "0x24",
+        "reg_address": "0x1A603194"
+    },
+    {
+        "pad_id": "P12_6",
+        "label": "CLICKBOARD_SPI",
+        "port": 12,
+        "pin": 6,
+        "location": "E5",
+        "function": "CAN_STBY_C",
+        "mux_mode": 4,
+        "pad_config": "0x20",
+        "reg_address": "0x1A603198"
+    },
+    {
+        "pad_id": "P13_0",
+        "label": "QEC",
+        "port": 13,
+        "pin": 0,
+        "location": "G18",
+        "function": "QEC0_X_C",
+        "mux_mode": 4,
+        "pad_config": "0x23",
+        "reg_address": "0x1A6031A0"
+    },
+    {
+        "pad_id": "P13_1",
+        "label": "QEC",
+        "port": 13,
+        "pin": 1,
+        "location": "G15",
+        "function": "QEC0_Y_C",
+        "mux_mode": 3,
+        "pad_config": "0x23",
+        "reg_address": "0x1A6031A4"
+    },
+    {
+        "pad_id": "P13_2",
+        "label": "QEC",
+        "port": 13,
+        "pin": 2,
+        "location": "F15",
+        "function": "QEC0_Z_C",
+        "mux_mode": 3,
+        "pad_config": "0x23",
+        "reg_address": "0x1A6031A8"
+    },
+    {
+        "pad_id": "P13_4",
+        "label": "LPI2S",
+        "port": 13,
+        "pin": 4,
+        "location": "E14",
+        "function": "LPI2S_SDI_C",
+        "mux_mode": 2,
+        "pad_config": "0x21",
+        "reg_address": "0x1A6031B0"
+    },
+    {
+        "pad_id": "P13_5",
+        "label": "LPI2S",
+        "port": 13,
+        "pin": 5,
+        "location": "A17",
+        "function": "LPI2S_SDO_C",
+        "mux_mode": 2,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031B4"
+    },
+    {
+        "pad_id": "P13_6",
+        "label": "LPI2S",
+        "port": 13,
+        "pin": 6,
+        "location": "B15",
+        "function": "LPI2S_SCLK_C",
+        "mux_mode": 2,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031B8"
+    },
+    {
+        "pad_id": "P13_7",
+        "label": "LPI2S",
+        "port": 13,
+        "pin": 7,
+        "location": "A15",
+        "function": "LPI2S_WS_C",
+        "mux_mode": 2,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031BC"
+    },
+    {
+        "pad_id": "P14_0",
+        "label": "QEC_X_GPO",
+        "port": 14,
+        "pin": 0,
+        "location": "B9",
+        "function": "GPIO14_0",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031C0"
+    },
+    {
+        "pad_id": "P14_1",
+        "label": "QEC_Y_GPO",
+        "port": 14,
+        "pin": 1,
+        "location": "H2",
+        "function": "GPIO14_1",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031C4"
+    },
+    {
+        "pad_id": "P14_2",
+        "label": "QEC_Z_GPO",
+        "port": 14,
+        "pin": 2,
+        "location": "G1",
+        "function": "GPIO14_2",
+        "mux_mode": 0,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031C8"
+    },
+    {
+        "pad_id": "P14_4",
+        "label": "CMP3_OUT",
+        "port": 14,
+        "pin": 4,
+        "location": "R8",
+        "function": "CMP3_OUT_B",
+        "mux_mode": 1,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031D0"
+    },
+    {
+        "pad_id": "P14_5",
+        "label": "CMP2_OUT",
+        "port": 14,
+        "pin": 5,
+        "location": "L11",
+        "function": "CMP2_OUT_B",
+        "mux_mode": 1,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031D4"
+    },
+    {
+        "pad_id": "P14_6",
+        "label": "CMP1_OUT",
+        "port": 14,
+        "pin": 6,
+        "location": "K12",
+        "function": "CMP1_OUT_B",
+        "mux_mode": 1,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031D8"
+    },
+    {
+        "pad_id": "P14_7",
+        "label": "CMP0_OUT",
+        "port": 14,
+        "pin": 7,
+        "location": "L12",
+        "function": "CMP0_OUT_B",
+        "mux_mode": 1,
+        "pad_config": "0x20",
+        "reg_address": "0x1A6031DC"
+    },
+    {
+        "pad_id": "P15_0",
+        "label": "JOY_SW_A",
+        "port": 15,
+        "pin": 0,
+        "location": "V2",
+        "function": "GPIOV_0",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x42007000"
+    },
+    {
+        "pad_id": "P15_1",
+        "label": "JOY_SW_B",
+        "port": 15,
+        "pin": 1,
+        "location": "W2",
+        "function": "GPIOV_1",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x42007004"
+    },
+    {
+        "pad_id": "P15_2",
+        "label": "JOY_SW_C",
+        "port": 15,
+        "pin": 2,
+        "location": "U2",
+        "function": "GPIOV_2",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x42007008"
+    },
+    {
+        "pad_id": "P15_3",
+        "label": "JOY_SW_D",
+        "port": 15,
+        "pin": 3,
+        "location": "V1",
+        "function": "GPIOV_3",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x4200700C"
+    },
+    {
+        "pad_id": "P15_4",
+        "label": "JOY_SW_CENTER",
+        "port": 15,
+        "pin": 4,
+        "location": "V3",
+        "function": "GPIOV_4",
+        "mux_mode": 0,
+        "pad_config": "0x2b",
+        "reg_address": "0x42007010"
+    },
+    {
+        "pad_id": "P15_5",
+        "label": "LCD_RESET",
+        "port": 15,
+        "pin": 5,
+        "location": "W4",
+        "function": "GPIOV_5",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x42007014"
+    },
+    {
+        "pad_id": "P15_6",
+        "label": "OSPI0_RESET",
+        "port": 15,
+        "pin": 6,
+        "location": "V4",
+        "function": "GPIOV_6",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x42007018"
+    },
+    {
+        "pad_id": "P15_7",
+        "label": "OSPI1_RESET",
+        "port": 15,
+        "pin": 7,
+        "location": "W5",
+        "function": "GPIOV_7",
+        "mux_mode": 0,
+        "pad_config": "0x28",
+        "reg_address": "0x4200701C"
+    }
+],
+"clocks": {
+	"change_sets": [
+		{
+			"address": "0x1A604020",
+			"mask": "0x00000303",
+			"value": "0x00000102"
+		},
+		{
+			"address": "0x1A010808",
+			"mask": "0x0000001F",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A010804",
+			"mask": "0x0000001F",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A010824",
+			"mask": "0x0000001F",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A604030",
+			"mask": "0x0001E000",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A60A03C",
+			"mask": "0x00003800",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A602000",
+			"mask": "0x00000011",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A602008",
+			"mask": "0x00110011",
+			"value": "0x00110011"
+		},
+		{
+			"address": "0x1A010800",
+			"mask": "0x000000FF",
+			"value": "0x00000004"
+		},
+		{
+			"address": "0x1A010820",
+			"mask": "0x000000FF",
+			"value": "0x00000002"
+		},
+		{
+			"address": "0x4903F080",
+			"mask": "0x00000010",
+			"value": "0x00000000"
+		},
+		{
+			"address": "0x1A602010",
+			"mask": "0x00003333",
+			"value": "0x00000033"
+		},
+		{
+			"address": "0x1A60A000",
+			"mask": "0x00000001",
+			"value": "0x00000001"
+		},
+		{
+			"address": "0x1A602014",
+			"mask": "0x00F03011",
+			"value": "0x00003011"
+		}
+	]
+},
+"miscellaneous": [
+		{
+			"id": "SE_BOOT_INFO",
+			"sdesc": "SE Info",
+			"ldesc": "SERAM displays additional information during the boot/wakeup process. This option allows this information to be optionally suppressed during boot/startup. Automatic is Normal for LCS=DM and Minimal for LCS=SE.",
+			"options": [{"value":0,"label":"Automatic"},{"value":1,"label":"Normal"},{"value":2,"label":"Minimal"}],
+			"value": 0
+		},
+		{
+			"id": "ISP_MAINTENANCE_SUPPORT",
+			"sdesc": "ISP Maintenace Support",
+			"ldesc": "Enables/disables the SERAM ISP Maintenance mode that allows various program, debug and display commands over the SEUART. Automatic is Enabled  for LCS=DM and Disabled for LCS=SE.",
+			"options": [{"value":0,"label":"Automatic"},{"value":1,"label":"Enabled"},{"value":2,"label":"Disabled"}],
+			"value": 0
+		},
+		{
+			"id": "FW_RUNTIME_CFG",
+			"sdesc": "Firewall Configuration",
+			"ldesc": "Controls if the FW settings can be changed at runtime after the SE applies the Conductor tool config settings to the FW's. In Dynamic mode, the settings can be changed by a core at run time. In Static mode, the settings cannot be modified at runtime, but are statically configured by the SE via the Conductor tool settings and protected by FW settings that prevent further access.",
+			"options": [{"value":0,"label":"Dynamic"},{"value":1,"label":"Static (Locked)"}],
+			"value": 0
+		},
+		{
+			"id": "PINMUX_RUNTIME_CFG",
+			"sdesc": "Pin Mux Configuration",
+			"ldesc": "Controls if the Pin Mux settings can be changed at runtime after the SE applies the Conductor tool settings to the Pin Mux. In Dynamic mode, the settings can be changed by a core at run time via SE Services. In Static mode, the settings cannot be modified at runtime, but are statically configured by the SE via the Conductor tool settings.",
+			"options": [{"value":0,"label":"Dynamic"},{"value":1,"label":"Static (Locked)"}],
+			"value": 0
+		},
+		{
+			"id": "CLOCK_RUNTIME_CFG",
+			"sdesc": "Clock Configuration",
+			"ldesc": "Controls if the Clock settings can be changed at runtime after the SE applies the Conductor tool settings to the clock selections. In Dynamic mode, the settings can be changed by a core at run time via SE Services. In Static mode, the  settings cannot be modified at runtime, but are statically configured by the SE via the Conductor tool settings.",
+			"options": [{"value":0,"label":"Dynamic"},{"value":1,"label":"Static (Locked)"}],
+			"value": 0
+		},
+		{
+			"id": "ERR",
+			"sdesc": "ERR",
+			"ldesc": "Requested behavior for responses for transactions terminated by the Firewall Component.",
+			"options": [{"value":false,"label":"False: No error (program does not fault)"},{"value":true,"label":"True: Error (programs faults)"}],
+			"value": false
+		},
+		{
+			"id": "RAZ",
+			"sdesc": "RAZ",
+			"ldesc": "Requested behavior for read data returned for read transactions terminated by the Firewall Component.",
+			"options": [{"value":false,"label":"False: Read data is based on the StreamID (0xDEADDEAD)"},{"value":true,"label":"True: Read data all 0s"}],
+			"value": false
+		},
+		{
+			"id": "BOARD_LED_COUNT",
+			"sdesc": "Onboard LEDs",
+			"ldesc": "Sets the #define BOARD_LED_COUNT in the board_def.h file exported from the Conductor tool.",
+			"options": [{"value":0,"label":"0"},{"value":1,"label":"1"},{"value":2,"label":"2"},{"value":3,"label":"3"},{"value":4,"label":"4"},{"value":5,"label":"5"}],
+			"value": 0
+		},
+		{
+			"id": "BOARD_LEDRGB_COUNT",
+			"sdesc": "Onboard RGB LEDs",
+			"ldesc": "Sets the #define BOARD_LEDRGB_COUNT in the board_def.h file exported from the Conductor tool.",
+			"options": [{"value":0,"label":"0"},{"value":1,"label":"1"},{"value":2,"label":"2"},{"value":3,"label":"3"},{"value":4,"label":"4"},{"value":5,"label":"5"}],
+			"value": 2
+		},
+		{
+			"id": "BOARD_BUTTON_COUNT",
+			"sdesc": "Onboard Push-buttons",
+			"ldesc": "Sets the #define BOARD_BUTTON_COUNT in the board_def.h file exported from the Conductor tool.",
+			"options": [{"value":0,"label":"0"},{"value":1,"label":"1"},{"value":2,"label":"2"},{"value":3,"label":"3"},{"value":4,"label":"4"},{"value":5,"label":"5"}],
+			"value": 5
+		},
+		{
+			"id": "BOARD_CONFIG_JUMPER_COUNT",
+			"sdesc": "Onboard Config Switches or Jumpers",
+			"ldesc": "Sets the #define BOARD_CONFIG_JUMPER_COUNT in the board_def.h file exported from the Conductor tool.",
+			"options": [{"value":0,"label":"0"},{"value":1,"label":"1"},{"value":2,"label":"2"},{"value":3,"label":"3"},{"value":4,"label":"4"},{"value":5,"label":"5"}],
+			"value": 0
+		},
+		{
+			"id": "BOARD_SWITCH_OUTPUT_COUNT",
+			"sdesc": "Onboard Switching Devices",
+			"ldesc": "Sets the #define BOARD_SWITCH_OUTPUT_COUNT in the board_def.h file exported from the Conductor tool. These include relays, solid state relays, transistors, optocopulers, etc.",
+			"options": [{"value":0,"label":"0"},{"value":1,"label":"1"},{"value":2,"label":"2"},{"value":3,"label":"3"},{"value":4,"label":"4"},{"value":5,"label":"5"}],
+			"value": 0
+		},
+		{
+			"id": "BOARD_OSPI0_BUS_SPEED",
+			"sdesc": "OSPI0 Bus Speed",
+			"ldesc": "Selects OSPI0 bus speed for a 200-MHz (default) HCLK. For 100 MHz and lower HCLK clock speeds, some values are either not possible, either rounded to the closest possible value in hardware.",
+			"options": [{"value":100000000,"label":"100 MHz"},{"value":50000000,"label":"50 MHz"},{"value":33333333,"label":"33.3 MHz"},{"value":25000000,"label":"25 MHz"},{"value":16666666,"label":"16.6 MHz"},{"value":12500000,"label":"12.5 MHz"},{"value":10000000,"label":"10 MHz"},{"value":8333333,"label":"8.3 MHz"},{"value":6250000,"label":"6.25 MHz"},{"value":3125000,"label":"3.125 MHz"},{"value":1562500,"label":"1.5625 MHz"},{"value":781250,"label":"0.78125 MHz"}],
+			"value": 100000000
+		},
+		{
+			"id": "BOARD_OSPI1_BUS_SPEED",
+			"sdesc": "OSPI1 Bus Speed",
+			"ldesc": "Selects OSPI1 bus speed for a 200-MHz (default) HCLK. For 100 MHz and lower HCLK clock speeds, some values are either not possible, either rounded to the closest possible value in hardware.",
+			"options": [{"value":100000000,"label":"100 MHz"},{"value":50000000,"label":"50 MHz"},{"value":33333333,"label":"33.3 MHz"},{"value":25000000,"label":"25 MHz"},{"value":16666666,"label":"16.6 MHz"},{"value":12500000,"label":"12.5 MHz"},{"value":10000000,"label":"10 MHz"},{"value":8333333,"label":"8.3 MHz"},{"value":6250000,"label":"6.25 MHz"},{"value":3125000,"label":"3.125 MHz"},{"value":1562500,"label":"1.5625 MHz"},{"value":781250,"label":"0.78125 MHz"}],
+			"value": 100000000
+		}
+	]
+}

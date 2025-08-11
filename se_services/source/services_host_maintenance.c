@@ -54,8 +54,8 @@
  */
 uint32_t SERVICES_heartbeat(uint32_t services_handle)
 {
-  SERVICES_prepare_packet_buffer(sizeof(service_header_t));
-  return SERVICES_send_request(services_handle, 
-                               SERVICE_MAINTENANCE_HEARTBEAT_ID,
-                               DEFAULT_TIMEOUT);
+    SERVICES_prepare_packet_buffer(sizeof(service_header_t));
+    return SERVICES_send_request(services_handle,
+                                 SERVICE_MAINTENANCE_HEARTBEAT_ID,
+                                 DEFAULT_TIMEOUT);
 }

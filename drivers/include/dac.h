@@ -11,31 +11,24 @@
 #ifndef DAC_H_
 #define DAC_H_
 
-#ifdef  __cplusplus
-extern "C"
-{
+#include "soc.h"
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-/**
-  * @brief DAC (DAC)
-  */
-typedef struct {                             /*!< DAC Structure                                          */
-    volatile uint32_t  DAC_REG1;             /*!< REG1 DAC Control Register                              */
-    volatile uint32_t  DAC_IN;               /*!< DAC Input Value Register                               */
-} DAC_Type;                                  /*!< Size = 8 (0x8)                                         */
-
 /* DAC  Control register */
-#define DAC_EN                   (1U << 0)   /* Enable DAC                                               */
-#define DAC_RESET_B              (1U << 27)  /* 0=Reset,this will reset the DAC                          */
-#define DAC_HP_MODE_EN           (1U << 18)  /* To enable the dac output buffer                          */
-#define DAC_MAX_INPUT            (0xFFFU)    /* Maximum input for the DAC is 4095(DAC 12 bit resolution) */
-#define DAC_IN_BYP_MUX           (1U << 1U)  /* Select the DAC input data source                         */
-#define DAC_MAX_BYP_VAL_Msk      (0x3FFCU)   /* DAC input data in bypass mode                            */
-#define DAC_TWOSCOMP_Pos          22U        /* Converts two's complement to unsigned binary data        */
-#define DAC_INPUT_BYP_MUX_Pos     1U         /* Set DAC input source in bypass mode                      */
-#define DAC_BYP_VAL_Pos           2U         /* DAC input data bypass mode                               */
-#define DAC_IBIAS_VAL_Pos         23U        /* DAC buffer output current                                */
-#define DAC_CAP_VAL_Pos           14U        /* DAC capacitance compensation                             */
+#define DAC_EN                (1U << 0) /* Enable DAC                                               */
+#define DAC_RESET_B           (1U << 27) /* 0=Reset,this will reset the DAC                          */
+#define DAC_HP_MODE_EN        (1U << 18) /* To enable the dac output buffer                          */
+#define DAC_MAX_INPUT         (0xFFFU) /* Maximum input for the DAC is 4095(DAC 12 bit resolution) */
+#define DAC_IN_BYP_MUX        (1U << 1U) /* Select the DAC input data source                         */
+#define DAC_MAX_BYP_VAL_Msk   (0x3FFCU) /* DAC input data in bypass mode */
+#define DAC_TWOSCOMP_Pos      22U /* Converts two's complement to unsigned binary data        */
+#define DAC_INPUT_BYP_MUX_Pos 1U  /* Set DAC input source in bypass mode                      */
+#define DAC_BYP_VAL_Pos       2U  /* DAC input data bypass mode                               */
+#define DAC_IBIAS_VAL_Pos     23U /* DAC buffer output current                                */
+#define DAC_CAP_VAL_Pos       14U /* DAC capacitance compensation                             */
 
 /**
  @fn           void dac_enable(DAC_Type *dac)
@@ -161,7 +154,7 @@ static inline void dac_set_bypass_input(DAC_Type *dac, uint32_t bypass_val)
     /* Clear the DAC bypass value */
     dac->DAC_REG1 &= ~(DAC_MAX_BYP_VAL_Msk);
 
-    bypass_val = (bypass_val & DAC_MAX_INPUT);
+    bypass_val     = (bypass_val & DAC_MAX_INPUT);
 
     /* Set the DAC bypass input value */
     dac->DAC_REG1 |= (bypass_val << DAC_BYP_VAL_Pos);
