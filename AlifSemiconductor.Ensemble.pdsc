@@ -1920,9 +1920,21 @@
       <require Bvendor="Alif Semiconductor" Bname="DevKit-E7"/>
     </condition>
 
+    <condition id="DevKit-E8">
+      <description>Alif Semiconductor Ensemble DevKit-E8 Board</description>
+      <require Bvendor="Alif Semiconductor" Bname="DevKit-E8"/>
+    </condition>
+
     <condition id="DevKit VIO Driver">
       <description>Requirement for DevKit-E7 VIO Driver</description>
       <require condition="DevKit-E7"/>
+      <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
+    </condition>
+
+    <condition id="DevKit-E8 VIO Driver">
+      <description>Requirement for DevKit-E8 VIO Driver</description>
+      <require condition="DevKit-E8"/>
+      <require Cclass="BSP" Cgroup="DevKit Config"  Cvariant="DevKit-e8"/>
       <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
     </condition>
 
@@ -2264,6 +2276,17 @@
      </RTE_Components_h>
      <files>
        <file category="source" name="Boards/DevKit-e7/Drivers/vio_DevKit-E7.c"/>
+     </files>
+   </component>
+
+   <component Cclass="CMSIS Driver" Cgroup="VIO" Csub="Board" Cvariant="DevKit-E8" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit-E8 VIO Driver">
+     <description>Virtual I/O implementation for Ensemble DevKit DK-E8</description>
+     <RTE_Components_h>
+        #define RTE_VIO_BOARD
+        #define RTE_VIO_DEVKIT_E8
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Boards/DevKit-e8/Drivers/vio_DevKit-E8.c"/>
      </files>
    </component>
 
