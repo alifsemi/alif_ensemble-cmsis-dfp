@@ -3187,6 +3187,8 @@
 
     <clayer type="Board" path="Boards/DevKit-e7/Layers/M55_HE"      file="Board_HE.clayer.yml" copy-to="Board/DevKit-E7_M55_HE" condition="DevKit-E7"/>
     <clayer type="Board" path="Boards/DevKit-e7/Layers/M55_HP"      file="Board_HP.clayer.yml" copy-to="Board/DevKit-E7_M55_HP" condition="DevKit-E7"/>
+
+    <clayer type="Board" path="Boards/DevKit-e8/Layers/M55_HE"      file="Board_HE.clayer.yml" copy-to="Board/DevKit-E8_M55_HE" condition="DevKit-E8"/>
   </csolution>
 
 </package>
