@@ -1426,6 +1426,7 @@
       <compatibleDevice deviceIndex="0" Dvendor="Alif Semiconductor:165" Dname="AE402FA0E5597LE0"/>
       <debugInterface adapter="JTAG/SW" connector="20-pin Arm Coresight JTAG Connector (1.27 mm)"/>
       <debugInterface adapter="JTAG/SW" connector="10-pin Arm Coresight JTAG Connector (1.27 mm)"/>
+      <debugProbe name="JLink Server" debugLink="swd" debugClock="10000000" connector="USB-C"/>
       <feature type="XTAL" n="38400000"/>
       <feature type="PWR" n="4.75" m="5.25"/>
       <feature type="Batt" n="1" name="CR2032 Battery for RTC and VBATT peripherals"/>
