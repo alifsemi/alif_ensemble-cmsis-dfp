@@ -1870,34 +1870,32 @@
       <require Cclass="CMSIS-Compiler" Cgroup="STDOUT" Csub="Custom"/>
     </condition>
 
-    <condition id="Board Config E7">
-      <description>Requirement for Board Config E7</description>
+    <condition id="BSP Board Config">
+      <description>Requirement for BSP Board Config</description>
       <require condition="Ensemble CMSIS_Driver"/>
       <require Cclass="Services" Cgroup="Secure Enclave" Csub="Initialization Helper"/>
+     </condition>
+
+    <condition id="Board Config E7">
+      <description>Requirement for Board Config E7</description>
       <require Cclass="BSP" Cgroup="Board Config"/>
       <require Dname="AE722F80F55D5*"/>
      </condition>
 
    <condition id="Board Config E8">
       <description>Requirement for Board Config E8</description>
-      <require condition="Ensemble CMSIS_Driver"/>
-      <require Cclass="Services" Cgroup="Secure Enclave" Csub="Initialization Helper"/>
       <require Cclass="BSP" Cgroup="Board Config"/>
       <require Dname="AE822FA0E5597*"/>
     </condition>
 
     <condition id="Board Config E4">
       <description>Requirement for Board Config E4</description>
-      <require condition="Ensemble CMSIS_Driver"/>
-      <require Cclass="Services" Cgroup="Secure Enclave" Csub="Initialization Helper"/>
       <require Cclass="BSP" Cgroup="Board Config"/>
       <require Dname="AE402FA0E5597*"/>
     </condition>
 
     <condition id="Board Config E1C">
       <description>Requirement for Board Config E1C</description>
-      <require condition="Ensemble CMSIS_Driver"/>
-      <require Cclass="Services" Cgroup="Secure Enclave" Csub="Initialization Helper"/>
       <require Cclass="BSP" Cgroup="Board Config"/>
       <require Dname="AE1C1F4051920*"/>
     </condition>
@@ -3021,7 +3019,7 @@
     </component>
 
 
-    <component Cclass="BSP" Cgroup="Board Config" Cversion="2.0.0" condition="Ensemble">
+    <component Cclass="BSP" Cgroup="Board Config" Cversion="2.0.0" condition="BSP Board Config">
       <description>Conductor Tool based board configuration for Board Config</description>
       <files>
         <file category="source" name="libs/board_config/board_config.c"/>
