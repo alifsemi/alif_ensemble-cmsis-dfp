@@ -132,4 +132,4 @@ fi
 
 gen_pack "${DEFAULT_ARGS[@]}" "$@"
 
-exit 1
+exit 0
