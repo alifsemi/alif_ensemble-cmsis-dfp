@@ -1,0 +1,88 @@
+name: Test-Examples   # BSP Examples
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/Test-Examples.yml  # Execute this workflow when workflow is being modified
+      - Boards/**                            # Execute this workflow when there are modifications inside Board directory
+  push:
+    branches: [main]                         # Execute this workflow when main branch is updated
+  schedule:
+    - cron: '00 20 * * 6'
+
+jobs:
+  Test-Examples:                     # Install tools, build
+    strategy:
+      matrix:
+        test: [
+          { tool: GCC,   dir: AppKit-e7-aiml/Examples/M55_HE/Blinky,        proj: Blinky,         artifact: AppKit_E7_Blinky_HE },
+          { tool: AC6,   dir: AppKit-e7-aiml/Examples/M55_HE/Blinky,        proj: Blinky,         artifact: AppKit_E7_Blinky_HE },
+          { tool: GCC,   dir: AppKit-e7-aiml/Examples/M55_HP/Blinky,        proj: Blinky,         artifact: AppKit_E7_Blinky_HP },
+          { tool: AC6,   dir: AppKit-e7-aiml/Examples/M55_HP/Blinky,        proj: Blinky,         artifact: AppKit_E7_Blinky_HP },
+          { tool: GCC,   dir: AppKit-e7-aiml/Examples/M55_HP_HE/DualCore,   proj: DualCore,       artifact: AppKit_E7_DualCore  },
+          { tool: AC6,   dir: AppKit-e7-aiml/Examples/M55_HP_HE/DualCore,   proj: DualCore,       artifact: AppKit_E7_DualCore  },
+          { tool: GCC,   dir: DevKit-e7/Examples/Blinky_HE,                 proj: Blinky_HE,      artifact: DevKit_E7_Blinky_HE },
+          { tool: AC6,   dir: DevKit-e7/Examples/Blinky_HE,                 proj: Blinky_HE,      artifact: DevKit_E7_Blinky_HE },
+          { tool: GCC,   dir: DevKit-e7/Examples/Blinky_HP,                 proj: Blinky_HP,      artifact: DevKit_E7_Blinky_HP },
+          { tool: AC6,   dir: DevKit-e7/Examples/Blinky_HP,                 proj: Blinky_HP,      artifact: DevKit_E7_Blinky_HP },
+          { tool: GCC,   dir: DevKit-e7/Examples/Dual_Core,                 proj: Dual_Core,      artifact: DevKit_E7_Dual_Core },
+          { tool: AC6,   dir: DevKit-e7/Examples/Dual_Core,                 proj: Dual_Core,      artifact: DevKit_E7_Dual_Core },
+          { tool: GCC,   dir: DevKit-e8/Examples/Blinky_HE,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HE },
+          { tool: AC6,   dir: DevKit-e8/Examples/Blinky_HE,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HE },
+          { tool: GCC,   dir: DevKit-e8/Examples/Blinky_HP,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HP },
+          { tool: AC6,   dir: DevKit-e8/Examples/Blinky_HP,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HP }
+          ]
+
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout .ci folder
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .ci
+
+      - name: Install tools
+        uses: ARM-software/cmsis-actions/vcpkg@v1
+        with:
+          config: "./.ci/vcpkg-configuration.json"
+
+      - name: Activate Arm tool license
+        uses: ARM-software/cmsis-actions/armlm@v1
+
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          path: ./DFP
+
+      - name: Initialize CMSIS pack root folder
+        run: |
+          cpackget init https://www.keil.com/pack/index.pidx
+          cpackget update-index
+
+      - name: Add local CMSIS packs
+        run: |
+          cpackget add ./DFP/AlifSemiconductor.Ensemble.pdsc
+
+      - name: Copy example to CI folder
+        working-directory: ./
+        run: |
+          mkdir -p ./CI/${{ matrix.test.dir }}
+          cp -a ./DFP/Boards/${{ matrix.test.dir }}/. ./CI/${{ matrix.test.dir }}
+
+      - name: Build Example
+        working-directory: ./CI/${{ matrix.test.dir }}
+        run: |
+          cbuild ./${{ matrix.test.proj }}.csolution.yml --packs --toolchain ${{ matrix.test.tool }}
+
+      - name: Upload Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.test.artifact }}_${{ matrix.test.tool }}
+          path: |
+            ./CI/${{ matrix.test.dir }}/
+            !./CI/${{ matrix.test.dir }}/tmp/
+          retention-days: 1
