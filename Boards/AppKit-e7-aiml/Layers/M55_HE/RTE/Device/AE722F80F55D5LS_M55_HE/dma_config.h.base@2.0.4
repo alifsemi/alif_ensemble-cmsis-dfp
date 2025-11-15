@@ -23,7 +23,7 @@
 //              1 = AWCACHE[0] is HIGH.
 //      Setting AWCACHE[3,1]=0b10 violates the AXI protocol
 // <i> Default: 0x2
-#define DMA_DEST_CACHE_CTRL     0x2
+#define DMA_DEST_CACHE_CTRL 0x2
 
 // <o> DMA Source Cache Control <0-7>
 // <i> State of ARCACHE[2:0] when the DMAC reads the source data
@@ -35,7 +35,7 @@
 //              1 = ARCACHE[0] is HIGH.
 //      Setting ARCACHE[2:1]=0b10 violates the AXI protocol
 // <i> Default: 0x2
-#define DMA_SRC_CACHE_CTRL      0x2
+#define DMA_SRC_CACHE_CTRL  0x2
 
 // <o> DMA Source Protection Control <0-7>
 // <i> State of ARPROT[2:0] when the DMAC reads the source data
@@ -47,7 +47,7 @@
 //              1 = ARPROT[0] is HIGH.
 //      Only DMA channels in the Secure state can program ARPROT[1] LOW
 // <i> Default: 0x0
-#define DMA_SRC_PROT_CTRL      0x0
+#define DMA_SRC_PROT_CTRL   0x0
 
 // <o> DMA Destination Protection Control <0-7>
 // <i> State of AWPROT[2:0] when the DMAC write the destination data
@@ -59,11 +59,11 @@
 //              1 = AWPROT[0] is HIGH.
 //      Only DMA channels in the Secure state can program AWPROT[1] LOW
 // <i> Default: 0x0
-#define DMA_DEST_PROT_CTRL      0x0
+#define DMA_DEST_PROT_CTRL  0x0
 
 // <o> DMA Microcode size
 // <i> Defines Default memory size(bytes) to hold the microcode for a channel
 // <i> Default: 128
-#define DMA_MICROCODE_SIZE      128
+#define DMA_MICROCODE_SIZE  128
 
 #endif /* DMA_CONFIG_H_ */
