@@ -28,11 +28,9 @@
  */
 #include "app_mem_regions.h"
 
-#define __STACK_SIZE             APP_HE_STACK_SIZE
-#define __HEAP_SIZE              APP_HE_HEAP_SIZE
-#define __APP_HEAP_SIZE          0x00004000
-#define __ROM_BASE               APP_MRAM_HE_BASE
-#define __ROM_SIZE               APP_MRAM_HE_SIZE
+#define __STACK_SIZE            APP_HE_STACK_SIZE
+#define __HEAP_SIZE             APP_HE_HEAP_SIZE
+#define __APP_HEAP_SIZE         0x00004000
 
 /*
  * Note:
@@ -49,36 +47,33 @@ MEMORY
   SRAM0 (rwx) : ORIGIN = APP_SRAM0_BASE, LENGTH = APP_SRAM0_SIZE
   SRAM1 (rwx) : ORIGIN = APP_SRAM1_BASE, LENGTH = APP_SRAM1_SIZE
   #endif
-  MRAM  (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE
 }
 
 ENTRY(Reset_Handler)
 
 SECTIONS
 {
-
   /DISCARD/ :
   {
       *(.ARM.exidx*)
       *(.ARM.extab* .gnu.linkonce.armextab.*)
   }
 
-  .startup.at_mram : ALIGN(2048)
+  .startup.at_itcm : ALIGN(2048)
   {
     KEEP(*(.vectors))
 
-    *startup*(.text* .rodata*)
-    *system*(.text* .rodata*)
-    *sys_*(.text* .rodata*)
-    *pm*(.text* .rodata*)
-    *tgu*(.text* .rodata*)
-    *mpu*(.text* .rodata*)
-    *sau_tcm_ns_setup*(.text* .rodata*)
+    *startup*(.text .rodata*)
+    *system*(.text .rodata*)
+    *sys_*(.text .rodata*)
+    *pm*(.text .rodata*)
+    *tgu*(.text .rodata*)
+    *mpu*(.text .rodata*)
+    *sau_tcm_ns_setup*(.text .rodata*)
 
-    *lv_*(.text* .rodata*)
+    *lv_*(.text .rodata*)
 
-    . = ALIGN(16);
-  } > MRAM
+  } > ITCM
 
   .copy.table : ALIGN(4)
   {
@@ -86,15 +81,12 @@ SECTIONS
     LONG ( LOADADDR(.tdata.at_dtcm) )
     LONG ( ADDR(.tdata.at_dtcm) )
     LONG ( SIZEOF(.tdata.at_dtcm)/4 )
+
     LONG ( LOADADDR(.data.at_dtcm) )
     LONG ( ADDR(.data.at_dtcm) )
     LONG ( SIZEOF(.data.at_dtcm)/4 )
-    LONG ( LOADADDR(.code.at_itcm) )
-    LONG ( ADDR(.code.at_itcm) )
-    LONG ( SIZEOF(.code.at_itcm)/4 )
     __copy_table_end__ = .;
-    . = ALIGN(16);
-  } > MRAM
+  } > ITCM
 
   .zero.table : ALIGN(4)
   {
@@ -108,18 +100,15 @@ SECTIONS
     LONG (SIZEOF(.bss.at_sram0)/4)
 #endif
     __zero_table_end__ = .;
-    . = ALIGN(16);
-  } > MRAM
+  } > ITCM
 
   .code.at_itcm : ALIGN(8)
   {
     *(.text*)
-    *(.itcm*)                             /* Object targeting ITCM */
-    . = ALIGN(16);
-  } > ITCM AT > MRAM
+  } > ITCM
 
-  /* Thread Local Storage sections */
-  .tdata.at_dtcm : ALIGN(16)
+  /* Thread Local Storage (.tdata) */
+  .tdata.at_dtcm : ALIGN(8)
   {
     /* TLS base = beginning of TLS block */
     __tls_base = .;
@@ -128,17 +117,15 @@ SECTIONS
     /* Initialized TLS variables */
     *(.tdata .tdata.* .gnu.linkonce.td.*)
     __tdata_end = .;
-    . = ALIGN(16);
-  } > DTCM AT > MRAM
+  } > DTCM AT > ITCM
 
   /* Thread-Local Uninitialized Data (.tbss) */
-  .tbss (NOLOAD) : ALIGN(16)
+  .tbss (NOLOAD) : ALIGN(8)
   {
     *(.tbss .tbss.* .gnu.linkonce.tb.*)
     /* TLS commons here */
     *(.tcommon)
     __tbss_end = .;
-    . = ALIGN(16);
   } > DTCM
 
   .data.at_dtcm : ALIGN(8)
@@ -146,7 +133,6 @@ SECTIONS
     *(vtable)
     *(.data)
     *(.data*)
-    *(.dtcm*)                             /* Objects targeting DTCM */
     *arm_common_tables*(.data* .rodata*)
 
     KEEP(*(.jcr*))
@@ -157,8 +143,8 @@ SECTIONS
     __exidx_start = .;
     *(.ARM.exidx* .gnu.linkonce.armexidx.*)
     __exidx_end = .;
-    . = ALIGN(16);
-  } > DTCM AT > MRAM
+
+  } > DTCM AT > ITCM
 
 #if __HAS_BULK_SRAM
   .bss.at_sram0 (NOLOAD) : ALIGN(8)
@@ -219,7 +205,7 @@ SECTIONS
   } > DTCM
   PROVIDE(__stack = __StackTop);
 
-  .readonly.at_mram : ALIGN(8)
+  .readonly.at_itcm : ALIGN(8)
   {
     /* Use wildcards to mop up any read-only not directed to TCM */
     KEEP(*(.init))
@@ -262,8 +248,7 @@ SECTIONS
     *(.rodata*)
 
     KEEP(*(.eh_frame*))
-    . = ALIGN(16);
-  } > MRAM
+  } > ITCM
 
   /* Check if data + heap + stack exceeds RAM limit */
   ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
