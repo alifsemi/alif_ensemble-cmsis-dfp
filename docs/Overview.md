@@ -81,6 +81,13 @@ Provided API Interface    | Description
  CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
  STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
 
+## CMSIS Solution Templates
+
+For starting new applications in VS Code, select these templates when using the CMSIS View menu command *Create a Solution*:
+
+- Alif CMSIS: A bare-metal application for an Alif Ensemble device.
+- Alif Zephyr: A Zephyr application (using West) for an Alif Ensemble device.
+
 ## Usage
 
 The host PC runs the [SETOOLS](https://swrm.alifsemi.com/Content/3.4%20SETOOLS.htm?TocPath=Secure%20Enclave%20Subsystem%7C_____4), IDE and debugger connects to Alif Semiconductor development boards via debug probes (J-Link, CMSIS DAP, ULINKpro). Optional, for the SETOOLS  an onboard UART-to-USB

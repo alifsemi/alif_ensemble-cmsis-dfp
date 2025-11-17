@@ -1,0 +1,44 @@
+# A solution is a collection of related projects that share same base configuration.
+solution:
+  created-for: CMSIS-Toolbox@2.12.0
+
+  # List of tested compilers that can be selected
+  select-compiler:
+    - compiler: AC6
+    - compiler: GCC
+    - compiler: IAR
+    - compiler: CLANG
+
+  # List the packs that define the device and/or board.
+  packs:
+
+  # List different hardware targets that are used to deploy the solution.
+  target-types:
+    - type: Ensemble
+
+  build-types:
+    - type: Debug
+      west-defs:
+        - CONFIG_DEBUG: y
+        - CONFIG_DEBUG_THREAD_INFO: y
+        - CONFIG_DEBUG_OPTIMIZATIONS: y
+    - type: Release
+      west-defs:
+        - CONFIG_SIZE_OPTIMIZATIONS: y
+
+# Add West projects as described in https://open-cmsis-pack.github.io/cmsis-toolbox/build-overview/#west-build-system-integration
+  projects:
+    #- west:
+    #    project-id: M55_HE
+    #    app-path: ./rtss_he
+    #    board: $west-board$_he
+    #    device: :M55_HE
+    #    west-defs:
+    #      - RTSS_HP_MHU0: ON
+    #- west:
+    #    project-id: M55_HP
+    #    app-path: ./rtss_hp
+    #    board: $west-board$_hp
+    #    device: :M55_HP
+    #    west-defs:
+    #      - RTSS_HE_MHU0: ON

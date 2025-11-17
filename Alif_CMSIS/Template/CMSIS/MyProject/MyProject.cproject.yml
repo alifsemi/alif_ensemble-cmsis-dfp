@@ -1,0 +1,21 @@
+# A project translates into one executable or library.
+project:
+  groups:
+    - group: AppMain
+      files:
+        - file: README.md
+        - file: app_main.c
+
+# ToDo: Add hardware abstraction layer (i.e. copy a layer from the pack)
+# layers:
+#   - layer: $SolutionDir()$/Board/Board_HP.clayer.yml   
+  device: :M55_HP           # remove this node when using a layer with device: specified
+
+  # List executable file formats to be generated.
+  output:
+    type:
+      - elf
+      - hex
+      - map
+      - bin
+      

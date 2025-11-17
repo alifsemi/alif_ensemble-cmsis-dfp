@@ -3060,6 +3060,13 @@
   </components>
 
   <csolution>
+    <template name="Alif CMSIS" path="Alif_CMSIS/Template/CMSIS" file="MyProject.csolution.yml" condition="Ensemble">
+      <description>Create a bare-metal application for Alif Ensemble device</description>
+    </template>
+    <template name="Alif Zephyr" path="Alif_CMSIS/Template/Zephyr" file="Zephyr.csolution.yml" condition="Ensemble">
+      <description>Create a Zephyr application (using West) for Alif Ensemble device</description>
+    </template>
+
     <clayer type="Board" path="Boards/AppKit-e7-aiml/Layers/M55_HE" file="Board_HE.clayer.yml" copy-to="Board/AppKit-E7_M55_HE" condition="AppKit-E7-AIML"/>
     <clayer type="Board" path="Boards/AppKit-e7-aiml/Layers/M55_HP" file="Board_HP.clayer.yml" copy-to="Board/AppKit-E7_M55_HP" condition="AppKit-E7-AIML"/>
 
