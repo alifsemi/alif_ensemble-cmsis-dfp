@@ -45,8 +45,8 @@ layer:
 
   # List the packs used in the layer.
   packs:
-    - pack: AlifSemiconductor::Ensemble@^2.0.0-0
-    - pack: ARM::CMSIS@^6.2.0-0
+    - pack: AlifSemiconductor::Ensemble@^2.0.4-0
+    - pack: ARM::CMSIS@^6.2.0
     - pack: ARM::CMSIS-Compiler@^2.1.0
     - pack: ARM::CMSIS-Driver@^2.8.0
     - pack: ARM::ethos-u-core-driver@^1.24.8
