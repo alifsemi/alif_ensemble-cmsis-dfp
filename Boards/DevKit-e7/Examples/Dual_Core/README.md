@@ -13,7 +13,7 @@ and is defined in [`csolution`](https://open-cmsis-pack.github.io/cmsis-toolbox/
 
 ## JLink
 
-When using the JLink debug adapter ensure that JLink version 8.44 or higher is installed.
+When using the JLink debug adapter ensure that JLink version 8.84 or higher is installed.
 
 ## SETOOLS
 

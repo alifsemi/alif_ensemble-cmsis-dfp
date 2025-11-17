@@ -9,7 +9,7 @@ is available with various real-time operating systems, for example RTX5 or FreeR
 
 ## JLink
 
-When using the JLink debug adapter ensure that JLink version 8.44 or higher is installed.
+When using the JLink debug adapter ensure that JLink version 8.84 or higher is installed.
 
 ## SETOOLS
 
