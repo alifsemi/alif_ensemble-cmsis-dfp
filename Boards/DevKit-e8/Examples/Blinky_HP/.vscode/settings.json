@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.h": "c",
-    },
-
-    "cmake.configureOnOpen": false,
-
-    "cortex-debug.variableUseNaturalFormat": false,
-}
