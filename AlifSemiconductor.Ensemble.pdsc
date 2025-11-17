@@ -205,15 +205,7 @@
         <debugconfig dormant="true"/>
         <!-- Debug sequences -->
         <sequences>
-          <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
-            <block>
-              Write32(0x1A600024, 0);
-            </block>
-          </sequence>
-          <sequence name="DisableWarmResetHandshake" Pname="M55_HE">
-            <block>
-              Write32(0x1A601024, 0);
-            </block>
+          <sequence name="DisableWarmResetHandshake">
           </sequence>
         </sequences>
         <!-- On-chip NVM Region -->
