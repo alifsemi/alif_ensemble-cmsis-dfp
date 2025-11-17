@@ -18,7 +18,7 @@ solution:
 
   # List different hardware targets that are used to deploy the solution.
   target-types:
-    - type: AE722F80F55D5LS
+    - type: DevKit-E7
       board: DevKit-E7:Gen 2
       device: AE722F80F55D5LS
 

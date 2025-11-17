@@ -15,7 +15,7 @@ solution:
 
   # List different hardware targets that are used to deploy the solution.
   target-types:
-    - type: Alif-DevKit-E7
+    - type: DevKit-E7
       board: Alif Semiconductor::DevKit-E7
       device: Alif Semiconductor::AE722F80F55D5LS
       target-set:
