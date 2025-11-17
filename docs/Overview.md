@@ -41,9 +41,6 @@ Blinky_M55_HE_TCM        | uVision IDE    | Blinky example running on M55 High E
 Csolution Project        | CMSIS-Toolbox  | Blinky examples configured for M55 High Performance or High Efficiency code
 DualCore_HE_HP           | CMSIS-Toolbox  | Dual Core example running on M55 High Efficiency and High Performance core
 HelloWorld_M55_HP        | uVision IDE    | Hello World example running on M55 High Performance core
-Zephyr_HP                | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Performance core
-Zephyr_HE                | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Efficiency core
-Zephyr_HE_HP             | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Efficiency and High Performance core
 
 Layer Type: Board       | Tool           | Description
 :-----------------------|:---------------|:--------------------------
@@ -68,9 +65,6 @@ Example                 | Tool           | Description
 Blinky_HP               | CMSIS-Toolbox  | Blinky example running on M55 High Performance core
 Blinky_HE               | CMSIS-Toolbox  | Blinky example running on M55 High Efficiency core
 DualCore_HE_HP          | CMSIS-Toolbox  | Dual Core example running on M55 High Efficiency and High Performance core
-Zephyr_HP               | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Performance core
-Zephyr_HE               | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Efficiency core
-Zephyr_HE_HP            | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Efficiency and High Performance core
 
 Layer Type: Board       | Tool           | Description
 :-----------------------|:---------------|:--------------------------

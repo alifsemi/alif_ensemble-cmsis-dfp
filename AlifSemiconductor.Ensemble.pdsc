@@ -1291,30 +1291,6 @@
       </attributes>
     </example>
 
-    <example name="Zephyr_HE" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HE" doc="README.md">
-      <description>Zephyr configuration for CMSIS-Debugger on M55 High Efficiency core</description>
-      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
-      </project>
-    </example>
-
-    <example name="Zephyr_HP" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HP" doc="README.md">
-      <description> Zephyr configuration for CMSIS-Debugger on M55 High Performance core</description>
-      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
-      </project>
-    </example>
-
-    <example name="Zephyr_DualCore_HE_HP" folder="Boards/DevKit-e7/Examples/Zephyr/M55_HP_HE" doc="README.md">
-      <description> Zephyr configuration for CMSIS-Debugger on M55 High Efficiency and High Performance core</description>
-      <board name="DevKit-E7" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
-      </project>
-    </example>
-
     <example name="Blinky_HE" folder="Boards/AppKit-e7-aiml/Examples/M55_HE/Blinky" doc="README.md">
       <description>CMSIS-RTOS2 Blinky example with VIO running on M55 High Efficiency core</description>
       <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
@@ -1336,30 +1312,6 @@
       <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
       <project>
         <environment name="csolution" load="DualCore.csolution.yml"/>
-      </project>
-    </example>
-
-    <example name="Zephyr_HE" folder="Boards/AppKit-e7-aiml/Examples/M55_HE/Zephyr" doc="README.md">
-      <description>Zephyr configuration for CMSIS-Debugger on M55 High Efficiency core</description>
-      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
-      </project>
-    </example>
-
-    <example name="Zephyr_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP/Zephyr" doc="README.md">
-      <description> Zephyr configuration for CMSIS-Debugger on M55 High Performance core</description>
-      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
-      </project>
-    </example>
-
-    <example name="Zephyr_DualCore_HE_HP" folder="Boards/AppKit-e7-aiml/Examples/M55_HP_HE/Zephyr" doc="README.md">
-      <description> Zephyr configuration for CMSIS-Debugger on M55 High Efficiency and High Performance core</description>
-      <board name="AppKit-E7-AIML" vendor="Alif Semiconductor"/>
-      <project>
-        <environment name="csolution" load="Zephyr.csolution.yml"/>
       </project>
     </example>
 
