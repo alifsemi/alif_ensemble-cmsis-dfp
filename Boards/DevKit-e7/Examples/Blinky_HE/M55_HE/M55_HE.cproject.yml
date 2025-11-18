@@ -29,4 +29,6 @@ project:
   output:
     type:
       - elf
+      - bin
       - hex
+      - map

@@ -30,3 +30,5 @@ project:
     type:
       - elf
       - bin
+      - hex
+      - map
