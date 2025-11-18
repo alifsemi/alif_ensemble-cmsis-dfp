@@ -24,6 +24,7 @@ project:
     - component: CMSIS Driver:USART
     - component: CMSIS-Compiler:CORE
     - component: CMSIS-Compiler:STDOUT:Custom
+
   # List executable file formats to be generated.
   output:
     type:

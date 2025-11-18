@@ -3,7 +3,7 @@ solution:
   created-for: CMSIS-Toolbox@2.12.0
   cdefault: # use CMSIS-Toolbox default Compiler options
 
-  # Compilers that can be selected
+  # Compilers that can be selected.
   select-compiler:
     - compiler: AC6
     - compiler: GCC

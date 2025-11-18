@@ -3,16 +3,10 @@ solution:
   created-for: CMSIS-Toolbox@2.12.0
   cdefault:
 
-  # Compilers that can be selected
+  # Compilers that can be selected.
   select-compiler:
     - compiler: AC6
     - compiler: GCC
-
-  # Miscellaneous toolchain controls directly passed to the tools
-  misc:
-    - for-compiler: AC6
-      C-CPP:
-        - -gdwarf-5
 
   # List the packs that define the device and/or board.
   packs:
@@ -26,10 +20,6 @@ solution:
     - type: AppKit-E7
       board: AppKit-E7-AIML
       device: AE722F80F55D5LS
-      target-set:
-        - set:
-          images:
-            - project-context: Blinky.Debug
 
   # List of different build configurations.
   build-types:
