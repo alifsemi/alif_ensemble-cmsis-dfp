@@ -35,4 +35,3 @@ solution:
   # List related projects.
   projects:
     - project: M55_HP/M55_HP.cproject.yml
-  compiler: GCC
