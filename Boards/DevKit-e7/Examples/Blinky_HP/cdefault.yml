@@ -1,17 +1,22 @@
-
 default:
 
   misc:
-    - for-compiler: AC6
-      C:
-        - -std=c99
-        - -fdata-sections
+    - for-compiler: AC6 # GDB requires DWARF 5, remove when using uVision Debugger
+      C-CPP:
+        - -gdwarf-5
+        - -Wno-macro-redefined
+        - -Wno-pragma-pack
+        - -Wno-parentheses-equality
         - -Wno-license-management
+      C:
+        - -std=gnu11
+      ASM:
+        - -masm=auto
+        - -gdwarf-5
       Link:
         - --entry=Reset_Handler
-        - --map
-        - --verbose
-        - --info=sizes,totals,unused,summarysizes
+        - --info=summarysizes
+        - --summary_stderr
         - --diag_suppress=L6312W,L6314W
 
     - for-compiler: GCC
@@ -26,7 +31,8 @@ default:
         - --specs=nosys.specs
         - -Wl,-print-memory-usage
         - -Wl,--gc-sections
-        - -Wl,--no-warn-rwx-segments
+        - -Wl,--no-warn-rwx-segments   # suppress incorrect linker warning
+
     - for-compiler: CLANG
       C-CPP:
         - -fomit-frame-pointer
@@ -43,6 +49,5 @@ default:
         #- -lcrt0-semihost
         #- -lsemihost
         # ------------------
-        #- -Wl,-Map=$elf()$.map
+        - -Wl,-print-memory-usage
         - -Wl,--gc-sections
-
