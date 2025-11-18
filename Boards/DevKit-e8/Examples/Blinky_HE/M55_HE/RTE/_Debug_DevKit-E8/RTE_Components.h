@@ -15,7 +15,7 @@
  */
 #define CMSIS_device_header "alif.h"
 
-/* ARM::CMSIS-Compiler:STDOUT:Custom@1.0.0 */
+/* ARM::CMSIS-Compiler:STDOUT:Custom@1.1.0 */
 #define RTE_CMSIS_Compiler_STDOUT                /* CMSIS-Compiler STDOUT */
 #define RTE_CMSIS_Compiler_STDOUT_Custom         /* CMSIS-Compiler STDOUT: Custom */
 /* AlifSemiconductor::CMSIS Driver:USART@2.0.0 */
