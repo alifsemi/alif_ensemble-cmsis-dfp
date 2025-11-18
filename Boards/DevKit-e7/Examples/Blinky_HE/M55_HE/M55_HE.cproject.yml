@@ -11,16 +11,16 @@ project:
   # List components to use for your application.
   # A software component is a re-usable unit that may be configurable.
   components:
-    - component: AlifSemiconductor::Device:SOC Peripherals:GPIO
-    - component: ARM::CMSIS:CORE
-    - component: AlifSemiconductor::Device:SOC Peripherals:PINCONF
-    - component: AlifSemiconductor::Device:Startup
-    - component: AlifSemiconductor::BSP:DevKit Config&DevKit-e7
-    - component: AlifSemiconductor::BSP:Board Config
-    - component: AlifSemiconductor::Services:Retarget IO:STDOUT
-    - component: AlifSemiconductor::Services:Secure Enclave:Initialization Helper&Source
-    - component: AlifSemiconductor::Services:Secure Enclave:core&Source
-    - component: AlifSemiconductor::Device:SOC Peripherals:MHU
+    - component: Device:SOC Peripherals:GPIO
+    - component: CMSIS:CORE
+    - component: Device:SOC Peripherals:PINCONF
+    - component: Device:Startup
+    - component: BSP:DevKit Config&DevKit-e7
+    - component: BSP:Board Config
+    - component: Services:Retarget IO:STDOUT
+    - component: Services:Secure Enclave:Initialization Helper&Source
+    - component: Services:Secure Enclave:core&Source
+    - component: Device:SOC Peripherals:MHU
     - component: CMSIS Driver:USART
     - component: CMSIS-Compiler:CORE
     - component: CMSIS-Compiler:STDOUT:Custom

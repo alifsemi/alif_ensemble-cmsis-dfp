@@ -24,8 +24,8 @@ solution:
   # List different hardware targets that are used to deploy the solution.
   target-types:
     - type: AppKit-E7
-      board: Alif Semiconductor::AppKit-E7-AIML
-      device: Alif Semiconductor::AE722F80F55D5LS
+      board: AppKit-E7-AIML
+      device: AE722F80F55D5LS
       target-set:
         - set:
           images:
