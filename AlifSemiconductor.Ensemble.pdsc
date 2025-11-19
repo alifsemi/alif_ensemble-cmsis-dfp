@@ -1944,6 +1944,24 @@
       <require Cclass="CMSIS Driver" Cgroup="SAI"/>
     </condition>
 
+    <condition id="DevKit-E8 vStream AudioIn">
+      <description>Requirement for DevKit-E8 vStream AudioIn Driver</description>
+      <require condition="DevKit-E8"/>
+      <require Cclass="CMSIS Driver" Cgroup="SAI"/>
+    </condition>
+
+    <condition id="DevKit-E8 vStream VideoIn">
+      <description>Requirement for DevKit-E8 vStream VideoIn Driver</description>
+      <require condition="DevKit-E8"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+    </condition>
+
+    <condition id="DevKit-E8 vStream VideoOut">
+      <description>Requirement for DevKit-E8 vStream VideoOut Driver</description>
+      <require condition="DevKit-E8"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC"/>
+    </condition>
+
     <condition id="AppKit-E7-AIML">
       <description>Alif Semiconductor Ensemble AppKit-E7-AIML Board</description>
       <require Bvendor="Alif Semiconductor" Bname="AppKit-E7-AIML"/>
@@ -2312,6 +2330,17 @@
      </files>
    </component>
 
+   <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="AudioIn" Cvariant="DevKit-E8" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit-E8 vStream AudioIn">
+     <description>Audio Input vStream implementation for Ensemble DevKit DK-E8</description>
+     <RTE_Components_h>
+        #define RTE_VSTREAM_AUDIOIN
+        #define RTE_VSTREAM_AUDIOIN_DEVKIT_E8
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Boards/DevKit-e8/Drivers/vstream_audio_in.c"/>
+     </files>
+   </component>
+
    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoIn" Cvariant="AppKit-E7-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit vStream VideoIn">
      <description>Video Input vStream implementation for Ensemble AppKit AK-E7-AIML</description>
      <RTE_Components_h>
@@ -2323,6 +2352,17 @@
      </files>
    </component>
 
+   <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoIn" Cvariant="DevKit-E8" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit-E8 vStream VideoIn">
+     <description>Video Input vStream implementation for Ensemble DevKit DK-E8</description>
+     <RTE_Components_h>
+        #define RTE_VSTREAM_VIDEOIN
+        #define RTE_VSTREAM_VIDEOIN_DEVKIT_E8
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Boards/DevKit-e8/Drivers/vstream_video_in.c"/>
+     </files>
+   </component>
+
    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoOut" Cvariant="AppKit-E7-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit vStream VideoOut">
      <description>Video Output vStream implementation for Ensemble AppKit AK-E7-AIML</description>
      <RTE_Components_h>
@@ -2331,6 +2371,17 @@
      </RTE_Components_h>
      <files>
        <file category="source" name="Boards/AppKit-e7-aiml/Drivers/vstream_video_out.c"/>
+     </files>
+   </component>
+
+   <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoOut" Cvariant="DevKit-E8" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit-E8 vStream VideoOut">
+     <description>Video Output vStream implementation for Ensemble DevKit DK-E8</description>
+     <RTE_Components_h>
+        #define RTE_VSTREAM_VIDEOOUT
+        #define RTE_VSTREAM_VIDEOOUT_DEVKIT_E8
+     </RTE_Components_h>
+     <files>
+       <file category="source" name="Boards/DevKit-e8/Drivers/vstream_video_out.c"/>
      </files>
    </component>
 
