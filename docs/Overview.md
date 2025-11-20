@@ -2,9 +2,10 @@
 
 The `Alif Semiconductor Ensemble Device Family Pack` contains Device and Board support for:
 
-- [Alif Semiconductor Ensemble E1C/E1/E3/E5/E7/E8](https://alifsemi.com/products/ensemble/) AI/ML microcontroller series with up two Arm Cortex-M55 and two Arm Ethos-U55 microNPUs.
-- [Alif Semiconductor Ensemble E7 DevKit - Gen 2](https://alifsemi.com/support/kits/ensemble-devkit/) single board computer with access to all signals and pins for power/performance profiling.
-- [Alif Semiconductor Ensemble E7 AI/ML AppKit - Gen 2](https://alifsemi.com/support/kits/ai-ml-appkit/) single board computer with camera/image, motion, sound sensors and display.
+- [Alif Semiconductor Ensemble E1C/E1/E3/E5/E7/E8](https://alifsemi.com/products/ensemble/) AI/ML microcontroller series with up two Arm Cortex-M55 and two Arm Ethos-U55/U85 microNPUs.
+- [Alif Semiconductor Ensemble E8 DevKit](https://alifsemi.com/support/kits/) single board computer with access to all signals and pins for power/performance profiling.
+- [Alif Semiconductor Ensemble E7 DevKit - Gen 2](https://alifsemi.com/support/kits/) single board computer with access to all signals and pins for power/performance profiling.
+- [Alif Semiconductor Ensemble E7 AI/ML AppKit - Gen 2](https://alifsemi.com/support/kits/) single board computer with camera/image, motion, sound sensors and display.
 
 This Pack contains:
 
@@ -30,6 +31,31 @@ The following packs are required for this DFP:
     - pack: ARM::CMSIS-Compiler@2.1.0       # Arm Compiler pack 2.1.0 or higher (for STDIN/OUT)
 ```
 
+## E8 DevKit (BSP)
+
+The E8 DevKit Board Support (BSP) part provides the following examples and layers:
+
+Example                 | Tool           | Description
+:-----------------------|:---------------|:--------------------------
+Blinky_HP               | CMSIS-Toolbox  | Blinky example configured for M55 High Performance code
+Blinky_HE               | CMSIS-Toolbox  | Blinky example configured for M55 High Efficiency code
+
+Layer Type: Board       | Tool           | Description
+:-----------------------|:---------------|:--------------------------
+`Board_HP.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Performance core
+`Board_HE.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Efficient core
+
+The Board Layers enable device-agnostic [Reference Applications](https://www.keil.arm.com/refapps/) and implement these API interfaces:
+
+Provided API Interface    | Description
+:-------------------------|:------------------------------------------------------------------------------
+ CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
+ CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
+ CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
+ CMSIS_VSTREAM_VIDEO_IN   | CMSIS-Driver for Video input stream via MIPI Camera
+ CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
+ STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
+
 ## E7 DevKit (BSP)
 
 The E7 DevKit Board Support (BSP) part provides the following examples and layers:
@@ -38,7 +64,8 @@ Example                  | Tool           | Description
 :------------------------|:---------------|:--------------------------
 Blinky_M55_HE            | uVision IDE    | Blinky example running on M55 High Efficiency core
 Blinky_M55_HE_TCM        | uVision IDE    | Blinky example running on M55 High Efficiency core from TCM
-Csolution Project        | CMSIS-Toolbox  | Blinky examples configured for M55 High Performance or High Efficiency code
+Blinky_HP                | CMSIS-Toolbox  | Blinky example configured for M55 High Performance code
+Blinky_HE                | CMSIS-Toolbox  | Blinky example configured for M55 High Efficiency code
 DualCore_HE_HP           | CMSIS-Toolbox  | Dual Core example running on M55 High Efficiency and High Performance core
 HelloWorld_M55_HP        | uVision IDE    | Hello World example running on M55 High Performance core
 Zephyr_HP                | CMSIS-Toolbox  | Zephyr setup for CMSIS-Debugger on M55 High Performance core
@@ -179,6 +206,4 @@ Done
 - [Product page](https://alifsemi.com/products/ensemble/)
 - [Alif GitHub Repos](https://github.com/alifsemi)
 - [Support](https://alifsemi.com/support/)
-<!--
-- [User forum]()
- -->
+- [User forum](https://community.arm.com/support-forums/f/keil-forum)
