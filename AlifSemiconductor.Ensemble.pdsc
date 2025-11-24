@@ -1227,6 +1227,14 @@
       </project>
     </example>
 
+    <example name="DualCore_HE_HP" folder="Boards/DevKit-e8/Examples/DualCore" doc="README.md">
+      <description>Dual Core example running on M55 High Efficiency and High Performance core</description>
+      <board name="DevKit-E8" vendor="Alif Semiconductor"/>
+      <project>
+        <environment name="csolution" load="DualCore.csolution.yml"/>
+      </project>
+    </example>
+
     <example name="Blinky_E7_M55_HE" folder="Boards/DevKit-e7/Examples/Blinky_HE" doc="README.md">
       <description>Blinky example running on M55 High Efficiency core</description>
       <board name="DevKit-E7" vendor="Alif Semiconductor"/>
