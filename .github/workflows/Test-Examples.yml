@@ -30,7 +30,9 @@ jobs:
           { tool: GCC,   dir: DevKit-e8/Examples/Blinky_HE,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HE },
           { tool: AC6,   dir: DevKit-e8/Examples/Blinky_HE,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HE },
           { tool: GCC,   dir: DevKit-e8/Examples/Blinky_HP,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HP },
-          { tool: AC6,   dir: DevKit-e8/Examples/Blinky_HP,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HP }
+          { tool: AC6,   dir: DevKit-e8/Examples/Blinky_HP,                 proj: Blinky,         artifact: DevKit_E8_Blinky_HP },
+          { tool: GCC,   dir: DevKit-e8/Examples/DualCore,                  proj: DualCore,       artifact: DevKit_E8_DualCore  },
+          { tool: AC6,   dir: DevKit-e8/Examples/DualCore,                  proj: DualCore,       artifact: DevKit_E8_DualCore  }
           ]
 
       fail-fast: false
