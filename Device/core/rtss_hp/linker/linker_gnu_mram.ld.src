@@ -67,15 +67,15 @@ SECTIONS
   {
     KEEP(*(.vectors))
 
-    *startup*(.text .rodata*)
-    *system*(.text .rodata*)
-    *sys_*(.text .rodata*)
-    *pm*(.text .rodata*)
-    *tgu*(.text .rodata*)
-    *mpu*(.text .rodata*)
-    *sau_tcm_ns_setup*(.text .rodata*)
+    *startup*(.text* .rodata*)
+    *system*(.text* .rodata*)
+    *sys_*(.text* .rodata*)
+    *pm*(.text* .rodata*)
+    *tgu*(.text* .rodata*)
+    *mpu*(.text* .rodata*)
+    *sau_tcm_ns_setup*(.text* .rodata*)
 
-    *lv_*(.text .rodata*)
+    *lv_*(.text* .rodata*)
 
     . = ALIGN(16);
   } > MRAM
