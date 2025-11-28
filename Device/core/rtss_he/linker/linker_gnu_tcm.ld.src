@@ -63,15 +63,15 @@ SECTIONS
   {
     KEEP(*(.vectors))
 
-    *startup*(.text .rodata*)
-    *system*(.text .rodata*)
-    *sys_*(.text .rodata*)
-    *pm*(.text .rodata*)
-    *tgu*(.text .rodata*)
-    *mpu*(.text .rodata*)
-    *sau_tcm_ns_setup*(.text .rodata*)
+    *startup*(.text* .rodata*)
+    *system*(.text* .rodata*)
+    *sys_*(.text* .rodata*)
+    *pm*(.text* .rodata*)
+    *tgu*(.text* .rodata*)
+    *mpu*(.text* .rodata*)
+    *sau_tcm_ns_setup*(.text* .rodata*)
 
-    *lv_*(.text .rodata*)
+    *lv_*(.text* .rodata*)
 
   } > ITCM
 
@@ -213,6 +213,7 @@ SECTIONS
 
     . = ALIGN(4);
     /* preinit data */
+    PROVIDE_HIDDEN (__bothinit_array_start = .);
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP(*(.preinit_array))
     PROVIDE_HIDDEN (__preinit_array_end = .);
@@ -223,6 +224,7 @@ SECTIONS
     KEEP(*(SORT(.init_array.*)))
     KEEP(*(.init_array))
     PROVIDE_HIDDEN (__init_array_end = .);
+    PROVIDE_HIDDEN (__bothinit_array_end = .);
 
     . = ALIGN(4);
     /* finit data */
