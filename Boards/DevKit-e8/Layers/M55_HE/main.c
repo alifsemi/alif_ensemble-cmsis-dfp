@@ -25,6 +25,7 @@
 
 #include "board_config.h"
 #include "ethosu_driver.h"
+#include "ext_init.h"
 #include "main.h"
 
 #include "se_services_port.h"
@@ -81,6 +82,21 @@ int32_t NpuInit(void)
 }
 
 /*
+  Initializes clocks.
+*/
+void clock_init(void)
+{
+    uint32_t rval;
+    uint32_t error_code = 0;
+
+    /* Enable the HFOSCx2 (76.8MHz) clock used by I2S */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_HFOSCx2, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
+}
+
+/*
   Initializes the VBAT power control registers to enable MIPI DPHY.
 */
 void vbat_init(void)
@@ -108,7 +124,6 @@ static void CpuCacheEnable(void)
 
 int main(void)
 {
-
     /* Apply pin configuration */
     board_pins_config();
 
@@ -120,6 +135,12 @@ int main(void)
 
     /* Initialize clocks */
     board_clocks_config(CLKEN_HFOSC_MASK | CLKEN_CLK_100M_MASK);
+
+    /* Initialize additional clocks */
+    clock_init();
+
+    /* Initialize board devices I/Os */
+    ext_init();
 
     /* Initialize MIPI PHY */
     vbat_init();

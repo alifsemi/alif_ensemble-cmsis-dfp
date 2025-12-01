@@ -117,6 +117,7 @@ layer:
         - file: ./main.h
         - file: ./DevKit-E8.h
         - file: ./retarget_stdio.c
+        - file: ./ext_init.c
 
     - group: Ethos Interface
       files:

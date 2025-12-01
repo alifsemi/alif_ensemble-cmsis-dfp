@@ -24,7 +24,7 @@
 /* Connect to hardware via Driver_SAI#                 */
 /* Select driver control block for hardware interface. */
 #ifndef AUDIO_CFG_SAI_INSTANCE
-#define AUDIO_CFG_SAI_INSTANCE 3
+#define AUDIO_CFG_SAI_INSTANCE LP
 #endif
 
 /* Number of bits per sample <0=>8 <1=>16 <2=>24 <3=>32  */
