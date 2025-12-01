@@ -25,6 +25,7 @@
 
 #include "board_config.h"
 #include "ethosu_driver.h"
+#include "ext_init.h"
 #include "main.h"
 
 #include "se_services_port.h"
@@ -108,7 +109,6 @@ static void CpuCacheEnable(void)
 
 int main(void)
 {
-
     /* Apply pin configuration */
     board_pins_config();
 
@@ -120,6 +120,9 @@ int main(void)
 
     /* Initialize clocks */
     board_clocks_config(CLKEN_HFOSC_MASK | CLKEN_CLK_100M_MASK);
+
+    /* Initialize board devices I/Os */
+    ext_init();
 
     /* Initialize MIPI PHY */
     vbat_init();

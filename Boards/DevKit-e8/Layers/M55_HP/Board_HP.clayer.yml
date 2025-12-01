@@ -16,7 +16,6 @@ layer:
         - CMSIS_ETH
         - CMSIS_USART
         - CMSIS_VIO
-        - CMSIS_VSTREAM_AUDIO_IN
         - CMSIS_VSTREAM_VIDEO_IN
         - CMSIS_VSTREAM_VIDEO_OUT
         - MIKROBUS_AN
@@ -78,11 +77,9 @@ layer:
       define:
         - CMSIS_GPIO_DISABLE_EVENTS
     - component: CMSIS Driver:I2C
-    - component: CMSIS Driver:SAI
     - component: CMSIS Driver:SPI
     - component: CMSIS Driver:USART
     - component: CMSIS Driver:VIO:Board&DevKit-E8
-    - component: CMSIS Driver:vStream:AudioIn&DevKit-E8
     - component: CMSIS Driver:vStream:VideoIn&DevKit-E8
     - component: CMSIS Driver:vStream:VideoOut&DevKit-E8
 
@@ -117,6 +114,7 @@ layer:
         - file: ./main.h
         - file: ./DevKit-E8.h
         - file: ./retarget_stdio.c
+        - file: ./ext_init.c
 
     - group: Ethos Interface
       files:
