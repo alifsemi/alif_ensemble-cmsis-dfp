@@ -1,6 +1,6 @@
 layer:
   type: Board
-  description: DevKit-E8 board setup using M55_HP
+  description: DevKit-E8 board setup using M55_HP and Ethos-U55
   for-board: Alif Semiconductor::DevKit-E8:Gen 1
   for-device: Alif Semiconductor::AE822FA0E5597LS0:M55_HP
   device: :M55_HP
@@ -115,6 +115,7 @@ layer:
         - file: ./main.c
         - file: ./main.h
         - file: ./DevKit-E8.h
+        - file: ./ethos_setup.c
         - file: ./retarget_stdio.c
         - file: ./ext_init.c
 

@@ -48,41 +48,6 @@ __WEAK int32_t shield_setup(void)
 }
 #endif
 
-/* Ethos NPU driver instance. */
-static struct ethosu_driver EthosDriver;
-
-/*
-  Ethos NPU interrupt handler.
-*/
-void NPU_HP_IRQHandler(void)
-{
-    ethosu_irq_handler(&EthosDriver);
-}
-
-/*
-  Initializes the Ethos NPU driver.
-*/
-int32_t NpuInit(void)
-{
-    void *const ethos_base_addr = (void *) NPULOCAL_BASE;
-
-    /*  Initialize Ethos-U NPU driver. */
-    if (ethosu_init(&EthosDriver,    /* Ethos-U device driver */
-                    ethos_base_addr, /* Ethos-U base address  */
-                    0,               /* Cache memory pointer  */
-                    0,               /* Cache memory size     */
-                    1,               /* Secure enable         */
-                    1)               /* Privileged mode       */
-    ) {
-        /* Failed to initialize Arm Ethos-U driver */
-        return 1;
-    }
-
-    NVIC_EnableIRQ(NPULOCAL_IRQ_IRQn);
-
-    return 0;
-}
-
 /*
   Initializes clocks.
 */
@@ -159,8 +124,10 @@ int main(void)
     /* Initialize Virtual I/O */
     vioInit();
 
+    #if defined(ETHOSU_ARCH)
     /* Initialize Ethos NPU */
-    NpuInit();
+    ethos_setup();
+    #endif
 
 #ifdef CMSIS_shield_header
     shield_setup();

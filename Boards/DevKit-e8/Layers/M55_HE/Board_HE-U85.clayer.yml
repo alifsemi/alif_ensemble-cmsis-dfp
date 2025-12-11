@@ -1,6 +1,6 @@
 layer:
   type: Board
-  description: DevKit-E8 board setup using M55_HE and Ethos-U55
+  description: DevKit-E8 board setup using M55_HE and Ethos-U85
   for-board: Alif Semiconductor::DevKit-E8:Gen 1
   for-device: Alif Semiconductor::AE822FA0E5597LS0:M55_HE
   device: :M55_HE
@@ -36,15 +36,7 @@ layer:
   # List of #define statements passed via the command line to the build tool.
   define:
     - CMSIS_target_header: \"DevKit-E8.h\"
-    - ETHOSU55
-    - NPU_QCONFIG: 1
-    - NPU_REGIONCFG_0: 1
-    - NPU_REGIONCFG_1: 0
-    - NPU_REGIONCFG_2: 1
-    - AXI_LIMIT0_MEM_TYPE: 3
-    - AXI_LIMIT1_MEM_TYPE: 3
-    - AXI_LIMIT2_MEM_TYPE: 3
-    - AXI_LIMIT3_MEM_TYPE: 3
+    - ETHOSU85
 
   # List the packs used in the layer.
   packs:
@@ -103,7 +95,7 @@ layer:
     - component: Device:SOC Peripherals:MIPI DSI CSI2 DPHY
     - component: Device:SOC Peripherals:PINCONF
 
-    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
+    - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
 
     - component: Services:Retarget IO:STDERR
     - component: Services:Retarget IO:STDIN
