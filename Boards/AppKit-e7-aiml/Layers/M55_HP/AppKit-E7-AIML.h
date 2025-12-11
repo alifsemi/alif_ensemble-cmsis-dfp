@@ -23,18 +23,22 @@
 #include "Driver_ETH_MAC.h"
 #include "Driver_SAI.h"
 #include "Driver_USART.h"
+#include "Driver_USBD.h"
 #include "cmsis_vstream.h"
 
 // CMSIS Driver instances of Board peripherals
-#define CMSIS_DRIVER_SAI    3  // CMSIS Driver SAI instance number
-#define CMSIS_DRIVER_USART  4  // CMSIS Driver USART instance number
+#define CMSIS_DRIVER_SAI     3  // CMSIS Driver SAI instance number
+#define CMSIS_DRIVER_USART   4  // CMSIS Driver USART instance number
+#define CMSIS_DRIVER_USBD    0  // CMSIS Driver USB Device instance number
+#define CMSIS_DRIVER_USBD_HS 1  // CMSIS Driver USB Device high-speed support
 
 // Retarget stdio to CMSIS UART
-#define RETARGET_STDIO_UART 4
+#define RETARGET_STDIO_UART  4
 
 // CMSIS Drivers
 extern ARM_DRIVER_SAI   Driver_SAI3;            /* I2S Microphones  */
 extern ARM_DRIVER_USART Driver_USART4;          /* PRG USB          */
+extern ARM_DRIVER_USBD  Driver_USBD0;           /* USB Device       */
 extern vStreamDriver_t  Driver_vStreamAudioIn;  /* Audio In Stream  */
 extern vStreamDriver_t  Driver_vStreamVideoIn;  /* Video In Stream  */
 extern vStreamDriver_t  Driver_vStreamVideoOut; /* Video Out Stream */

@@ -15,6 +15,7 @@ layer:
       provides:
         - CMSIS_ETH
         - CMSIS_USART
+        - CMSIS_USB_Device
         - CMSIS_VIO
         - CMSIS_VSTREAM_AUDIO_IN
         - MIKROBUS_AN
@@ -55,7 +56,7 @@ layer:
   add-path:
     - ./ConductorTool
 
-  # List miscelaneous options passed via the command line to the build tool.
+  # List miscellaneous options passed via the command line to the build tool.
   misc:
     - for-compiler: AC6
       Link:
@@ -75,6 +76,7 @@ layer:
     - component: CMSIS Driver:SAI
     - component: CMSIS Driver:SPI
     - component: CMSIS Driver:USART
+    - component: CMSIS Driver:USB Device
     - component: CMSIS Driver:VIO:Board&DevKit-E7
     - component: CMSIS Driver:vStream:AudioIn&DevKit-E7
 

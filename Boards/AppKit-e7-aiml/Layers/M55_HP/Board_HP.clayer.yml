@@ -14,6 +14,7 @@ layer:
     - connect: AppKit-E7-AIML Board
       provides:
         - CMSIS_USART
+        - CMSIS_USB_Device
         - CMSIS_VIO
         - CMSIS_VSTREAM_AUDIO_IN
         - CMSIS_VSTREAM_VIDEO_IN
@@ -48,7 +49,7 @@ layer:
   add-path:
     - ./ConductorTool
 
-  # List miscelaneous options passed via the command line to the build tool.
+  # List miscellaneous options passed via the command line to the build tool.
   misc:
     - for-compiler: AC6
       Link:
@@ -68,6 +69,7 @@ layer:
     - component: CMSIS Driver:I2C
     - component: CMSIS Driver:SAI
     - component: CMSIS Driver:USART
+    - component: CMSIS Driver:USB Device
     - component: CMSIS Driver:VIO:Board&AppKit-E7-AIML
     - component: CMSIS Driver:vStream:AudioIn&AppKit-E7-AIML
     - component: CMSIS Driver:vStream:VideoIn&AppKit-E7-AIML

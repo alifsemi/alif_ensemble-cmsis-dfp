@@ -27,6 +27,8 @@
 #include "ethosu_driver.h"
 #include "main.h"
 
+#include "se_services_port.h"
+
 #ifdef CMSIS_shield_header
 __WEAK int32_t shield_setup(void)
 {
@@ -69,6 +71,49 @@ int32_t NpuInit(void)
     return 0;
 }
 
+/*
+  Initializes clocks.
+*/
+void clock_init(void)
+{
+    uint32_t rval;
+    uint32_t error_code = 0;
+    run_profile_t runp = {0};
+
+    /* Enable 100M_CLK */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_CLK_100M, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
+
+    /* Enable HFOSC_CLK */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_HFOSC, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
+
+    /* Enable USB_CLK */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_USB, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
+
+    /* Get the current run configuration from SE */
+    rval = SERVICES_get_run_cfg(se_services_s_handle, &runp, &error_code);
+    if (rval != 0) {
+        return;
+    }
+
+    /* Enable power to USB phy */
+    runp.phy_pwr_gating |= USB_PHY_MASK;
+
+    /* Set the current run configuration to SE */
+    rval = SERVICES_set_run_cfg(se_services_s_handle, &runp, &error_code);
+    if (rval != 0) {
+        return;
+    }
+}
+
 static void CpuCacheEnable(void)
 {
     /* Enable I-Cache */
@@ -80,9 +125,13 @@ static void CpuCacheEnable(void)
 
 int main(void)
 {
-
     /* Apply pin configuration */
     board_pins_config();
+
+    se_services_port_init();
+
+    /* Initialize clocks */
+    clock_init();
 
     /* Initialize STDIO */
     stdio_init();

@@ -31,13 +31,15 @@
 #include "se_services_port.h"
 
 /* VBAT PWR_CTRL field definitions */
-#define VBAT_PWR_CTRL_TX_DPHY_PWR_MASK        (1U << 0) /* Mask off the power supply for MIPI TX DPHY */
-#define VBAT_PWR_CTRL_TX_DPHY_ISO             (1U << 1) /* Enable isolation for MIPI TX DPHY */
-#define VBAT_PWR_CTRL_RX_DPHY_PWR_MASK        (1U << 4) /* Mask off the power supply for MIPI RX DPHY */
-#define VBAT_PWR_CTRL_RX_DPHY_ISO             (1U << 5) /* Enable isolation for MIPI RX DPHY */
-#define VBAT_PWR_CTRL_DPHY_PLL_PWR_MASK       (1U << 8) /* Mask off the power supply for MIPI PLL */
-#define VBAT_PWR_CTRL_DPHY_PLL_ISO            (1U << 9) /* Enable isolation for MIPI PLL */
+#define VBAT_PWR_CTRL_TX_DPHY_PWR_MASK        (1U <<  0) /* Mask off the power supply for MIPI TX DPHY */
+#define VBAT_PWR_CTRL_TX_DPHY_ISO             (1U <<  1) /* Enable isolation for MIPI TX DPHY */
+#define VBAT_PWR_CTRL_RX_DPHY_PWR_MASK        (1U <<  4) /* Mask off the power supply for MIPI RX DPHY */
+#define VBAT_PWR_CTRL_RX_DPHY_ISO             (1U <<  5) /* Enable isolation for MIPI RX DPHY */
+#define VBAT_PWR_CTRL_DPHY_PLL_PWR_MASK       (1U <<  8) /* Mask off the power supply for MIPI PLL */
+#define VBAT_PWR_CTRL_DPHY_PLL_ISO            (1U <<  9) /* Enable isolation for MIPI PLL */
 #define VBAT_PWR_CTRL_DPHY_VPH_1P8_PWR_BYP_EN (1U << 12) /* dphy vph 1p8 power bypass enable */
+#define VBAT_PWR_CTRL_UPHY_PWR_MASK           (1U << 16) /* Mask off the power supply for UPHY */
+#define VBAT_PWR_CTRL_UPHY_ISO                (1U << 17) /* Enable isolation for UPHY */
 
 #ifdef CMSIS_shield_header
 __WEAK int32_t shield_setup(void)
@@ -94,10 +96,16 @@ void clock_init(void)
     if ((rval != 0) || (error_code != 0)) {
         return;
     }
+
+    /* Enable USB_CLK */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_CLK_20M, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
 }
 
 /*
-  Initializes the VBAT power control registers to enable MIPI DPHY.
+  Initializes the VBAT power control registers to enable MIPI DPHY/USB PHY.
 */
 void vbat_init(void)
 {
@@ -105,9 +113,15 @@ void vbat_init(void)
     VBAT->PWR_CTRL &= ~(VBAT_PWR_CTRL_TX_DPHY_PWR_MASK | VBAT_PWR_CTRL_RX_DPHY_PWR_MASK |
                         VBAT_PWR_CTRL_DPHY_PLL_PWR_MASK | VBAT_PWR_CTRL_DPHY_VPH_1P8_PWR_BYP_EN);
 
+    /* Enable USB PHY power */
+    VBAT->PWR_CTRL &= ~VBAT_PWR_CTRL_UPHY_PWR_MASK;
+
     /* Disable MIPI DPHY isolation */
     VBAT->PWR_CTRL &=
         ~(VBAT_PWR_CTRL_TX_DPHY_ISO | VBAT_PWR_CTRL_RX_DPHY_ISO | VBAT_PWR_CTRL_DPHY_PLL_ISO);
+
+    /* Disable USB PHY isolation */
+    VBAT->PWR_CTRL &= ~VBAT_PWR_CTRL_UPHY_ISO;
 }
 
 /*

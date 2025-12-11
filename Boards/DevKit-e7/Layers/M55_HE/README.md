@@ -1,4 +1,4 @@
-# Board: AlifSemiconductor DevKit
+# Board: AlifSemiconductor DevKit-E7
 
 ## Board Layer for M55 High Efficiency Core
 
@@ -29,6 +29,7 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 | Driver_I2C0           | I2C0       | MikroBUS Header               | MIKROBUS_I2C
 | Driver_SPI0           | SPI0       | MikroBUS Header               | MIKROBUS_SPI
 | Driver_USART4         | UART4      | PRG USB connector (J3)        | STDIN, STDOUT, STDERR
+| Driver_USBD0          | USB        | SoC USB connector (J2)        | CMSIS_USB_Device
 | CMSIS-Driver VIO      | GPIO       | Buttons, RGB LED, Joystick    | CMSIS_VIO
 | Driver_vStreamAudioIn | SAI3       | I2S Microphone (U13, U15)     | CMSIS_VSTREAM_AUDIO_IN
 

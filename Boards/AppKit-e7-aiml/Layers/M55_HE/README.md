@@ -1,4 +1,4 @@
-# Board: AlifSemiconductor AppKit
+# Board: AlifSemiconductor AppKit-E7-AIML
 
 ## Board Layer for M55 High Efficiency Core
 
@@ -26,6 +26,7 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 | CMSIS-Driver           | Peripheral | Board connector/component  | Connection
 |:-----------------------|:-----------|:---------------------------|:----------------------
 | Driver_USART4          | UART4      | PRG USB connector (J3)     | STDIN, STDOUT, STDERR
+| Driver_USBD0           | USB        | SOC USB connector (J1)     | CMSIS_USB_Device
 | CMSIS-Driver VIO       | GPIO       | Buttons, RGB LED, Joystick | CMSIS_VIO
 | Driver_vStreamAudioIn  | SAI3       | I2S Microphone (U13, U15)  | CMSIS_VSTREAM_AUDIO_IN
 | Driver_vStreamVideoIn  | MIPI CSI   | MIPI Camera (J10, J12)     | CMSIS_VSTREAM_VIDEO_IN
