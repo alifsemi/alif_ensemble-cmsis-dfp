@@ -186,6 +186,12 @@
 // <o> "UARTB" UART instance number <0-7>
 #define BOARD_UARTB_UART_INSTANCE                       4
 
+// <o> "UARTC" UART instance number <0-7>
+#define BOARD_UARTC_UART_INSTANCE                       3
+
+// <o> "UARTD" UART instance number <0-7>
+#define BOARD_UARTD_UART_INSTANCE                       6
+
 // <e> USB module enabled flag
 #define BOARD_USB_ENABLED                               1
 // <e> "Device Role" on USB presence flag
