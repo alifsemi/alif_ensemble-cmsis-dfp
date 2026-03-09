@@ -317,23 +317,14 @@ static void ILI9806E_Configure(void)
         DSI_DCS_Short_Write(page0_cfg[i].cmd, page0_cfg[i].data);
     }
 
-    DSI_DCS_CMD_Short_Write(0x11);
+    DSI_DCS_CMD_Short_Write(0x11);   /* Sleep Out */
+    sys_busy_loop_us(120000);
 
-    sys_busy_loop_us(100000);
+    DSI_DCS_CMD_Short_Write(0x20);   /* Display Inversion OFF */
+    sys_busy_loop_us(10000);
+
+    DSI_DCS_CMD_Short_Write(0x29);   /* Display On */
     sys_busy_loop_us(20000);
-
-    DSI_DCS_CMD_Short_Write(0x29);
-
-    sys_busy_loop_us(25000);
-
-    /*Normal Display mode on*/
-    DSI_DCS_Short_Write(0x05, 0x13);
-
-    /*All Pixel On*/
-    DSI_DCS_Short_Write(0x05, 0x23);
-
-    /*Display On*/
-    DSI_DCS_Short_Write(0x05, 0x29);
 }
 
 /**
