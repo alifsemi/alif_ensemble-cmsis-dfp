@@ -15,12 +15,20 @@
  * @note     : Code will verify:
  *              1.)Master transmit and Slave receive
  *              2.)Master receive  and Slave transmit
- *                  I2C0 instance is taken as Master and
- *                  LPI2C0(Slave-only) instance is taken as Slave.
+ *
+ *              I2C instance selection:
+ *              - I2C0 is used as Master when available
+ *              - I2C1 is used as Master on boards (e.g., DevKit-E1C) where I2C0
+ *                is not available for use as Master
+ *              - LPI2C0 (Slave-only) is used as Slave
  *
  *              Hardware Connection:
  *              I2C0 SDA(P3_5) -> LPI2C0 SDA(P5_3)
  *              I2C0 SCL(P3_4) -> LPI2C0 SCL(P5_2)
+ *
+ *              For DevKit-E1C (using I2C1):
+ *              I2C1 SDA (P7_2) -> LPI2C0 SDA (P0_1)
+ *              I2C1 SCL (P7_3) -> LPI2C0 SCL (P0_0)
  ******************************************************************************/
 
 /* Include */
@@ -56,8 +64,8 @@ typedef enum _LPI2C_CB_EVENT {
 } LPI2C_CB_EVENT;
 
 /* I2C Driver instance */
-extern ARM_DRIVER_I2C  Driver_I2C0;
-static ARM_DRIVER_I2C *I2C_mstdrv = &Driver_I2C0;
+extern ARM_DRIVER_I2C  ARM_Driver_I2C_(BOARD_MASTER_I2C_INSTANCE);
+static ARM_DRIVER_I2C *I2C_mstdrv = &ARM_Driver_I2C_(BOARD_MASTER_I2C_INSTANCE);
 
 extern ARM_DRIVER_I2C  Driver_LPI2C0;
 static ARM_DRIVER_I2C *LPI2C_slvdrv = &Driver_LPI2C0;
@@ -191,25 +199,25 @@ static int32_t board_lpi2c_pins_config(void)
         return ret;
     }
 
-    /* I2C0_SDA */
-    ret = pinconf_set(PORT_(BOARD_I2C0_SDA_GPIO_PORT),
-                      BOARD_I2C0_SDA_GPIO_PIN,
-                      BOARD_I2C0_SDA_ALTERNATE_FUNCTION,
-                      (PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP |
-                       PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
+    /* MASTER_I2C_SDA */
+    ret = pinconf_set(PORT_(BOARD_MASTER_I2C_SDA_GPIO_PORT),
+		      BOARD_MASTER_I2C_SDA_GPIO_PIN,
+		      BOARD_MASTER_I2C_SDA_ALTERNATE_FUNCTION,
+		      (PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP |
+		       PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
     if (ret) {
-        printf("ERROR: Failed to configure PINMUX for I2C0_SDA_PIN\n");
+        printf("ERROR: Failed to configure PINMUX for MASTER_I2C_SDA_PIN\n");
         return ret;
     }
 
-    /* I2C0_SCL */
-    ret = pinconf_set(PORT_(BOARD_I2C0_SCL_GPIO_PORT),
-                      BOARD_I2C0_SCL_GPIO_PIN,
-                      BOARD_I2C0_SCL_ALTERNATE_FUNCTION,
-                      (PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP |
-                       PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
+    /* MASTER_I2C_SCL */
+    ret = pinconf_set(PORT_(BOARD_MASTER_I2C_SCL_GPIO_PORT),
+		      BOARD_MASTER_I2C_SCL_GPIO_PIN,
+		      BOARD_MASTER_I2C_SCL_ALTERNATE_FUNCTION,
+		      (PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP |
+		       PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA));
     if (ret) {
-        printf("ERROR: Failed to configure PINMUX for I2C0_SCL_PIN\n");
+        printf("ERROR: Failed to configure PINMUX for MASTER_I2C_SCL_PIN\n");
         return ret;
     }
 
