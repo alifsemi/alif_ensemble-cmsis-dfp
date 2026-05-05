@@ -679,22 +679,6 @@
 // PIN6 <7=> PIN7
 #define BOARD_SD_D7_A_GPIO_PIN                          7
 
-// <o> "I2C1_SDA_C" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
-// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
-// GPIO13 <14=> GPIO14 <15=> LPGPIO
-#define BOARD_I2C1_SDA_C_GPIO_PORT                      7
-// <o> "I2C1_SDA_C" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
-// PIN6 <7=> PIN7
-#define BOARD_I2C1_SDA_C_GPIO_PIN                       2
-
-// <o> "I2C1_SCL_C" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
-// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
-// GPIO13 <14=> GPIO14 <15=> LPGPIO
-#define BOARD_I2C1_SCL_C_GPIO_PORT                      7
-// <o> "I2C1_SCL_C" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
-// PIN6 <7=> PIN7
-#define BOARD_I2C1_SCL_C_GPIO_PIN                       3
-
 // <o> "LPI2S_SDO_C" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
 // GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
 // GPIO13 <14=> GPIO14 <15=> LPGPIO
@@ -1431,25 +1415,25 @@
 // <o> "LPI2C0_SCL_A" GPIO pin alternate function <0-7>
 #define BOARD_LPI2C0_SCL_ALTERNATE_FUNCTION             5
 
-// <o> "I2C0_SDA_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// <o> "MASTER_I2C_SDA_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
 // GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
 // GPIO13 <14=> GPIO14 <15=> LPGPIO
-#define BOARD_I2C0_SDA_GPIO_PORT                        3
-// <o> "I2C0_SDA_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+#define BOARD_MASTER_I2C_SDA_GPIO_PORT                        3
+// <o> "MASTER_I2C_SDA_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
 // PIN6 <7=> PIN7
-#define BOARD_I2C0_SDA_GPIO_PIN                         5
-// <o> "I2C0_SDA_B" GPIO pin alternate function <0-7>
-#define BOARD_I2C0_SDA_ALTERNATE_FUNCTION               5
+#define BOARD_MASTER_I2C_SDA_GPIO_PIN                         5
+// <o> "MASTER_I2C_SDA_B" GPIO pin alternate function <0-7>
+#define BOARD_MASTER_I2C_SDA_ALTERNATE_FUNCTION               5
 
-// <o> "I2C0_SCL_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// <o> "MASTER_I2C_SCL_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
 // GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
 // GPIO13 <14=> GPIO14 <15=> LPGPIO
-#define BOARD_I2C0_SCL_GPIO_PORT                        3
-// <o> "I2C0_SCL_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+#define BOARD_MASTER_I2C_SCL_GPIO_PORT                        3
+// <o> "MASTER_I2C_SCL_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
 // PIN6 <7=> PIN7
-#define BOARD_I2C0_SCL_GPIO_PIN                         4
-// <o> "I2C0_SCL_B" GPIO pin alternate function <0-7>
-#define BOARD_I2C0_SCL_ALTERNATE_FUNCTION               5
+#define BOARD_MASTER_I2C_SCL_GPIO_PIN                         4
+// <o> "MASTER_I2C_SCL_B" GPIO pin alternate function <0-7>
+#define BOARD_MASTER_I2C_SCL_ALTERNATE_FUNCTION               5
 
 // <o> "Master" MW SPI instance number <0-3>
 #define BOARD_MW_SPI_MASTER_INSTANCE                    2
