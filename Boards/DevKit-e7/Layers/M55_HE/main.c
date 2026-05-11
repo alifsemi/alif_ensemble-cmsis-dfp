@@ -93,7 +93,7 @@ void clock_init(void)
     }
 
     /* Enable USB_CLK */
-    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_USB, true, &error_code);
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_CLK_20M, true, &error_code);
     if ((rval != 0) || (error_code != 0)) {
         return;
     }
@@ -125,7 +125,6 @@ static void CpuCacheEnable(void)
 
 int main(void)
 {
-
     /* Apply pin configuration */
     board_pins_config();
 
