@@ -40,7 +40,7 @@ layer:
 
   # List the packs used in the layer.
   packs:
-    - pack: AlifSemiconductor::Ensemble@^2.0.4-0
+    - pack: AlifSemiconductor::Ensemble@^2.1.0-0
     - pack: ARM::CMSIS@^6.2.0
     - pack: ARM::CMSIS-Compiler@^2.1.0
     - pack: ARM::CMSIS-Driver@^2.10.0
