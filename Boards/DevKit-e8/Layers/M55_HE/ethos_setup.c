@@ -47,9 +47,9 @@
 
 #else /* Ethos-U55 */
 /* Define Ethos-U NPU base address and interrupt handler */
-#define ETHOSU_BASE_ADDR            NPU_HP_BASE
-#define ETHOSU_IRQ_HANDLER          NPU_HP_IRQHandler
-#define ETHOSU_IRQ_IRQn             NPU_HP_IRQ_IRQn
+#define ETHOSU_BASE_ADDR            NPU_HE_BASE
+#define ETHOSU_IRQ_HANDLER          NPU_HE_IRQHandler
+#define ETHOSU_IRQ_IRQn             NPU_HE_IRQ_IRQn
 #endif /* ETHOSU85 */
 
 /* Define Ethos-U NPU security mode */
