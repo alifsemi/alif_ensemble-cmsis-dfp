@@ -22,8 +22,12 @@
 #include "ethosu_driver.h"
 #include "app_mem_regions.h"
 
-#define MRAM_BASE APP_MRAM_HE_BASE
-#define MRAM_SIZE APP_MRAM_HE_SIZE
+#define ITCM_BASE APP_ITCM_BASE
+#define ITCM_SIZE APP_HE_ITCM_SIZE
+#define DTCM_BASE APP_DTCM_BASE
+#define DTCM_SIZE APP_HE_DTCM_SIZE
+#define MRAM_BASE APP_MRAM_HP_BASE
+#define MRAM_SIZE APP_MRAM_HP_SIZE
 
 typedef struct {
     uint32_t start_addr;  // Base address of a block
@@ -31,9 +35,9 @@ typedef struct {
 } mem_block_t;
 
 const mem_block_t non_cached_memory[] = {
-    {0x00000000, 0x01FFFFFF},              /* TCM */
-    {0x20000000, 0x21FFFFFF},              /* TCM */
-    {MRAM_BASE, MRAM_BASE + MRAM_SIZE - 1} /* MRAM */
+    {ITCM_BASE, ITCM_BASE + ITCM_SIZE - 1},
+    {DTCM_BASE, DTCM_BASE + DTCM_SIZE - 1},
+    {MRAM_BASE, MRAM_BASE + MRAM_SIZE - 1}
 };
 
 /**
@@ -66,32 +70,36 @@ static bool check_mem_region(const void *p, size_t bytes)
     return true;
 }
 
-void ethosu_flush_dcache(uint32_t *p, size_t bytes)
+void ethosu_flush_dcache(const uint64_t *base_addr, const size_t *base_addr_size, int num_base_addr)
 {
+    for (int i = 0; i < num_base_addr; i++) {
+        if (check_mem_region((const void *)(uintptr_t)base_addr[i], base_addr_size[i])) {
+            /* Call CleanDCache instead of CleanDCache_by_Addr to avoid delays.        */
+            /* Memory regions size is usually large and calling by_Addr consumes time. */
+            SCB_CleanDCache();
 
-    if (check_mem_region(p, bytes)) {
-        /* Call CleanDCache instead of CleanDCache_by_Addr to avoid delays.        */
-        /* Memory regions size is usually large and calling by_Addr consumes time. */
-        SCB_CleanDCache();
-    } else {
-        __DSB();
+            /* Cache is cleaned, return immediately */
+            return;
+        }
     }
+
+    /* No cleaning, just ensure all memory accesses are completed before continuing */
+    __DSB();
 }
 
-void ethosu_invalidate_dcache(uint32_t *p, size_t bytes)
+void ethosu_invalidate_dcache(const uint64_t *base_addr, const size_t *base_addr_size, int num_base_addr)
 {
-    bool invalidate;
+    for (int i = 0; i < num_base_addr; i++) {
+        if (check_mem_region((const void *)(uintptr_t)base_addr[i], base_addr_size[i])) {
+            /* Call CleanInvalidateDCache instead of SCB_InvalidateDCache to avoid silently losing data. */
+            /* This avoids losing dirty lines that the CPU has written but not yet committed to memory.  */
+            SCB_CleanInvalidateDCache();
 
-    if (p == NULL) {
-        invalidate = true;
-    } else {
-        invalidate = check_mem_region(p, bytes);
+            /* Cache is cleaned and invalidated, return immediately */
+            return;
+        }
     }
 
-    if (invalidate) {
-        /* Clean and invalidate data cache */
-        SCB_CleanInvalidateDCache();
-    } else {
-        __DSB();
-    }
+    /* No invalidation, just ensure all memory accesses are completed before continuing */
+    __DSB();
 }

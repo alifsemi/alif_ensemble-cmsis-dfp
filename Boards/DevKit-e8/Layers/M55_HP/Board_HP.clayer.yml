@@ -51,7 +51,7 @@ layer:
     - pack: ARM::CMSIS@^6.2.0
     - pack: ARM::CMSIS-Compiler@^2.1.0
     - pack: ARM::CMSIS-Driver@^2.10.0
-    - pack: ARM::ethos-u-core-driver@^1.25.2
+    - pack: ARM::ethos-u-core-driver@^1.26.2
 
   # List miscellaneous options passed via the command line to the build tool.
   misc:
