@@ -23,6 +23,7 @@
 #include "Driver_USBD.h"
 
 #define EP_NUM(ep_addr)      (ep_addr & ARM_USB_ENDPOINT_NUMBER_MASK)
+#define EP_DIR(ep_addr)      (ep_addr & ARM_USB_ENDPOINT_DIRECTION_MASK) ? USB_DIR_IN : USB_DIR_OUT;
 
 #define ARM_USBD_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /* driver version */
 
@@ -349,13 +350,15 @@ static int32_t ARM_USBD_EndpointTransfer(uint8_t ep_addr, uint8_t *data, uint32_
 static uint32_t ARM_USBD_EndpointTransferGetResult(uint8_t ep_addr)
 {
     uint8_t  ep_num;
+    uint8_t  ep_dir;
     uint32_t transferred;
 
     ep_num = EP_NUM(ep_addr);
     if (ep_num == 0) {
         transferred = usb_drv.actual_length;
     } else {
-        transferred = usb_drv.num_bytes;
+        ep_dir = EP_DIR(ep_addr);
+        transferred = usb_drv.eps[USB_GET_PHYSICAL_EP(ep_num, ep_dir)].bytes_txed;
     }
 
     return transferred;
