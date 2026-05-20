@@ -16,7 +16,7 @@ jobs:
     name: Generate pack
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -28,7 +28,7 @@ jobs:
       - uses: Open-CMSIS-Pack/gen-pack-action@main
         with:
           doxygen-version: 1.9.6                              # TODO: set required version of DoxyGen
-          packchk-version: 1.3.98                             # TODO: set required version of PackChk
+          packchk-version: 1.4.5                              # TODO: set required version of PackChk
           #          gen-doc-script: ./docs/gen_doc.sh                    # TODO: set path to documentation generator script, leave empty or remove to skip
           #          check-links-script: ./docs/check_links.sh            # TODO: set path to link checker script, leave empty or remove to skip
           #oc-path: ./docs/html/                               # TODO: set path to generated documentation, leave empty or remove to skip
