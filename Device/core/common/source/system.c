@@ -218,6 +218,10 @@ void SystemInit(void)
     sau_tcm_ns_setup();
 #endif
 
+#ifdef TURBO_MODE
+    *(volatile uint32_t *)0x1A605028 |= (1 << 19);
+#endif
+
     SystemCoreClock = CORE_DEFAULT_CLK;
 
     /* Add a feature to bypass the clock gating in the EXPMST0.

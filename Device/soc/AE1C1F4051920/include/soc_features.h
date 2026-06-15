@@ -17,15 +17,25 @@
 #define SOC_FEAT_M55_HE_CORE_ID                    (3)
 
 /* Clocks */
+#ifdef TURBO_MODE
+#define SOC_FEAT_M55_HE_MAX_HZ     (240000000)
+#define SOC_FEAT_ACLK_MAX_HZ       (240000000)
+#define SOC_FEAT_HCLK_MAX_HZ       (120000000)
+#define SOC_FEAT_PCLK_MAX_HZ       (60000000)
+#define SOC_FEAT_REFCLK_MAX_HZ     (120000000)
+#else
 #define SOC_FEAT_M55_HE_MAX_HZ                     (160000000)
 
 #define SOC_FEAT_ACLK_MAX_HZ                       (160000000)
 #define SOC_FEAT_HCLK_MAX_HZ                       (80000000)
 #define SOC_FEAT_PCLK_MAX_HZ                       (40000000)
 #define SOC_FEAT_REFCLK_MAX_HZ                     (80000000)
+#endif /* TURBO_MODE */
+
 #define SOC_FEAT_HFOSC_MAX_HZ                      (38400000)
 #define SOC_FEAT_PLL_CLK1_MAX_HZ                   (160000000)
 #define SOC_FEAT_PLL_CLK2_MAX_HZ                   (120000000)
+
 
 /* Memory Regions */
 #define SOC_FEAT_MRAM_SIZE                         (0x0018C000)
