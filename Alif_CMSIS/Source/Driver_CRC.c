@@ -579,8 +579,15 @@ static int32_t CRC_Control(uint32_t control, uint32_t arg, CRC_RESOURCES *CRC)
 
             case ARM_CRC_ALGORITHM_SEL_32_BIT_CUSTOM_POLY:
 
-                /* To enable 32 bit poly custom CRC algorithm and size */
+                /* Legacy custom polynomial: algorithm select 5 and CRC_CUSTOM_POLY */
                 crc_enable_32bit_custom_poly(CRC->regs);
+
+                break;
+
+            case ARM_CRC_ALGORITHM_SEL_32_BIT_CRC32C:
+
+                /* To enable hardware CRC32C algorithm and 32 bit size */
+                crc_enable_32bit_crc32c(CRC->regs);
 
                 break;
             default:
