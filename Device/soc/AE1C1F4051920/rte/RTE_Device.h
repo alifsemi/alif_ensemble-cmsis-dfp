@@ -3665,6 +3665,11 @@
 // <i> Default: 0
 #define RTE_I2C0_RX_FIFO_THRESHOLD 0
 
+// <o> I2C0 SCL Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SCL stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 40MHz)
+#define RTE_I2C0_SCL_STUCK_LOW_TIMEOUT 400000
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -3707,6 +3712,11 @@
 // <i> Defines RX FIFO threshold for I2C1.
 // <i> Default: 0
 #define RTE_I2C1_RX_FIFO_THRESHOLD 0
+
+// <o> I2C1 SCL Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SCL stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 40MHz)
+#define RTE_I2C1_SCL_STUCK_LOW_TIMEOUT 400000
 
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
