@@ -76,6 +76,7 @@ extern "C" {
 #define I2C_IC_INT_DISABLE_ALL               (0x0)
 
 /* Interrupt Register Fields */
+#define I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW    (1 << 14)
 #define I2C_IC_INTR_STAT_GEN_CALL            (1 << 11)
 #define I2C_IC_INTR_STAT_START_DET           (1 << 10)
 #define I2C_IC_INTR_STAT_STOP_DET            (1 << 9)
@@ -91,21 +92,31 @@ extern "C" {
 #define I2C_IC_INTR_STAT_RX_OVER             (1 << 1) /* raw interrupt status */
 #define I2C_IC_INTR_STAT_RX_UNDER            (1 << 0) /* raw interrupt status */
 
+#define I2C_IC_MST_INTR_STAT_ALL                                                                   \
+    (I2C_IC_INTR_STAT_RX_UNDER | I2C_IC_INTR_STAT_RX_OVER  | I2C_IC_INTR_STAT_RX_FULL   |          \
+     I2C_IC_INTR_STAT_TX_OVER  | I2C_IC_INTR_STAT_TX_EMPTY | I2C_IC_INTR_STAT_TX_ABRT   |          \
+     I2C_IC_INTR_STAT_ACTIVITY | I2C_IC_INTR_STAT_STOP_DET | I2C_IC_INTR_STAT_START_DET |          \
+     I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW)
+
 /* Interrupt enable mask as master */
 #define I2C_IC_INT_MST_TX_ENABLE                                                                   \
     (I2C_IC_INTR_STAT_TX_EMPTY | I2C_IC_INTR_STAT_TX_OVER | I2C_IC_INTR_STAT_TX_ABRT |             \
-     I2C_IC_INTR_STAT_STOP_DET)
+     I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW | I2C_IC_INTR_STAT_STOP_DET)
 
 #define I2C_IC_INT_DMA_MST_TX_ENABLE                                                               \
-    (I2C_IC_INTR_STAT_TX_OVER | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
+    (I2C_IC_INTR_STAT_TX_OVER | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW |     \
+    I2C_IC_INTR_STAT_STOP_DET)
 
 #define I2C_IC_INT_MST_RX_ENABLE                                                                   \
     (I2C_IC_INTR_STAT_TX_EMPTY | I2C_IC_INTR_STAT_RX_FULL | I2C_IC_INTR_STAT_RX_OVER |             \
-     I2C_IC_INTR_STAT_RX_UNDER | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
+     I2C_IC_INTR_STAT_RX_UNDER | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW |    \
+     I2C_IC_INTR_STAT_STOP_DET)
 
 #define I2C_IC_INT_DMA_MST_RX_ENABLE                                                               \
     (I2C_IC_INTR_STAT_RX_OVER | I2C_IC_INTR_STAT_RX_UNDER |                                        \
-     I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
+     I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW |                                \
+     I2C_IC_INTR_STAT_STOP_DET)
+
 /* Interrupt enable mask as slave */
 #define I2C_IC_INT_SLV_TX_ENABLE                                                                   \
     (I2C_IC_INTR_STAT_RD_REQ | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
@@ -279,9 +290,10 @@ typedef enum _I2C_XFER_EVENT{
     I2C_XFER_EVENT_RX_IN_TX_MODE    = (1 << 11), /* Xfer event: Read command sent in Tx mode  */
     I2C_XFER_EVENT_USER_ABORT       = (1 << 12), /* Xfer event: User abort                    */
     I2C_XFER_EVENT_SDA_STUCK_AT_LOW = (1 << 13), /* Xfer event: SDA is stuck at low for IC_SDA_STUCK_AT_LOW_TIMEOUT   */
-    I2C_XFER_EVENT_DEV_ID_NOACK     = (1 << 14), /* Xfer event: No ack for Device ID transfer */
-    I2C_XFER_EVENT_DEV_ID_WRITE     = (1 << 15), /* Xfer event: Some data available in Tx FIFO during Device ID communication */
-    I2C_XFER_EVENT_UNDEF_TX_ABORT   = (1 << 16), /* Xfer event: Undefined Tx abort            */
+    I2C_XFER_EVENT_SCL_STUCK_AT_LOW = (1 << 14), /* Xfer event: SCL is stuck at low for IC_SCL_STUCK_AT_LOW_TIMEOUT   */
+    I2C_XFER_EVENT_DEV_ID_NOACK     = (1 << 15), /* Xfer event: No ack for Device ID transfer */
+    I2C_XFER_EVENT_DEV_ID_WRITE     = (1 << 16), /* Xfer event: Some data available in Tx FIFO during Device ID communication */
+    I2C_XFER_EVENT_UNDEF_TX_ABORT   = (1 << 17), /* Xfer event: Undefined Tx abort            */
 } I2C_XFER_EVENT;
 
 /* i2c Transfer Information (Run-Time) */
@@ -575,6 +587,18 @@ static inline void i2c_set_tx_threshold(I2C_Type *i2c, const uint8_t threshold)
 static inline void i2c_set_rx_threshold(I2C_Type *i2c, const uint8_t threshold)
 {
     i2c->I2C_RX_TL = threshold;
+}
+
+/**
+ * @brief   Sets the SCL Stuck at Low Timeout
+ * @note    none
+ * @param   i2c     : Pointer to i2c register map
+ * @param   timeout : SCL stuck at Low Timeout value
+ * @retval  None
+ */
+static inline void i2c_set_scl_stuck_timeout(I2C_Type *i2c, const uint32_t timeout)
+{
+    i2c->I2C_SCL_STUCK_AT_LOW_TIMEOUT = timeout;
 }
 
 /**

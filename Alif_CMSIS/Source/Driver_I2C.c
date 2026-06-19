@@ -21,7 +21,7 @@
 #endif
 
 /* Driver version */
-#define ARM_I2C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 11)
+#define ARM_I2C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(1, 12)
 
 /* Driver Version */
 static const ARM_DRIVER_VERSION DriverVersion = {ARM_I2C_API_VERSION, ARM_I2C_DRV_VERSION};
@@ -815,6 +815,7 @@ static int32_t ARM_I2C_PowerControl(ARM_POWER_STATE state, I2C_RESOURCES *I2C)
 
         i2c_set_tx_threshold(I2C->regs, I2C->tx_fifo_threshold);
         i2c_set_rx_threshold(I2C->regs, I2C->rx_fifo_threshold);
+        i2c_set_scl_stuck_timeout(I2C->regs, I2C->scl_stuck_timeout);
 
 #if I2C_DMA_ENABLE
         if (I2C->dma_enable) {
@@ -1667,6 +1668,12 @@ void I2C_HandleIRQError(I2C_RESOURCES *I2C_RES)
         i2c_stat->bus_error = 1U;
         I2C_RES->cb_event(ARM_I2C_EVENT_SDA_STUCK_LOW  |
                           ARM_I2C_EVENT_BUS_ERROR);
+
+    } else if (transfer->evt_sts & I2C_XFER_EVENT_SCL_STUCK_AT_LOW) {
+        i2c_stat->bus_error = 1U;
+        I2C_RES->cb_event(ARM_I2C_EVENT_SCL_STUCK_LOW  |
+                          ARM_I2C_EVENT_BUS_ERROR);
+
     } else if (transfer->evt_sts & I2C_XFER_EVENT_UNEXPECTED_ACK) {
         I2C_RES->cb_event(ARM_I2C_EVENT_UNEXPECTED_ACK |
                           ARM_I2C_EVENT_BUS_ERROR);
@@ -2138,6 +2145,7 @@ static I2C_RESOURCES I2C0_RES = {
 #endif
     .tx_fifo_threshold = RTE_I2C0_TX_FIFO_THRESHOLD,
     .rx_fifo_threshold = RTE_I2C0_RX_FIFO_THRESHOLD,
+    .scl_stuck_timeout = RTE_I2C0_SCL_STUCK_LOW_TIMEOUT,
     .instance          = I2C_INSTANCE_0
 };
 
@@ -2268,6 +2276,7 @@ static I2C_RESOURCES I2C1_RES = {
 #endif
     .tx_fifo_threshold = RTE_I2C1_TX_FIFO_THRESHOLD,
     .rx_fifo_threshold = RTE_I2C1_RX_FIFO_THRESHOLD,
+    .scl_stuck_timeout = RTE_I2C1_SCL_STUCK_LOW_TIMEOUT,
     .instance          = I2C_INSTANCE_1
 };
 
@@ -2398,6 +2407,7 @@ static I2C_RESOURCES I2C2_RES = {
 #endif
     .tx_fifo_threshold = RTE_I2C2_TX_FIFO_THRESHOLD,
     .rx_fifo_threshold = RTE_I2C2_RX_FIFO_THRESHOLD,
+    .scl_stuck_timeout = RTE_I2C2_SCL_STUCK_LOW_TIMEOUT,
     .instance          = I2C_INSTANCE_2
 };
 
@@ -2528,6 +2538,7 @@ static I2C_RESOURCES I2C3_RES = {
 #endif
     .tx_fifo_threshold = RTE_I2C3_TX_FIFO_THRESHOLD,
     .rx_fifo_threshold = RTE_I2C3_RX_FIFO_THRESHOLD,
+    .scl_stuck_timeout = RTE_I2C3_SCL_STUCK_LOW_TIMEOUT,
     .instance          = I2C_INSTANCE_3
 };
 
@@ -2658,6 +2669,7 @@ static I2C_RESOURCES LPI2C1_RES = {
 #endif
     .tx_fifo_threshold = RTE_LPI2C1_TX_FIFO_THRESHOLD,
     .rx_fifo_threshold = RTE_LPI2C1_RX_FIFO_THRESHOLD,
+    .scl_stuck_timeout = RTE_LPI2C1_SCL_STUCK_LOW_TIMEOUT,
     .instance          = I2C_INSTANCE_LP_1
 };
 

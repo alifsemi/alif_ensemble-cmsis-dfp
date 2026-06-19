@@ -221,7 +221,7 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
 {
     uint32_t status;
 
-    status        = i2c->I2C_RAW_INTR_STAT;
+    status = i2c->I2C_RAW_INTR_STAT;
 
     /* during transmit set once TX_fifo is at max buffer_length and
      * processor sends another i2c cmd by writing to IC_DATA_CMD
@@ -240,6 +240,14 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
         /* clear reg */
         (void)i2c->I2C_CLR_RX_OVER;
         (void)i2c->I2C_CLR_RX_UNDER;
+    }
+
+    if (status & I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW) {
+        /* SCL is stuck at low . */
+        i2c_mask_interrupt(i2c, I2C_IC_MST_INTR_STAT_ALL);
+
+        transfer->evt_sts = I2C_XFER_EVENT_SCL_STUCK_AT_LOW;
+        (void)i2c->I2C_CLR_SCL_STUCK_DET;
     }
 
     /* transmit abort */
