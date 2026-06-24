@@ -245,7 +245,11 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     if (status & I2C_IC_INTR_STAT_TX_ABRT) {
         status = i2c->I2C_TX_ABRT_SOURCE;
 
-        if (status & I2C_ABRT_ARBITRATION_LOST) {
+        /* Check USER_ABRT first - it's a deliberate user action */
+        if (status & I2C_IC_TX_ABRT_USER_ABRT) {
+            /* User aborted the xfer */
+            transfer->evt_sts = I2C_XFER_EVENT_USER_ABORT;
+        } else if (status & I2C_ABRT_ARBITRATION_LOST) {
             /* Master lost arbitration. */
             transfer->evt_sts = I2C_XFER_EVENT_ARBITRATION_LOST;
         } else if (status & I2C_MST_ABRT_ADDR_NOACK) {
@@ -270,9 +274,6 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
         } else if (status & I2C_IC_TX_ABRT_MASTER_DIS) {
             /* Master mode disabled */
             transfer->evt_sts = I2C_XFER_EVENT_MASTER_DIS;
-        } else if (status & I2C_IC_TX_ABRT_USER_ABRT) {
-            /* User aborted the xfer */
-            transfer->evt_sts = I2C_XFER_EVENT_USER_ABORT;
         } else if (status & I2C_IC_TX_ABRT_SDA_STUCK_AT_LOW) {
             /* SDA line stuck at low  */
             transfer->evt_sts = I2C_XFER_EVENT_SDA_STUCK_AT_LOW;
