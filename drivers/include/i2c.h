@@ -31,9 +31,12 @@ extern "C" {
 /* Disable I2C */
 #define I2C_IC_ENABLE_I2C_DISABLE            (0)
 
+/* Field of IC_ENABLE register */
+#define I2C_IC_ENABLE_ABORT                  (1 << 1)
+#define I2C_IC_SDA_STUCK_RECOVERY_ENABLE     (1 << 3)
+
 /* Field of IC_ENABLE_STATUS register*/
 #define I2C_ENABLE_STATUS_IC_EN              (1 << 0)
-#define I2C_IC_SDA_STUCK_RECOVERY_ENABLE     (1 << 3)
 
 /* i2c Status Register Fields. */
 #define I2C_IC_STATUS_ACTIVITY               (0x01) /* (1 << 0) */
@@ -338,6 +341,17 @@ static inline void i2c_disable(I2C_Type *i2c)
 static inline void i2c_master_recover_sda(I2C_Type *i2c)
 {
     i2c->I2C_ENABLE |= I2C_IC_SDA_STUCK_RECOVERY_ENABLE;
+}
+
+/**
+ * @brief   Initiate transfer abort (sends STOP on bus)
+ * @note    Generates TX_ABRT with USER_ABRT source
+ * @param   i2c : Pointer to i2c register map
+ * @retval  none
+ */
+static inline void i2c_master_abort(I2C_Type *i2c)
+{
+    i2c->I2C_ENABLE |= I2C_IC_ENABLE_ABORT;
 }
 
 /**

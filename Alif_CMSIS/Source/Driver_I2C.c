@@ -1076,50 +1076,30 @@ static int32_t ARM_I2C_Control(I2C_RESOURCES *I2C, uint32_t control, uint32_t ar
 
     case ARM_I2C_ABORT_TRANSFER:
 
-#if I2C_DMA_ENABLE
-        if (I2C->dma_enable) {
-            /* Transmit mode */
-            if (I2C->status.direction == I2C_DIR_TRANSMITTER) {
-                if (I2C_DMA_Stop(&I2C->dma_cfg->dma_tx) != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-            } else if (I2C->status.direction == I2C_DIR_RECEIVER) { /* Reception mode */
-                if (I2C_DMA_Stop(&I2C->dma_cfg->dma_rx) != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-            }
-
-            i2c_disable_tx_dma(I2C->regs);
-            i2c_disable_rx_dma(I2C->regs);
+        /* I2C protocol: only the master can terminate a bus cycle */
+        if (I2C->mode != I2C_MASTER_MODE) {
+            return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
-#endif
-        /* only useful in interrupt method,
-         * no effect on polling method.
-         */
 
-        /* i2c is half-duplex, at a time it can be either tx or rx
-         * not sure which one is running, so clearing both. */
+        /* Mark abort early so DMA callback / ISR won't overwrite curr_cnt */
+        I2C->transfer.abort = true;
 
-        /* if tx interrupt flag is enable then only disable transmit interrupt */
-        if (I2C->mode == I2C_MASTER_MODE) {
+        if (I2C->status.busy) {
+            /* Active master transfer: emit TX_ABRT(USER_ABRT) +
+             * STOP_DET; the ISR handles teardown and app callback.
+             */
+            i2c_master_abort(I2C->regs);
+        } else {
+            /* No active transfer: local cleanup only. */
             i2c_master_disable_tx_interrupt(I2C->regs);
-        } else {
-            i2c_slave_disable_tx_interrupt(I2C->regs);
-        }
-
-        if (I2C->mode == I2C_MASTER_MODE) {
             i2c_master_disable_rx_interrupt(I2C->regs);
-        } else {
-            i2c_slave_disable_rx_interrupt(I2C->regs);
+
+            I2C->transfer.tx_total_num = 0U;
+            I2C->transfer.rx_total_num = 0U;
+            I2C->transfer.curr_stat    = I2C_XFER_NONE;
+            I2C->transfer.abort        = false;
+            I2C->status.busy           = 0U;
         }
-
-        /* Reset the tx_buffer */
-        I2C->transfer.tx_total_num = 0U;
-        I2C->transfer.rx_total_num = 0U;
-        I2C->transfer.curr_stat    = I2C_XFER_NONE;
-
-        /* clear busy status bit. */
-        I2C->status.busy           = 0U;
 
         break;
 
