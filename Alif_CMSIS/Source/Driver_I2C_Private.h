@@ -29,6 +29,15 @@
 
 #if I2C_DMA_ENABLE
 #include <DMA_Common.h>
+#include "dma_opcode.h"
+#endif
+
+#if I2C_DMA_ENABLE
+/* Microcode buffer size for the per-instance TX and RX microcodes.
+ * Sized for a single DMALP chunk (max 256 iterations):
+ * 64 B fits the worst case.
+ */
+#define I2C_DMA_MCODE_SIZE 64
 #endif
 
 typedef volatile struct _I2C_DRIVER_STATE {
@@ -68,6 +77,13 @@ typedef struct _I2C_RESOURCES {
     const uint32_t        dma_irq_priority; /* DMA IRQ priority number                 */
     ARM_DMA_SignalEvent_t dma_cb;           /* I2S DMA Callback                        */
     I2C_DMA_HW_CONFIG    *dma_cfg;          /* DMA Controller configuration            */
+    uint16_t             *dma_tx_scratch;    /* 16-bit DATA_CMD scratch buf            */
+    uint32_t              dma_tx_scratch_sz; /* Scratch buf capacity                   */
+    const uint8_t        *dma_xfer_src;     /* Pointer into the user's 8-bit TX buffer */
+    uint32_t              dma_xfer_remaining; /* Bytes left after the current chunk    */
+    uint32_t              dma_xfer_total;   /* Original transfer size                  */
+    bool                  dma_xfer_pending; /* If true, no STOP on final chunk         */
+    uint8_t               dma_mcode[I2C_DMA_MCODE_SIZE] __ALIGNED(32); /* microcode    */
 #endif
     uint8_t            tx_fifo_threshold; /* Tx Fifo Buffer threshold                */
     uint8_t            rx_fifo_threshold; /* Rx Fifo Buffer threshold                */

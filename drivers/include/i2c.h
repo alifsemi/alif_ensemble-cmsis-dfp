@@ -104,13 +104,14 @@ extern "C" {
      I2C_IC_INTR_STAT_RX_UNDER | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
 
 #define I2C_IC_INT_DMA_MST_RX_ENABLE                                                               \
-    (I2C_IC_INTR_STAT_TX_EMPTY | I2C_IC_INTR_STAT_RX_OVER | I2C_IC_INTR_STAT_RX_UNDER |            \
+    (I2C_IC_INTR_STAT_RX_OVER | I2C_IC_INTR_STAT_RX_UNDER |                                        \
      I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
 /* Interrupt enable mask as slave */
 #define I2C_IC_INT_SLV_TX_ENABLE                                                                   \
     (I2C_IC_INTR_STAT_RD_REQ | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
 
-#define I2C_IC_INT_DMA_SLV_TX_ENABLE (I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
+#define I2C_IC_INT_DMA_SLV_TX_ENABLE                                                               \
+    (I2C_IC_INTR_STAT_RD_REQ | I2C_IC_INTR_STAT_TX_ABRT | I2C_IC_INTR_STAT_STOP_DET)
 
 #define I2C_IC_INT_SLV_RX_ENABLE                                                                   \
     (I2C_IC_INTR_STAT_RX_FULL | I2C_IC_INTR_STAT_RX_OVER | I2C_IC_INTR_STAT_RX_UNDER |             \
@@ -624,11 +625,22 @@ static inline void i2c_disable_rx_dma(I2C_Type *i2c)
  * @brief   Returns I2C Rx DMA enable status
  * @note    none
  * @param   i2c    : Pointer to i2c register map
- * @retval  None
+ * @retval  true if RX DMA is enabled, false otherwise
  */
 static inline bool i2c_is_rx_dma_enable(I2C_Type *i2c)
 {
     return ((i2c->I2C_DMA_CR & I2C_DMACR_RX_DMA_ENABLE) != 0);
+}
+
+/**
+ * @brief   Returns I2C Tx DMA enable status
+ * @note    none
+ * @param   i2c    : Pointer to i2c register map
+ * @retval  true if TX DMA is enabled, false otherwise
+ */
+static inline bool i2c_is_tx_dma_enable(I2C_Type *i2c)
+{
+    return ((i2c->I2C_DMA_CR & I2C_DMACR_TX_DMA_ENABLE) != 0);
 }
 
 /**
