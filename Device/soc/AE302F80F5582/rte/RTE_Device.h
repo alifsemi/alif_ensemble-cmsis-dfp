@@ -8130,6 +8130,12 @@
 // <i> Defines I2C0 DMA Interrupt priority
 // <i> Default: 0
 #define RTE_I2C0_DMA_IRQ_PRI 0
+
+// <o> I2C0 DMA scratch buffer size (entries) <32-256:8>
+// <i> Per-instance 16-bit DMA scratch buffer; sized in DATA_CMD entries.
+// <i> Caps the per-chunk DMA transfer (max 256).
+// <i> Default: 256
+#define RTE_I2C0_DMA_SCRATCH_SIZE 256
 #endif
 
 #endif
@@ -8167,6 +8173,12 @@
 // <i> Defines I2C1 DMA Interrupt priority
 // <i> Default: 0
 #define RTE_I2C1_DMA_IRQ_PRI 0
+
+// <o> I2C1 DMA scratch buffer size (entries) <32-256:8>
+// <i> Per-instance 16-bit DMA scratch buffer; sized in DATA_CMD entries.
+// <i> Caps the per-chunk DMA transfer (max 256).
+// <i> Default: 256
+#define RTE_I2C1_DMA_SCRATCH_SIZE 256
 #endif
 
 #endif
@@ -8204,6 +8216,12 @@
 // <i> Defines I2C2 DMA Interrupt priority
 // <i> Default: 0
 #define RTE_I2C2_DMA_IRQ_PRI 0
+
+// <o> I2C2 DMA scratch buffer size (entries) <32-256:8>
+// <i> Per-instance 16-bit DMA scratch buffer; sized in DATA_CMD entries.
+// <i> Caps the per-chunk DMA transfer (max 256).
+// <i> Default: 256
+#define RTE_I2C2_DMA_SCRATCH_SIZE 256
 #endif
 
 #endif
@@ -8242,6 +8260,12 @@
 // <i> Defines I2C3 DMA Interrupt priority
 // <i> Default: 0
 #define RTE_I2C3_DMA_IRQ_PRI 0
+
+// <o> I2C3 DMA scratch buffer size (entries) <32-256:8>
+// <i> Per-instance 16-bit DMA scratch buffer; sized in DATA_CMD entries.
+// <i> Caps the per-chunk DMA transfer (max 256).
+// <i> Default: 256
+#define RTE_I2C3_DMA_SCRATCH_SIZE 256
 #endif
 
 #endif
