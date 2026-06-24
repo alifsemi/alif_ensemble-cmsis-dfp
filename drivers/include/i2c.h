@@ -46,6 +46,7 @@ extern "C" {
 #define I2C_IC_STATUS_RFF                    (0x10) /* (1 << 4) */
 #define I2C_IC_STATUS_MASTER_ACT             (0x20) /* (1 << 5) */
 #define I2C_IC_STATUS_SLAVE_ACT              (0x40) /* (1 << 6) */
+#define I2C_IC_STATUS_SDA_STUCK_NOT_RECOVERED (1 << 11)
 
 /* Perform a Restart/Stop request */
 #define I2C_IC_DATA_CMD_RESTART              (1 << 10)

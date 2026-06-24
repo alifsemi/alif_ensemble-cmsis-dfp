@@ -535,13 +535,25 @@ void i2c_master_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
             /* mark event as master receive complete successfully. */
             transfer->evt_sts    |= I2C_XFER_EVENT_DONE;
         } else {
-            /* mark event as bus cleared successfully. */
-            if (transfer->cmd_bus_clr) {
-                transfer->evt_sts |= I2C_XFER_EVENT_BUS_CLEAR;
+            /* Promote SDA_STUCK_AT_LOW to BUS_CLEAR only on a user
+             * bus-clear that actually recovered.
+             */
+            if (transfer->cmd_bus_clr &&
+                (transfer->evt_sts & I2C_XFER_EVENT_SDA_STUCK_AT_LOW)) {
+                if (!(i2c->I2C_STATUS & I2C_IC_STATUS_SDA_STUCK_NOT_RECOVERED)) {
+                    transfer->evt_sts = (transfer->evt_sts &
+                                         ~I2C_XFER_EVENT_SDA_STUCK_AT_LOW) |
+                                        I2C_XFER_EVENT_BUS_CLEAR;
+                }
             }
             /* clear xfer abort status */
             transfer->abort = false;
         }
+        /* cmd_bus_clr is scoped to one BUS_CLEAR command; the HW ends
+         * that command with STOP_DET whether recovery succeeded or not.
+         * Clear here so the flag never leaks into the next transfer.
+         */
+        transfer->cmd_bus_clr = false;
 
         /* transmitted all the bytes, disable the transmit interrupt */
         i2c_master_disable_tx_interrupt(i2c);
@@ -677,13 +689,25 @@ void i2c_master_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
                 transfer->evt_sts    |= I2C_XFER_EVENT_DONE;
             }
         } else {
-            /* mark event as bus cleared successfully. */
-            if (transfer->cmd_bus_clr) {
-                transfer->evt_sts |= I2C_XFER_EVENT_BUS_CLEAR;
+            /* Promote SDA_STUCK_AT_LOW to BUS_CLEAR only on a user
+             * bus-clear that actually recovered.
+             */
+            if (transfer->cmd_bus_clr &&
+                (transfer->evt_sts & I2C_XFER_EVENT_SDA_STUCK_AT_LOW)) {
+                if (!(i2c->I2C_STATUS & I2C_IC_STATUS_SDA_STUCK_NOT_RECOVERED)) {
+                    transfer->evt_sts = (transfer->evt_sts &
+                                         ~I2C_XFER_EVENT_SDA_STUCK_AT_LOW) |
+                                        I2C_XFER_EVENT_BUS_CLEAR;
+                }
             }
             /* clear xfer abort status */
             transfer->abort = false;
         }
+        /* cmd_bus_clr is scoped to one BUS_CLEAR command; the HW ends
+         * that command with STOP_DET whether recovery succeeded or not.
+         * Clear here so the flag never leaks into the next transfer.
+         */
+        transfer->cmd_bus_clr = false;
 
         /* Stop bit detected, disable the Receive interrupt */
         i2c_master_disable_rx_interrupt(i2c);
