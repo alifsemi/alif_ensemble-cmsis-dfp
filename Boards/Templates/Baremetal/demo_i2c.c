@@ -71,53 +71,7 @@ static volatile uint32_t slv_cb_status;
 #endif
 
 #define STOP (0X00)
-#if (RTE_I2C0_DMA_ENABLE && RTE_I2C1_DMA_ENABLE)
-#define I2C_DMA_ENABLED 1
-#else
-#define I2C_DMA_ENABLED 0
-#endif
-#if I2C_DMA_ENABLED
-/* master transmit and slave receive */
-#define MST_BYTE_TO_TRANSMIT 11
-/* slave transmit and master receive */
-#define SLV_BYTE_TO_TRANSMIT 10
-/* Tx and Rx buffers are in multiples of 2bytes
- * as the DMA processes in 2bytes fashion only */
-/* Master parameter set */
-/* Master TX Data */
-static uint16_t __ALIGNED(4) MST_TX_BUF[MST_BYTE_TO_TRANSMIT] = {
-    /* MST_TX_BUF data = "Master_Data" */
-    77,
-    97,
-    115,
-    116,
-    101,
-    114,
-    95,
-    68,
-    97,
-    116,
-    97};
-/* master receive buffer */
-static uint16_t __ALIGNED(4) MST_RX_BUF[SLV_BYTE_TO_TRANSMIT];
-/* Master parameter set END  */
-/* Slave parameter set */
-/* slave receive buffer */
-static uint16_t __ALIGNED(4) SLV_RX_BUF[MST_BYTE_TO_TRANSMIT];
-static uint16_t __ALIGNED(4) SLV_TX_BUF[SLV_BYTE_TO_TRANSMIT] = {
-    /* SLV_TX_BUF data =  "Slave_Data" */
-    83,
-    108,
-    97,
-    118,
-    101,
-    95,
-    68,
-    97,
-    116,
-    97};
-/* Slave parameter set END */
-#else
+
 /* master transmit and slave receive */
 #define MST_BYTE_TO_TRANSMIT 30
 /* slave transmit and master receive */
@@ -134,7 +88,7 @@ static uint8_t SLV_RX_BUF[MST_BYTE_TO_TRANSMIT];
 /* Slave TX Data */
 static uint8_t SLV_TX_BUF[SLV_BYTE_TO_TRANSMIT] = {"!*!Test Message from Slave!*!"};
 /* Slave parameter set END */
-#endif
+
 
 typedef enum _I2C_CB_EVENT {
     I2C_CB_EVENT_TRANSFER_DONE       = (1 << 0),
@@ -309,11 +263,7 @@ static void I2C_demo(void)
     }
 
     /* Compare received data. */
-#if I2C_DMA_ENABLED
-    if (memcmp(&SLV_RX_BUF, &MST_TX_BUF, (MST_BYTE_TO_TRANSMIT * 2)))
-#else
     if (memcmp(&SLV_RX_BUF, &MST_TX_BUF, MST_BYTE_TO_TRANSMIT))
-#endif
     {
         printf("\n Error: Master transmit/slave receive failed \n");
         printf("\n ---Stop--- \r\n wait forever >>> \n");
@@ -371,11 +321,7 @@ static void I2C_demo(void)
     sys_busy_loop_us(1000);
 
     /* Compare received data. */
-#if I2C_DMA_ENABLED
-    if (memcmp(&SLV_TX_BUF, &MST_RX_BUF, (SLV_BYTE_TO_TRANSMIT * 2)))
-#else
     if (memcmp(&SLV_TX_BUF, &MST_RX_BUF, SLV_BYTE_TO_TRANSMIT))
-#endif
     {
         printf("\n Error: Master receive/slave transmit failed\n");
         printf("\n ---Stop--- \r\n wait forever >>> \n");
