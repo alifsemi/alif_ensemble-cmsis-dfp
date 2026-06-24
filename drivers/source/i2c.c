@@ -307,10 +307,6 @@ static void i2c_slave_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
         (void)i2c->I2C_CLR_START_DET;
     }
 
-    if (status & I2C_IC_INTR_STAT_STOP_DET) {
-        (void)i2c->I2C_CLR_STOP_DET;
-    }
-
     if (status & I2C_IC_INTR_STAT_GEN_CALL) {
         (void)i2c->I2C_CLR_GEN_CALL;
     }
@@ -492,9 +488,6 @@ void i2c_master_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
 
     i2c_master_check_error(i2c, transfer);
 
-    /* Clear Interrupt */
-    (void) i2c->I2C_CLR_INTR;
-
     /* Checks if Tx FIFO is empty then
      * performs the below operations
      */
@@ -534,6 +527,8 @@ void i2c_master_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     }
 
     if (i2c_int_status & I2C_IC_INTR_STAT_STOP_DET) {
+        (void) i2c->I2C_CLR_STOP_DET;
+
         transfer->curr_stat = I2C_XFER_NONE;
         if (!transfer->abort) {
             /* mark event as master receive complete successfully. */
@@ -567,9 +562,6 @@ void i2c_master_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     i2c_int_status        = (i2c->I2C_INTR_STAT);
 
     i2c_master_check_error(i2c, transfer);
-
-    /* Clear Interrupt */
-    (void) i2c->I2C_CLR_INTR;
 
     if (!transfer->abort) {
         if (i2c_int_status & I2C_IC_INTR_STAT_TX_EMPTY) {
@@ -641,6 +633,8 @@ void i2c_master_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     }
 
     if (i2c_int_status & I2C_IC_INTR_STAT_STOP_DET) {
+        (void) i2c->I2C_CLR_STOP_DET;
+
         if (!transfer->abort) {
             /* Checks if rx-dma is not enabled */
             if (!i2c_is_rx_dma_enable(i2c)) {
@@ -711,9 +705,6 @@ void i2c_slave_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     /* Slave error state check */
     i2c_slave_check_error(i2c, transfer);
 
-    /* Clear Interrupt */
-    (void) i2c->I2C_CLR_INTR;
-
     /* Slave is Active */
     if (i2c->I2C_STATUS & I2C_IC_STATUS_SLAVE_ACT) {
         /* Fill data when Read is requested */
@@ -741,11 +732,15 @@ void i2c_slave_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
                 } /* (xmit_end) */
 
             } /* while(i2c_tx_ready(i2c_reg_ptr)) END*/
+
+            (void) i2c->I2C_CLR_RD_REQ;
         } /* Read request END */
     } /* (i2c_reg_ptr->ic_status & I2C_IC_STATUS_SLAVE_ACT) END*/
 
     /* Checks for stop condition */
     if (i2c_int_status & I2C_IC_INTR_STAT_STOP_DET) {
+        (void) i2c->I2C_CLR_STOP_DET;
+
         transfer->curr_stat  = I2C_XFER_NONE;
 
         /* mark event as slave transmit complete successfully. */
@@ -774,8 +769,8 @@ void i2c_slave_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
 
     i2c_int_status = (i2c->I2C_INTR_STAT);
 
-    /* Clear Interrupt */
-    (void) i2c->I2C_CLR_INTR;
+    /* Slave error state check */
+    i2c_slave_check_error(i2c, transfer);
 
     /* Checking for the RX full interrupt */
     if (i2c_int_status & I2C_IC_INTR_STAT_RX_FULL) {
@@ -803,6 +798,8 @@ void i2c_slave_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     } /* (i2c_int_status & I2C_IC_INTR_STAT_RX_FULL) END */
 
     if (i2c_int_status & I2C_IC_INTR_STAT_STOP_DET) {
+        (void) i2c->I2C_CLR_STOP_DET;
+
         if (transfer->rx_curr_cnt < transfer->rx_total_num) {
             /* Checks if there are pending data
              * present in Rx FIFO that are expected
