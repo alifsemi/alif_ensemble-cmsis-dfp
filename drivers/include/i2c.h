@@ -704,6 +704,40 @@ static inline void i2c_enable_dma_slave_rx(I2C_Type *i2c)
 }
 
 /**
+ * @brief   Check whether the TX FIFO is completely empty.
+ * @note    Reads IC_STATUS.TFE.
+ * @param   i2c    : Pointer to i2c register map
+ * @retval  true   if the TX FIFO is empty, false otherwise
+ */
+static inline bool i2c_tx_fifo_empty(I2C_Type *i2c)
+{
+    return ((i2c->I2C_STATUS & I2C_IC_STATUS_TFE) != 0U);
+}
+
+/**
+ * @brief   Read the current TX FIFO occupancy.
+ * @note    Reads IC_TXFLR.
+ * @param   i2c    : Pointer to i2c register map
+ * @retval  Number of valid entries currently in the TX FIFO (0..FIFO_DEPTH)
+ */
+static inline uint32_t i2c_tx_fifo_level(I2C_Type *i2c)
+{
+    return i2c->I2C_TXFLR;
+}
+
+/**
+ * @brief   Check whether a TX_ABRT has latched in the raw interrupt status.
+ * @note    Reads IC_RAW_INTR_STAT.TX_ABRT, which latches independently of
+ *          the IRQ mask
+ * @param   i2c    : Pointer to i2c register map
+ * @retval  true   if TX_ABRT is latched, false otherwise
+ */
+static inline bool i2c_tx_abort_pending(I2C_Type *i2c)
+{
+    return ((i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_TX_ABRT) != 0U);
+}
+
+/**
  * @brief    set i2c target address for slave device in master mode
  * @param    i2c       : Pointer to i2c resources structure
  * @param    address   : i2c 7-bit or 10-bit slave address
