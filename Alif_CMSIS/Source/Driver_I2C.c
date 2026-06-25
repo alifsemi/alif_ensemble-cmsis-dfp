@@ -1791,6 +1791,60 @@ void I2C_IRQHandler(I2C_RESOURCES *I2C_RES)
 
 #if I2C_DMA_ENABLE
 
+typedef enum {
+    I2C_DMA_DRAIN_DONE,    /* bus went idle cleanly — caller emits TRANSFER_DONE */
+    I2C_DMA_DRAIN_ABORT,   /* TX_ABRT latched — caller returns without emit so the
+                            * pending I2C ISR delivers the error event
+                            */
+    I2C_DMA_DRAIN_TIMEOUT, /* ~3 ms elapsed — caller emits BUS_ERROR | INCOMPLETE  */
+} i2c_dma_drain_result_t;
+
+/* Bound on the FIFO+shift-register drain. Worst case is Standard mode
+ * (100 kHz) with a full 32-deep TX FIFO: 32 * 90 us ≈ 2.88 ms.
+ */
+#define I2C_DMA_DRAIN_TIMEOUT_US 3000U
+
+/* sys_busy_loop_us() resolves to a single tick (~30.51 us) */
+#define I2C_DMA_DRAIN_POLL_STEP_US 30U
+#define I2C_DMA_DRAIN_MAX_ITERS                                                                    \
+    ((I2C_DMA_DRAIN_TIMEOUT_US + I2C_DMA_DRAIN_POLL_STEP_US - 1U) / I2C_DMA_DRAIN_POLL_STEP_US)
+
+/* One Standard-mode (100 kHz) byte time covers the shift register tail
+ * after IC_STATUS.TFE asserts. Faster modes finish sooner; the extra
+ * wait is harmless.
+ */
+#define I2C_DMA_SHIFT_TAIL_US 90U
+
+/* Poll for the FIFO+shift-register drain that follows DMA COMPLETE on a
+ * TX transfer. DMA COMPLETE only means the bytes are
+ * in the I2C TX FIFO; the controller may still be clocking them onto SDA
+ * and a late slave NACK or arbitration loss raises TX_ABRT *after* DMA
+ * reports success.
+ *
+ * Called from the DMA ISR — the I2C ISR cannot run until this returns,
+ * so we inspect IC_STATUS / IC_RAW_INTR_STAT directly instead of waiting
+ * for the TX_ABRT handler. TFE reports FIFO empty but not shift-register
+ * empty, hence the fixed ~90 us tail wait on the clean path.
+ */
+static i2c_dma_drain_result_t i2c_dma_wait_drain(I2C_RESOURCES *I2C)
+{
+    for (uint32_t i = 0U; i < I2C_DMA_DRAIN_MAX_ITERS; i++) {
+        if (i2c_tx_abort_pending(I2C->regs)) {
+            return I2C_DMA_DRAIN_ABORT;
+        }
+        if (i2c_tx_fifo_empty(I2C->regs)) {
+            sys_busy_loop_us(I2C_DMA_SHIFT_TAIL_US);
+            /* Re-check for an abort that fired during the tail wait. */
+            if (i2c_tx_abort_pending(I2C->regs)) {
+                return I2C_DMA_DRAIN_ABORT;
+            }
+            return I2C_DMA_DRAIN_DONE;
+        }
+        sys_busy_loop_us(I2C_DMA_DRAIN_POLL_STEP_US);
+    }
+    return I2C_DMA_DRAIN_TIMEOUT;
+}
+
 /**
  * @brief   Callback function from DMA for I2C
  * @param   event    : Event from DMA
@@ -1927,14 +1981,38 @@ rearm_failed:
                    (I2C->dma_xfer_pending) &&
                    (!I2C->transfer.abort)) {
             /* xfer_pending=true: no STOP will be sent, so STOP_DET won't
-             * fire. Signal completion here instead.
+             * fire. Wait for the FIFO+shift-register drain to finish
+             * before signalling completion. A late TX_ABRT raised during
+             * drain is delivered via the pending I2C ISR by returning
+             * from this DMA cb without emit (interrupts must stay
+             * unmasked until then, so the disable+emit only happens on
+             * the clean-drain path).
              */
-            i2c_master_disable_tx_interrupt(I2C->regs);
-            i2c_disable_tx_dma(I2C->regs);
-            I2C->transfer.curr_cnt  = I2C->dma_xfer_total;
-            I2C->transfer.curr_stat = I2C_XFER_NONE;
-            I2C->status.busy        = 0U;
-            I2C->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+            switch (i2c_dma_wait_drain(I2C)) {
+            case I2C_DMA_DRAIN_ABORT:
+                /* Pending I2C TX_ABRT ISR routes through HandleIRQError. */
+                return;
+            case I2C_DMA_DRAIN_TIMEOUT:
+                i2c_master_disable_tx_interrupt(I2C->regs);
+                i2c_disable_tx_dma(I2C->regs);
+                I2C->status.bus_error   = 1U;
+                I2C->transfer.curr_cnt  = I2C->dma_xfer_total -
+                                          i2c_tx_fifo_level(I2C->regs);
+                I2C->transfer.curr_stat = I2C_XFER_NONE;
+                I2C->status.busy        = 0U;
+                I2C->cb_event(ARM_I2C_EVENT_BUS_ERROR |
+                              ARM_I2C_EVENT_TRANSFER_INCOMPLETE);
+                break;
+            case I2C_DMA_DRAIN_DONE:
+            default:
+                i2c_master_disable_tx_interrupt(I2C->regs);
+                i2c_disable_tx_dma(I2C->regs);
+                I2C->transfer.curr_cnt  = I2C->dma_xfer_total;
+                I2C->transfer.curr_stat = I2C_XFER_NONE;
+                I2C->status.busy        = 0U;
+                I2C->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+                break;
+            }
         } else if ((I2C->dma_xfer_remaining == 0U) &&
                    (I2C->transfer.curr_stat == I2C_XFER_MST_RX) &&
                    (I2C->dma_xfer_pending) &&
@@ -1970,16 +2048,39 @@ rearm_failed:
         } else if ((I2C->dma_xfer_remaining == 0U) &&
                    (I2C->transfer.curr_stat == I2C_XFER_SLV_TX) &&
                    (!I2C->transfer.abort)) {
-            /* Slave TX DMA completed all expected bytes. Signal DONE.
-             * Normally STOP_DET would signal completion, but in W/R combined
-             * mode the master sends RESTART instead of STOP.
+            /* Slave TX DMA finished pushing all bytes into the TX FIFO.
+             * When the master is using xfer_pending master-RX, no STOP
+             * fires and STOP_DET will not signal completion, so the DMA
+             * cb must emit it. Wait for FIFO+shift drain first so a late
+             * TX_ABRT (arbitration loss, slave-flush, etc.) is delivered
+             * via the pending I2C ISR through HandleIRQError instead of
+             * being masked by a premature TRANSFER_DONE.
              */
-            i2c_slave_disable_tx_interrupt(I2C->regs);
-            i2c_disable_tx_dma(I2C->regs);
-            I2C->transfer.curr_cnt  = I2C->dma_xfer_total;
-            I2C->transfer.curr_stat = I2C_XFER_NONE;
-            I2C->status.busy        = 0U;
-            I2C->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+            switch (i2c_dma_wait_drain(I2C)) {
+            case I2C_DMA_DRAIN_ABORT:
+                /* Pending I2C TX_ABRT ISR routes through HandleIRQError. */
+                return;
+            case I2C_DMA_DRAIN_TIMEOUT:
+                i2c_slave_disable_tx_interrupt(I2C->regs);
+                i2c_disable_tx_dma(I2C->regs);
+                I2C->status.bus_error   = 1U;
+                I2C->transfer.curr_cnt  = I2C->dma_xfer_total -
+                                          i2c_tx_fifo_level(I2C->regs);
+                I2C->transfer.curr_stat = I2C_XFER_NONE;
+                I2C->status.busy        = 0U;
+                I2C->cb_event(ARM_I2C_EVENT_BUS_ERROR |
+                              ARM_I2C_EVENT_TRANSFER_INCOMPLETE);
+                break;
+            case I2C_DMA_DRAIN_DONE:
+            default:
+                i2c_slave_disable_tx_interrupt(I2C->regs);
+                i2c_disable_tx_dma(I2C->regs);
+                I2C->transfer.curr_cnt  = I2C->dma_xfer_total;
+                I2C->transfer.curr_stat = I2C_XFER_NONE;
+                I2C->status.busy        = 0U;
+                I2C->cb_event(ARM_I2C_EVENT_TRANSFER_DONE);
+                break;
+            }
         }
     }
 }
