@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(7, 14) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 0) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -1053,6 +1053,48 @@ static ARM_I3C_STATUS I3Cx_GetStatus(I3C_RESOURCES *i3c)
 }
 
 /**
+  \fn      int32_t I3Cx_GetDataCount(I3C_RESOURCES *i3c)
+  \brief   Get transferred data count.
+  \param   i3c   : Pointer to i3c resources structure
+  \retval  transfer data count
+*/
+static int32_t I3Cx_GetDataCount(I3C_RESOURCES *i3c)
+{
+    int32_t count = 0;
+    if (i3c->status.busy) {
+#if I3C_DMA_ENABLE
+        if (i3c->dma_enable) {
+            uint32_t dma_count = 0;
+            ARM_DRIVER_DMA *dma_drv;
+            DMA_Handle_Type *handle;
+
+            if (i3c->status.direction == I3C_DIR_TRANSMITTER) {
+                dma_drv = i3c->dma_cfg->dma_tx.dma_drv;
+                handle  = (DMA_Handle_Type *)&i3c->dma_cfg->dma_tx.dma_handle;
+                (void) dma_drv->GetStatus(handle, &dma_count);
+                /* TX DMA transfers 8-bit bytes */
+                count = (int32_t) dma_count;
+            } else {
+                dma_drv = i3c->dma_cfg->dma_rx.dma_drv;
+                handle  = (DMA_Handle_Type *)&i3c->dma_cfg->dma_rx.dma_handle;
+                (void) dma_drv->GetStatus(handle, &dma_count);
+                /* RX DMA transfers 8-bit bytes */
+                count = (int32_t) dma_count;
+            }
+        } else
+#endif
+        {
+            if (i3c->status.direction == I3C_DIR_TRANSMITTER) {
+                count = (int32_t)i3c->xfer.tx_cur_cnt;
+            } else {
+                count = (int32_t)i3c->xfer.rx_cur_cnt;
+            }
+        }
+    }
+    return count;
+}
+
+/**
   \fn           ARM_I3C_DEVICE_INFO I3Cx_GetDeviceInfo(I3C_RESOURCES *i3c)
   \brief        Get i3c device information
   \return       i3c driver info
@@ -1147,6 +1189,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
         i3c->xfer.xfer_cmd.addr_depth = 1U;
         i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
         i3c->xfer.xfer_cmd.data_len   = ccc->len;
+        i3c->status.direction         = I3C_DIR_RECEIVER;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
         if (i3c->blocking_mode) {
@@ -1187,6 +1230,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
             i3c->xfer.xfer_cmd.addr_depth = 1U;
             i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
             i3c->xfer.xfer_cmd.data_len   = ccc->len;
+            i3c->status.direction         = I3C_DIR_TRANSMITTER;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
             if (i3c->blocking_mode) {
@@ -1271,6 +1315,7 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
     }
 
     i3c->status.busy              = 1;
+    i3c->status.direction         = I3C_DIR_TRANSMITTER;
     i3c->xfer.error               = 0U;
     i3c->xfer.tx_len              = len;
     i3c->xfer.rx_buf              = NULL;
@@ -1371,6 +1416,7 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
     }
 
     i3c->status.busy              = 1;
+    i3c->status.direction         = I3C_DIR_RECEIVER;
     i3c->xfer.error               = 0U;
     i3c->xfer.tx_buf              = NULL;
     i3c->xfer.tx_len              = 0U;
@@ -1467,6 +1513,7 @@ static int I3Cx_SlaveTransmit(I3C_RESOURCES *i3c, const uint8_t *data, uint16_t 
     }
 
     i3c->status.busy            = 1;
+    i3c->status.direction       = I3C_DIR_TRANSMITTER;
     i3c->xfer.error             = 0U;
     i3c->xfer.rx_buf            = NULL;
     i3c->xfer.rx_len            = 0U;
@@ -1560,6 +1607,7 @@ static int I3Cx_SlaveReceive(I3C_RESOURCES *i3c, uint8_t *data, uint32_t len)
     }
 
     i3c->status.busy            = 1;
+    i3c->status.direction       = I3C_DIR_RECEIVER;
     i3c->xfer.error             = 0U;
     i3c->xfer.tx_buf            = NULL;
     i3c->xfer.tx_len            = 0;
@@ -1747,6 +1795,7 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
     }
 
     i3c->status.busy            = 1U;
+    i3c->status.direction       = I3C_DIR_TRANSMITTER;
     i3c->xfer.error             = 0U;
     i3c->xfer.rx_len            = 0U;
     i3c->xfer.rx_cur_cnt        = 0U;
@@ -2707,6 +2756,10 @@ static ARM_I3C_STATUS I3C_GetStatus(void)
     return I3Cx_GetStatus(&i3c);
 }
 
+static int32_t I3C_GetDataCount(void)
+{
+    return I3Cx_GetDataCount(&i3c);
+}
 static ARM_I3C_DEVICE_INFO I3C_GetDeviceInfo(void)
 {
     return I3Cx_GetDeviceInfo(&i3c);
@@ -2793,6 +2846,7 @@ ARM_DRIVER_I3C        Driver_I3C = {
     I3C_GetVersion,
     I3C_GetCapabilities,
     I3C_GetStatus,
+    I3C_GetDataCount,
     I3C_GetDeviceInfo,
     I3C_Initialize,
     I3C_Uninitialize,
@@ -2895,6 +2949,11 @@ static ARM_I3C_STATUS LPI3C_GetStatus(void)
     return I3Cx_GetStatus(&LPI3C_RES);
 }
 
+static int32_t LPI3C_GetDataCount(void)
+{
+    return I3Cx_GetDataCount(&LPI3C_RES);
+}
+
 static ARM_I3C_DEVICE_INFO LPI3C_GetDeviceInfo(void)
 {
     return I3Cx_GetDeviceInfo(&LPI3C_RES);
@@ -2981,6 +3040,7 @@ ARM_DRIVER_I3C        Driver_I3CLP = {
     I3C_GetVersion,
     I3C_GetCapabilities,
     LPI3C_GetStatus,
+    LPI3C_GetDataCount,
     LPI3C_GetDeviceInfo,
     LPI3C_Initialize,
     LPI3C_Uninitialize,
