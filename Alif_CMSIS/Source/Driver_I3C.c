@@ -364,7 +364,7 @@ static int I3Cx_GetSlaveDynamicAddr(I3C_RESOURCES *i3c, uint8_t static_addr, uin
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    *dynamic_addr = i3c_get_slv_dyn_addr(i3c->regs, static_addr);
+    *dynamic_addr = i3c_get_slv_dyn_addr(i3c->regs, static_addr) & 0x7FU;
 
     /* Returns error if the requested address not found */
     if (!(*dynamic_addr)) {
@@ -1326,6 +1326,7 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
 
         /* We have space in the dat,
          * program the dat in index pos */
+        I3C_AddDynamicAddrParity(&dyn_addr);
         i3c_add_slv_to_dat(i3c->regs, pos, dyn_addr, addr_cmd->addr);
 
         i3c->xfer.xfer_cmd.cmd_id     = addr_cmd->cmd_id;
