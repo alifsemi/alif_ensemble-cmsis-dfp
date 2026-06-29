@@ -1305,6 +1305,8 @@ void i3c_slave_init(I3C_Type *i3c, const uint8_t slv_addr, const uint32_t core_c
 
     /* As per mipi_i3c_user Section 5 */
 
+    /* Clear stale dynamic address so slave responds to SETDASA */
+    i3c->I3C_DEVICE_ADDR &= ~I3C_DEVICE_ADDR_DYNAMIC_ADDR_VALID;
     /* DEVICE_ADDR to set static addr with its valid bit */
     i3c->I3C_DEVICE_ADDR |= (I3C_DEVICE_ADDR_STATIC_ADDR_VALID | slv_addr);
 
