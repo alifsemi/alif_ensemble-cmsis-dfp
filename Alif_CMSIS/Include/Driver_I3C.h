@@ -16,7 +16,7 @@ extern "C" {
 
 #include "Driver_Common.h"
 
-#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(7, 2) /* API version */
+#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 0) /* API version */
 
 /****** I3C Control Codes *****/
 
@@ -176,10 +176,11 @@ typedef struct _ARM_I3C_CMD {
 typedef struct _ARM_I3C_STATUS {
     uint32_t busy           : 1;  ///< Busy flag
     uint32_t mode           : 1;  ///< Mode: 0=Slave, 1=Master
+    uint32_t direction      : 1;  ///< Direction: 0=Transmitter, 1=Receiver
     uint32_t ibi_slv_addr   : 8;  ///< Address of last IBI slave
     uint32_t last_error_code: 4;  ///< Last occurred error
     uint32_t defslv_cnt: 8;  ///< Slave count from last DEFSLVS (Applicable for Sec masters only)
-    uint32_t reserved  : 10;
+    uint32_t reserved       : 9;
 } ARM_I3C_STATUS;
 
 /**
@@ -374,6 +375,7 @@ typedef struct _ARM_DRIVER_I3C {
     (void);  ///< Pointer to \ref GetCapabilities   : Get I3C driver capabilities.
     ARM_I3C_STATUS (*GetStatus)
     (void);  ///< Pointer to \ref GetStatus         : Get I3C driver status.
+    int32_t (*GetDataCount) (void);  ///< Pointer to \ref GetDataCount: Get transferred data count.
     ARM_I3C_DEVICE_INFO (*GetDeviceInfo)
     (void);  ///< Pointer to \ref GetDeviceInfo     : Get I3C device information.
     int32_t (*Initialize)(ARM_I3C_SignalEvent_t cb_event);  ///< Pointer to \ref Initialize        :
