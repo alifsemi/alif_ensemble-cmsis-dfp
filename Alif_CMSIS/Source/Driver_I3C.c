@@ -15,6 +15,11 @@
 
 /* Project Includes */
 #include "Driver_I3C_Private.h"
+#if I3C_DMA_ENABLE
+#include <dma_opcode.h>
+#include <dma_config.h>
+#include <sys_utils.h>
+#endif
 
 #if defined(RTE_Drivers_I3C)
 
@@ -44,6 +49,8 @@
 
 #define IS_I3C_DMA_TX_REQ(p)  (IS_DMA_I3C_TX(p) || IS_DMA_LPI3C_TX(p))
 #define IS_I3C_DMA_RX_REQ(p)  (IS_DMA_I3C_RX(p) || IS_DMA_LPI3C_RX(p))
+
+static const uint8_t i3c_dma_zero[4] __ALIGNED(4) = {0};
 #endif
 
 /* Driver Version */
@@ -206,6 +213,413 @@ __STATIC_INLINE int32_t I3C_DMA_Stop(DMA_PERIPHERAL_CONFIG *dma_periph)
 }
 
 /**
+ * \fn          static bool i3c_build_tx_mcode(I3C_RESOURCES *i3c,
+ *                                             const void    *src,
+ *                                             uint32_t       len,
+ *                                             uint8_t       *mcode)
+ * \brief       Build PL330 microcode for I3C TX DMA transfer.
+ *              Uses byte-mode loads to handle any source alignment.
+ *              Pads tail with zeros from dma_zero buffer.
+ * \param[in]   i3c    : Pointer to i3c resources structure
+ * \param[in]   src    : Source buffer address
+ * \param[in]   len    : Transfer length in bytes
+ * \param[out]  mcode  : Buffer to write microcode (must be I3C_DMA_MCODE_SIZE)
+ * \return      true on success, false on error (buffer overflow or invalid length)
+ */
+static bool i3c_build_tx_mcode(I3C_RESOURCES *i3c, const void *src,
+                                uint32_t len, uint8_t *mcode)
+{
+    dma_opcode_buf op_buf;
+    dma_ccr_t      ccr;
+    dma_loop_t     lp_args;
+    uint32_t       outer_start;
+    uint32_t       inner_start;
+    uint32_t       word_cnt;
+    uint32_t       outer_cnt;
+    uint32_t       remainder;
+    uint32_t       tail;
+    uint8_t        periph     = i3c->dma_cfg->dma_tx.dma_periph_req;
+    uint8_t        dma_handle = (uint8_t)i3c->dma_cfg->dma_tx.dma_handle;
+
+    op_buf.buf      = mcode;
+    op_buf.off      = 0;
+    op_buf.buf_size = I3C_DMA_MCODE_SIZE;
+
+    word_cnt  = len / 4;
+    tail      = len & 0x3;
+    outer_cnt = word_cnt / DMA_MAX_LP_CNT;
+    remainder = word_cnt % DMA_MAX_LP_CNT;
+
+    if ((word_cnt + (tail ? 1 : 0)) == 0 || outer_cnt > DMA_MAX_LP_CNT) {
+        return false;
+    }
+
+    ccr.value                  = 0;
+    ccr.value_b.src_inc        = DMA_BURST_INCREMENTING;
+    ccr.value_b.src_burst_size = BS_BYTE_1;
+    ccr.value_b.src_burst_len  = 0;
+    ccr.value_b.src_cache_ctrl = DMA_SRC_CACHE_CTRL;
+    ccr.value_b.dst_inc        = DMA_BURST_FIXED;
+    ccr.value_b.dst_burst_size = BS_BYTE_4;
+    ccr.value_b.dst_burst_len  = 0;
+
+    if (!dma_construct_move(ccr.value, DMA_REG_CCR, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_move(LocalToGlobal(src), DMA_REG_SAR, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_move((uint32_t)(uintptr_t)i3c_get_dma_tx_addr(i3c->regs),
+                            DMA_REG_DAR, &op_buf)) {
+        return false;
+    }
+
+    if (outer_cnt > 0) {
+        if (!dma_construct_loop(DMA_LC_1, (uint8_t)outer_cnt, &op_buf)) {
+            return false;
+        }
+        outer_start = op_buf.off;
+
+        if (!dma_construct_loop(DMA_LC_0, (uint8_t)DMA_MAX_LP_CNT, &op_buf)) {
+            return false;
+        }
+        inner_start = op_buf.off;
+
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_storeperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+
+        lp_args.xfer_type = DMA_XFER_SINGLE;
+        lp_args.lc        = DMA_LC_0;
+        lp_args.nf        = 1;
+        lp_args.jump      = (uint8_t)(op_buf.off - inner_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+
+        lp_args.lc   = DMA_LC_1;
+        lp_args.jump = (uint8_t)(op_buf.off - outer_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+    }
+
+    if (remainder > 0) {
+        if (!dma_construct_loop(DMA_LC_0, (uint8_t)remainder, &op_buf)) {
+            return false;
+        }
+        inner_start = op_buf.off;
+
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_storeperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+
+        lp_args.xfer_type = DMA_XFER_SINGLE;
+        lp_args.lc        = DMA_LC_0;
+        lp_args.nf        = 1;
+        lp_args.jump      = (uint8_t)(op_buf.off - inner_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+    }
+
+    if (tail) {
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+
+        for (uint32_t i = 0; i < tail; i++) {
+            if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+                return false;
+            }
+        }
+
+        if (!dma_construct_move(LocalToGlobal(i3c_dma_zero),
+                                DMA_REG_SAR, &op_buf)) {
+            return false;
+        }
+        for (uint32_t i = 0; i < (4 - tail); i++) {
+            if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+                return false;
+            }
+        }
+
+        if (!dma_construct_storeperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+    }
+
+    if (!dma_construct_wmb(&op_buf)) {
+        return false;
+    }
+    if (!dma_construct_send_event(dma_handle, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_end(&op_buf)) {
+        return false;
+    }
+
+    RTSS_CleanDCache_by_Addr(op_buf.buf, op_buf.buf_size);
+
+    return true;
+}
+
+/**
+ * \fn          static bool i3c_build_rx_mcode(I3C_RESOURCES *i3c,
+ *                                             void          *dst,
+ *                                             uint32_t       len,
+ *                                             uint8_t       *mcode)
+ * \brief       Build PL330 microcode for I3C RX DMA transfer.
+ *              Uses byte-mode stores to handle any destination alignment.
+ *              Uses scratch buffer for unaligned length tail.
+ * \param[in]   i3c    : Pointer to i3c resources structure
+ * \param[in]   dst    : Destination buffer address
+ * \param[in]   len    : Transfer length in bytes
+ * \param[out]  mcode  : Buffer to write microcode (must be I3C_DMA_MCODE_SIZE)
+ * \return      true on success, false on error (buffer overflow or invalid length)
+ */
+static bool i3c_build_rx_mcode(I3C_RESOURCES *i3c, void *dst,
+                                uint32_t len, uint8_t *mcode)
+{
+    dma_opcode_buf op_buf;
+    dma_ccr_t      ccr;
+    dma_loop_t     lp_args;
+    uint32_t       outer_start;
+    uint32_t       inner_start;
+    uint32_t       word_cnt;
+    uint32_t       outer_cnt;
+    uint32_t       remainder;
+    uint32_t       tail;
+    uint8_t        periph     = i3c->dma_cfg->dma_rx.dma_periph_req;
+    uint8_t        dma_handle = (uint8_t)i3c->dma_cfg->dma_rx.dma_handle;
+
+    op_buf.buf      = mcode;
+    op_buf.off      = 0;
+    op_buf.buf_size = I3C_DMA_MCODE_SIZE;
+
+    word_cnt  = len / 4;
+    tail      = len & 0x3;
+    outer_cnt = word_cnt / DMA_MAX_LP_CNT;
+    remainder = word_cnt % DMA_MAX_LP_CNT;
+
+    if ((word_cnt + (tail ? 1 : 0)) == 0 || outer_cnt > DMA_MAX_LP_CNT) {
+        return false;
+    }
+
+    ccr.value                  = 0;
+    ccr.value_b.src_inc        = DMA_BURST_FIXED;
+    ccr.value_b.src_burst_size = BS_BYTE_4;
+    ccr.value_b.src_burst_len  = 0;
+    ccr.value_b.dst_inc        = DMA_BURST_INCREMENTING;
+    ccr.value_b.dst_burst_size = BS_BYTE_1;
+    ccr.value_b.dst_burst_len  = 0;
+    ccr.value_b.dst_cache_ctrl = DMA_SRC_CACHE_CTRL;
+
+    if (!dma_construct_move(ccr.value, DMA_REG_CCR, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_move((uint32_t)(uintptr_t)i3c_get_dma_rx_addr(i3c->regs),
+                            DMA_REG_SAR, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_move(LocalToGlobal(dst), DMA_REG_DAR, &op_buf)) {
+        return false;
+    }
+
+    if (outer_cnt > 0) {
+        if (!dma_construct_loop(DMA_LC_1, (uint8_t)outer_cnt, &op_buf)) {
+            return false;
+        }
+        outer_start = op_buf.off;
+
+        if (!dma_construct_loop(DMA_LC_0, (uint8_t)DMA_MAX_LP_CNT, &op_buf)) {
+            return false;
+        }
+        inner_start = op_buf.off;
+
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_loadperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+
+        lp_args.xfer_type = DMA_XFER_SINGLE;
+        lp_args.lc        = DMA_LC_0;
+        lp_args.nf        = 1;
+        lp_args.jump      = (uint8_t)(op_buf.off - inner_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+
+        lp_args.lc   = DMA_LC_1;
+        lp_args.jump = (uint8_t)(op_buf.off - outer_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+    }
+
+    if (remainder > 0) {
+        if (!dma_construct_loop(DMA_LC_0, (uint8_t)remainder, &op_buf)) {
+            return false;
+        }
+        inner_start = op_buf.off;
+
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_loadperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+
+        lp_args.xfer_type = DMA_XFER_SINGLE;
+        lp_args.lc        = DMA_LC_0;
+        lp_args.nf        = 1;
+        lp_args.jump      = (uint8_t)(op_buf.off - inner_start);
+        if (!dma_construct_loopend(&lp_args, &op_buf)) {
+            return false;
+        }
+    }
+
+    if (tail) {
+        /* Load last word from FIFO to scratch buffer */
+        if (!dma_construct_move(LocalToGlobal(i3c->dma_rx_scratch),
+                                DMA_REG_DAR, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_flushperiph(periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_wfp(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_loadperiph(DMA_XFER_SINGLE, periph, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+            return false;
+        }
+
+        /* Change CCR: memory-to-memory byte copy from scratch to user buffer */
+        ccr.value_b.src_inc        = DMA_BURST_INCREMENTING;
+        ccr.value_b.src_burst_size = BS_BYTE_1;
+        if (!dma_construct_move(ccr.value, DMA_REG_CCR, &op_buf)) {
+            return false;
+        }
+
+        /* Copy tail bytes from scratch to user buffer */
+        if (!dma_construct_move(LocalToGlobal(i3c->dma_rx_scratch),
+                                DMA_REG_SAR, &op_buf)) {
+            return false;
+        }
+        if (!dma_construct_move(LocalToGlobal((uint8_t *)dst + (word_cnt * 4)),
+                                DMA_REG_DAR, &op_buf)) {
+            return false;
+        }
+        for (uint32_t i = 0; i < tail; i++) {
+            if (!dma_construct_load(DMA_XFER_SINGLE, &op_buf)) {
+                return false;
+            }
+            if (!dma_construct_store(DMA_XFER_SINGLE, &op_buf)) {
+                return false;
+            }
+        }
+    }
+
+    if (!dma_construct_wmb(&op_buf)) {
+        return false;
+    }
+    if (!dma_construct_send_event(dma_handle, &op_buf)) {
+        return false;
+    }
+    if (!dma_construct_end(&op_buf)) {
+        return false;
+    }
+
+    RTSS_CleanDCache_by_Addr(op_buf.buf, op_buf.buf_size);
+
+    return true;
+}
+
+/**
   \fn          int32_t I3C_DMA_Start_TX(I3C_RESOURCES *i3c,
                                         const void    *src_addr,
                                         uint32_t       len)
@@ -217,33 +631,32 @@ __STATIC_INLINE int32_t I3C_DMA_Stop(DMA_PERIPHERAL_CONFIG *dma_periph)
 */
 static int32_t I3C_DMA_Start_TX(I3C_RESOURCES *i3c, const void *src_addr, uint32_t len)
 {
-    int32_t        status;
-    ARM_DMA_PARAMS dma_params;
+    int32_t         status;
+    ARM_DMA_PARAMS  dma_params;
+    ARM_DRIVER_DMA *dma_drv = i3c->dma_cfg->dma_tx.dma_drv;
 
-    /* Start the DMA engine for sending the data to I3C */
-    dma_params.peri_reqno = (int8_t) i3c->dma_cfg->dma_tx.dma_periph_req;
-    dma_params.dir        = ARM_DMA_MEM_TO_DEV;
-    dma_params.cb_event   = i3c->dma_cb;
-    dma_params.src_addr   = src_addr;
-    dma_params.dst_addr   = i3c_get_dma_tx_addr(i3c->regs);
-
-    dma_params.num_bytes  = len;
-    /* i3c TX/RX FIFO is 4-byte(word) aligned,
-     *  if length is not 4-byte aligned(multiple of 4),
-     *   make it aligned by adding extra length.
-     */
-    if (len % 4) {
-        dma_params.num_bytes += (4 - (len % 4));
+    if (!i3c_build_tx_mcode(i3c, src_addr, len, i3c->dma_tx_mcode)) {
+        return ARM_DRIVER_ERROR;
     }
 
-    dma_params.irq_priority = i3c->dma_irq_priority;
+    status = dma_drv->Control(&i3c->dma_cfg->dma_tx.dma_handle,
+                              ARM_DMA_USER_PROVIDED_MCODE,
+                              LocalToGlobal(i3c->dma_tx_mcode));
+    if (status) {
+        return ARM_DRIVER_ERROR;
+    }
 
-    /* i3c TX/RX FIFO is 4-byte(word) aligned */
+    dma_params.peri_reqno   = (int8_t)i3c->dma_cfg->dma_tx.dma_periph_req;
+    dma_params.dir          = ARM_DMA_MEM_TO_DEV;
+    dma_params.cb_event     = i3c->dma_cb;
+    dma_params.src_addr     = src_addr;
+    dma_params.dst_addr     = i3c_get_dma_tx_addr(i3c->regs);
+    dma_params.num_bytes    = len;
+    dma_params.irq_priority = i3c->dma_irq_priority;
     dma_params.burst_size   = BS_BYTE_4;
     dma_params.burst_len    = 1;
 
-    /* Start DMA transfer */
-    status                  = I3C_DMA_Start(&i3c->dma_cfg->dma_tx, &dma_params);
+    status = I3C_DMA_Start(&i3c->dma_cfg->dma_tx, &dma_params);
     if (status) {
         return ARM_DRIVER_ERROR;
     }
@@ -263,33 +676,32 @@ static int32_t I3C_DMA_Start_TX(I3C_RESOURCES *i3c, const void *src_addr, uint32
 */
 static int32_t I3C_DMA_Start_RX(I3C_RESOURCES *i3c, void *dst_addr, uint32_t len)
 {
-    ARM_DMA_PARAMS dma_params;
-    int32_t        status;
+    ARM_DMA_PARAMS  dma_params;
+    ARM_DRIVER_DMA *dma_drv = i3c->dma_cfg->dma_rx.dma_drv;
+    int32_t         status;
 
-    /* Start the DMA engine for sending the data to i3c */
-    dma_params.peri_reqno = (int8_t) i3c->dma_cfg->dma_rx.dma_periph_req;
-    dma_params.dir        = ARM_DMA_DEV_TO_MEM;
-    dma_params.cb_event   = i3c->dma_cb;
-    dma_params.src_addr   = i3c_get_dma_rx_addr(i3c->regs);
-    dma_params.dst_addr   = dst_addr;
-
-    dma_params.num_bytes  = len;
-    /* i3c TX/RX FIFO is 4-byte(word) aligned,
-     *  if length is not 4-byte aligned(multiple of 4),
-     *   make it aligned by adding extra length.
-     */
-    if (len % 4) {
-        dma_params.num_bytes += (4 - (len % 4));
+    if (!i3c_build_rx_mcode(i3c, dst_addr, len, i3c->dma_rx_mcode)) {
+        return ARM_DRIVER_ERROR;
     }
 
-    dma_params.irq_priority = i3c->dma_irq_priority;
+    status = dma_drv->Control(&i3c->dma_cfg->dma_rx.dma_handle,
+                              ARM_DMA_USER_PROVIDED_MCODE,
+                              LocalToGlobal(i3c->dma_rx_mcode));
+    if (status) {
+        return ARM_DRIVER_ERROR;
+    }
 
-    /* i3c TX/RX FIFO is 4-byte(word) aligned */
+    dma_params.peri_reqno   = (int8_t)i3c->dma_cfg->dma_rx.dma_periph_req;
+    dma_params.dir          = ARM_DMA_DEV_TO_MEM;
+    dma_params.cb_event     = i3c->dma_cb;
+    dma_params.src_addr     = i3c_get_dma_rx_addr(i3c->regs);
+    dma_params.dst_addr     = dst_addr;
+    dma_params.num_bytes    = len;
+    dma_params.irq_priority = i3c->dma_irq_priority;
     dma_params.burst_size   = BS_BYTE_4;
     dma_params.burst_len    = 1;
 
-    /* Start DMA transfer */
-    status                  = I3C_DMA_Start(&i3c->dma_cfg->dma_rx, &dma_params);
+    status = I3C_DMA_Start(&i3c->dma_cfg->dma_rx, &dma_params);
     if (status) {
         return ARM_DRIVER_ERROR;
     }
