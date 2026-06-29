@@ -32,6 +32,8 @@ extern "C" {
 
 #if I3C_DMA_ENABLE
 #include <DMA_Common.h>
+
+#define I3C_DMA_MCODE_SIZE  96  /* PL330 microcode buffer size in bytes */
 #endif
 
 #define I3C_TARGET_SLAVE_TYPE_I2C (1U << 7U) /* Represents slave type */
@@ -87,6 +89,9 @@ typedef struct _I3C_RESOURCES {
     ARM_DMA_SignalEvent_t dma_cb;           /* Pointer to DMA  Callback                           */
     I3C_DMA_HW_CONFIG    *dma_cfg;          /* DMA Controller configuration                       */
     const uint32_t        dma_irq_priority; /* DMA IRQ priority number                            */
+    uint8_t               dma_tx_mcode[I3C_DMA_MCODE_SIZE] __ALIGNED(4); /* TX microcode buffer   */
+    uint8_t               dma_rx_mcode[I3C_DMA_MCODE_SIZE] __ALIGNED(4); /* RX microcode buffer   */
+    uint8_t               dma_rx_scratch[4] __ALIGNED(4); /* RX tail scratch for unaligned len    */
 #endif
 } I3C_RESOURCES;
 
