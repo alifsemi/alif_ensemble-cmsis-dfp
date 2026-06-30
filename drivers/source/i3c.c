@@ -1595,6 +1595,17 @@ void i3c_master_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
             if (xfer->rx_len) {
                 i3c_receive(i3c, xfer, rx_len);
 
+                if (tid == I3C_MST_RX_TID && rx_len < xfer->rx_len) {
+                    /* Slave asserted T=0 before delivering all requested bytes.
+                     * Hardware reports no error; report as early termination so
+                     * the caller can distinguish it via GetError().
+                     */
+                    i3c_disable_intr(i3c, I3C_INTR_STATUS_RX_THLD_STS);
+                    xfer->error  = I3C_COMM_ERROR_PEC_OR_EARLY_TERM;
+                    xfer->status = I3C_XFER_STATUS_ERROR | I3C_XFER_STATUS_ERROR_RX;
+                    break;
+                }
+
                 if (xfer->rx_cur_cnt >= xfer->rx_len) {
                     i3c_disable_intr(i3c, I3C_INTR_STATUS_RX_THLD_STS);
                 }
