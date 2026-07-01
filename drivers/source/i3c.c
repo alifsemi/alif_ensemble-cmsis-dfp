@@ -1568,7 +1568,7 @@ void i3c_master_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
         i3c_ibi_handler(i3c, xfer);
     }
 
-    if (xfer->error) {
+    if (xfer->error || (status & I3C_INTR_STATUS_TRANSFER_ABORT_STS)) {
         /* Fetches error type */
         i3c_fetch_error_type(xfer);
 
