@@ -1572,6 +1572,13 @@ void i3c_master_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
 
         /* Invokes error handler */
         i3c_error_handler(i3c, xfer, status, resp);
+
+        /* Disable other than default master interrupts and
+         * clear all interrupts
+         */
+        i3c_disable_intr(i3c, ~I3C_MASTER_DFLT_INTR_EN_MASK);
+        i3c_clear_intr(i3c, I3C_INTR_STATUS_ALL);
+
     } else {
         switch (tid) {
         case I3C_MST_TX_TID:
@@ -1740,6 +1747,13 @@ void i3c_slave_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
 
         /* Invokes error handler */
         i3c_error_handler(i3c, xfer, status, resp);
+
+        /* Disable other than default slave interrupts and
+         * clear all interrupts
+         */
+        i3c_disable_intr(i3c, ~I3C_SLAVE_DFLT_INTR_EN_MASK);
+        i3c_clear_intr(i3c, I3C_INTR_STATUS_ALL);
+
     } else {
         tid = I3C_RESPONSE_QUEUE_PORT_TID(resp);
 
