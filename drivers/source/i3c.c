@@ -89,9 +89,12 @@ static void i3c_set_tx_buf_thld(I3C_Type *i3c, const uint16_t len)
     uint32_t temp =
         (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk));
 
-    /* If data length is more than 4 bytes then perform the following,
-     * else set 0*/
-    if (len > 4) {
+    /* In DMA mode the threshold is forced to 0 so the peripheral
+     * request line asserts on any FIFO occupancy. A length-scaled
+     * threshold would starve short-after-long TX sequences (the
+     * FIFO would never reach the previous transfer's threshold)
+     */
+    if (!i3c_is_dma_enable(i3c) && len > 4) {
         if (rem) {
             /* Set 1 extra location */
             temp |= (((loc_len + 1) << I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos) &
@@ -120,9 +123,12 @@ static void i3c_set_rx_buf_thld(I3C_Type *i3c, const uint16_t len)
     uint8_t  rem     = (len % 4);
     uint32_t temp = (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk));
 
-    /* If data length is more than 4 bytes then perform the following,
-     * else set 0*/
-    if (len > 4) {
+    /* In DMA mode the threshold is forced to 0 so partial data on
+     * early termination reaches the buffer — a length-scaled
+     * threshold would trap short reads in the FIFO because the level
+     * never crosses the previous transfer's threshold
+     */
+    if (!i3c_is_dma_enable(i3c) && len > 4) {
         if (rem) {
             temp |= (((loc_len + 1) << I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Pos) &
                      I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk);
@@ -1470,8 +1476,7 @@ void i3c_setup_rx(I3C_Type *i3c, const uint16_t len)
     i3c_set_rx_buf_thld(i3c, len);
 
     if (i3c_is_dma_enable(i3c)) {
-        /* Enable only command queue ready status interrupt if
-         * DMA is enabled */
+        /* Enable only command queue ready status interrupt if DMA is enabled */
         temp = I3C_INTR_STATUS_EN_CMD_QUEUE_READY_STS_EN;
     } else {
         if (i3c_is_master(i3c)) {
@@ -1764,10 +1769,28 @@ void i3c_slave_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
 
         case I3C_SLV_RX_TID:
             if (xfer->rx_len) {
-                i3c_receive(i3c, xfer, rx_len);
+                if (i3c_is_dma_enable(i3c)) {
+                    if (xfer->slv_rx_resp_pending) {
+                        /* Trailing RESP for a slave-RX xfer whose DMA
+                         * cb already delivered success. Drop it — the
+                         * response word has already been read from
+                         * I3C_RESPONSE_QUEUE_PORT above
+                         */
+                        xfer->slv_rx_resp_pending = 0;
+                        break;
+                    }
+                    /* No pending flag: this RESP is the abort of the
+                     * currently-armed xfer (DMA cb never fires on
+                     * abort). Record actual byte count so
+                     * HandleSuccess can detect the short read
+                     */
+                    xfer->rx_cur_cnt = rx_len;
+                } else {
+                    i3c_receive(i3c, xfer, rx_len);
 
-                if (xfer->rx_cur_cnt >= xfer->rx_len) {
-                    i3c_disable_intr(i3c, I3C_INTR_STATUS_RX_THLD_STS);
+                    if (xfer->rx_cur_cnt >= xfer->rx_len) {
+                        i3c_disable_intr(i3c, I3C_INTR_STATUS_RX_THLD_STS);
+                    }
                 }
 
                 /* mark all success event also as Transfer DONE */
