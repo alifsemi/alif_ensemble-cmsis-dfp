@@ -439,7 +439,12 @@ typedef enum _I3C_XFER_STATUS {
         (1UL << 18), /**< Transfer status IBI Slave Intr request received*/
     I3C_XFER_STATUS_DEFSLV_LIST    = (1UL << 19), /**< Transfer status Defslvs received */
     I3C_XFER_STATUS_BUS_RESET_DONE = (1UL << 20), /**< Transfer status Bus reset done  */
-    I3C_XFER_STATUS_SLV_RD_RQ_RCVD = (1UL << 21)  /**< Transfer status Read request rcvd from master */
+    I3C_XFER_STATUS_SLV_RD_RQ_RCVD = (1UL << 21), /**< Transfer status Read request rcvd
+                                                    * from master
+                                                    */
+    I3C_XFER_STATUS_DMA_RX_DONE    = (1UL << 22) /**< DMA RX channel completed before
+                                                   * RESP_READY IRQ
+                                                   */
 } I3C_XFER_STATUS;
 
 /* brief I3C Transfer types */
@@ -517,6 +522,7 @@ typedef struct _i3c_xfer_t {
     volatile I3C_XFER_STATUS status;     /* transfer status                            */
     volatile uint8_t         error;      /* error if any for this transfer             */
     volatile uint8_t         addr_len;   /* Dual usage: Address of slave or length     */
+    volatile uint8_t         slv_rx_resp_pending; /* set by DMA cb after slave-RX success */
 } i3c_xfer_t;
 
 /**
