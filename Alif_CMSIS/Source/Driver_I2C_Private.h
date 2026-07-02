@@ -35,9 +35,9 @@
 #if I2C_DMA_ENABLE
 /* Microcode buffer size for the per-instance TX and RX microcodes.
  * Sized for a single DMALP chunk (max 256 iterations):
- * 64 B fits the worst case.
+ * 96 B fits the worst case.
  */
-#define I2C_DMA_MCODE_SIZE 64
+#define I2C_DMA_MCODE_SIZE 96
 #endif
 
 typedef volatile struct _I2C_DRIVER_STATE {
