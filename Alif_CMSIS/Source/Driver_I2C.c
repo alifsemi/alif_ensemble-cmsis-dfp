@@ -1250,8 +1250,14 @@ static int32_t ARM_I2C_SlaveTransmit(I2C_RESOURCES *I2C, const uint8_t *data, ui
     I2C->transfer.tx_over        = 0U;
     I2C->transfer.curr_stat      = I2C_XFER_SLV_TX;
 
-    /* Clear all interrupts */
-    i2c_clear_all_interrupt(I2C->regs);
+    /* Clear stale software-clearable interrupts from a previous transaction
+     * WITHOUT touching RD_REQ. CLR_INTR would clear a pending RD_REQ
+     * latched when the master started its read phase mid-transaction (e.g.
+     * WRITE + RESTART + READ, where the app arms SlaveTransmit after
+     * SlaveReceive has completed).
+     */
+    (void) I2C->regs->I2C_CLR_TX_ABRT;
+    (void) I2C->regs->I2C_CLR_STOP_DET;
 
 #if I2C_DMA_ENABLE
     if (I2C->dma_enable) {
