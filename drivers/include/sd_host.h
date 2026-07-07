@@ -29,21 +29,15 @@ extern "C" {
 /* Includes */
 #include "stdint.h"
 #include "soc.h"
+#include "sd_types.h"
+
+/* Forward declaration */
+struct _sd_handle_t;
 
 #define SDMMC_HC_VERSION_REG    (SDMMC_BASE + 0xFEU)
 #define SDHC_HC_VERSION_REG_Msk 0xFFFFU
 #define SDHC_IRQ_NUM            SDMMC_IRQ_IRQn
 #define SDHC_WAKEUP_IRQ_NUM     SDMMC_WAKEUP_IRQ_IRQn
-
-/**
- * @brief  Host controller driver status enum definition
- */
-typedef enum _SDHC_STATUS {
-    SDHC_STATUS_OK,
-    SDHC_STATUS_ERR,
-    SDHC_STATUS_INV_STATE,
-    SDHC_STATUS_BUSY
-} SDHC_STATUS;
 
 /* ADMA Descriptor 64-bit format (matching original packed struct layout):
  * Bits 0-15:   Attribute
@@ -119,7 +113,9 @@ typedef enum _SDHC_STATUS {
 #define SDHC_PROG_CLK_MODE               0x1U
 #define SDHC_CLK_GEN_SEL_Msk             (SDHC_DIV_CLK_MODE << SDHC_CLK_GEN_SEL_Pos)
 #define SDHC_UPPER_FREQ_SEL_Pos          6U
+#define SDHC_UPPER_FREQ_SEL_Msk          (0x3U << SDHC_UPPER_FREQ_SEL_Pos)
 #define SDHC_FREQ_SEL_Pos                8U
+#define SDHC_FREQ_SEL_Msk                (0xFFU << SDHC_FREQ_SEL_Pos)
 #define SDHC_CLK_200KHz_DIV              (2U << SDHC_UPPER_FREQ_SEL_Pos)
 #define SDHC_CLK_400KHz_DIV              (1U << SDHC_UPPER_FREQ_SEL_Pos)
 #define SDHC_CLK_UPPR_FREQ_SEL           SDHC_CLK_400KHz_DIV
@@ -208,7 +204,7 @@ typedef enum _SDHC_STATUS {
 #define SDHC_CLOCK_STABLE_DELAY_US        1000U      /*!< Clock stable delay in microseconds */
 #define SDHC_POST_CLOCK_ENABLE_DELAY_US   1000U      /*!< Delay after clock enable */
 #define SDHC_POST_1P8V_CLOCK_DELAY_US     1000U      /*!< Clock enable delay for 1.8V switch */
-#define SDHC_BUS_IDLE_TIMEOUT             0x100000U  /*!< Bus idle timeout count */
+#define SDHC_BUS_IDLE_TIMEOUT             0x1000U    /*!< Bus idle timeout count */
 #define SDHC_POWER_CYCLE_TIMEOUT          0xFFFFU    /*!< Power cycle timeout count */
 #define SDHC_CLOCK_STABLE_TIMEOUT         1000U      /*!< Clock stable timeout in microseconds */
 
@@ -220,6 +216,7 @@ typedef enum _SDHC_STATUS {
 #define SDHC_DIVIDER_LOW_MASK             0xFFU       /*!< Lower 8 bits of divider */
 #define SDHC_DIVIDER_HIGH_MASK            0x03U       /*!< Upper 2 bits of divider */
 #define SDHC_HS_MODE_THRESHOLD_HZ         25000000U   /*!< High speed mode threshold (25MHz) */
+#define SDHC_UHS_SDR50_THRESHOLD_HZ       50000000U   /*!< SDR50/SDR104 threshold (50MHz) */
 #define SDHC_INIT_CLOCK_FREQ_HZ           400000U     /*!< Initialization clock freq (400KHz) */
 #define SDHC_DEFAULT_BASE_CLK_MHZ         50U         /*!< Default base clock in MHz */
 
@@ -248,10 +245,56 @@ typedef enum _SDHC_STATUS {
 #define SDHC_HOST_CTRL2_CMD23_EN_Msk       (1U << 11U)
 #define SDHC_HOST_CTRL2_SIGNALING_EN_Msk   (1U << 3U)
 
+/* UHS Mode Select - HOST_CTRL2 bits [2:0] */
+#define SDHC_HOST_CTRL2_UHS_MODESEL_Pos    0U
+#define SDHC_HOST_CTRL2_UHS_MODESEL_Msk    (0x7U << SDHC_HOST_CTRL2_UHS_MODESEL_Pos)
+#define SDHC_UHS_MODESEL_SDR12             0x0U  /*!< Default Speed (<=25MHz, 3.3V) */
+#define SDHC_UHS_MODESEL_SDR25             0x1U  /*!< High Speed   (<=50MHz, 3.3V/1.8V) */
+#define SDHC_UHS_MODESEL_SDR50             0x2U  /*!< SDR50        (50MHz, 1.8V) */
+#define SDHC_UHS_MODESEL_SDR104            0x3U  /*!< SDR104       (>50MHz, 1.8V) */
+#define SDHC_UHS_MODESEL_DDR50             0x4U  /*!< DDR50        (50MHz DDR, 1.8V) */
+
 #define HC_CLOCK_DISABLE(pHsd) \
     (pHsd->regs->SDMMC_CLK_CTRL_R &= ~SDHC_CLK_EN_Msk)
 #define HC_CLOCK_ENABLE(pHsd) \
     (pHsd->regs->SDMMC_CLK_CTRL_R |= SDHC_CLK_EN_Msk)
+
+/**
+  \fn          int sdhc_card_present(struct _sd_handle_t *pHsd, int (*card_det_cb)(void))
+  \brief       Check if SD card is present using GPIO callback or PSTATE register
+  \param[in]   pHsd: SD host handle
+  \param[in]   card_det_cb: Optional GPIO card detect callback
+  \return      1 if card present, 0 if not
+*/
+int sdhc_card_present(struct _sd_handle_t *pHsd, int (*card_det_cb)(void));
+
+/**
+  \fn          SD_DRV_STATUS sdhc_init(sd_handle_t *pHsd, sd_param_t *p_sd_param)
+  \brief       Initialize SD host controller
+  \param[in]   pHsd: SD host handle
+  \param[in]   p_sd_param: SD parameters
+  \return      SD driver status
+*/
+SD_DRV_STATUS sdhc_init(sd_handle_t *pHsd, sd_param_t *p_sd_param);
+
+/* Low-level host controller API declarations */
+SDHC_STATUS sdhc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd);
+SDHC_STATUS sdhc_set_io(sdmmc_io_t *p_sdmmc_io_param,
+                         SDMMC_SET_IO_CMD set_io_cmd);
+SDHC_STATUS sdhc_reset(sd_handle_t *pHsd, uint8_t reset_val);
+void        sdhc_power_cycle(sd_handle_t *pHsd);
+SDHC_STATUS sdhc_xfer_dma_setup(sd_handle_t *pHsd, sd_data_t *data);
+SDHC_STATUS sdhc_set_blk_size(sd_handle_t *pHsd, uint32_t blk_size);
+void        sdhc_set_block_count(sd_handle_t *pHsd, uint32_t blk_cnt);
+SDHC_STATUS sdhc_check_xfer_done(sd_handle_t *pHsd, uint32_t timeout_cnt);
+uint32_t    sdhc_get_response1(sd_handle_t *pHsd);
+uint32_t    sdhc_get_response2(sd_handle_t *pHsd);
+uint32_t    sdhc_get_response3(sd_handle_t *pHsd);
+uint32_t    sdhc_get_response4(sd_handle_t *pHsd);
+void        sdhc_enable_irq(sd_handle_t *pHsd, uint16_t mask);
+void        sdhc_set_emmc_ctrl(sd_handle_t *pHsd, uint8_t value);
+uint32_t    sdhc_get_blk_size(sd_handle_t *pHsd);
+void        sdhc_set_led(sd_handle_t *pHsd, bool enable);
 
 #ifdef __cplusplus
 }

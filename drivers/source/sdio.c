@@ -97,6 +97,7 @@ SD_DRV_STATUS sdio_rw_direct(sd_handle_t *pHsd, uint32_t rwFlag, uint32_t fn, ui
     sdio_cmd.xfer_mode  = SDHC_XFER_MODE_DATA_XFER_RD_Msk | SDHC_XFER_MODE_DMA_EN_Msk;
     sdio_cmd.cmdidx     = SDIO_RW_DIRECT;
     sdio_cmd.rsp_type   = SDMMC_RESP_R1;
+    sdio_cmd.retries    = 0;
     sdio_cmd.arg        = rwFlag ? SDIO_RW_FLAG_Msk : 0x00000000;
     sdio_cmd.arg       |= fn << SDIO_FN_Pos;
     sdio_cmd.arg       |= (rwFlag && readPtr) ? SDIO_RAW_FLAG_Msk : 0x00000000;
@@ -162,6 +163,7 @@ SD_DRV_STATUS sdio_rw_extended(sd_handle_t *pHsd, uint32_t rwFlag, uint32_t fn,
     pHsd->sd_cmd.arg         |= incr_addr ? SDIO_RW_EXT_INCR_ADDR_Msk : 0x00000000;
     pHsd->sd_cmd.arg         |= addr << SDIO_REG_ADDR_Pos;
     pHsd->sd_cmd.data_present = 1;
+    pHsd->sd_cmd.retries      = 0;
 
     if (blk_cnt) {
         pHsd->sd_cmd.arg |= SDIO_RW_EXT_BLK_MODE_Msk | blk_cnt;

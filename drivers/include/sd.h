@@ -256,9 +256,9 @@ typedef struct _diskio_t {
     SD_CARD_STATE (*disk_status)(void);             /*!< Get Disk Status            */
     SD_DRV_STATUS (*disk_info)(sd_cardinfo_t *);    /*!< Get Disk information       */
     SD_DRV_STATUS (*disk_read)
-    (uint32_t, uint16_t, volatile uint8_t *); /*!< Read Sector(s)             */
+    (uint32_t, uint16_t, volatile uint8_t *);       /*!< Read Sector(s)             */
     SD_DRV_STATUS (*disk_write)
-    (uint32_t, uint32_t, volatile uint8_t *); /*!< Write Sector(s)            */
+    (uint32_t, uint32_t, volatile uint8_t *);       /*!< Write Sector(s)            */
     SD_DRV_STATUS (*disk_set_io)
     (sdmmc_io_t *, SDMMC_SET_IO_CMD);               /*!< Set SDMMC IO, power, clk   */
 #ifdef SDMMC_IRQ_MODE
@@ -279,11 +279,10 @@ SD_DRV_STATUS sdio_read_cia(uint8_t *pcia, uint8_t fn, uint8_t offset);
 SD_DRV_STATUS sdio_write_cia(uint8_t cia, uint8_t fn, uint8_t offset);
 SD_DRV_STATUS sdio_read_cccr(uint8_t *pcccr);
 SD_DRV_STATUS sdio_write_cccr(uint8_t cccr);
-SD_DRV_STATUS sdhc_init(sd_handle_t *pHsd, sd_param_t *p_sd_param);
 SD_DRV_STATUS sd_write(uint32_t sector, uint32_t blk_cnt,
-                        volatile unsigned char *src_buff);
+                       volatile unsigned char *src_buff);
 SD_DRV_STATUS sd_read(uint32_t sec, uint16_t blk_cnt,
-                       volatile unsigned char *dest_buff);
+                      volatile unsigned char *dest_buff);
 SD_DRV_STATUS sd_set_io(sdmmc_io_t *p_sdmmc_io_param, SDMMC_SET_IO_CMD set_io_cmd);
 void          sdmmc_decode_card_csd(sd_handle_t *pHsd);
 void          sdmmc_decode_card_ext_csd(sd_handle_t *pHsd, uint8_t *praw_ext_csd);

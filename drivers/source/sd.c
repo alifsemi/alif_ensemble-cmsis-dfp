@@ -21,6 +21,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sd.h"
+#include "sd_host.h"
 #include "sdio.h"
 #include "sys_ctrl_sd.h"
 #include "string.h"
@@ -28,28 +29,6 @@
 
 /* Global SD Handle */
 sd_handle_t Hsd __attribute__((section("sd_dma_buf")));
-
-/* Static function forward declarations */
-static SD_DRV_STATUS sd_error_handler(void);
-static SD_DRV_STATUS sd_identify_card(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_get_card_ifcond(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_go_idle(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_get_emmc_card_opcond(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_get_card_opcond(sd_handle_t *pHsd, uint32_t req_ocr);
-static SD_DRV_STATUS sd_get_card_cid(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_get_rca(sd_handle_t *pHsd, uint32_t *prca);
-static SD_DRV_STATUS sd_get_card_csd(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_get_card_ext_csd(sd_handle_t *pHsd, uint8_t *pbuff);
-static SD_DRV_STATUS sd_get_card_scr(sd_handle_t *pHsd);
-static SD_DRV_STATUS sd_sel_card(sd_handle_t *pHsd, uint32_t rca);
-static SD_DRV_STATUS sd_set_blk_size(sd_handle_t *pHsd, uint32_t blk_size);
-static SD_DRV_STATUS sd_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth);
-static SD_DRV_STATUS sd_get_card_status(sd_handle_t *pHsd, uint32_t *pstatus);
-static SD_DRV_STATUS sd_set_block_count(sd_handle_t *pHsd, uint32_t blk_cnt);
-static SD_DRV_STATUS sd_check_speed_mode(sd_handle_t *pHsd, uint8_t mode);
-static SD_DRV_STATUS sd_switch_speed_mode(sd_handle_t *pHsd, uint8_t mode);
-static SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param);
-static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t direction);
 
 /* Global SD Driver Callback definitions */
 const diskio_t SD_Driver = {
@@ -78,38 +57,6 @@ SD_DRV_STATUS sd_set_io(sdmmc_io_t *p_sdmmc_io_param, SDMMC_SET_IO_CMD set_io_cm
 }
 
 /**
- * \fn           static SD_DRV_STATUS sd_switch_voltage(sd_handle_t *pHsd, uint8_t req_vol)
- * \brief        switch sd line volatge
- * \param[in]    SD Global Handle pointer
- * \param[in]    new voltage
- * \return       sd driver status
- */
-static SD_DRV_STATUS sd_switch_voltage(sd_handle_t *pHsd, uint8_t req_vol)
-{
-    uint32_t   status;
-    sdmmc_io_t sdmmc_io_param;
-
-    SD_LOG_DBG("Switching to 1.8v");
-    pHsd->sd_cmd.cmdidx   = CMD11;
-    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
-    pHsd->sd_cmd.arg      = 0;
-
-    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    sdmmc_io_param.sdmmc_vol = req_vol;
-    status = (SD_DRV_STATUS)sdhc_set_io(&sdmmc_io_param, SDMMC_SET_IO_VOL);
-
-    if (status) {
-        SD_LOG_WRN("Failed to switch to UHS-I voltage");
-        return SD_DRV_STATUS_CARD_INIT_ERR;
-    } else {
-        return SD_DRV_STATUS_OK;
-    }
-}
-
-/**
  * \fn           static SD_DRV_STATUS sd_error_handler(void)
  * \brief        SD Driver error Handler
  * \param[in]    SD error number
@@ -120,6 +67,38 @@ static SD_DRV_STATUS sd_error_handler(void)
     sd_handle_t *pHsd = &Hsd;
     sdhc_reset(pHsd, SDHC_SW_RST_DAT_Msk | SDHC_SW_RST_CMD_Msk);
     return ~SD_DRV_STATUS_OK;
+}
+
+/**
+ * \fn           static SD_DRV_STATUS sd_switch_voltage(sd_handle_t *pHsd, uint8_t req_vol)
+ * \brief        switch sd line volatge
+ * \param[in]    SD Global Handle pointer
+ * \param[in]    new voltage
+ * \return       sd driver status
+ */
+static SD_DRV_STATUS sd_switch_voltage(sd_handle_t *pHsd, uint8_t req_vol)
+{
+    uint32_t   status;
+    sdmmc_io_t sdmmc_io_param = {0};
+
+    pHsd->sd_cmd.cmdidx   = CMD11;
+    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
+    pHsd->sd_cmd.arg      = 0;
+
+    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    sdmmc_io_param.sdmmc_vol = req_vol;
+    status = sd_set_io(&sdmmc_io_param, SDMMC_SET_IO_VOL);
+
+    if (status) {
+        SD_LOG_DBG("1.8V switch: failed");
+        return SD_DRV_STATUS_CARD_INIT_ERR;
+    } else {
+        SD_LOG_DBG("1.8V switch: success");
+        return SD_DRV_STATUS_OK;
+    }
 }
 
 /**
@@ -143,12 +122,16 @@ static SD_DRV_STATUS sd_identify_card(sd_handle_t *pHsd)
                         SDHC_INTR_CARD_INSRT_Msk | SDHC_INTR_CARD_REM_Msk;
     sdhc_enable_irq(pHsd, irq_mask);
 
-    /* Use GPIO card detect instead of the SDHC PSTATE card-detect bit. */
-    isCardPresent = true;
+    /* Check card present via GPIO callback or PSTATE register */
+    isCardPresent = sdhc_card_present(pHsd, pHsd->sd_param.card_det_cb);
     pHsd->sd_card.iscardpresent = isCardPresent;
-#ifdef SDMMC_PRINT_DBG
-    printf("SD Card Detected (GPIO check)...\n");
-#endif
+
+    if (!isCardPresent) {
+        SD_LOG_ERR("SD Card not detected");
+        return SD_DRV_STATUS_CARD_INIT_ERR;
+    }
+
+    SD_LOG_DBG("SD Card Detected (GPIO check)");
 
     status = SD_DRV_STATUS_OK;
 
@@ -224,7 +207,7 @@ static SD_DRV_STATUS sd_get_emmc_card_opcond(sd_handle_t *pHsd)
 {
 
     uint32_t resp_OPcond;
-    uint32_t timeout   = SDMMC_CMD_TIMEOUT;
+    uint32_t timeout   = SDMMC_CMD_OCR_TOUT;
     uint32_t switch1v8 = false;
 
     sdhc_power_cycle(pHsd);
@@ -425,80 +408,6 @@ static SD_DRV_STATUS sd_get_card_csd(sd_handle_t *pHsd)
 }
 
 /**
- * \fn           static SD_DRV_STATUS sd_get_card_ext_csd(sd_handle_t *pHsd, uint8_t *pbuff)
- * \brief        Get eMMC Extended CSD Data
- * \param[in]    Global sd Handle pointer
- * \param[in]    buffer pointer
- * \return       SD driver status
- */
-static SD_DRV_STATUS sd_get_card_ext_csd(sd_handle_t *pHsd, uint8_t *pbuff)
-{
-
-    /* Select a card */
-    if (sd_sel_card(pHsd, pHsd->sd_card.relcardadd) != SD_DRV_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    if (sd_set_blk_size(pHsd, SDMMC_BLK_SIZE_512_Msk) != SD_DRV_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    pHsd->sd_cmd.cmdidx       = CMD8;
-    pHsd->sd_cmd.rsp_type     = SDMMC_RESP_R48;
-    pHsd->sd_cmd.arg          = 0;
-    pHsd->sd_cmd.data_present = true;
-    pHsd->sd_cmd.data.buffer    = (uint32_t) LocalToGlobal(pbuff);
-    pHsd->sd_cmd.data.blk_size  = SDMMC_BLK_SIZE_512_Msk;
-    pHsd->sd_cmd.data.blk_cnt   = 1;
-    pHsd->sd_cmd.data.direction = SD_DATA_DIR_READ;
-    pHsd->sd_cmd.xfer_mode      = SDHC_XFER_MODE_DATA_XFER_RD_Msk |
-                                  SDHC_XFER_MODE_DMA_EN_Msk;
-
-    sdhc_xfer_dma_setup(pHsd, &pHsd->sd_cmd.data);
-
-    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    pHsd->sd_cmd.data_present = false;
-
-    return SD_DRV_STATUS_OK;
-}
-
-/**
- * \fn           static SD_DRV_STATUS sd_get_card_scr(sd_handle_t *pHsd)
- * \brief        Get SCR
- * \param[in]    Global sd Handle pointer
- * \return       SD driver status
- */
-static SD_DRV_STATUS sd_get_card_scr(sd_handle_t *pHsd)
-{
-
-    /* just to indicate SD Card that the next cmd is APP CMD */
-    pHsd->sd_cmd.cmdidx   = CMD55;
-    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
-    pHsd->sd_cmd.arg      = 0x0;
-
-    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    pHsd->sd_cmd.cmdidx   = CMD51;
-    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
-    pHsd->sd_cmd.arg      = 0;
-
-    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    /* update the global instance */
-    pHsd->sd_card.scr[0] = sdhc_get_response1(pHsd);
-    pHsd->sd_card.scr[1] = sdhc_get_response2(pHsd);
-
-    return SD_DRV_STATUS_OK;
-}
-
-/**
  * \fn           static SD_DRV_STATUS sd_sel_card(sd_handle_t *pHsd, uint32_t rca)
  * \brief        Select a card for further operation
  * \param[in]    Global sd Handle pointer
@@ -555,6 +464,114 @@ static SD_DRV_STATUS sd_set_blk_size(sd_handle_t *pHsd, uint32_t blk_size)
 }
 
 /**
+ * \fn           static SD_DRV_STATUS sd_get_card_ext_csd(sd_handle_t *pHsd, uint8_t *pbuff)
+ * \brief        Get eMMC Extended CSD Data
+ * \param[in]    Global sd Handle pointer
+ * \param[in]    buffer pointer
+ * \return       SD driver status
+ */
+static SD_DRV_STATUS sd_get_card_ext_csd(sd_handle_t *pHsd, uint8_t *pbuff)
+{
+
+    /* Select a card */
+    if (sd_sel_card(pHsd, pHsd->sd_card.relcardadd) != SD_DRV_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    if (sd_set_blk_size(pHsd, SDMMC_BLK_SIZE_512_Msk) != SD_DRV_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    pHsd->sd_cmd.cmdidx       = CMD8;
+    pHsd->sd_cmd.rsp_type     = SDMMC_RESP_R48;
+    pHsd->sd_cmd.arg          = 0;
+    pHsd->sd_cmd.data_present = true;
+    pHsd->sd_cmd.retries      = SDMMC_DATA_RETRIES;
+    pHsd->sd_cmd.data.buffer    = (uint32_t) pbuff;
+    pHsd->sd_cmd.data.blk_size  = SDMMC_BLK_SIZE_512_Msk;
+    pHsd->sd_cmd.data.blk_cnt   = 1;
+    pHsd->sd_cmd.data.direction = SD_DATA_DIR_READ;
+    pHsd->sd_cmd.xfer_mode      = SDHC_XFER_MODE_DATA_XFER_RD_Msk |
+                                  SDHC_XFER_MODE_DMA_EN_Msk;
+
+    sdhc_xfer_dma_setup(pHsd, &pHsd->sd_cmd.data);
+
+    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    pHsd->sd_cmd.data_present = false;
+    pHsd->sd_cmd.retries      = SDMMC_CMD_RETRIES;
+
+    return SD_DRV_STATUS_OK;
+}
+
+/**
+ * \fn           static SD_DRV_STATUS sd_get_card_scr(sd_handle_t *pHsd)
+ * \brief        Get SCR
+ * \param[in]    Global sd Handle pointer
+ * \return       SD driver status
+ */
+static SD_DRV_STATUS sd_get_card_scr(sd_handle_t *pHsd)
+{
+
+    /* just to indicate SD Card that the next cmd is APP CMD */
+    pHsd->sd_cmd.cmdidx   = CMD55;
+    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
+    pHsd->sd_cmd.arg      = 0x0;
+
+    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    pHsd->sd_cmd.cmdidx   = CMD51;
+    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
+    pHsd->sd_cmd.arg      = 0;
+
+    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
+        sd_error_handler();
+    }
+
+    /* update the global instance */
+    pHsd->sd_card.scr[0] = sdhc_get_response1(pHsd);
+    pHsd->sd_card.scr[1] = sdhc_get_response2(pHsd);
+
+    return SD_DRV_STATUS_OK;
+}
+
+/**
+ * \fn           static SD_DRV_STATUS sd_get_card_status(sd_handle_t *pHsd, uint32_t *pstatus)
+ * \brief        Get the Card Status
+ * \param[in]    Global sd Handle pointer
+ * \param[in]    status pointer
+ * \return       SD driver status
+ */
+static SD_DRV_STATUS sd_get_card_status(sd_handle_t *pHsd, uint32_t *pstatus)
+{
+
+    uint32_t status;
+
+    /* Check current card status */
+    pHsd->sd_cmd.cmdidx   = CMD13;
+    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
+    pHsd->sd_cmd.arg      = pHsd->sd_card.relcardadd;
+
+    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
+        SD_LOG_ERR("CMD7 failed");
+        sd_error_handler();
+        return SD_DRV_STATUS_CARD_INIT_ERR;
+    }
+
+    status   = sdhc_get_response1(pHsd);
+
+    *pstatus = (status & SDHC_STATUS_Msk) >> SDHC_STATUS_Pos;
+
+    SD_LOG_DBG("Card Status: %" PRIx32, status);
+
+    return SD_DRV_STATUS_OK;
+}
+
+/**
  * \fn           static SD_DRV_STATUS sd_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth)
  * \brief        Configure required bus width for Host and Card
  * \param[in]    pHsd - Global SD Handle pointer
@@ -566,6 +583,7 @@ static SD_DRV_STATUS sd_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth)
 
     uint32_t status;
     uint32_t timeout_cnt = SDMMC_CMD_TIMEOUT;
+    sdmmc_io_t io_param = {0};
 
     do {
 
@@ -584,11 +602,6 @@ static SD_DRV_STATUS sd_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth)
             pHsd->sd_param.bus_width = SDMMC_4_BIT_MODE;
         }
     }
-
-    sdmmc_io_t io_param;
-
-    io_param.sdmmc_bus_width = (sdmmc_bus_width_t)buswidth;
-    sdhc_set_io(&io_param, SDMMC_SET_IO_BUS_WIDTH);
 
     /* just to indicate Card that the next cmd is APP CMD if not MMC/eMMC Card */
     if (pHsd->sd_card.cardtype != SDMMC_CARD_MMC) {
@@ -640,35 +653,8 @@ static SD_DRV_STATUS sd_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth)
         sys_busy_loop_us(SDMMC_CMD6_DELAY);
     }
 
-    return SD_DRV_STATUS_OK;
-}
-
-/**
- * \fn           static SD_DRV_STATUS sd_get_card_status(sd_handle_t *pHsd, uint32_t *pstatus)
- * \brief        Get the Card Status
- * \param[in]    Global sd Handle pointer
- * \param[in]    status pointer
- * \return       SD driver status
- */
-static SD_DRV_STATUS sd_get_card_status(sd_handle_t *pHsd, uint32_t *pstatus)
-{
-
-    uint32_t status;
-
-    /* Check current card status */
-    pHsd->sd_cmd.cmdidx   = CMD13;
-    pHsd->sd_cmd.rsp_type = SDMMC_RESP_R48;
-    pHsd->sd_cmd.arg      = pHsd->sd_card.relcardadd;
-
-    if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
-        sd_error_handler();
-    }
-
-    status   = sdhc_get_response1(pHsd);
-
-    *pstatus = (status & SDHC_STATUS_Msk) >> SDHC_STATUS_Pos;
-
-    SD_LOG_DBG("Card Status: %" PRIx32, status);
+    io_param.sdmmc_bus_width = (sdmmc_bus_width_t)buswidth;
+    sd_set_io(&io_param, SDMMC_SET_IO_BUS_WIDTH);
 
     return SD_DRV_STATUS_OK;
 }
@@ -709,6 +695,7 @@ static SD_DRV_STATUS sd_check_speed_mode(sd_handle_t *pHsd, uint8_t mode)
     pHsd->sd_cmd.rsp_type     = SDMMC_RESP_R48;
     pHsd->sd_cmd.arg          = SDMMC_CMD6_CHECK_ARG;
     pHsd->sd_cmd.data_present = true;
+    pHsd->sd_cmd.retries      = SDMMC_DATA_RETRIES;
     pHsd->sd_cmd.data.buffer    = (uint32_t) pHsd->sd_cmd.card_buffer;
     pHsd->sd_cmd.data.blk_size  = SDMMC_CMD6_BLK_SIZE;
     pHsd->sd_cmd.data.blk_cnt   = 1;
@@ -724,11 +711,13 @@ static SD_DRV_STATUS sd_check_speed_mode(sd_handle_t *pHsd, uint8_t mode)
         SD_LOG_DBG("CMD6 CHECK: send_cmd failed");
         pHsd->sd_cmd.data_present = false;
         pHsd->sd_cmd.xfer_mode = 0;
+        pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
         return SD_DRV_STATUS_ERR;
     }
 
     pHsd->sd_cmd.data_present = false;
     pHsd->sd_cmd.xfer_mode = 0;
+    pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
 
     /* Wait for data transfer to complete */
     if (sdhc_check_xfer_done(pHsd, SDMMC_CMD6_TIMEOUT_US) != SDHC_STATUS_OK) {
@@ -763,7 +752,7 @@ static SD_DRV_STATUS sd_check_speed_mode(sd_handle_t *pHsd, uint8_t mode)
         SD_LOG_DBG("Card supports SDR104 mode");
         break;
     default:
-        SD_LOG_DBG("Default speed mode (no check needed)");
+        SD_LOG_DBG("Default speed mode (DS)");
         break;
     }
 
@@ -787,6 +776,7 @@ static SD_DRV_STATUS sd_switch_speed_mode(sd_handle_t *pHsd, uint8_t mode)
     pHsd->sd_cmd.arg         &= ~(0xFU << 0);
     pHsd->sd_cmd.arg         |= (mode & 0xF) << 0;
     pHsd->sd_cmd.data_present = true;
+    pHsd->sd_cmd.retries      = SDMMC_DATA_RETRIES;
     pHsd->sd_cmd.data.buffer    = (uint32_t) pHsd->sd_cmd.card_buffer;
     pHsd->sd_cmd.data.blk_size  = SDMMC_CMD6_BLK_SIZE;
     pHsd->sd_cmd.data.blk_cnt   = 1;
@@ -801,11 +791,13 @@ static SD_DRV_STATUS sd_switch_speed_mode(sd_handle_t *pHsd, uint8_t mode)
     if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
         pHsd->sd_cmd.data_present = false;
         pHsd->sd_cmd.xfer_mode = 0;
+        pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
         return SD_DRV_STATUS_ERR;
     }
 
     pHsd->sd_cmd.data_present = false;
     pHsd->sd_cmd.xfer_mode = 0;
+    pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
 
     /* Wait for data transfer to complete */
     if (sdhc_check_xfer_done(pHsd, SDMMC_CMD6_TIMEOUT_US) != SDHC_STATUS_OK) {
@@ -822,7 +814,7 @@ static SD_DRV_STATUS sd_switch_speed_mode(sd_handle_t *pHsd, uint8_t mode)
         return SD_DRV_STATUS_ERR;
     }
 
-    SD_LOG_DBG("CMD6 response: card accepted speed mode %d", mode);
+    SD_LOG_DBG("Speed mode %d switch: accepted", mode);
 
     return SD_DRV_STATUS_OK;
 }
@@ -837,6 +829,13 @@ static SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param)
 {
     uint32_t       ocr;
     uint8_t        re_init_cnt    = 1;
+    sdmmc_io_t     io_param;
+
+    /* Check card detect using low-level API (GPIO callback or PSTATE register) */
+    if (!sdhc_card_present(pHsd, p_sd_param->card_det_cb)) {
+        SD_LOG_ERR("SD card not detected");
+        return SD_DRV_STATUS_CARD_INIT_ERR;
+    }
 
     /* Default settings */
     pHsd->sd_card.cardtype        = SDMMC_CARD_SDHC;
@@ -848,7 +847,8 @@ static SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param)
 #endif
 
     /* Set 400KHz initialization clock */
-    sdhc_set_clk_freq(pHsd, SDMMC_CLK_400_KHZ_HZ);
+    io_param.sdmmc_clock = SDMMC_CLK_400KHZ;
+    sd_set_io(&io_param, SDMMC_SET_IO_CLK);
 
     pHsd->state = SD_CARD_STATE_IDLE;
 
@@ -859,6 +859,7 @@ static SD_DRV_STATUS sd_card_init(sd_handle_t *pHsd, sd_param_t *p_sd_param)
     pHsd->sd_cmd.rsp_type  = SDMMC_RESP_NONE;
     pHsd->sd_cmd.arg       = 0;
     pHsd->sd_cmd.xfer_mode = 0;
+    pHsd->sd_cmd.retries   = SDMMC_CMD_RETRIES;
 
     /* Check and wait till the card is present and Reset It */
     if (sd_identify_card(pHsd) != SD_DRV_STATUS_OK) {
@@ -895,8 +896,8 @@ RE_INIT:
 
             if (re_init_cnt--) {
 
-                if (pHsd->sd_param.reset_cb) {
-                    pHsd->sd_param.reset_cb();
+                if (pHsd->sd_param.pwr_cb) {
+                    pHsd->sd_param.pwr_cb(0);
                 }
 
                 /* 1.8V switch Failed Re-init with 3.3V */
@@ -904,7 +905,8 @@ RE_INIT:
                 pHsd->sd_card.flags &= ~SDMMC_1P8V_FLAG;
 
                 /* Set 3.3v SD Voltage supply */
-                sdhc_set_bus_power(pHsd, SDHC_PC_BUS_VSEL_3V3_Msk);
+                io_param.sdmmc_vol = SDMMC_VOL_3P3V;
+                sd_set_io(&io_param, SDMMC_SET_IO_VOL);
 
                 sys_busy_loop_us(SDMMC_RESET_DELAY_US);
 
@@ -942,15 +944,15 @@ RE_INIT:
             if (sd_get_card_scr(pHsd) != SD_DRV_STATUS_OK) {
                 return SD_DRV_STATUS_CARD_INIT_ERR;
             }
+
+			/* Select a card */
+			if (sd_sel_card(pHsd, pHsd->sd_card.relcardadd) != SD_DRV_STATUS_OK) {
+				return SD_DRV_STATUS_CARD_INIT_ERR;
+			}
         }
 
         /* Change the Card State from Identification to Ready */
         pHsd->state = SD_CARD_STATE_STBY;
-    }
-
-    /* Select a card */
-    if (sd_sel_card(pHsd, pHsd->sd_card.relcardadd) != SD_DRV_STATUS_OK) {
-        return SD_DRV_STATUS_CARD_INIT_ERR;
     }
 
     /* Determine required speed mode based on configured frequency */
@@ -964,7 +966,7 @@ RE_INIT:
         target_speed_mode = SDMMC_SPEED_MODE_HS;
     }
 
-    SD_LOG_DBG("Target speed mode: %d (clock_freq: %d)",
+    SD_LOG_DBG("Target speed mode: %d (clock: %d Hz)",
         target_speed_mode, p_sd_param->clock_freq);
 
     if (target_speed_mode != SDMMC_SPEED_MODE_DEFAULT) {
@@ -978,24 +980,31 @@ RE_INIT:
                           target_speed_mode);
             sdhc_reset(pHsd, (uint8_t)(SDHC_SW_RST_DAT_Msk | SDHC_SW_RST_CMD_Msk));
             /* Use default speed after failed switch */
-            sdhc_set_clk_freq(pHsd, SDMMC_CLK_25_MHZ);
+            io_param.sdmmc_clock = SDMMC_CLK_25MHZ;
+            sd_set_io(&io_param, SDMMC_SET_IO_CLK);
         } else {
-            SD_LOG_INF("Switched to speed mode %d successfully", target_speed_mode);
+            SD_LOG_INF("Speed mode %d switch: success", target_speed_mode);
             /* Set clock frequency after successful speed mode switch */
-            sdhc_set_clk_freq(pHsd, (p_sd_param->clock_freq > SDMMC_CLK_25_MHZ) ?
-                              p_sd_param->clock_freq : SDMMC_CLK_25_MHZ);
+            io_param.sdmmc_clock = (p_sd_param->clock_freq > SDMMC_CLK_25_MHZ) ?
+                                  SDMMC_CLK_ENABLE : SDMMC_CLK_25MHZ;
+            sd_set_io(&io_param, SDMMC_SET_IO_CLK);
         }
     } else {
         /* Default speed mode: set clock frequency */
-        sdhc_set_clk_freq(pHsd, (p_sd_param->clock_freq > SDMMC_CLK_25_MHZ) ?
-                          p_sd_param->clock_freq : SDMMC_CLK_25_MHZ);
+        io_param.sdmmc_clock = (p_sd_param->clock_freq > SDMMC_CLK_25_MHZ) ?
+                              SDMMC_CLK_ENABLE : SDMMC_CLK_25MHZ;
+        sd_set_io(&io_param, SDMMC_SET_IO_CLK);
     }
 
     if (!(pHsd->sd_card.sdio_mode)) {
         if (pHsd->sd_param.bus_width >= SDMMC_4_BIT_MODE) {
-            SD_LOG_DBG("Setting bus width to %d", pHsd->sd_param.bus_width ? 4 : 1);
+            SD_LOG_DBG("Setting bus width to %d",
+                        (pHsd->sd_param.bus_width == SDMMC_8_BIT_MODE) ? 8 :
+                        (pHsd->sd_param.bus_width == SDMMC_4_BIT_MODE) ? 4 : 1);
             if (sd_set_bus_width(pHsd, pHsd->sd_param.bus_width) != SD_DRV_STATUS_OK) {
-                SD_LOG_ERR("Failed to set bus width to %d", pHsd->sd_param.bus_width ? 4 : 1);
+                SD_LOG_ERR("Failed to set bus width to %d",
+                            (pHsd->sd_param.bus_width == SDMMC_8_BIT_MODE) ? 8 :
+                            (pHsd->sd_param.bus_width == SDMMC_4_BIT_MODE) ? 4 : 1);
                 return SD_DRV_STATUS_CARD_INIT_ERR;
             }
         }
@@ -1189,8 +1198,10 @@ SD_DRV_STATUS sd_uninit(uint8_t devId)
     }
 
     /* turn off power supply to the card */
-    sdhc_set_clk_freq(pHsd, 0);
-    sdhc_set_bus_power(pHsd, (uint8_t) (0));
+    sdmmc_io_t io_param;
+    io_param.sdmmc_power = SDMMC_POWER_OFF;
+    sd_set_io(&io_param, SDMMC_SET_IO_PWR);
+
     return SD_DRV_STATUS_OK;
 }
 
@@ -1240,8 +1251,12 @@ SD_DRV_STATUS sd_info(sd_cardinfo_t *pinfo)
  */
 static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t direction)
 {
-    /* Send CMD23 for multi-block transfers (SDHC/SDXC only) */
-    if (pHsd->sd_card.cardtype != SDMMC_CARD_SDSC) {
+    /* Send CMD23 for multi-block transfers (SDHC/SDXC only).
+     * Per SD spec 4.3.4.4, CMD23 is only valid immediately before
+     * CMD18/CMD25. Sending it before single-block CMD17/CMD24 is an
+     * illegal sequence: the card sets ILLEGAL_COMMAND in the next
+     * response and the CMD24 write data phase never starts. */
+    if ((pHsd->sd_card.cardtype != SDMMC_CARD_SDSC) && (data->blk_cnt > 1)) {
         if (sd_set_block_count(pHsd, data->blk_cnt) != SD_DRV_STATUS_OK) {
             return SD_DRV_STATUS_ERR;
         }
@@ -1255,6 +1270,7 @@ static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t d
     }
 
     pHsd->sd_cmd.data_present = true;
+    pHsd->sd_cmd.retries      = SDMMC_DATA_RETRIES;
 
     if (direction == SD_DATA_DIR_READ) {
         if (data->blk_cnt == 1) {
@@ -1269,8 +1285,6 @@ static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t d
             pHsd->sd_cmd.xfer_mode = SDHC_XFER_MODE_DATA_XFER_RD_Msk |
                                      SDHC_XFER_MODE_MULTI_BLK_SEL_Msk |
                                      SDHC_XFER_MODE_BLK_CNT_Msk |
-                                     (SDHC_XFER_MODE_AUTO_CMD12 <<
-                                      SDHC_XFER_MODE_AUTO_CMD_EN_Pos) |
                                      SDHC_XFER_MODE_DMA_EN_Msk;
         }
     } else {
@@ -1286,8 +1300,6 @@ static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t d
             pHsd->sd_cmd.xfer_mode = SDHC_XFER_MODE_DATA_XFER_WR_Msk |
                                      SDHC_XFER_MODE_MULTI_BLK_SEL_Msk |
                                      SDHC_XFER_MODE_BLK_CNT_Msk |
-                                     (SDHC_XFER_MODE_AUTO_CMD12 <<
-                                      SDHC_XFER_MODE_AUTO_CMD_EN_Pos) |
                                      SDHC_XFER_MODE_DMA_EN_Msk;
         }
     }
@@ -1297,12 +1309,14 @@ static SD_DRV_STATUS sd_xfer_setup(sd_handle_t *pHsd, sd_data_t *data, uint8_t d
     if (sdhc_send_cmd(pHsd, &pHsd->sd_cmd) != SDHC_STATUS_OK) {
         pHsd->sd_cmd.data_present = false;
         pHsd->sd_cmd.xfer_mode = 0;
+        pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
         sdhc_set_led(pHsd, false);
         return SD_DRV_STATUS_ERR;
     }
 
     pHsd->sd_cmd.data_present = false;
     pHsd->sd_cmd.xfer_mode = 0;
+    pHsd->sd_cmd.retries = SDMMC_CMD_RETRIES;
     sdhc_set_led(pHsd, false);
 
     return SD_DRV_STATUS_OK;
@@ -1339,9 +1353,6 @@ SD_DRV_STATUS sd_read(uint32_t sec, uint16_t blk_cnt, volatile unsigned char *de
     pHsd->sd_cmd.data.sector    = sec;
     pHsd->sd_cmd.data.direction = SD_DATA_DIR_READ;
 
-    /* Change the Card State from Tran to Data */
-    pHsd->state = SD_CARD_STATE_DATA;
-
 #ifdef SDMMC_IRQ_MODE
 
     (void) timeout_cnt;
@@ -1371,11 +1382,6 @@ retry:
     }
 #endif
 
-    /* Change the Card State from Data to Tran */
-    pHsd->state = SD_CARD_STATE_TRAN;
-
-    RTSS_InvalidateDCache_by_Addr(dest_buff, blk_cnt * 512);
-
     return SD_DRV_STATUS_OK;
 }
 
@@ -1393,11 +1399,13 @@ SD_DRV_STATUS sd_write(uint32_t sector, uint32_t blk_cnt,
 {
 
     sd_handle_t *pHsd = &Hsd;
+
 #ifndef SDMMC_IRQ_MODE
     int     timeout_cnt = 1000 * blk_cnt;
     uint8_t retry_cnt   = 1;
 #endif
     uint8_t *aligned_buff = (uint8_t *) src_buff;
+
     if (src_buff == NULL) {
         return SD_DRV_STATUS_WR_ERR;
     }

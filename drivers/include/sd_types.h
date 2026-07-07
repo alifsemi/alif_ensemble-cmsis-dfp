@@ -26,8 +26,18 @@
 extern "C" {
 #endif
 
-#include "sd_host.h"
+#include "stdint.h"
 #include "sys_utils.h"
+
+/**
+ * @brief  Host controller driver status enum definition
+ */
+typedef enum _SDHC_STATUS {
+    SDHC_STATUS_OK,
+    SDHC_STATUS_ERR,
+    SDHC_STATUS_INV_STATE,
+    SDHC_STATUS_BUSY
+} SDHC_STATUS;
 
 /* SD Driver Logging Configuration */
 #define SD_LOG_LEVEL 2  /* 0=off, 1=err, 2=inf, 3=wrn, 4=dbg */
@@ -105,6 +115,10 @@ typedef enum _SET_IO_CMD {
 /* Time out constant */
 #define SDMMC_MAX_TIMEOUT_32              0xFFFFFFFFU
 #define SDMMC_MAX_TIMEOUT_16              0xFFFFU
+
+/* Retry counts — per-command, set in sd_cmd_t.retries */
+#define SDMMC_CMD_RETRIES  0   /* Non-data commands: no retry */
+#define SDMMC_DATA_RETRIES 2   /* Data commands (CMD17/18/24/25) */
 
 /**
  * @brief  SDIO operating condition structure
@@ -285,6 +299,7 @@ typedef struct _sd_cmd_t {
     uint8_t   cmdidx;       /*!< SD Command index           */
     uint8_t   rsp_type;     /*!< Expected response type     */
     uint8_t   data_present; /*!< SD Command uses Data lines */
+    uint8_t   retries;      /*!< Max retries on error/timeout */
 } sd_cmd_t;
 
 /**
@@ -298,7 +313,9 @@ typedef struct _sd_param_t {
     uint32_t clock_freq;                      /*!< SD Clock frequency in Hz        */
     void (*app_callback)(uint16_t cmd_complete,
         uint16_t xfer_complete);              /*!< SD App Callback function pointer */
-    void (*reset_cb)(void);                   /*!< SD Application Callback function pointer */
+    void (*pwr_cb)(uint8_t power_on);         /*!< SD Power Callback function pointer (power_on: 0=off, 1=on) */
+    int (*card_det_cb)(void);                 /*!< SD Card Detect Callback function pointer (returns 1 if present, 0 if not) */
+    void (*vsel_cb)(uint8_t voltage);         /*!< SD VSEL Callback function pointer (voltage: 0=3.3V, 1=1.8V) */
 } sd_param_t;
 
 /**
@@ -317,33 +334,6 @@ typedef struct _sd_handle_t {
     sd_param_t    sd_param;    /*!< SD Default Config Parameters           */
     mmc_ext_csd_t mmc_ext_csd; /*!< mmc extended card specific data        */
 } sd_handle_t;
-
-/* ======================================================================== */
-/* Host Controller Driver API                                               */
-/* ======================================================================== */
-SDHC_STATUS sdhc_send_cmd(sd_handle_t *pHsd, sd_cmd_t *pCmd);
-SDHC_STATUS sdhc_set_io(sdmmc_io_t *p_sdmmc_io_param,
-                         SDMMC_SET_IO_CMD set_io_cmd);
-SDHC_STATUS sdhc_reset(sd_handle_t *pHsd, uint8_t reset_val);
-void        sdhc_power_cycle(sd_handle_t *pHsd);
-SDHC_STATUS sdhc_set_bus_power(sd_handle_t *pHsd, uint8_t bus_power);
-SDHC_STATUS sdhc_set_clk_freq(sd_handle_t *pHsd, uint32_t clk_freq);
-SDHC_STATUS sdhc_xfer_dma_setup(sd_handle_t *pHsd, sd_data_t *data);
-SDHC_STATUS sdhc_set_bus_width(sd_handle_t *pHsd, uint8_t buswidth);
-SDHC_STATUS sdhc_set_blk_size(sd_handle_t *pHsd, uint32_t blk_size);
-void        sdhc_set_block_count(sd_handle_t *pHsd, uint32_t blk_cnt);
-SDHC_STATUS sdhc_check_xfer_done(sd_handle_t *pHsd, uint32_t timeout_cnt);
-SDHC_STATUS sdhc_check_bus_idle(sd_handle_t *pHsd);
-SDHC_STATUS sdhc_get_capabilities(sd_handle_t *pHsd, uint32_t *phcaps);
-uint32_t    sdhc_get_response1(sd_handle_t *pHsd);
-uint32_t    sdhc_get_response2(sd_handle_t *pHsd);
-uint32_t    sdhc_get_response3(sd_handle_t *pHsd);
-uint32_t    sdhc_get_response4(sd_handle_t *pHsd);
-void        sdhc_config_default_intr(sd_handle_t *pHsd);
-void        sdhc_enable_irq(sd_handle_t *pHsd, uint16_t mask);
-void        sdhc_set_emmc_ctrl(sd_handle_t *pHsd, uint8_t value);
-uint32_t    sdhc_get_blk_size(sd_handle_t *pHsd);
-void        sdhc_set_led(sd_handle_t *pHsd, bool enable);
 
 #ifdef __cplusplus
 }
