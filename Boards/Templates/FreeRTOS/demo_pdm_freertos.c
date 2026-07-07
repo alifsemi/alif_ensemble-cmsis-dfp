@@ -237,72 +237,73 @@ static int32_t board_pdm_pins_config(void)
     int32_t status;
 
     /* channel 0_1 data line */
-    status = pinconf_set(PORT_(BOARD_PDM_D0_A_GPIO_PORT),
-                         BOARD_PDM_D0_A_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_D0_GPIO_PORT),
+                         BOARD_PDM_D0_GPIO_PIN,
+                         BOARD_PDM_D0_ALTERNATE_FUNCTION,
                          PADCTRL_READ_ENABLE);
     if (status) {
         return status;
     }
 
     /* channel 2_3 data line */
-    status = pinconf_set(PORT_(BOARD_PDM_D1_C_GPIO_PORT),
-                         BOARD_PDM_D1_C_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_4,
+    status = pinconf_set(PORT_(BOARD_PDM_D1_GPIO_PORT),
+                         BOARD_PDM_D1_GPIO_PIN,
+                         BOARD_PDM_D1_ALTERNATE_FUNCTION,
                          PADCTRL_READ_ENABLE);
     if (status) {
         return status;
     }
 
     /* channel 4_5 data line */
-    status = pinconf_set(PORT_(BOARD_PDM_D2_B_GPIO_PORT),
-                         BOARD_PDM_D2_B_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_D2_GPIO_PORT),
+                         BOARD_PDM_D2_GPIO_PIN,
+                         BOARD_PDM_D2_ALTERNATE_FUNCTION,
                          PADCTRL_READ_ENABLE);
+
     if (status) {
         return status;
     }
 
     /* channel 6_7 data line */
-    status = pinconf_set(PORT_(BOARD_PDM_D3_A_GPIO_PORT),
-                         BOARD_PDM_D3_A_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_D3_GPIO_PORT),
+                         BOARD_PDM_D3_GPIO_PIN,
+                         BOARD_PDM_D3_ALTERNATE_FUNCTION,
                          PADCTRL_READ_ENABLE);
     if (status) {
         return status;
     }
 
     /* Channel 0_1 clock line */
-    status = pinconf_set(PORT_(BOARD_PDM_C0_A_GPIO_PORT),
-                         BOARD_PDM_C0_A_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_C0_GPIO_PORT),
+                         BOARD_PDM_C0_GPIO_PIN,
+                         BOARD_PDM_C0_ALTERNATE_FUNCTION,
                          PADCTRL_DRIVER_DISABLED_HIGH_Z);
     if (status) {
         return status;
     }
 
     /* Channel 2_3 clock line */
-    status = pinconf_set(PORT_(BOARD_PDM_C1_C_GPIO_PORT),
-                         BOARD_PDM_C1_C_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_4,
+    status = pinconf_set(PORT_(BOARD_PDM_C1_GPIO_PORT),
+                         BOARD_PDM_C1_GPIO_PIN,
+                         BOARD_PDM_C1_ALTERNATE_FUNCTION,
                          PADCTRL_DRIVER_DISABLED_HIGH_Z);
     if (status) {
         return status;
     }
 
     /* Channel 4_5 clock line */
-    status = pinconf_set(PORT_(BOARD_PDM_C2_A_GPIO_PORT),
-                         BOARD_PDM_C2_A_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_C2_GPIO_PORT),
+                         BOARD_PDM_C2_GPIO_PIN,
+                         BOARD_PDM_C2_ALTERNATE_FUNCTION,
                          PADCTRL_DRIVER_DISABLED_HIGH_Z);
     if (status) {
         return status;
     }
 
     /* Channel 6_7 clock line */
-    status = pinconf_set(PORT_(BOARD_PDM_C3_A_GPIO_PORT),
-                         BOARD_PDM_C3_A_GPIO_PIN,
-                         PINMUX_ALTERNATE_FUNCTION_3,
+    status = pinconf_set(PORT_(BOARD_PDM_C3_GPIO_PORT),
+                         BOARD_PDM_C3_GPIO_PIN,
+                         BOARD_PDM_C3_ALTERNATE_FUNCTION,
                          PADCTRL_DRIVER_DISABLED_HIGH_Z);
     if (status) {
         return status;
