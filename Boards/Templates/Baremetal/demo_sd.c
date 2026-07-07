@@ -71,29 +71,27 @@ void sd_cb(uint16_t cmd_status, uint16_t xfer_status)
 extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
 
 /**
-  \fn           sd_reset_cb(void)
-  \brief        Perform SD reset sequence
+  \fn           sd_pwr_cb(uint8_t power_on)
+  \brief        SD power callback
+  \param[in]    power_on: 0=off, 1=on
   \return       none
   */
-void sd_reset_cb(void)
+void sd_pwr_cb(uint8_t power_on)
 {
     int              status;
-    ARM_DRIVER_GPIO *gpioSD_RST = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+    ARM_DRIVER_GPIO *gpioSD_PWR = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
 
-    status = gpioSD_RST->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
-    if (status != ARM_DRIVER_OK) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
-    }
-
-    sys_busy_loop_us(SDMMC_RESET_DELAY_US);
-
-    status = gpioSD_RST->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
-    if (status != ARM_DRIVER_OK) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
+    if (power_on) {
+        status = gpioSD_PWR->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
+        if (status != ARM_DRIVER_OK) {
+            SD_LOG_ERR("Failed to turn on SD power pin");
+        }
+    } else {
+        status = gpioSD_PWR->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
+        if (status != ARM_DRIVER_OK) {
+            SD_LOG_ERR("Failed to turn off SD power pin");
+        }
+        sys_busy_loop_us(SDMMC_RESET_DELAY_US);
     }
 
     return;
@@ -138,29 +136,21 @@ void BareMetalSDTest(uint32_t startSec, uint32_t EndSector)
 
     status = sd_rst_gpio->Initialize(BOARD_SD_RESET_GPIO_PIN, NULL);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to initialize SD RST GPIO\n");
-#endif
+        SD_LOG_ERR("Failed to initialize SD RST GPIO");
     }
 
     status = sd_rst_gpio->PowerControl(BOARD_SD_RESET_GPIO_PIN, ARM_POWER_FULL);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to powered full\n");
-#endif
+        SD_LOG_ERR("Failed to power SD RST GPIO");
     }
 
     status = sd_rst_gpio->SetDirection(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_DIRECTION_OUTPUT);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to configure\n");
-#endif
+        SD_LOG_ERR("Failed to configure SD RST GPIO direction");
     }
     status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
+        SD_LOG_ERR("Failed to set SD reset pin high");
     }
 
 #endif
@@ -219,9 +209,9 @@ void BareMetalSDTest(uint32_t startSec, uint32_t EndSector)
     sd_param.app_callback = sd_cb;
 
 #ifdef BOARD_SD_RESET_GPIO_PORT
-    sd_param.reset_cb     = sd_reset_cb;
+    sd_param.pwr_cb     = sd_pwr_cb;
 #else
-    sd_param.reset_cb     = 0;
+    sd_param.pwr_cb     = 0;
 #endif
 
     if (p_SD_Driver->disk_initialize(&sd_param)) {
@@ -234,7 +224,7 @@ void BareMetalSDTest(uint32_t startSec, uint32_t EndSector)
 
         dma_done_irq = 0;  // clear dma done callback status
 
-        if (p_SD_Driver->disk_read(startSec, 1, sdbuffer) != SD_DRV_STATUS_OK) {
+        if (p_SD_Driver->disk_read(startSec, 1, (volatile uint8_t *) sdbuffer) != SD_DRV_STATUS_OK) {
             continue;
         }
 
@@ -253,7 +243,7 @@ void BareMetalSDTest(uint32_t startSec, uint32_t EndSector)
             j += 4;
         }
 
-        if (p_SD_Driver->disk_write(startSec, 1, sdbuffer) != SD_DRV_STATUS_OK) {
+        if (p_SD_Driver->disk_write(startSec, 1, (volatile uint8_t *) sdbuffer) != SD_DRV_STATUS_OK) {
             printf("Unable to write Back sector: %" PRIu32 "\n", startSec);
         }
         startSec++;

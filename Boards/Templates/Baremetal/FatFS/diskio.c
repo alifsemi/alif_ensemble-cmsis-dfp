@@ -13,7 +13,9 @@
 #include "stdio.h"
 #include "board_config.h"
 #include "app_utils.h"
-#ifdef BOARD_SD_RESET_GPIO_PORT
+#if defined(BOARD_SD_RESET_GPIO_PORT) || \
+    defined(BOARD_SD_CARD_DETECT_GPIO_PORT) || \
+    defined(BOARD_SD_VSEL_GPIO_PORT)
 #include "Driver_IO.h"
 #endif
 
@@ -37,35 +39,74 @@ void              sd_cb(uint16_t cmd_status, uint16_t xfer_status)
 }
 
 /**
- * \fn           sd_reset(void)
- * \brief        Perform SD reset sequence
+ * \fn           sd_pwr(uint8_t power_on)
+ * \brief        Perform SD power sequence
  * \return       none
  */
 #ifdef BOARD_SD_RESET_GPIO_PORT
 extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
-void sd_reset_cb(void)
+void sd_pwr_cb(uint8_t power_on)
 {
     int status;
 
-    ARM_DRIVER_GPIO *sd_rst_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+    ARM_DRIVER_GPIO *sd_pwr_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
 
-    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
-    if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
-    }
-
-    sys_busy_loop_us(SDMMC_RESET_DELAY_US);
-
-    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
-    if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
+    if (power_on) {
+        status = sd_pwr_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
+        if (status) {
+            SD_LOG_ERR("Failed to turn on SD power pin");
+        }
+    } else {
+        status = sd_pwr_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
+        if (status) {
+            SD_LOG_ERR("Failed to turn off SD power pin");
+        }
+        sys_busy_loop_us(SDMMC_RESET_DELAY_US);
     }
 
     return;
+}
+#endif
+
+/**
+ * \fn           sd_card_det_cb(void)
+ * \brief        Check SD card detect GPIO
+ * \return       1 if card present, 0 if not
+ */
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_CARD_DETECT_GPIO_PORT);
+int sd_card_det_cb(void)
+{
+    uint32_t pin_state;
+    ARM_DRIVER_GPIO *cd_gpio = &ARM_Driver_GPIO_(BOARD_SD_CARD_DETECT_GPIO_PORT);
+
+    cd_gpio->GetValue(BOARD_SD_CARD_DETECT_GPIO_PIN, &pin_state);
+
+    /* Card detect: pin state 0 = card present (active low) */
+    return (pin_state == 0) ? 1 : 0;
+}
+#endif
+
+/**
+ * \fn           sd_vsel_cb(uint8_t voltage)
+ * \brief        Set SD VSEL GPIO for voltage selection
+ * \param[in]    voltage: 0 = 3.3V, 1 = 1.8V
+ * \return       none
+ */
+#ifdef BOARD_SD_VSEL_GPIO_PORT
+extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_VSEL_GPIO_PORT);
+void sd_vsel_cb(uint8_t voltage)
+{
+    int status;
+    ARM_DRIVER_GPIO *vsel_gpio = &ARM_Driver_GPIO_(BOARD_SD_VSEL_GPIO_PORT);
+
+    /* VSEL: 0 = 3.3V, 1 = 1.8V */
+    status = vsel_gpio->SetValue(BOARD_SD_VSEL_GPIO_PIN, voltage ? GPIO_PIN_OUTPUT_STATE_HIGH : GPIO_PIN_OUTPUT_STATE_LOW);
+    if (status) {
+        SD_LOG_ERR("Failed to set SD VSEL pin to %d", voltage);
+    }
+
+    SD_LOG_DBG("SD VSEL set to %s", voltage ? "1.8V" : "3.3V");
 }
 #endif
 
@@ -77,6 +118,12 @@ DSTATUS disk_status(BYTE pdrv /* Physical drive number to identify the drive */
 )
 {
     ARG_UNUSED(pdrv);
+
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+    if (!sdhc_card_present(&Hsd, sd_card_det_cb)) {
+        return STA_NODISK;
+    }
+#endif
 
     return RES_OK;
 }
@@ -94,36 +141,72 @@ DSTATUS disk_initialize(BYTE drivenum)  // FATFS *p_sd_card, char *MEDIA_NAME, v
     ARG_UNUSED(drivenum);
 
 #ifdef BOARD_SD_RESET_GPIO_PORT
-    ARM_DRIVER_GPIO *sd_rst_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
+    ARM_DRIVER_GPIO *sd_pwr_gpio = &ARM_Driver_GPIO_(BOARD_SD_RESET_GPIO_PORT);
 
-    status = sd_rst_gpio->Initialize(BOARD_SD_RESET_GPIO_PIN, NULL);
+    status = sd_pwr_gpio->Initialize(BOARD_SD_RESET_GPIO_PIN, NULL);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to initialize SD RST GPIO\n");
-#endif
+        SD_LOG_ERR("Failed to initialize SD PWR GPIO");
     }
 
-    status = sd_rst_gpio->PowerControl(BOARD_SD_RESET_GPIO_PIN, ARM_POWER_FULL);
+    status = sd_pwr_gpio->PowerControl(BOARD_SD_RESET_GPIO_PIN, ARM_POWER_FULL);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to powered full\n");
-#endif
+        SD_LOG_ERR("Failed to power SD PWR GPIO");
     }
 
-    status = sd_rst_gpio->SetDirection(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_DIRECTION_OUTPUT);
+    status = sd_pwr_gpio->SetDirection(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_DIRECTION_OUTPUT);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to configure\n");
-#endif
+        SD_LOG_ERR("Failed to configure SD PWR GPIO direction");
     }
 
-    status = sd_rst_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
+    status = sd_pwr_gpio->SetValue(BOARD_SD_RESET_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_HIGH);
     if (status) {
-#ifdef SDMMC_PRINT_ERR
-        printf("ERROR: Failed to toggle sd reset pin\n");
-#endif
+        SD_LOG_ERR("Failed to set SD power pin high");
     }
 
+#endif
+
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+    ARM_DRIVER_GPIO *cd_gpio = &ARM_Driver_GPIO_(BOARD_SD_CARD_DETECT_GPIO_PORT);
+
+    status = cd_gpio->Initialize(BOARD_SD_CARD_DETECT_GPIO_PIN, NULL);
+    if (status) {
+        SD_LOG_ERR("Failed to initialize SD CD GPIO");
+    }
+
+    status = cd_gpio->PowerControl(BOARD_SD_CARD_DETECT_GPIO_PIN, ARM_POWER_FULL);
+    if (status) {
+        SD_LOG_ERR("Failed to power SD CD GPIO");
+    }
+
+    status = cd_gpio->SetDirection(BOARD_SD_CARD_DETECT_GPIO_PIN, GPIO_PIN_DIRECTION_INPUT);
+    if (status) {
+        SD_LOG_ERR("Failed to configure SD CD GPIO direction");
+    }
+#endif
+
+#ifdef BOARD_SD_VSEL_GPIO_PORT
+    ARM_DRIVER_GPIO *vsel_gpio = &ARM_Driver_GPIO_(BOARD_SD_VSEL_GPIO_PORT);
+
+    status = vsel_gpio->Initialize(BOARD_SD_VSEL_GPIO_PIN, NULL);
+    if (status) {
+        SD_LOG_ERR("Failed to initialize SD VSEL GPIO");
+    }
+
+    status = vsel_gpio->PowerControl(BOARD_SD_VSEL_GPIO_PIN, ARM_POWER_FULL);
+    if (status) {
+        SD_LOG_ERR("Failed to power SD VSEL GPIO");
+    }
+
+    status = vsel_gpio->SetDirection(BOARD_SD_VSEL_GPIO_PIN, GPIO_PIN_DIRECTION_OUTPUT);
+    if (status) {
+        SD_LOG_ERR("Failed to configure SD VSEL GPIO direction");
+    }
+
+    /* Default to 3.3V */
+    status = vsel_gpio->SetValue(BOARD_SD_VSEL_GPIO_PIN, GPIO_PIN_OUTPUT_STATE_LOW);
+    if (status) {
+        SD_LOG_ERR("Failed to set SD VSEL to 3.3V");
+    }
 #endif
 
     sd_param.dev_id       = SDMMC_DEV_ID;
@@ -133,9 +216,19 @@ DSTATUS disk_initialize(BYTE drivenum)  // FATFS *p_sd_card, char *MEDIA_NAME, v
     sd_param.app_callback = sd_cb;
 
 #ifdef BOARD_SD_RESET_GPIO_PORT
-    sd_param.reset_cb     = sd_reset_cb;
+    sd_param.pwr_cb     = sd_pwr_cb;
 #else
-    sd_param.reset_cb     = 0;
+    sd_param.pwr_cb     = 0;
+#endif
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+    sd_param.card_det_cb = sd_card_det_cb;
+#else
+    sd_param.card_det_cb = 0;
+#endif
+#ifdef BOARD_SD_VSEL_GPIO_PORT
+    sd_param.vsel_cb = sd_vsel_cb;
+#else
+    sd_param.vsel_cb = 0;
 #endif
 
     status                = p_SD_Driver->disk_initialize(&sd_param);
@@ -164,7 +257,7 @@ DRESULT disk_read(BYTE  pdrv,   /* Physical drive number to identify the drive *
 
     dma_done_irq = 0;
 
-    if (p_SD_Driver->disk_read(sector, count, buff)) {
+    if (p_SD_Driver->disk_read(sector, count, (volatile uint8_t *) buff)) {
         return RES_ERROR;
 	}
 
@@ -203,7 +296,7 @@ DRESULT disk_write(BYTE        pdrv,   /* Physical drive number to identify the 
         res = RES_ERROR;
     }
 
-    uint32_t timeout = 1000000; // Max write Delay 1sec
+    uint32_t timeout = 100000; // Max write Delay 1sec
 
     while (!dma_done_irq && timeout--) {
         sys_busy_loop_us(10);
