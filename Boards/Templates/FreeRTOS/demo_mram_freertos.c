@@ -98,8 +98,8 @@ static ARM_DRIVER_MRAM *MRAM_drv = &Driver_MRAM;
 
 void MRAM_Thread_entry(void *pvParameters);
 
-/* Valid MRAM address-offset. */
-#define MRAM_ADDR_OFFSET (0x100000)
+/* Valid MRAM address-offset starting from APP_MRAM_USER_BASE. */
+#define MRAM_ADDR_OFFSET (0x0)
 
 /* Buffer size and value which needs to write to MRAM. */
 #define BUFFER_SIZE      0x1000 /* any random size.(for demo purpose size taken as 4KB) */
