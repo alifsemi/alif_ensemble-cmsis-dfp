@@ -84,27 +84,16 @@ static void i3c_read_rx_fifo(I3C_Type *i3c, uint8_t *bytes, uint32_t nbytes)
 */
 static void i3c_set_tx_buf_thld(I3C_Type *i3c, const uint16_t len)
 {
-    uint16_t loc_len = (len / 4);
-    uint8_t  rem     = (len % 4);
+    uint8_t thld;
+
     uint32_t temp =
         (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk));
 
-    /* In DMA mode the threshold is forced to 0 so the peripheral
-     * request line asserts on any FIFO occupancy. A length-scaled
-     * threshold would starve short-after-long TX sequences (the
-     * FIFO would never reach the previous transfer's threshold)
-     */
-    if (!i3c_is_dma_enable(i3c) && len > 4) {
-        if (rem) {
-            /* Set 1 extra location */
-            temp |= (((loc_len + 1) << I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos) &
-                     I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk);
-        } else {
-            /* Set actual number of locations */
-            temp |= ((loc_len << I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos) &
-                     I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk);
-        }
-    }
+    thld = i3c_get_buflen_to_threshold(len);
+
+    /* Set the calculated threshold */
+    temp |= ((thld << I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos) &
+                      I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk);
 
     i3c->I3C_DATA_BUFFER_THLD_CTRL = temp;
 }
@@ -119,24 +108,15 @@ static void i3c_set_tx_buf_thld(I3C_Type *i3c, const uint16_t len)
 */
 static void i3c_set_rx_buf_thld(I3C_Type *i3c, const uint16_t len)
 {
-    uint16_t loc_len = (len / 4);
-    uint8_t  rem     = (len % 4);
+    uint8_t thld;
+
     uint32_t temp = (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk));
 
-    /* In DMA mode the threshold is forced to 0 so partial data on
-     * early termination reaches the buffer — a length-scaled
-     * threshold would trap short reads in the FIFO because the level
-     * never crosses the previous transfer's threshold
-     */
-    if (!i3c_is_dma_enable(i3c) && len > 4) {
-        if (rem) {
-            temp |= (((loc_len + 1) << I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Pos) &
-                     I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk);
-        } else {
-            temp |= ((loc_len << I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Pos) &
-                     I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk);
-        }
-    }
+    thld  = i3c_get_buflen_to_threshold(len);
+
+    /* Set the calculated threshold */
+    temp |= ((thld << I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Pos) &
+                      I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk);
 
     i3c->I3C_DATA_BUFFER_THLD_CTRL = temp;
 }

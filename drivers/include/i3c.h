@@ -20,6 +20,7 @@ extern "C" {
 
 /* common helpers */
 #define BIT(nr)                            (1UL << (nr))
+#define TOTAL_BITS(x)                      (sizeof(x) * 8)
 
 #define GENMASK(h, l)                      (((~(0U)) - ((1U) << (l)) + 1) & (~(0U) >> (32 - 1 - (h))))
 
@@ -192,6 +193,7 @@ extern "C" {
 #define I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos 0U
 #define I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk                                            \
     GENMASK(2, I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos)
+#define I3C_DATA_BUFFER_THLD_CTRL_MAX_THLD        0x5
 
 #define I3C_IBI_QUEUE_CTRL_NOTIFY_SIR_REJECTED    (1U << 3U)
 #define I3C_IBI_QUEUE_CTRL_NOTIFY_MR_REJECTED     (1U << 1U)
@@ -885,6 +887,45 @@ static inline uint8_t i3c_get_rx_buf_thld(I3C_Type *i3c)
     }
 
     return rx_thld_val;
+}
+
+/**
+  \fn          uint8_t i3c_get_buflen_to_threshold(uint16_t buflen)
+  \brief       Get buffer threshold for buffer length (in bytes)
+  \            Each entry is of 4 bytes.
+  \param[in]   bytes  Length of data in bytes
+  \return      Buffer thresold value
+*/
+static inline uint8_t i3c_get_buflen_to_threshold(uint16_t buflen)
+{
+    uint8_t threshold = 0;
+    uint8_t pos = TOTAL_BITS(buflen) - 1;
+
+    /* As per DW I3C Datasheet:
+     * threshold = 1 entry when bytes = 16 (4th bit),
+     * threshold = 2 entries when bytes = 32 (5th bit),
+     * threshold = 3 entries when bytes = 64 (6th bit) .. continues
+     */
+    while (pos > 3) {
+        /* Iterate from last bit till 4th bit to find the MSB */
+        if (buflen & BIT(pos)) {
+            threshold = pos;
+            break;
+        } else {
+            pos--;
+        }
+    }
+
+    if (threshold) {
+        /* The valid threshold is from bit 4*/
+        threshold -= 3;
+
+        if (threshold > I3C_DATA_BUFFER_THLD_CTRL_MAX_THLD) {
+            threshold = I3C_DATA_BUFFER_THLD_CTRL_MAX_THLD;
+        }
+    }
+
+    return threshold;
 }
 
 /**
