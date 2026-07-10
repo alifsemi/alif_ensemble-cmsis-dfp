@@ -140,8 +140,8 @@
 /* single shot conversion scan use ARM_ADC_SINGLE_SHOT_CH_CONV*/
 /* continuous conversion scan use ARM_ADC_CONTINOUS_CH_CONV */
 
-#define ADC_CONVERSION                 ARM_ADC_SINGLE_SHOT_CH_CONV
-// #define ADC_CONVERSION    ARM_ADC_CONTINOUS_CH_CONV
+//#define ADC_CONVERSION    ARM_ADC_SINGLE_SHOT_CH_CONV
+#define ADC_CONVERSION    ARM_ADC_CONTINOUS_CH_CONV
 
 /* For rotating through one channel use ARM_ADC_FIXED_CHANNEL_SCAN */
 /* For continuous rotating through all channel use ARM_ADC_MULTIPLE_CHANNEL_SCAN*/
@@ -149,8 +149,8 @@
 /* @note : When conversion is selected ARM_ADC_CH_SINGLE_SHOT_SCAN
  *         ADC_SCAN should be in ARM_ADC_SINGLE_CH_SCAN
  * */
-#define ADC_SCAN                       ARM_ADC_SINGLE_CH_SCAN
-// #define ADC_SCAN       ARM_ADC_MULTIPLE_CH_SCAN
+#define ADC_SCAN       ARM_ADC_SINGLE_CH_SCAN
+//#define ADC_SCAN       ARM_ADC_MULTIPLE_CH_SCAN
 
 /* Macro */
 #define ADC_12                         1
@@ -171,21 +171,68 @@ extern ARM_DRIVER_ADC  Driver_ADC24;
 static ARM_DRIVER_ADC *ADCdrv = &Driver_ADC24;
 #endif
 
+/* Buffer element type. Buffers hold raw ADC_SAMPLE_REG_ values
+ * including any hardware-averaging accumulation, so uint32_t fits
+ * both ADC12 and ADC24 instances. SAMPLES_PER_BUFFER below is the
+ * buffer capacity in samples; the driver reports the same value
+ * back in the BUF_A/BUF_B event.
+ */
+typedef uint32_t             app_sample_t;
+#define APP_SAMPLE_FMT               " 0x%08" PRIX32 /* 11 chars per column */
+#define APP_HDR_FMT                  "        CH%u"  /* 11 chars per column */
+#if (ADC_INSTANCE == ADC_12)
+#define ADC_TOTAL_CH                 9U   /* CH0..CH8 */
+#else
+#define ADC_TOTAL_CH                 4U   /* CH0..CH3 */
+#endif
+
 #define COMP_A_THLD_VALUE (0X00) /* Comparator A threshold value */
 #define COMP_B_THLD_VALUE (0x00) /* Comparator B threshold value */
-#define MASK_CHANNEL                                                                               \
-    (ARM_ADC_MASK_CHANNEL_2 | ARM_ADC_MASK_CHANNEL_4) /* Masking particular channels  */
+#define MASK_CHANNEL      (ARM_ADC_MASK_CHANNEL_6 | ARM_ADC_MASK_CHANNEL_7 | \
+    ARM_ADC_MASK_CHANNEL_8) /* Masking particular channels  */
 
-#define MAX_NUM_THRESHOLD (6)
-#define NUM_CHANNELS      (8)
+#define MAX_NUM_THRESHOLD    (6)
+
+/* Sweep width is derived from the enabled channels: 1 in
+ * SINGLE_CH_SCAN, or (total - masked) in MULTIPLE_CH_SCAN.
+ */
+#define ADC_POPCNT_16(x)                                                                 \
+    ((((x) >>  0) & 1U) + (((x) >>  1) & 1U) + (((x) >>  2) & 1U) + (((x) >>  3) & 1U) + \
+     (((x) >>  4) & 1U) + (((x) >>  5) & 1U) + (((x) >>  6) & 1U) + (((x) >>  7) & 1U) + \
+     (((x) >>  8) & 1U) + (((x) >>  9) & 1U) + (((x) >> 10) & 1U) + (((x) >> 11) & 1U) + \
+     (((x) >> 12) & 1U) + (((x) >> 13) & 1U) + (((x) >> 14) & 1U) + (((x) >> 15) & 1U))
+
+#if (ADC_SCAN == ARM_ADC_SINGLE_CH_SCAN)
+#define SAMPLES_PER_SWEEP    1U
+#else
+#define SAMPLES_PER_SWEEP                                                                \
+    (ADC_TOTAL_CH - ADC_POPCNT_16(MASK_CHANNEL & ((1U << ADC_TOTAL_CH) - 1U)))
+#endif
 
 /* store comparator result */
 uint32_t comp_value[MAX_NUM_THRESHOLD] = {0};
 
-/* Demo purpose adc_sample*/
-uint32_t adc_sample[NUM_CHANNELS];
+#if (ADC_CONVERSION == ARM_ADC_CONTINOUS_CH_CONV)
+/* Ping-pong buffers for the StartN API. */
+#define SWEEPS_PER_BUFFER    (100)
+#define SAMPLES_PER_BUFFER   (SAMPLES_PER_SWEEP * SWEEPS_PER_BUFFER)
+#define BUFFERS_TO_COLLECT   (2)
 
-volatile uint32_t num_samples;
+static app_sample_t buf_a[SAMPLES_PER_BUFFER];
+static app_sample_t buf_b[SAMPLES_PER_BUFFER];
+
+/* Written from the ISR-context callback; read by the main loop. */
+static volatile uint32_t   buffers_filled;
+static volatile uint32_t   samples_per_buf_filled;
+static volatile bool       capture_stopped;
+static volatile uint32_t   stopped_partial;
+#endif
+
+#if (ADC_CONVERSION == ARM_ADC_SINGLE_SHOT_CH_CONV)
+/* Per-channel sample slot filled by the CONVERSION_COMPLETE callback. */
+static app_sample_t       adc_sample[ADC_TOTAL_CH];
+static volatile uint32_t  num_samples;
+#endif
 
 #if (!USE_CONDUCTOR_TOOL_PINS_CONFIG)
 /**
@@ -384,12 +431,40 @@ static int32_t board_adc_pins_config(void)
  */
 static void adc_conversion_callback(uint32_t event, uint8_t channel, uint32_t sample_output)
 {
+#if (ADC_CONVERSION == ARM_ADC_SINGLE_SHOT_CH_CONV)
     if (event & ARM_ADC_EVENT_CONVERSION_COMPLETE) {
-        num_samples         += 1;
-
-        /* Store the value for the respected channels */
-        adc_sample[channel]  = sample_output;
+        if (channel < ADC_TOTAL_CH) {
+            adc_sample[channel] = (app_sample_t) sample_output;
+        }
+        num_samples += 1U;
     }
+#endif
+
+#if (ADC_CONVERSION == ARM_ADC_CONTINOUS_CH_CONV)
+    (void) channel;
+
+    if (event & (ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A |
+                 ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B)) {
+        /* `sample_output` carries the actual samples-per-buffer count
+         * (may be less than the buffer's slot capacity when the driver
+         * has to stage encoded samples). Stop from the callback so the
+         * next-buffer restart is skipped and both buffers stay pristine
+         * when the main loop reads them.
+         */
+        samples_per_buf_filled = sample_output;
+        buffers_filled += 1U;
+        if (buffers_filled >= BUFFERS_TO_COLLECT) {
+            (void) ADCdrv->Stop();
+        }
+    }
+    if (event & ARM_ADC_EVENT_CONTINUOUS_CONV_STOPPED) {
+        /* Fired for both app-initiated Stop() and any abort. `value`
+         * (sample_output) carries the partial-buffer sample count.
+         */
+        stopped_partial = sample_output;
+        capture_stopped = true;
+    }
+#endif
     if (event & ARM_ADC_COMPARATOR_THRESHOLD_ABOVE_A) {
         comp_value[0] += 1;
     }
@@ -503,6 +578,13 @@ void ADC_demo()
     }
 
     if (ADC_SCAN == ARM_ADC_SINGLE_CH_SCAN) {
+        /* set sequencer controller */
+        ret = ADCdrv->Control(ARM_ADC_SEQUENCER_CTRL, ARM_ADC_SINGLE_CH_SCAN);
+        if (ret != ARM_DRIVER_OK) {
+            printf("\r\n Error: ADC sequencer controller failed\n");
+            goto error_poweroff;
+        }
+
         /* set channel */
         ret = ADCdrv->Control(ARM_ADC_CHANNEL_INIT_VAL, ARM_ADC_CHANNEL_0);
         if (ret != ARM_DRIVER_OK) {
@@ -554,33 +636,129 @@ void ADC_demo()
         goto error_poweroff;
     }
 
-    printf(">>> Allocated memory buffer Address is 0x%" PRIx32 " <<<\n", (uint32_t) adc_sample);
-    /* Start ADC */
+#if (ADC_CONVERSION == ARM_ADC_SINGLE_SHOT_CH_CONV)
+    printf(">>> Single-shot capture: %u sample(s) <<<\n",
+           (unsigned int) SAMPLES_PER_SWEEP);
+
     ret = ADCdrv->Start();
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: ADC Start failed\n");
         goto error_poweroff;
     }
 
-    /* wait for timeout */
-    if (ADC_CONVERSION == ARM_ADC_CONTINOUS_CH_CONV) {
-        while (num_samples < 1000) {
-        }
-    } else {
-        /* single shot conversion */
-        while (num_samples < 1) {
-        }
+    while (num_samples < SAMPLES_PER_SWEEP) {
     }
 
-    /* Stop ADC */
-    ret = ADCdrv->Stop();
+    (void) ADCdrv->Stop();
+
+    printf("\n--- Single-shot samples ---\n");
+    printf("  ");
+#if (ADC_SCAN == ARM_ADC_SINGLE_CH_SCAN)
+    printf(APP_HDR_FMT, 0U);
+    printf("\n  ");
+    printf(APP_SAMPLE_FMT, adc_sample[0]);
+    printf("\n");
+#else
+    for (uint32_t ch = 0U; ch < ADC_TOTAL_CH; ch++) {
+        if (MASK_CHANNEL & (1U << ch)) {
+            continue;
+        }
+        printf(APP_HDR_FMT, (unsigned int) ch);
+    }
+    printf("\n  ");
+    for (uint32_t ch = 0U; ch < ADC_TOTAL_CH; ch++) {
+        if (MASK_CHANNEL & (1U << ch)) {
+            continue;
+        }
+        printf(APP_SAMPLE_FMT, adc_sample[ch]);
+    }
+    printf("\n");
+#endif
+#endif /* ARM_ADC_SINGLE_SHOT_CH_CONV */
+
+#if (ADC_CONVERSION == ARM_ADC_CONTINOUS_CH_CONV)
+    printf(">>> Ping-pong buffers: buf_a=0x%" PRIx32 " buf_b=0x%" PRIx32
+           " (%d slots each) <<<\n",
+           (uint32_t) buf_a, (uint32_t) buf_b, SAMPLES_PER_BUFFER);
+
+    /* Arm both ping-pong buffers; driver flips between them and fires
+     * BUF_A / BUF_B events without pausing the sequencer.
+     */
+    ret = ADCdrv->StartN(buf_a, buf_b, SAMPLES_PER_BUFFER);
     if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: ADC Stop failed\n");
+        printf("\r\n Error: ADC StartN failed\n");
         goto error_poweroff;
     }
 
-    printf("\n >>> ADC conversion completed \n");
-    printf(" Converted value are stored in user allocated memory address.\n");
+    /* Wait until both ping-pong buffers have been filled. Stop is issued
+     * from the callback when the second buffer completes. Bail out early
+     * if the driver reports STOPPED (Stop() acked, or any abort).
+     */
+    while (!capture_stopped && buffers_filled < BUFFERS_TO_COLLECT) {
+    }
+
+    if (capture_stopped && buffers_filled < BUFFERS_TO_COLLECT) {
+        printf("\r\n ADC capture stopped early after %u buffers, %" PRIu32
+               " partial samples\n",
+               (unsigned int) buffers_filled, stopped_partial);
+        goto error_poweroff;
+    }
+
+    /* Buffers are sweep-interleaved: SAMPLES_PER_SWEEP columns per row,
+     * one row per sweep. Channel order matches the sequencer (unmasked
+     * channels in ascending order for MULTIPLE_CH_SCAN). The actual
+     * samples-per-buffer count comes from the callback event
+     */
+    uint32_t sweeps_in_buf = samples_per_buf_filled / SAMPLES_PER_SWEEP;
+    uint32_t head_sweeps   = (sweeps_in_buf < 4U) ? sweeps_in_buf : 4U;
+    uint32_t tail_start    = (sweeps_in_buf > 8U) ? (sweeps_in_buf - 4U)
+                                                  : head_sweeps;
+
+    for (uint32_t b = 0U; b < BUFFERS_TO_COLLECT; b++) {
+        app_sample_t *buf = (b == 0U) ? buf_a : buf_b;
+
+        printf("\n--- Buffer %s (%" PRIu32 " samples: first %u + last %u sweeps) ---\n",
+               (b == 0U) ? "A" : "B",
+               samples_per_buf_filled,
+               (unsigned int) head_sweeps,
+               (unsigned int) (sweeps_in_buf - tail_start));
+        printf("  Sweep");
+#if (ADC_SCAN == ARM_ADC_SINGLE_CH_SCAN)
+        printf(APP_HDR_FMT, 0U);
+#else
+        for (uint32_t ch = 0U; ch < ADC_TOTAL_CH; ch++) {
+            if (MASK_CHANNEL & (1U << ch)) {
+                continue;
+            }
+            printf(APP_HDR_FMT, (unsigned int) ch);
+        }
+#endif
+        printf("\n");
+
+        for (uint32_t s = 0U; s < head_sweeps; s++) {
+            uint32_t off = s * SAMPLES_PER_SWEEP;
+
+            printf(" [%3u] ", (unsigned int) s);
+            for (uint32_t c = 0U; c < SAMPLES_PER_SWEEP; c++) {
+                printf(APP_SAMPLE_FMT, buf[off + c]);
+            }
+            printf("\n");
+        }
+        if (tail_start > head_sweeps) {
+            printf("   ...\n");
+            for (uint32_t s = tail_start; s < sweeps_in_buf; s++) {
+                uint32_t off = s * SAMPLES_PER_SWEEP;
+
+                printf(" [%3u] ", (unsigned int) s);
+                for (uint32_t c = 0U; c < SAMPLES_PER_SWEEP; c++) {
+                    printf(APP_SAMPLE_FMT, buf[off + c]);
+                }
+                printf("\n");
+            }
+        }
+    }
+#endif /* ARM_ADC_CONTINOUS_CH_CONV */
+
     printf("\n ---END--- \r\n wait forever >>> \n");
     WAIT_FOREVER_LOOP
 
