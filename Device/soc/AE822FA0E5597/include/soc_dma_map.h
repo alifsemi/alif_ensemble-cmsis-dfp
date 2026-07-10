@@ -53,21 +53,21 @@ extern "C" {
 
 #if RTE_ADC120_SELECT_DMA0
 #define ADC120_DMA                  0
-#define ADC120_DMA_DONE1_PERIPH_REQ 4
+#define ADC120_DMA_DONE0_PERIPH_REQ 4
 #define ADC120_DMA_GROUP            0
 #define ADC120_DMA_HANDSHAKE_ENABLE 0
 #endif
 
 #if RTE_ADC121_SELECT_DMA0
 #define ADC121_DMA                  0
-#define ADC121_DMA_DONE1_PERIPH_REQ 5
+#define ADC121_DMA_DONE0_PERIPH_REQ 5
 #define ADC121_DMA_GROUP            0
 #define ADC121_DMA_HANDSHAKE_ENABLE 0
 #endif
 
 #if RTE_ADC122_SELECT_DMA0
 #define ADC122_DMA                  0
-#define ADC122_DMA_DONE1_PERIPH_REQ 6
+#define ADC122_DMA_DONE0_PERIPH_REQ 6
 #define ADC122_DMA_GROUP            0
 #define ADC122_DMA_HANDSHAKE_ENABLE 0
 #endif
@@ -632,21 +632,21 @@ extern "C" {
 
 #if (!RTE_ADC120_SELECT_DMA0)
 #define ADC120_DMA                  2
-#define ADC120_DMA_DONE1_PERIPH_REQ 4
+#define ADC120_DMA_DONE0_PERIPH_REQ 4
 #define ADC120_DMA_GROUP            0
 #define ADC120_DMA_HANDSHAKE_ENABLE 0
 #endif
 
 #if (!RTE_ADC121_SELECT_DMA0)
 #define ADC121_DMA                  2
-#define ADC121_DMA_DONE1_PERIPH_REQ 5
+#define ADC121_DMA_DONE0_PERIPH_REQ 5
 #define ADC121_DMA_GROUP            0
 #define ADC121_DMA_HANDSHAKE_ENABLE 0
 #endif
 
 #if (!RTE_ADC122_SELECT_DMA0)
 #define ADC122_DMA                  2
-#define ADC122_DMA_DONE1_PERIPH_REQ 6
+#define ADC122_DMA_DONE0_PERIPH_REQ 6
 #define ADC122_DMA_GROUP            0
 #define ADC122_DMA_HANDSHAKE_ENABLE 0
 #endif

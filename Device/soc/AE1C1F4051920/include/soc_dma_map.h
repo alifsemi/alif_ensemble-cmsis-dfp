@@ -39,12 +39,12 @@ extern "C" {
 #define AHI_UART_DMA_HANDSHAKE_ENABLE        1
 
 #define ADC120_DMA                           2
-#define ADC120_DMA_DONE1_PERIPH_REQ          4
+#define ADC120_DMA_DONE0_PERIPH_REQ          4
 #define ADC120_DMA_GROUP                     0
 #define ADC120_DMA_HANDSHAKE_ENABLE          0
 
 #define ADC121_DMA                           2
-#define ADC121_DMA_DONE1_PERIPH_REQ          5
+#define ADC121_DMA_DONE0_PERIPH_REQ          5
 #define ADC121_DMA_GROUP                     0
 #define ADC121_DMA_HANDSHAKE_ENABLE          0
 
