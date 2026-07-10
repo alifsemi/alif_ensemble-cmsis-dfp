@@ -53,6 +53,7 @@ typedef struct _ADC_RESOURCES {
     uint32_t  pga_value;                /* ADC Programmable gain amplifier(PGA)                 */
     uint32_t  bias;                     /* ADC24 bias control value                             */
     uint32_t  output_rate;              /* ADC24 output rate                                    */
+    uint32_t  active_channels;          /* Enabled-channels bitfield                            */
 } ADC_RESOURCES;
 
 #endif /* DRIVER_ADC_PRIVATE_H_ */

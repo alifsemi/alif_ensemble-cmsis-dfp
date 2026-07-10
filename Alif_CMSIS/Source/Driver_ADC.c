@@ -60,6 +60,21 @@ static int32_t ADC_Initialize(ADC_RESOURCES *ADC, ARM_ADC_SignalEvent_t cb_event
     /* User call back Event */
     ADC->cb_event  = cb_event;
 
+    /* active_channels default mirrors the hardware reset state. */
+    if (ADC->drv_instance == ADC_INSTANCE_ADC24_0) {
+        ADC->active_channels = (1UL << ADC24_MAX_DIFFERENTIAL_CHANNEL) - 1UL;
+    } else {
+        ADC->active_channels = 0xFFUL;
+    }
+
+    /* No StartN buffer armed yet. */
+    ADC->conv.buf_a           = NULL;
+    ADC->conv.buf_b           = NULL;
+    ADC->conv.active_buf      = NULL;
+    ADC->conv.samples_per_buf = 0U;
+    ADC->conv.buffer_idx      = 0U;
+    ADC->conv.active_buf_idx  = 0U;
+
     /* Setting flag to initialize */
     ADC->state    |= ADC_FLAG_DRV_INIT_DONE;
 
@@ -92,6 +107,14 @@ static int32_t ADC_Uninitialize(ADC_RESOURCES *ADC)
 
     /* Reset last read channel */
     ADC->conv.read_channel = 0;
+
+    /* Drop any StartN buffer registration */
+    ADC->conv.buf_a           = NULL;
+    ADC->conv.buf_b           = NULL;
+    ADC->conv.active_buf      = NULL;
+    ADC->conv.samples_per_buf = 0U;
+    ADC->conv.buffer_idx      = 0U;
+    ADC->conv.active_buf_idx  = 0U;
 
     /* flags */
     ADC->state             = 0;
@@ -325,6 +348,9 @@ static int32_t ADC_Start(ADC_RESOURCES *ADC)
  */
 static int32_t ADC_Stop(ADC_RESOURCES *ADC)
 {
+    uint32_t partial;
+    bool     was_capturing;
+
     /* Check Power done or not */
     if (!(ADC->state & ADC_FLAG_DRV_POWER_DONE)) {
         return ARM_DRIVER_ERROR;
@@ -345,7 +371,125 @@ static int32_t ADC_Stop(ADC_RESOURCES *ADC)
         }
     }
 
+    /* Snapshot ping-pong state: if a StartN capture was in progress,
+     * report the partial count and drop the buffer registration
+     * so future stores are locked out.
+     */
+    was_capturing = (ADC->conv.active_buf != NULL) ||
+                    (ADC->conv.buf_a != NULL);
+    partial       = ADC->conv.buffer_idx;
+
+    ADC->conv.buf_a           = NULL;
+    ADC->conv.buf_b           = NULL;
+    ADC->conv.active_buf      = NULL;
+    ADC->conv.samples_per_buf = 0U;
+    ADC->conv.buffer_idx      = 0U;
+    ADC->conv.active_buf_idx  = 0U;
+    ADC->busy                 = 0U;
+
+    if (was_capturing && ADC->cb_event) {
+        ADC->cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_STOPPED, 0U, partial);
+    }
+
     return ARM_DRIVER_OK;
+}
+
+/*
+ * @func         : int32_t ADC_StartN(ADC_RESOURCES *ADC,
+ *                                    void *buf_a, void *buf_b,
+ *                                    uint32_t samples_per_buf)
+ * @brief        : Arm ping-pong buffers for continuous-mode
+ *                 scan. The DONE0 ISR fills buf_a first; on the
+ *                 samples_per_buf boundary it flips to buf_b and the
+ *                 per-instance handler fires
+ *                 ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A. Next boundary flips
+ *                 back and fires BUF_B, and so on. The sequencer never
+ *                 stops between halves.
+ *                 If buf_b is NULL the call is one-shot: buf_a fills once,
+ *                 BUF_A event fires.
+ *
+ *                 Element width is determined at Initialize time from the
+ *                 driver instance (uint16_t for the 12-bit ADCs, uint32_t
+ *                 for ADC24). samples_per_buf must be a whole multiple of
+ *                 the number of unmasked channels so every sweep fits
+ *                 exactly.
+ *
+ * @parameter[1] : ADC             : pointer to ADC_RESOURCES structure
+ * @parameter[2] : buf_a           : caller-owned primary buffer, non-NULL
+ * @parameter[3] : buf_b           : caller-owned secondary buffer for
+ *                                   ping-pong, or NULL for one-shot
+ * @parameter[4] : samples_per_buf : sample capacity of each buffer
+ * @return       : ARM_DRIVER_OK              : buffer(s) armed
+ *                 ARM_DRIVER_ERROR           : not powered
+ *                 ARM_DRIVER_ERROR_PARAMETER : bad args, wrong mode,
+ *                                              samples_per_buf not a whole
+ *                                              multiple of enabled
+ *                                              channels
+ */
+static int32_t ADC_StartN(ADC_RESOURCES *ADC,
+                          void          *buf_a,
+                          void          *buf_b,
+                          uint32_t       samples_per_buf)
+{
+    uint32_t popcount = (uint32_t) __builtin_popcount(ADC->active_channels);
+
+    if (!(ADC->state & ADC_FLAG_DRV_POWER_DONE)) {
+        return ARM_DRIVER_ERROR;
+    }
+
+    if ((buf_a == NULL) || (samples_per_buf == 0U)) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    /* StartN is only defined for continuous conversion */
+    if (ADC->conv.mode != ADC_CONV_MODE_CONTINUOUS) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    /* samples_per_buf must be a whole multiple of the enabled channel count
+     * so the buffer ends on a sweep boundary.
+     */
+    if ((popcount == 0U) || ((samples_per_buf % popcount) != 0U)) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    ADC->conv.buf_a           = buf_a;
+    ADC->conv.buf_b           = buf_b;
+    ADC->conv.samples_per_buf = samples_per_buf;
+    ADC->conv.buffer_idx      = 0U;
+    ADC->conv.active_buf_idx  = 0U;
+    ADC->conv.active_buf      = buf_a;
+
+    /* Re-arm case: sequencer already running */
+    if (ADC->busy) {
+        return ARM_DRIVER_OK;
+    }
+
+    /* First-arm case: start the sequencer */
+    ADC->conv.status = ADC_CONV_STAT_NONE;
+    ADC->busy        = 1U;
+    adc_unmask_interrupt(ADC->regs);
+    if (ADC->ext_trig_val) {
+        adc_enable_external_trigger(ADC->regs, ADC->ext_trig_val);
+    } else {
+        adc_enable_continuous_conv(ADC->regs);
+    }
+
+    return ARM_DRIVER_OK;
+}
+
+/*
+ * @func      : uint32_t ADC_GetSampleCount(ADC_RESOURCES *ADC)
+ * @brief     : Return the number of samples written into the caller's
+ *              buffer since the last StartN. Snapshot value; safe to
+ *              call at any time. Reset to 0 by the next StartN; preserved
+ *              across Stop so the caller can read the final count.
+ * @parameter : ADC : pointer to ADC_RESOURCES structure
+ * @return    : samples-written count
+ */
+static uint32_t ADC_GetSampleCount(ADC_RESOURCES *ADC)
+{
+    return ADC->conv.buffer_idx;
 }
 
 /*
@@ -396,6 +540,7 @@ static int32_t ADC_Control(ADC_RESOURCES *ADC, uint32_t Control, uint32_t arg)
         /*selecting the mode of control for taking single scan(1) or multiple channel scan(0)*/
         if (arg == ADC_SCAN_MODE_SINGLE_CH) {
             adc_set_single_ch_scan_mode(ADC->regs, &ADC->conv);
+            ADC->active_channels = 1UL << ADC->conv.read_channel;
         } else {
             adc_set_multi_ch_scan_mode(ADC->regs, &ADC->conv);
         }
@@ -410,6 +555,13 @@ static int32_t ADC_Control(ADC_RESOURCES *ADC, uint32_t Control, uint32_t arg)
 
         /* set channel to be masked */
         adc_sequencer_msk_ch_control(ADC->regs, arg);
+
+        /* Cache the enabled-channels bitfield */
+        if (ADC->drv_instance == ADC_INSTANCE_ADC24_0) {
+            ADC->active_channels = ((1UL << ADC24_MAX_DIFFERENTIAL_CHANNEL) - 1UL) & ~arg;
+        } else {
+            ADC->active_channels = 0xFFUL & ~arg;
+        }
 
         break;
 
@@ -441,6 +593,13 @@ static int32_t ADC_Control(ADC_RESOURCES *ADC, uint32_t Control, uint32_t arg)
 
         /* Store first channel to start conversion */
         ADC->conv.read_channel = arg;
+
+        /* In single-channel scan mode the sequencer visits exactly this
+         * channel per sweep; keep active_channels in sync.
+         */
+        if (ADC->conv.sequencer_ctrl_status == ADC_SCAN_MODE_SINGLE_CH) {
+            ADC->active_channels = 1UL << arg;
+        }
 
         break;
 
@@ -629,9 +788,28 @@ static ADC_RESOURCES ADC120_RES = {
 void ADC120_DONE0_IRQHandler(void)
 {
     conv_info_t *conv = &(ADC120_RES.conv);
+    uint32_t filled;
 
     adc_done0_irq_handler(ADC120_RES.regs, conv);
 
+    if (conv->status & ADC_CONV_STAT_BUF_A_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_A_FULL;
+        ADC120_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A, 0U, filled);
+        if (conv->buf_b == NULL) {
+            /* One-shot: halt the sequencer; app must call StartN to re-arm */
+            adc_mask_interrupt(ADC120_RES.regs);
+            adc_disable_continuous_conv(ADC120_RES.regs);
+            conv->buf_a      = NULL;
+            conv->active_buf = NULL;
+            ADC120_RES.busy  = 0U;
+        }
+    }
+    if (conv->status & ADC_CONV_STAT_BUF_B_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_B_FULL;
+        ADC120_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B, 0U, filled);
+    }
     if (conv->status & ADC_CONV_STAT_COMPLETE) {
         /* set busy flag to 0U */
         ADC120_RES.busy = 0U;
@@ -824,6 +1002,31 @@ static int32_t ADC120_Control(uint32_t Control, uint32_t arg)
     return ADC_Control(&ADC120_RES, Control, arg);
 }
 
+/**
+ * @fn           : int32_t ADC120_StartN(void *buf_a, void *buf_b,
+ *                                       uint32_t samples_per_buf)
+ * @brief        : Arm ping-pong buffered continuous scan for ADC120.
+ * @parameter[1] : buf_a           : uint32_t[] primary buffer
+ * @parameter[2] : buf_b           : uint32_t[] secondary buffer;
+ *                                   NULL for one-shot
+ * @parameter[3] : samples_per_buf : whole multiple of unmasked channel count
+ * @return       : execution_status
+ */
+static int32_t ADC120_StartN(void *buf_a, void *buf_b, uint32_t samples_per_buf)
+{
+    return ADC_StartN(&ADC120_RES, buf_a, buf_b, samples_per_buf);
+}
+
+/**
+ * @fn           : uint32_t ADC120_GetSampleCount(void)
+ * @brief        : Samples written into the current StartN buffer.
+ * @return       : samples-written count
+ */
+static uint32_t ADC120_GetSampleCount(void)
+{
+    return ADC_GetSampleCount(&ADC120_RES);
+}
+
 extern ARM_DRIVER_ADC Driver_ADC120;
 ARM_DRIVER_ADC        Driver_ADC120 = {
     ADC120_GetVersion,
@@ -833,7 +1036,9 @@ ARM_DRIVER_ADC        Driver_ADC120 = {
     ADC120_Start,
     ADC120_Stop,
     ADC120_PowerControl,
-    ADC120_Control
+    ADC120_Control,
+    ADC120_StartN,
+    ADC120_GetSampleCount
 };
 #endif /* RTE_ADC120 */
 
@@ -874,9 +1079,28 @@ static ADC_RESOURCES ADC121_RES = {
 void ADC121_DONE0_IRQHandler(void)
 {
     conv_info_t *conv = &(ADC121_RES.conv);
+    uint32_t filled;
 
     adc_done0_irq_handler(ADC121_RES.regs, conv);
 
+    if (conv->status & ADC_CONV_STAT_BUF_A_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_A_FULL;
+        ADC121_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A, 0U, filled);
+        if (conv->buf_b == NULL) {
+            /* One-shot: halt the sequencer; app must call StartN to re-arm */
+            adc_mask_interrupt(ADC121_RES.regs);
+            adc_disable_continuous_conv(ADC121_RES.regs);
+            conv->buf_a      = NULL;
+            conv->active_buf = NULL;
+            ADC121_RES.busy  = 0U;
+        }
+    }
+    if (conv->status & ADC_CONV_STAT_BUF_B_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_B_FULL;
+        ADC121_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B, 0U, filled);
+    }
     if (conv->status & ADC_CONV_STAT_COMPLETE) {
         /* set busy flag to 0U */
         ADC121_RES.busy = 0U;
@@ -1069,6 +1293,31 @@ static int32_t ADC121_Control(uint32_t Control, uint32_t arg)
     return ADC_Control(&ADC121_RES, Control, arg);
 }
 
+/**
+ * @fn           : int32_t ADC121_StartN(void *buf_a, void *buf_b,
+ *                                       uint32_t samples_per_buf)
+ * @brief        : Arm ping-pong buffered continuous scan for ADC121.
+ * @parameter[1] : buf_a           : uint32_t[] primary buffer
+ * @parameter[2] : buf_b           : uint32_t[] secondary buffer;
+ *                                   NULL for one-shot
+ * @parameter[3] : samples_per_buf : whole multiple of unmasked channel count
+ * @return       : execution_status
+ */
+static int32_t ADC121_StartN(void *buf_a, void *buf_b, uint32_t samples_per_buf)
+{
+    return ADC_StartN(&ADC121_RES, buf_a, buf_b, samples_per_buf);
+}
+
+/**
+ * @fn           : uint32_t ADC121_GetSampleCount(void)
+ * @brief        : Samples written into the current StartN buffer.
+ * @return       : samples-written count
+ */
+static uint32_t ADC121_GetSampleCount(void)
+{
+    return ADC_GetSampleCount(&ADC121_RES);
+}
+
 extern ARM_DRIVER_ADC Driver_ADC121;
 ARM_DRIVER_ADC        Driver_ADC121 = {
     ADC121_GetVersion,
@@ -1078,7 +1327,9 @@ ARM_DRIVER_ADC        Driver_ADC121 = {
     ADC121_Start,
     ADC121_Stop,
     ADC121_PowerControl,
-    ADC121_Control
+    ADC121_Control,
+    ADC121_StartN,
+    ADC121_GetSampleCount
 };
 #endif /* RTE_ADC121 */
 
@@ -1119,9 +1370,28 @@ static ADC_RESOURCES ADC122_RES = {
 void ADC122_DONE0_IRQHandler(void)
 {
     conv_info_t *conv = &(ADC122_RES.conv);
+    uint32_t filled;
 
     adc_done0_irq_handler(ADC122_RES.regs, conv);
 
+    if (conv->status & ADC_CONV_STAT_BUF_A_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_A_FULL;
+        ADC122_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A, 0U, filled);
+        if (conv->buf_b == NULL) {
+            /* One-shot: halt the sequencer; app must call StartN to re-arm */
+            adc_mask_interrupt(ADC122_RES.regs);
+            adc_disable_continuous_conv(ADC122_RES.regs);
+            conv->buf_a      = NULL;
+            conv->active_buf = NULL;
+            ADC122_RES.busy  = 0U;
+        }
+    }
+    if (conv->status & ADC_CONV_STAT_BUF_B_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_B_FULL;
+        ADC122_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B, 0U, filled);
+    }
     if (conv->status & ADC_CONV_STAT_COMPLETE) {
         /* set busy flag to 0U */
         ADC122_RES.busy = 0U;
@@ -1314,6 +1584,31 @@ static int32_t ADC122_Control(uint32_t Control, uint32_t arg)
     return ADC_Control(&ADC122_RES, Control, arg);
 }
 
+/**
+ * @fn           : int32_t ADC122_StartN(void *buf_a, void *buf_b,
+ *                                       uint32_t samples_per_buf)
+ * @brief        : Arm ping-pong buffered continuous scan for ADC122.
+ * @parameter[1] : buf_a           : uint32_t[] primary buffer
+ * @parameter[2] : buf_b           : uint32_t[] secondary buffer;
+ *                                   NULL for one-shot
+ * @parameter[3] : samples_per_buf : whole multiple of unmasked channel count
+ * @return       : execution_status
+ */
+static int32_t ADC122_StartN(void *buf_a, void *buf_b, uint32_t samples_per_buf)
+{
+    return ADC_StartN(&ADC122_RES, buf_a, buf_b, samples_per_buf);
+}
+
+/**
+ * @fn           : uint32_t ADC122_GetSampleCount(void)
+ * @brief        : Samples written into the current StartN buffer.
+ * @return       : samples-written count
+ */
+static uint32_t ADC122_GetSampleCount(void)
+{
+    return ADC_GetSampleCount(&ADC122_RES);
+}
+
 extern ARM_DRIVER_ADC Driver_ADC122;
 ARM_DRIVER_ADC        Driver_ADC122 = {
     ADC122_GetVersion,
@@ -1323,7 +1618,9 @@ ARM_DRIVER_ADC        Driver_ADC122 = {
     ADC122_Start,
     ADC122_Stop,
     ADC122_PowerControl,
-    ADC122_Control
+    ADC122_Control,
+    ADC122_StartN,
+    ADC122_GetSampleCount
 };
 #endif /* RTE_ADC122 */
 
@@ -1362,9 +1659,28 @@ static ADC_RESOURCES ADC24_RES = {
 void ADC24_DONE0_IRQHandler(void)
 {
     conv_info_t *conv = &(ADC24_RES.conv);
+    uint32_t filled;
 
     adc_done0_irq_handler(ADC24_RES.regs, conv);
 
+    if (conv->status & ADC_CONV_STAT_BUF_A_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_A_FULL;
+        ADC24_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A, 0U, filled);
+        if (conv->buf_b == NULL) {
+            /* One-shot: halt the sequencer; app must call StartN to re-arm */
+            adc_mask_interrupt(ADC24_RES.regs);
+            adc_disable_continuous_conv(ADC24_RES.regs);
+            conv->buf_a      = NULL;
+            conv->active_buf = NULL;
+            ADC24_RES.busy   = 0U;
+        }
+    }
+    if (conv->status & ADC_CONV_STAT_BUF_B_FULL) {
+        filled           = conv->samples_per_buf;
+        conv->status    &= ~ADC_CONV_STAT_BUF_B_FULL;
+        ADC24_RES.cb_event(ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B, 0U, filled);
+    }
     if (conv->status & ADC_CONV_STAT_COMPLETE) {
         /* set busy flag to 0U */
         ADC24_RES.busy = 0U;
@@ -1557,6 +1873,31 @@ static int32_t ADC24_Control(uint32_t Control, uint32_t arg)
     return ADC_Control(&ADC24_RES, Control, arg);
 }
 
+/**
+ * @fn           : int32_t ADC24_StartN(void *buf_a, void *buf_b,
+ *                                      uint32_t samples_per_buf)
+ * @brief        : Arm ping-pong buffered continuous scan for ADC24.
+ * @parameter[1] : buf_a           : uint32_t[] primary buffer
+ * @parameter[2] : buf_b           : uint32_t[] secondary buffer;
+ *                                   NULL for one-shot
+ * @parameter[3] : samples_per_buf : whole multiple of unmasked channel count
+ * @return       : execution_status
+ */
+static int32_t ADC24_StartN(void *buf_a, void *buf_b, uint32_t samples_per_buf)
+{
+    return ADC_StartN(&ADC24_RES, buf_a, buf_b, samples_per_buf);
+}
+
+/**
+ * @fn           : uint32_t ADC24_GetSampleCount(void)
+ * @brief        : Samples written into the current StartN buffer.
+ * @return       : samples-written count
+ */
+static uint32_t ADC24_GetSampleCount(void)
+{
+    return ADC_GetSampleCount(&ADC24_RES);
+}
+
 extern ARM_DRIVER_ADC Driver_ADC24;
 ARM_DRIVER_ADC        Driver_ADC24 = {
     ADC24_GetVersion,
@@ -1566,7 +1907,9 @@ ARM_DRIVER_ADC        Driver_ADC24 = {
     ADC24_Start,
     ADC24_Stop,
     ADC24_PowerControl,
-    ADC24_Control
+    ADC24_Control,
+    ADC24_StartN,
+    ADC24_GetSampleCount
 };
 #endif /* RTE_ADC24 */
 #endif /* RTE_Drivers_ADC */

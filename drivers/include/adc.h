@@ -133,6 +133,14 @@ typedef enum _ADC_CONV_STAT {
         (1U << 5), /* ADC Conversion status comparator threshold between A & B */
     ADC_CONV_STAT_CMP_THLD_OUTSIDE_A_B =
         (1U << 6), /* ADC Conversion status comparator threshold outside A & B */
+    ADC_CONV_STAT_BUF_A_FULL =
+        (1U << 7), /* StartN buf_a just filled; per-instance handler to fire
+                    * ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A and clear this bit
+                    */
+    ADC_CONV_STAT_BUF_B_FULL =
+        (1U << 8), /* StartN buf_b just filled; per-instance handler to fire
+                    * ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B and clear this bit
+                    */
 } ADC_CONV_STAT;
 
 /* Structure to store the conversion info */
@@ -144,6 +152,22 @@ typedef struct conv_info {
     volatile ADC_CONV_STAT status;                /* Conversion status              */
     volatile ADC_CONV_MODE mode;                  /* Conversion status control      */
     volatile uint8_t       read_channel;          /* Store channel                  */
+    /* StartN buffered-mode state.
+     * Buffers hold raw ADC_SAMPLE_REG_ values including any hardware-
+     * averaging accumulation, so uint32_t is used to fit both ADC12 and
+     * ADC24 instances.
+     * buf_a is required; buf_b == NULL => one-shot semantics.
+     * active_buf points at the buffer currently being filled; the ISR flips
+     * it between buf_a and buf_b on each fill boundary. active_buf == NULL
+     * locks out stores (one-shot completion or Stop).
+     */
+    uint32_t              *buf_a;
+    uint32_t              *buf_b;
+
+    uint32_t *volatile active_buf;
+    volatile uint32_t      samples_per_buf;
+    volatile uint32_t      buffer_idx;
+    volatile uint8_t       active_buf_idx;
 } conv_info_t;
 
 /**
