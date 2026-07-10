@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#define ARM_ADC_API_VERSION              ARM_DRIVER_VERSION_MAJOR_MINOR(1, 0) /*API VERSION*/
+#define ARM_ADC_API_VERSION              ARM_DRIVER_VERSION_MAJOR_MINOR(2, 0) /*API VERSION*/
 
 #define _ARM_Driver_ADC12(n)             Driver_ADC12##n
 #define ARM_Driver_ADC12(n)              _ARM_Driver_ADC12(n)
@@ -63,7 +63,10 @@ extern "C" {
 #define ARM_ADC_COMPARATOR_THRESHOLD_BETWEEN_A_B                                                   \
     (1 << 5) /* ARM ADC COMPARATOR THRESHOLD BETWEEN A_B */
 #define ARM_ADC_COMPARATOR_THRESHOLD_OUTSIDE_A_B                                                   \
-    (1 << 6) /* ARM ADC COMPARATOR THRESHOLD OUTSIDE A_B */
+    (1 << 6)                                    /* ARM ADC COMPARATOR THRESHOLD OUTSIDE A_B */
+#define ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A   (1 << 7)  /* StartN: buf_a filled            */
+#define ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B   (1 << 8)  /* StartN: buf_b filled            */
+#define ARM_ADC_EVENT_CONTINUOUS_CONV_STOPPED (1 << 9)  /* StartN: Stop() partial-buf done */
 
 /**********ADC CONVERSION OPERATION**********/
 #define ARM_ADC_CONTINOUS_CH_CONV      (0x00) /* ARM ADC CHANNEL CONTINUOUS CONVERSION    */
@@ -142,6 +145,38 @@ extern "C" {
     @parameter[1] : control    :operation
     @parameter[2] : arg        :Argument of operation (optional)
     @return       : Execution status
+
+    @func         : int32_t StartN (void *buf_a, void *buf_b,
+                                    uint32_t samples_per_buf)
+    @brief        : Arm ping-pong buffers for continuous-mode
+                    scan. Driver fills buf_a, fires
+                    ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_A with the sample
+                    count in `value`, then fills buf_b and fires
+                    ARM_ADC_EVENT_CONTINUOUS_CONV_BUF_B, and so on. The
+                    sequencer never stops between halves.
+                    If buf_b is NULL the call is one-shot: buf_a is
+                    filled once, the BUF_A event fires.
+                    StartN must be called again to re-arm.
+                    On Stop() during a running capture, the driver fires
+                    ARM_ADC_EVENT_CONTINUOUS_CONV_STOPPED once with
+                    `value` = number of samples written into the partly-
+                    filled active buffer.
+                    Not supported in single-shot conversion mode.
+    @parameter[1] : buf_a           : pointer to uint32_t[]. Buffers hold
+                                      raw ADC_SAMPLE_REG_ values including
+                                      any hardware-averaging accumulation,
+                                      so uint32_t is used to fit both
+                                      ADC12 and ADC24 instances. Required.
+    @parameter[2] : buf_b           : same type as buf_a; NULL for one-shot.
+    @parameter[3] : samples_per_buf : sample capacity of each buffer; must
+                                      be a whole multiple of the number of
+                                      unmasked channels.
+    @return       : Execution status
+
+    @func         : uint32_t GetSampleCount (void)
+    @brief        : Return the number of samples written into the currently-
+                    filling StartN buffer.
+    @return       : samples-written count
 */
 
 typedef void (*ARM_ADC_SignalEvent_t)(uint32_t event, uint8_t channel,
@@ -168,6 +203,14 @@ typedef struct ARM_DRIVER_ADC {
                                                        ADC Interface Power */
     int32_t (*Control)(uint32_t Control,
                        uint32_t arg); /* Pointer to \ref ADC_Control : Control ADC Interface */
+    int32_t (*StartN)(void    *buf_a,
+                      void    *buf_b,
+                      uint32_t samples_per_buf); /* Pointer to \ref ADC_StartN : arm ping-pong
+                                                  * buffers for continuous channel scan
+                                                  */
+    uint32_t (*GetSampleCount)(void); /* Pointer to \ref ADC_GetSampleCount : samples written
+                                       * into the current StartN buffer
+                                       */
 } const ARM_DRIVER_ADC;
 
 #ifdef _cplusplus

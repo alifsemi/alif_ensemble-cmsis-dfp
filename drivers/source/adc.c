@@ -26,15 +26,36 @@ void adc_done0_irq_handler(ADC_Type *adc, conv_info_t *conversion)
     adc->ADC_INTERRUPT                = ADC_INTR_DONE0_CLEAR;
 
     if (conversion->mode == ADC_CONV_MODE_CONTINUOUS) {
-        adc->ADC_INTERRUPT         = ADC_INTR_DONE0_CLEAR;
-        /* read sample and store  */
-        conversion->sampled_value  = *(sample_reg_ptr + conversion->read_channel);
-        /* Store current channel */
-        conversion->curr_channel   = conversion->read_channel;
-        /* Next channel to be read */
-        conversion->read_channel   = adc->ADC_SEL;
-        /* set call back */
-        conversion->status        |= ADC_CONV_STAT_COMPLETE;
+        uint32_t raw             = *(sample_reg_ptr + conversion->read_channel);
+
+        /* Track channel just read and pre-fetch next channel from sequencer */
+        conversion->curr_channel = conversion->read_channel;
+        conversion->read_channel = adc->ADC_SEL;
+
+        if (conversion->active_buf) {
+            /* StartN buffered mode: store the raw sample register value
+             * into the caller's buffer. */
+            conversion->active_buf[conversion->buffer_idx++] = raw;
+            if (conversion->buffer_idx == conversion->samples_per_buf) {
+                /* Buffer filled: flip to the other buffer for ping-pong and
+                 * flag the per-instance handler to fire the matching event.
+                 */
+                if (conversion->active_buf_idx == 0U) {
+                    conversion->status         |= ADC_CONV_STAT_BUF_A_FULL;
+                    conversion->active_buf      = conversion->buf_b;
+                    conversion->active_buf_idx  = 1U;
+                } else {
+                    conversion->status         |= ADC_CONV_STAT_BUF_B_FULL;
+                    conversion->active_buf      = conversion->buf_a;
+                    conversion->active_buf_idx  = 0U;
+                }
+                conversion->buffer_idx = 0U;
+            }
+        } else {
+            /* per-sample-callback mode */
+            conversion->sampled_value  = raw;
+            conversion->status        |= ADC_CONV_STAT_COMPLETE;
+        }
     }
 }
 
