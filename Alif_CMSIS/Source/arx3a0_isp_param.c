@@ -70,8 +70,8 @@ ISP_CALIB_DATA_S calibration_data = {
             .blockWin = {
                 .hOffs = 0,
                 .vOffs = 0,
-                .hSize = 560,
-                .vSize = 560,
+                .hSize = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+                .vSize = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
             },
         },
 #endif /* RTE_ISP_EXPM_MODULE */
@@ -81,7 +81,7 @@ ISP_CALIB_DATA_S calibration_data = {
             .opType = OP_TYPE_AUTO,
             .manualAttr = {
                 .intTime = 10165,
-                .again = 10 * 1024,
+                .again = 1 * 1024,
                 .dgain = 1024,
             },
             .autoAttr = {
@@ -97,11 +97,11 @@ ISP_CALIB_DATA_S calibration_data = {
                     .min = 1024,
                     .max = 8 * 1024,
                 },
-                .aeRunInterval = 6,
-                .aeTarget = 100,
-                .dampOver = 0x10,
-                .dampUnder = 0x10,
-                .tolerance = 30,
+                .aeRunInterval = 1,
+                .aeTarget = 50,
+                .dampOver = 0x40,
+                .dampUnder = 0x40,
+                .tolerance = 10,
                 .antiflicker = {
                     .enable = 0,
                     .flickerFreq = 100,
@@ -133,8 +133,8 @@ ISP_CALIB_DATA_S calibration_data = {
             .measRect = {
                 .hOffs = 0,
                 .vOffs = 0,
-                .hSize = 560,
-                .vSize = 560,
+                .hSize = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+                .vSize = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
             },
             .wpRange = {
                 .maxY       = 0xEB,
@@ -149,14 +149,14 @@ ISP_CALIB_DATA_S calibration_data = {
 
 #if (RTE_ISP_WB_MODULE)
         .wb = {
-            .enable = 1,
-            .opType = OP_TYPE_MANUAL,
+            .enable = 0,
+            .opType = OP_TYPE_AUTO,
             .manualAttr = {
                 .wbGain = {0x100, 0x100, 0x100, 0x100},
             },
             .autoAttr = {
-                .runInterval = 18,
-                .speed = 4,
+                .runInterval = 1,
+                .speed = 64,
                 .tolerance = 1,
                 .initColorTemp = 5000,
                 .calibParam = {
@@ -286,7 +286,9 @@ ISP_CALIB_DATA_S calibration_data = {
             .opType = OP_TYPE_MANUAL,
             .manualAttr = {
                 .colorMatrix = {
-                    0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x80
+                    289, -70, -16,
+                    -21, 183, -67,
+                    -81, -8, 304
                 },
                 .rOffset = 0,
                 .gOffset = 0,
@@ -349,30 +351,30 @@ ISP_PORT_ATTR_S port_attr = {
     .ispInputType = INPUT_TYPE_SENSOR,
     .ispMode      = ISP_MODE_RAW,
     .hdrMode      = HDR_MODE_LINEAR,
-    .pixelFormat  = PIXEL_FORMAT_GRBG8,
+    .pixelFormat  = PIXEL_FORMAT_GBRG10,
     .snsRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+        .height = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
     },
     .inFormRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+        .height = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
     },
     .iSRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+        .height = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
     },
     .outFormRect = {
-        .top    = RTE_ISP_CROP_TOP,
-        .left   = RTE_ISP_CROP_LEFT,
-        .width  = RTE_ISP_CROP_WIDTH,
-        .height = RTE_ISP_CROP_HEIGHT,
+        .top    = 0,
+        .left   = 0,
+        .width  = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
+        .height = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
     },
 };
 
@@ -387,5 +389,25 @@ ISP_CHN_ATTR_S chan_attr = {
         .pixelFormat = RTE_ISP_OUTPUT_FORMAT,
     },
 };
+
+void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_t height)
+{
+    /* RECT_S field naming is swapped in the libisp:
+     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
+     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
+     * We swap here so our API uses conventional image coordinates.
+     */
+    port_attr.outFormRect.top    = left;
+    port_attr.outFormRect.left   = top;
+    port_attr.outFormRect.width  = width;
+    port_attr.outFormRect.height = height;
+}
+
+
+void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height)
+{
+    chan_attr.chnFormat.width  = width;
+    chan_attr.chnFormat.height = height;
+}
 
 #endif /* defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1) */

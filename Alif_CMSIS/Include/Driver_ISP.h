@@ -74,6 +74,24 @@ struct vsiISP_CHN_ATTR_S;
 #define ISP_CONTROL_AE_IS_STABLE               (0x16UL)
 #endif /* RTE_ISP_AE_MODULE */
 
+/**
+ * @brief Set crop region for the ISP input.
+ *
+ * The arg parameter should point to a struct isp_crop_info.
+ * Must be called after ISP_Initialize and before streaming starts.
+ * Cannot be changed while the ISP is actively streaming.
+ */
+#define ISP_CONTROL_SET_CROP                    (0x17UL)
+
+/**
+ * @brief Set output channel dimensions.
+ *
+ * The arg parameter should point to a struct isp_output_info.
+ * Must be called after ISP_Initialize and before streaming starts.
+ * Cannot be changed while the ISP is actively streaming.
+ */
+#define ISP_CONTROL_SET_OUTPUT                  (0x18UL)
+
 /* ISP parameter structs and masks */
 #include "isp_ctrl_params.h"
 

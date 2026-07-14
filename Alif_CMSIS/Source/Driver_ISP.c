@@ -346,9 +346,16 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
         return ARM_DRIVER_ERROR;
     }
 
-    // Update the sensor configuration here:
-    isp->isp_port_attr->snsRect.width  = cam_sensor->width;
-    isp->isp_port_attr->snsRect.height = cam_sensor->height;
+    // Update ISP input rectangles with runtime sensor dimensions:
+    // snsRect: Sensor rectangle
+    // inFormRect: Input format rectangle from sensor
+    isp->isp_port_attr->snsRect.width     = cam_sensor->width;
+    isp->isp_port_attr->snsRect.height    = cam_sensor->height;
+    isp->isp_port_attr->inFormRect.width  = cam_sensor->width;
+    isp->isp_port_attr->inFormRect.height = cam_sensor->height;
+    isp->isp_port_attr->iSRect.width      = cam_sensor->width;
+    isp->isp_port_attr->iSRect.height     = cam_sensor->height;
+
 
     isp_port_config.ispInputType       = isp->isp_port_attr->ispInputType;
     isp_port_config.ispMode            = isp->isp_port_attr->ispMode;
@@ -365,6 +372,21 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
     isp_port_config.inFormRect.left    = isp->isp_port_attr->inFormRect.left;
     isp_port_config.inFormRect.width   = isp->isp_port_attr->inFormRect.width;
     isp_port_config.inFormRect.height  = isp->isp_port_attr->inFormRect.height;
+
+    /* Compute centered square crop from runtime sensor dimensions.
+     * RECT_S field naming is swapped in the libisp:
+     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
+     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
+     */
+    vsi_u32_t side = cam_sensor->width < cam_sensor->height
+                   ? cam_sensor->width : cam_sensor->height;
+    vsi_u32_t v_off = cam_sensor->height > side ? (cam_sensor->height - side) / 2 : 0;
+    vsi_u32_t h_off = cam_sensor->width  > side ? (cam_sensor->width  - side) / 2 : 0;
+
+    isp->isp_port_attr->outFormRect.top    = h_off;  /* libisp: horizontal offset */
+    isp->isp_port_attr->outFormRect.left   = v_off;  /* libisp: vertical offset */
+    isp->isp_port_attr->outFormRect.width  = side;
+    isp->isp_port_attr->outFormRect.height = side;
 
     isp_port_config.outFormRect.top    = isp->isp_port_attr->outFormRect.top;
     isp_port_config.outFormRect.left   = isp->isp_port_attr->outFormRect.left;
@@ -383,16 +405,25 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
         return ARM_DRIVER_ERROR;
     }
 
+    /* Patch AE measurement window in calib struct to match the finalized crop
+     * before SetCalib writes it to HW.
+     */
+    isp->isp_calib_info->modules.aem.blockWin.hOffs = isp->isp_port_attr->outFormRect.top;
+    isp->isp_calib_info->modules.aem.blockWin.vOffs = isp->isp_port_attr->outFormRect.left;
+    isp->isp_calib_info->modules.aem.blockWin.hSize = isp->isp_port_attr->outFormRect.width;
+    isp->isp_calib_info->modules.aem.blockWin.vSize = isp->isp_port_attr->outFormRect.height;
+
+    /* Patch WB measurement window in calib struct to match the finalized crop
+     * before SetCalib writes it to HW.
+     */
+    isp->isp_calib_info->modules.wbm.measRect.hOffs = isp->isp_port_attr->outFormRect.top;
+    isp->isp_calib_info->modules.wbm.measRect.vOffs = isp->isp_port_attr->outFormRect.left;
+    isp->isp_calib_info->modules.wbm.measRect.hSize = isp->isp_port_attr->outFormRect.width;
+    isp->isp_calib_info->modules.wbm.measRect.vSize = isp->isp_port_attr->outFormRect.height;
+
     ret = VSI_MPI_ISP_SetCalib(isp->isp_port_id, isp->isp_calib_info);
     if (ret) {
         return ARM_DRIVER_ERROR;
-    }
-
-    if (!isp->isp_chan_attr->chnFormat.width) {
-        isp->isp_chan_attr->chnFormat.width = cam_sensor->width;
-    }
-    if (!isp->isp_chan_attr->chnFormat.height) {
-        isp->isp_chan_attr->chnFormat.height = cam_sensor->height;
     }
 
     // Set-up ISP channel attributes which control the way ISP output data to memory.
@@ -1507,6 +1538,101 @@ static int32_t ISP_control(uint32_t control, uint32_t arg, ISP_RESOURCES *isp)
         ret = ISP_Sensor_AEIsStable(isp);
         break;
 #endif
+    case ISP_CONTROL_SET_CROP: {
+        const struct isp_crop_info *crop = (const struct isp_crop_info *)arg;
+
+        if (!crop) {
+            ret = ARM_DRIVER_ERROR_PARAMETER;
+            break;
+        }
+
+        /* Do not allow changing crop while actively streaming */
+        if (isp->state.streaming) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        isp_param_set_crop(crop->top, crop->left, crop->width, crop->height);
+
+        /* Read current HW port config, update only outFormRect, then write back */
+        ISP_PORT_ATTR_S isp_port_config;
+
+        ret = VSI_MPI_ISP_GetPortAttr(isp->isp_port_id, &isp_port_config);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        isp_port_config.outFormRect = isp->isp_port_attr->outFormRect;
+
+        ret = VSI_MPI_ISP_SetPortAttr(isp->isp_port_id, &isp_port_config);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        /* outFormRect change affects AE/AWB stats windows and the binning/resize pipeline.
+         * Re-applying SetChnAttr() recomputes the resize module to satisfy the resolution
+         * constraints between binning, scaler, and output.
+         */
+        ret = VSI_MPI_ISP_SetChnAttr(isp->isp_chn_id, isp->isp_chan_attr);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        /* Update AE measurement window to match the new crop dimensions. */
+        isp->isp_calib_info->modules.aem.blockWin.hOffs = isp->isp_port_attr->outFormRect.top;
+        isp->isp_calib_info->modules.aem.blockWin.vOffs = isp->isp_port_attr->outFormRect.left;
+        isp->isp_calib_info->modules.aem.blockWin.hSize = isp->isp_port_attr->outFormRect.width;
+        isp->isp_calib_info->modules.aem.blockWin.vSize = isp->isp_port_attr->outFormRect.height;
+        ret = VSI_MPI_ISP_SetExpmAttr(isp->isp_port_id, &isp->isp_calib_info->modules.aem);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        /* Update WB measurement window to match the new crop dimensions. */
+        isp->isp_calib_info->modules.wbm.measRect.hOffs = isp->isp_port_attr->outFormRect.top;
+        isp->isp_calib_info->modules.wbm.measRect.vOffs = isp->isp_port_attr->outFormRect.left;
+        isp->isp_calib_info->modules.wbm.measRect.hSize = isp->isp_port_attr->outFormRect.width;
+        isp->isp_calib_info->modules.wbm.measRect.vSize = isp->isp_port_attr->outFormRect.height;
+        ret = VSI_MPI_ISP_SetWbmAttr(isp->isp_port_id, &isp->isp_calib_info->modules.wbm);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        break;
+    }
+    case ISP_CONTROL_SET_OUTPUT: {
+
+        const struct isp_output_info *out = (const struct isp_output_info *)arg;
+
+        if (!out) {
+            ret = ARM_DRIVER_ERROR_PARAMETER;
+            break;
+        }
+
+        /* Do not allow changing output dimensions while actively streaming */
+        if (isp->state.streaming) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        isp_param_set_output_dimensions(out->width, out->height);
+
+        /* Re-apply channel attributes to write output dimensions to HW registers */
+        ret = VSI_MPI_ISP_SetChnAttr(isp->isp_chn_id, isp->isp_chan_attr);
+        if (ret) {
+            ret = ARM_DRIVER_ERROR;
+            break;
+        }
+
+        ret = ARM_DRIVER_OK;
+
+        break;
+    }
     default:
         ret = ARM_DRIVER_ERROR_UNSUPPORTED;
         break;

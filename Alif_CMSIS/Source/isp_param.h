@@ -41,4 +41,8 @@ extern ISP_PORT_ATTR_S  port_attr;
 /* Default ISP channel attributes - defined in sensor-specific *_isp_param.c */
 extern ISP_CHN_ATTR_S   chan_attr;
 
+/* Runtime crop and output configuration - defined in sensor-specific *_isp_param.c */
+void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_t height);
+void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height);
+
 #endif /* ISP_PARAM_H_ */

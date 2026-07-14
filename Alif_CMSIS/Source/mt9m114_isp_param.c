@@ -23,6 +23,33 @@
 
 #if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
 
+#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE)
+#if   (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 0)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   1288
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  728
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 1)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   1280
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  720
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 2)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   1280
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  720
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 3)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   640
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  480
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 4)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   320
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  240
+#elif (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 5)
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   320
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  320
+#else
+#error "Unsupported RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG"
+#endif
+#else
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH   RTE_MT9M114_CAMERA_SENSOR_FRAME_WIDTH
+#define MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT  RTE_MT9M114_CAMERA_SENSOR_FRAME_HEIGHT
+#endif /* RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE */
+
 #include "isp_param.h"
 
 /* ---------------------------------------------------------------------------
@@ -71,8 +98,8 @@ ISP_CALIB_DATA_S calibration_data = {
             .blockWin = {
                 .hOffs = 0,
                 .vOffs = 0,
-                .hSize = 1280,
-                .vSize = 720,
+                .hSize = RTE_MT9M114_CAMERA_SENSOR_FRAME_WIDTH,
+                .vSize = RTE_MT9M114_CAMERA_SENSOR_FRAME_HEIGHT,
             },
         },
 #endif /* RTE_ISP_EXPM_MODULE */
@@ -88,21 +115,21 @@ ISP_CALIB_DATA_S calibration_data = {
             .autoAttr = {
                 .expTimeRange = {
                     .min =  100,
-                    .max =  300000,
+                    .max =  33000,
                 },
                 .againRange = {
-                    .min = 3 * 1024,
-                    .max = 1056 * 1024,
+                    .min = 1 * 1024,
+                    .max = 8 * 1024,
                 },
                 .dgainRange = {
                     .min = 1024,
                     .max = 1024,
                 },
-                .aeRunInterval = 6,
-                .aeTarget = 100,
-                .dampOver = 0x10,
-                .dampUnder = 0x10,
-                .tolerance = 30,
+                .aeRunInterval = 3,
+                .aeTarget = 128,
+                .dampOver = 0x20,
+                .dampUnder = 0x20,
+                .tolerance = 1,
                 .antiflicker = {
                     .enable = 0,
                     .flickerFreq = 100,
@@ -129,13 +156,13 @@ ISP_CALIB_DATA_S calibration_data = {
 
 #if (RTE_ISP_WBM_MODULE)
         .wbm = {
-            .enable   = 1,
+            .enable   = 0,
             .measMode = ISP_AWB_MEAS_MODE_RGB,
             .measRect = {
                 .hOffs = 0,
                 .vOffs = 0,
-                .hSize = 1280,
-                .vSize = 720,
+                .hSize = RTE_MT9M114_CAMERA_SENSOR_FRAME_WIDTH,
+                .vSize = RTE_MT9M114_CAMERA_SENSOR_FRAME_HEIGHT,
             },
             .wpRange = {
                 .maxY       = 0xEB,
@@ -150,7 +177,7 @@ ISP_CALIB_DATA_S calibration_data = {
 
 #if (RTE_ISP_WB_MODULE)
         .wb = {
-            .enable = 1,
+            .enable = 0,
             .opType = OP_TYPE_MANUAL,
             .manualAttr = {
                 .wbGain = {0x100, 0x100, 0x100, 0x100},
@@ -284,7 +311,7 @@ ISP_CALIB_DATA_S calibration_data = {
 
 #if (RTE_ISP_CCM_MODULE)
         .ccm = {
-            .opType = OP_TYPE_AUTO,
+            .opType = OP_TYPE_MANUAL,
             .manualAttr = {
                 .colorMatrix = {
                     0x80, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x80
@@ -344,37 +371,38 @@ ISP_CALIB_DATA_S calibration_data = {
 
 /* ---------------------------------------------------------------------------
  * ISP Port Attribute - MT9M114
- * Native resolution: 1280x960 (SXGA)
+ * Resolution: Determined by MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG
+ * (1288x728, 1280x720, 640x480, 320x240, or 320x320)
  * ---------------------------------------------------------------------------
  */
 ISP_PORT_ATTR_S port_attr = {
     .ispInputType = INPUT_TYPE_SENSOR,
     .ispMode      = ISP_MODE_RAW,
     .hdrMode      = HDR_MODE_LINEAR,
-    .pixelFormat  = PIXEL_FORMAT_GRBG8,
+    .pixelFormat  = PIXEL_FORMAT_GBRG10,
     .snsRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
+        .height = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     },
     .inFormRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
+        .height = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     },
     .iSRect = {
         .top    = 0,
         .left   = 0,
-        .width  = RTE_ISP_SENSOR_INPUT_WIDTH,
-        .height = RTE_ISP_SENSOR_INPUT_HEIGHT,
+        .width  = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
+        .height = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     },
     .outFormRect = {
-        .top    = RTE_ISP_CROP_TOP,
-        .left   = RTE_ISP_CROP_LEFT,
-        .width  = RTE_ISP_CROP_WIDTH,
-        .height = RTE_ISP_CROP_HEIGHT,
+        .top    = 0,
+        .left   = 0,
+        .width  = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
+        .height = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     },
 };
 
@@ -390,5 +418,25 @@ ISP_CHN_ATTR_S chan_attr = {
         .pixelFormat = RTE_ISP_OUTPUT_FORMAT,
     },
 };
+
+void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_t height)
+{
+    /* RECT_S field naming is swapped in the libisp:
+     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
+     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
+     * We swap here so our API uses conventional image coordinates.
+     */
+    port_attr.outFormRect.top    = left;
+    port_attr.outFormRect.left   = top;
+    port_attr.outFormRect.width  = width;
+    port_attr.outFormRect.height = height;
+}
+
+
+void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height)
+{
+    chan_attr.chnFormat.width  = width;
+    chan_attr.chnFormat.height = height;
+}
 
 #endif /* defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1) */

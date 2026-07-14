@@ -518,6 +518,26 @@ struct isp_params {
     struct isp_binning_param    binning;
 };
 
+/* ISP Control argument structures for runtime configuration */
+
+/**
+ * @brief ISP crop region information
+ */
+struct isp_crop_info {
+    uint32_t top;    /**< Top coordinate of crop region */
+    uint32_t left;   /**< Left coordinate of crop region */
+    uint32_t width;  /**< Width of crop region */
+    uint32_t height; /**< Height of crop region */
+};
+
+/**
+ * @brief ISP output dimension information
+ */
+struct isp_output_info {
+    uint32_t width;  /**< Output width */
+    uint32_t height; /**< Output height */
+};
+
 #ifdef __cplusplus
 }
 #endif
