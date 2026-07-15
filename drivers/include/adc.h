@@ -21,6 +21,7 @@
 #define ADC_START_SINGLE_SHOT_CONV         (1U << 0)  /* start single shot conversion          */
 #define ADC_SHIFT_CTRL_RIGHT_OR_LEFT       (1U << 16) /* Enable the right or left shift        */
 #define ADC_SEQUENCER_CTRL_FIXED_OR_ROTATE (1U << 16) /* Enable to select particular scan mode */
+#define ADC_CONTROL_SAMPLE_INT_CLR         (1U << 2)  /* sample-read auto-clears active ints   */
 
 /****ADC Differential macros****/
 #define ADC_DIFFERENTIAL_ENABLE            (0X01) /* Enable differential mode              */

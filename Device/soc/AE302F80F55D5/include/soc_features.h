@@ -118,6 +118,7 @@
 #define SOC_FEAT_CRC_RESULT_REFLECT_ENABLE         (1)
 
 #define SOC_FEAT_ADC_REG_ALIASING                  (0)
+#define SOC_FEAT_ADC_HAS_SAMPLE_INT_CLR_BIT        (0)
 
 #define SOC_FEAT_DAC_REG_ALIASING                  (0)
 
