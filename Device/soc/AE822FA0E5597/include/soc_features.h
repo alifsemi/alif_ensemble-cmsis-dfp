@@ -86,6 +86,7 @@
 #define SOC_FEAT_CRC_RESULT_REFLECT_ENABLE         (0)
 
 #define SOC_FEAT_ADC_REG_ALIASING                  (1)
+#define SOC_FEAT_ADC_HAS_SAMPLE_INT_CLR_BIT        (1)
 
 #define SOC_FEAT_OSPI_HAS_XIP_SER                  (0)
 #define SOC_FEAT_OSPI_HAS_CLK_ENABLE               (1)
