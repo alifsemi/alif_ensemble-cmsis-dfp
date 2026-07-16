@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--v1.7: Aligned with HWRM v1.5 and CONDUCTOR v1.0.14-->
+<!--v1.9: Aligned with HWRM v1.7 and CONDUCTOR v1.0.17-->
 <device xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.1" xs:noNamespaceSchemaLocation="CMSIS-SVD.xsd">
   <vendor>Alif Semiconductor</vendor>
   <vendorID>ALIF</vendorID>
@@ -42,11 +42,259 @@
       <name>CLKCTL_SYS</name>
       <baseAddress>0x1A010000</baseAddress>
       <addressBlock>
-        <offset>1280</offset>
-        <size>808</size>
+        <offset>792</offset>
+        <size>1780</size>
         <usage>registers</usage>
       </addressBlock>
       <registers>
+        <register>
+          <name>RTSS_HE_RST_CTRL</name>
+          <description>RTSS-HE Reset Control Register</description>
+          <addressOffset>0x318</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000001</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>RST_REQ</name>
+              <description>Reset request for RTSS-HE.</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>No reset requested</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Reset requested</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CPUWAIT</name>
+              <description>CPU wait control.
+When CPUWAIT becomes
+0x0, any attempt to revert back to
+0x1 is ignored. This field only returns to 0x1
+when any of the following
+occurs:
+- External power-on reset
+- Internal power-on reset
+- Debug reset
+- RTSS-HE reset
+This field becomes read-only when
+the associated
+CPUWAIT_WEN is 0x0. Any attempt to
+set this field to 0x0 by
+software is ignored.</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>CPUWAIT signal of RTSS-HE is deasserted</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>CPUWAIT signal of RTSS-HE is asserted</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>RTSS_HE_RST_ST</name>
+          <description>RTSS-HE Reset Status Register</description>
+          <addressOffset>0x31C</addressOffset>
+          <size>32</size>
+          <access>read-only</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>RST_ACK</name>
+              <description>Status of reset request.</description>
+              <bitRange>[2:1]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>No reset requested</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Reset request unable to complete</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x2</name>
+                  <description>Reset request complete</description>
+                  <value>0x2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>BSYS_PWR_REQ</name>
+          <description>Base System Power Request Register</description>
+          <addressOffset>0x400</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>SYSTOP_PWR_REQ</name>
+              <description>Selects SYSTOP power domain behavior when no activity in the domain.</description>
+              <bitRange>[5:3]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>No request for logic or volatile memory to be powered</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>No request for logic to be powered, but volatile memory must be retained</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x2</name>
+                  <description>Request for logic to be powered, but volatile memory can be either powered or retained</description>
+                  <value>0x2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x3</name>
+                  <description>Request for logic to be powered, but volatile memory can be either powered or retained</description>
+                  <value>0x3</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x4</name>
+                  <description>Request for logic and volatile memory to be powered</description>
+                  <value>0x4</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x5</name>
+                  <description>Request for logic and volatile memory to be powered</description>
+                  <value>0x5</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x6</name>
+                  <description>Request for logic and volatile memory to be powered</description>
+                  <value>0x6</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x7</name>
+                  <description>Request for logic and volatile memory to be powered</description>
+                  <value>0x7</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>DBGTOP_PWR_REQ</name>
+              <description>Selects DBGTOP power domain behavior when no activity in the domain.</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>No request for DBGTOP to be powered</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Request for DBGTOP to be powered</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>REFCLK_REQ</name>
+              <description>Request SYST_REFCLK.</description>
+              <bitRange>[1:1]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>No request for SYST_REFCLK to be supplied</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Request for SYST_REFCLK to be supplied</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>BSYS_PWR_ST</name>
+          <description>Base System Power Status Register</description>
+          <addressOffset>0x404</addressOffset>
+          <size>32</size>
+          <access>read-only</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFC3</resetMask>
+          <fields>
+            <field>
+              <name>SYSTOP_PWR_ST</name>
+              <description>SYSTOP power domain status.
+All other values are reserved.</description>
+              <bitRange>[5:3]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>SYSTOP is in the OFF or WARM_RST power mode</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>SYSTOP is in the MEM_RET power mode</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x2</name>
+                  <description>SYSTOP is in the FUNC_RET power mode</description>
+                  <value>0x2</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x4</name>
+                  <description>SYSTOP is in the ON power mode</description>
+                  <value>0x4</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>DBGTOP_PWR_ST</name>
+              <description>DBGTOP power domain status. </description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>DBGTOP is in the OFF or WARM_RST power mode</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>DBGTOP is in the ON power mode</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
         <register>
           <name>SYS_LCTRL_ST</name>
           <description>System Lock Control Status Register</description>
@@ -105,17 +353,17 @@
           <fields>
             <field>
               <name>LOCK_CLR_DIS</name>
-              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[LOCK_CLR_DIS] bit to 0x1
-Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[LOCK_CLR_DIS] bit
-This bit always reads as 0x0</description>
+              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[LOCK_CLR_DIS] bit to 0x1.
+Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[LOCK_CLR_DIS] bit.
+This bit always reads as 0x0.</description>
               <bitRange>[31:31]</bitRange>
               <access>write-only</access>
             </field>
             <field>
               <name>INT_RTR_LOCK</name>
-              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[INT_RTR_LOCK] bit to 0x1
-Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[INT_RTR_LOCK] bit
-This bit always reads as 0x0</description>
+              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[INT_RTR_LOCK] bit to 0x1.
+Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[INT_RTR_LOCK] bit.
+This bit always reads as 0x0.</description>
               <bitRange>[1:1]</bitRange>
               <access>write-only</access>
             </field>
@@ -132,9 +380,9 @@ This bit always reads as 0x0</description>
           <fields>
             <field>
               <name>INT_RTR_LOCK</name>
-              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[INT_RTR_LOCK] bit to 0x0
-Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[INT_RTR_LOCK] bit
-This bit always reads as 0x0</description>
+              <description>Writing 0x1 to this bit sets the SYS_LCTRL_ST[INT_RTR_LOCK] bit to 0x0.
+Writing 0x0 to this bit has no effect on the value of the SYS_LCTRL_ST[INT_RTR_LOCK] bit.
+This bit always reads as 0x0.</description>
               <bitRange>[1:1]</bitRange>
               <access>write-only</access>
             </field>
@@ -157,7 +405,7 @@ This bit always reads as 0x0</description>
             </field>
             <field>
               <name>CLKSELECT_CUR</name>
-              <description>Currently selected clock source for SYST_ACLK
+              <description>Currently selected clock source for SYST_ACLK.
 All other values are reserved.</description>
               <bitRange>[15:8]</bitRange>
               <access>read-only</access>
@@ -181,7 +429,7 @@ All other values are reserved.</description>
             </field>
             <field>
               <name>CLKSELECT</name>
-              <description>Select the clock source for SYST_ACLK
+              <description>Select the clock source for SYST_ACLK.
 All other values are reserved.
 Selecting a reserved value can cause a deadlock.</description>
               <bitRange>[7:0]</bitRange>
@@ -217,7 +465,7 @@ Selecting a reserved value can cause a deadlock.</description>
           <fields>
             <field>
               <name>CLKDIV_CUR</name>
-              <description>Current value of integer divider applied to SYSPLL_CLK</description>
+              <description>Current value of integer divider applied to SYSPLL_CLK.</description>
               <bitRange>[20:16]</bitRange>
               <access>read-only</access>
               <enumeratedValues>
@@ -240,7 +488,7 @@ Selecting a reserved value can cause a deadlock.</description>
             </field>
             <field>
               <name>CLKDIV</name>
-              <description>Select the value of the integer divider applied to SYSPLL_CLK</description>
+              <description>Select the value of the integer divider applied to SYSPLL_CLK.</description>
               <bitRange>[4:0]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -260,6 +508,298 @@ Selecting a reserved value can cause a deadlock.</description>
                   <value>0x1F</value>
                 </enumeratedValue>
               </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DBGCLK_CTRL</name>
+          <description>DBGCLK Clock Control Register</description>
+          <addressOffset>0x840</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000001</resetValue>
+          <resetMask>0xFFFF00FF</resetMask>
+          <fields>
+            <field>
+              <name>ENTRY_DELAY</name>
+              <description>Configure number of idle clock cycles before clock is gated</description>
+              <bitRange>[31:24]</bitRange>
+              <access>read-write</access>
+            </field>
+            <field>
+              <name>CLKSELECT_CUR</name>
+              <description>Currently selected clock source for DBGCLK.
+All other values are reserved.</description>
+              <bitRange>[15:8]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Clock gate</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>SYST_REFCLK</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x2</name>
+                  <description>SYSPLL_CLK</description>
+                  <value>0x2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CLKSELECT</name>
+              <description>Select the clock source for DBGCLK.
+All other values are reserved.
+Selecting a reserved value can cause a deadlock.</description>
+              <bitRange>[7:0]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Clock gate</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>SYST_REFCLK</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x2</name>
+                  <description>SYSPLL_CLK</description>
+                  <value>0x2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>DBGCLK_DIV0</name>
+          <description>DBGCLK Clock Divider 0 Register</description>
+          <addressOffset>0x844</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFE0FFFF</resetMask>
+          <fields>
+            <field>
+              <name>CLKDIV_CUR</name>
+              <description>Current value of integer divider applied to SYSPLL_CLK.</description>
+              <bitRange>[20:16]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Divide by 1</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Divide by 2</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1F</name>
+                  <description>Divide by 32</description>
+                  <value>0x1F</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CLKDIV</name>
+              <description>Select the value of the integer divider applied to SYSPLL_CLK.</description>
+              <bitRange>[4:0]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Divide by 1</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Divide by 2</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1F</name>
+                  <description>Divide by 32</description>
+                  <value>0x1F</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CLKFORCE_ST</name>
+          <description>Clock Force Status Register</description>
+          <addressOffset>0xA00</addressOffset>
+          <size>32</size>
+          <access>read-only</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>REFCLK_FORCE_ST</name>
+              <description>Status of SYST_REFCLK clock force.</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>High-level clock gating is enabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>High-level clock gating is disabled</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>DBGCLK_FORCE_ST</name>
+              <description>Status of DBGCLK clock force.</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>High-level clock gating is enabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>High-level clock gating is disabled</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>CTRLCLK_FORCE_ST</name>
+              <description>Status of CTRLCLK clock force.</description>
+              <bitRange>[3:3]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>High-level clock gating is enabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>High-level clock gating is disabled</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>ACLK_FORCE_ST</name>
+              <description>Status of SYST_ACLK clock force.</description>
+              <bitRange>[2:2]</bitRange>
+              <access>read-only</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>High-level clock gating is enabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>High-level clock gating is disabled</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CLKFORCE_SET</name>
+          <description>Clock Force Set Register</description>
+          <addressOffset>0xA04</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>REFCLK_FORCE_SET</name>
+              <description>Set CLKFORCE_ST[REFCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[6:6]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>DBGCLK_FORCE_SET</name>
+              <description>Set CLKFORCE_ST[DBGCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>CTRLCLK_FORCE_SET</name>
+              <description>Set CLKFORCE_ST[CTRLCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ACLK_FORCE_SET</name>
+              <description>Set CLKFORCE_ST[ACLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[2:2]</bitRange>
+              <access>write-only</access>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CLKFORCE_CLR</name>
+          <description>Clock Force Clear Register</description>
+          <addressOffset>0xA08</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFFFF</resetMask>
+          <fields>
+            <field>
+              <name>REFCLK_FORCE_CLR</name>
+              <description>Clear CLKFORCE_ST[REFCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[6:6]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>DBGCLK_FORCE_CLR</name>
+              <description>Clear CLKFORCE_ST[DBGCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[4:4]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>CTRLCLK_FORCE_CLR</name>
+              <description>Clear CLKFORCE_ST[CTRLCLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[3:3]</bitRange>
+              <access>write-only</access>
+            </field>
+            <field>
+              <name>ACLK_FORCE_CLR</name>
+              <description>Clear CLKFORCE_ST[ACLK_FORCE_ST] bit.
+Writing 0x0 has no effect.
+This field always reads as 0x0.</description>
+              <bitRange>[2:2]</bitRange>
+              <access>write-only</access>
             </field>
           </fields>
         </register>
@@ -1806,7 +2346,7 @@ When TMP_ST_VLD is 0, this field is not valid.</description>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Val_0x1</name>
-                  <description>Select 38.4 MHz crystal-oscillator clock</description>
+                  <description>Select 76.8 MHz (38.4 MHz x 2) crystal-oscillator clock</description>
                   <value>0x1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -3654,12 +4194,12 @@ Bits [7-0]: Quiescence entry delay for AON clock controller</description>
           <size>32</size>
           <access>read-write</access>
           <resetValue>0x00000000</resetValue>
-          <resetMask>0x0001E000</resetMask>
+          <resetMask>0x001E0000</resetMask>
           <fields>
             <field>
               <name>CLKDIV</name>
               <description>HFXO divisor</description>
-              <bitRange>[16:13]</bitRange>
+              <bitRange>[20:17]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
                 <enumeratedValue>
@@ -4456,13 +4996,135 @@ Note: ADC120 must be put into differential mode when PGA is enabled</description
           </fields>
         </register>
         <register>
+          <name>PWR_CTRL_REG</name>
+          <description>VBAT Power Control Register</description>
+          <addressOffset>0x4</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0x00030071</resetMask>
+          <fields>
+            <field>
+              <name>MRAM_VDDA_1P8_PWR_BYP_VAL</name>
+              <description>Power setting for MRAM 1.8 V supply. The setting is used only
+if MRAM_VDDA_1P8_PWR_BYP_EN bit is enabled.</description>
+              <bitRange>[17:17]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Power disabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Power enabled</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>MRAM_VDDA_1P8_PWR_BYP_EN</name>
+              <description>Power mode for MRAM 1.8 V supply</description>
+              <bitRange>[16:16]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Power enabled whenever PD-6 is enabled</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Power specified by MRAM_VDDA_1P8_PWR_BYP_VAL bit</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>MBIST_EFUSE_VDD18</name>
+              <description>Enable 1.8 V supply for MBIST efuse</description>
+              <bitRange>[6:6]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0</name>
+                  <description>Disable</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_1</name>
+                  <description>Enable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>SECENC_EFUSE_VDD18</name>
+              <description>Enable 1.8 V supply for SE efuse</description>
+              <bitRange>[5:5]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0</name>
+                  <description>Disable</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_1</name>
+                  <description>Enable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>MRAM_EFUSE_VDD18</name>
+              <description>Enable 1.8 V supply for MRAM efuse</description>
+              <bitRange>[4:4]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0</name>
+                  <description>Disable</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_1</name>
+                  <description>Enable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>MDM_AON</name>
+              <description>Software controlled BLE Modem AON power.
+Only if BLE modem is used, then hardware logic will switch on PD-1 and PD-7 concurrently to avoid breaking BLE core logic. SE must set this bit to 0x1 after powering up PD-7 to keep PD1 domain ON forever regardless the power state of the BLE core (PD-7). Once this bit is set, it should never be cleared.
+Note: PD-7 and PD-1 domains are OFF by default. </description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0</name>
+                  <description>Disable</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_1</name>
+                  <description>Enable</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
           <name>WKUP_CTRL</name>
           <description>VBAT Wake-up Source Control Register</description>
           <addressOffset>0x8</addressOffset>
           <size>32</size>
           <access>read-write</access>
           <resetValue>0x00000011</resetValue>
-          <resetMask>0x00FF0FFF</resetMask>
+          <resetMask>0x00FF0FF9</resetMask>
           <fields>
             <field>
               <name>LPGPIO</name>
@@ -4555,6 +5217,41 @@ This register bit is also used to clear the wake-up source by SE CPU.</descripti
                 </enumeratedValue>
               </enumeratedValues>
             </field>
+            <field>
+              <name>MDM</name>
+              <description>Controls enable/disable of wake-up source from BLE Modem AON</description>
+              <bitRange>[0:0]</bitRange>
+              <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0</name>
+                  <description>Disable wake-up source</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_1</name>
+                  <description>Enable wake-up source</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <name>CM55_HE_SE_VTOR</name>
+          <description>25-bit M55-HE Secure VTOR Register</description>
+          <addressOffset>0x24</addressOffset>
+          <size>32</size>
+          <access>read-write</access>
+          <resetValue>0x00000000</resetValue>
+          <resetMask>0xFFFFFF80</resetMask>
+          <fields>
+            <field>
+              <name>VCTR</name>
+              <description>Bits [31:7] of vector table base address. Bits [6:0] are discarded.</description>
+              <bitRange>[31:7]</bitRange>
+              <access>read-write</access>
+            </field>
           </fields>
         </register>
         <register>
@@ -4604,12 +5301,6 @@ Clock is DC-DC clock divided by 8 (~250 kHz for nominal settings)</description>
  Max is 1111 = 15 clock cycles delay
 Clock is DC-DC clock divided by 8 (~250 kHz for nominal settings)</description>
               <bitRange>[21:18]</bitRange>
-              <access>read-write</access>
-            </field>
-            <field>
-              <name>DCDC_EN_XTAL_CLK</name>
-              <description>When set to '1', switches DC-DC PWM clock from internal 2-MHz oscillator to 2-MHz crystal oscillator.</description>
-              <bitRange>[17:17]</bitRange>
               <access>read-write</access>
             </field>
             <field>
@@ -4783,12 +5474,12 @@ Step: 22.857 mV</description>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>Val_0b000</name>
-                  <description>1.585 mV</description>
+                  <description>1.585 V</description>
                   <value>0b000</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Val_0b111</name>
-                  <description>1.745 mV</description>
+                  <description>1.745 V</description>
                   <value>0b111</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -4814,9 +5505,21 @@ Step: 22.857 mV</description>
             </field>
             <field>
               <name>BOR_EN</name>
-              <description>Enables brown-out reset circuit.</description>
+              <description>Enables BOR circuit.</description>
               <bitRange>[25:25]</bitRange>
               <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Disable</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Enable</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
             </field>
             <field>
               <name>XTAL32K_CAP_CONT</name>
@@ -5317,9 +6020,21 @@ Step: 22.857 mV</description>
             </field>
             <field>
               <name>BOD_EN</name>
-              <description>Enables brown-out detector.</description>
+              <description>Enables BOD circuit. </description>
               <bitRange>[8:8]</bitRange>
               <access>read-write</access>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Val_0x0</name>
+                  <description>Disable</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Enable</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
             </field>
             <field>
               <name>LDO_MAIN_CONT</name>
@@ -11660,7 +12375,8 @@ For field encoding (list of supported PMU events), refer to the Arm(R) Ethos(TM)
           <fields>
             <field>
               <name>CB</name>
-              <description>Enable DMA request on DMACBREQ</description>
+              <description>Enable DMA request on DMACBREQ (DMAC Burst Request)
+Note: It is recommended to enable all DMA requests on the burst request line (DMACBREQ). For single transfer, the number of beats in a burst should be set to 1 (DMA_CCRn[SRC_BURST_LEN] = 0x0).</description>
               <bitRange>[12:12]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -11678,7 +12394,8 @@ For field encoding (list of supported PMU events), refer to the Arm(R) Ethos(TM)
             </field>
             <field>
               <name>CS</name>
-              <description>Enable DMA request on DMACSREQ</description>
+              <description>Enable DMA request on DMACSREQ (DMAC Single Request)
+Note: It is recommended to enable all DMA requests on the burst request line (DMACBREQ), even for single transfer.</description>
               <bitRange>[8:8]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -11696,7 +12413,8 @@ For field encoding (list of supported PMU events), refer to the Arm(R) Ethos(TM)
             </field>
             <field>
               <name>CLB</name>
-              <description>Enable DMA request on DMACLBREQ</description>
+              <description>Enable DMA request on DMACLBREQ (DMAC Last Burst Request)
+Note: Do not use. The current implementation does not support transfers from a peripheral with an unspecified length ('peripheral length management').</description>
               <bitRange>[4:4]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -11714,7 +12432,8 @@ For field encoding (list of supported PMU events), refer to the Arm(R) Ethos(TM)
             </field>
             <field>
               <name>CLS</name>
-              <description>Enable DMA request on DMACLSREQ</description>
+              <description>Enable DMA request on DMACLSREQ (DMAC Last Single Request)
+Note: Do not use. The current implementation does not support transfers from a peripheral with an unspecified length ('peripheral length management').</description>
               <bitRange>[0:0]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -18091,7 +18810,8 @@ When bit HE_FLT_ENA1[CPI_STREAM_EN] is set to 1 (streaming enabled), the CPI log
             </field>
             <field>
               <name>NPU_CKEN</name>
-              <description>Enable clock for NPU-HE</description>
+              <description>Enable clock for NPU-HE
+Note: When this bit is 0x1, the clock is automatically controlled. When this bit is 0x0, the clock is forcibly disabled, overriding the automatic control. Forcing this clock off can block RTSS-HE power domain state transitions or resets and does not save more power than the automatic gating. Therefore, this bit should remain 0x1 in normal operation. The control exists for test and debug purposes only.</description>
               <bitRange>[0:0]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -18102,7 +18822,7 @@ When bit HE_FLT_ENA1[CPI_STREAM_EN] is set to 1 (streaming enabled), the CPI log
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Val_0x1</name>
-                  <description>Enable clock</description>
+                  <description>Enable clock (automatic gating)</description>
                   <value>0x1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -35686,7 +36406,6 @@ Note: Software should ensure that, if this bit is set to 0, then the MASTER_MODE
               <name>IC_RESTART_EN</name>
               <description>Determines whether RESTART conditions may be sent when acting as a master. Some older slaves do not support handling RESTART conditions; however, RESTART conditions are used in several I2C operations. When RESTART is disabled, the master is prohibited from performing the following functions:
 - Sending a START BYTE
-- Performing any high-speed mode operation
 - Performing direction changes in combined format mode
 - Performing a read operation with a 10-bit address
 By replacing RESTART condition followed by STOP and subsequent START condition, split operations are broken down into multiple I2C transfers. If the above operations are performed, it will result in asserting the I2C_RAW_INTR_STAT[TX_ABRT] bit.</description>
@@ -35757,11 +36476,6 @@ This register should be programmed only with a value in the range of 1 to 3.</de
                   <name>Val_0x2</name>
                   <description>Fast or Fast Plus mode of operation</description>
                   <value>0x2</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0x3</name>
-                  <description>High-speed mode of operation</description>
-                  <value>0x3</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -35898,30 +36612,6 @@ Note: The correct operation of the I2C interface is not guaranteed if this field
           </fields>
         </register>
         <register>
-          <name>I2C_HS_MADDR</name>
-          <description>High Speed Master Mode Code Address Register</description>
-          <addressOffset>0xC</addressOffset>
-          <size>32</size>
-          <access>read-write</access>
-          <resetValue>0x00000001</resetValue>
-          <resetMask>0xFFFFFFFF</resetMask>
-          <fields>
-            <field>
-              <name>IC_HS_MAR</name>
-              <description>This bit field holds the value of the I2C HS mode master
-code. HS mode master codes are reserved 8-bit codes
-(00001xxx) that are not used for slave addressing or other
-purposes. Each master has its unique master code; up to
-eight high-speed mode masters can be present on the same
-I^2C bus system. Valid values are 0-7.
-This register can only be written when the I2C module is
-disabled, which corresponds to the I2C_ENABLE[ENABLE] bit being set to 0. Writes at other times have no effect.</description>
-              <bitRange>[2:0]</bitRange>
-              <access>read-write</access>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>I2C_DATA_CMD</name>
           <description>Rx/Tx Data Buffer and Command Register</description>
           <addressOffset>0x10</addressOffset>
@@ -36031,48 +36721,6 @@ The minimum valid value is 6; hardware prevents values less than this being writ
             <field>
               <name>IC_FS_SCL_LCNT</name>
               <description>This register must be set before any I2C bus transaction can take place to ensure proper I/O timing. This register sets the SCL clock low period count for fast speed or fast mode plus.
-This register can only be written when the I2C module is disabled, which corresponds to the I2C_ENABLE[ENABLE] bit being set to 0. Writes at other times have no effect.
-The minimum valid value is 8; hardware prevents values less than this being written, and if attempted, results in 8 being set.</description>
-              <bitRange>[15:0]</bitRange>
-              <access>read-write</access>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>I2C_HS_SCL_HCNT</name>
-          <description>High Speed SCL High Count Register</description>
-          <addressOffset>0x24</addressOffset>
-          <size>32</size>
-          <access>read-write</access>
-          <resetValue>0x00000006</resetValue>
-          <resetMask>0xFFFFFFFF</resetMask>
-          <fields>
-            <field>
-              <name>IC_HS_SCL_HCNT</name>
-              <description>This register must be set before any I2C bus transaction can take place to ensure proper I/O timing. This register sets the SCL clock high period count for high speed.
-The SCL high time depends on the loading of the bus. For
-100 pF loading, the SCL high time is 60 ns.
-This register can only be written when the I2C module is disabled, which corresponds to the I2C_ENABLE[ENABLE] bit being set to 0. Writes at other times have no effect.
-The minimum valid value is 6; hardware prevents values less than this being written, and if attempted, results in 6 being set.</description>
-              <bitRange>[15:0]</bitRange>
-              <access>read-write</access>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>I2C_HS_SCL_LCNT</name>
-          <description>High Speed SCL Low Count Register</description>
-          <addressOffset>0x28</addressOffset>
-          <size>32</size>
-          <access>read-write</access>
-          <resetValue>0x00000010</resetValue>
-          <resetMask>0xFFFFFFFF</resetMask>
-          <fields>
-            <field>
-              <name>IC_HS_SCL_LCNT</name>
-              <description>This register must be set before any I2C bus transaction can take place to ensure proper I/O timing. This register sets the SCL clock low period count for high speed.
-The SCL low time depends on the loading of the bus. For
-100 pF loading, the SCL low time is 160 ns.
 This register can only be written when the I2C module is disabled, which corresponds to the I2C_ENABLE[ENABLE] bit being set to 0. Writes at other times have no effect.
 The minimum valid value is 8; hardware prevents values less than this being written, and if attempted, results in 8 being set.</description>
               <bitRange>[15:0]</bitRange>
@@ -37738,28 +38386,6 @@ trying to send START BYTE when RESTART disabled</description>
               </enumeratedValues>
             </field>
             <field>
-              <name>ABRT_HS_NORSTRT</name>
-              <description>This is a master-mode-only bit.
-This field indicates that the RESTART feature is disabled
-(I2C_CON[IC_RESTART_EN] = 0) and the user is tryingto use the master to transfer data in High-Speed mode.
-Role of I2C: Master-Transmitter or Master-Receiver
-to switch master to HS mode when the RESTART feature is disabled</description>
-              <bitRange>[8:8]</bitRange>
-              <access>read-only</access>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Val_0x0</name>
-                  <description>This abort is not generated</description>
-                  <value>0x0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0x1</name>
-                  <description>User trying</description>
-                  <value>0x1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
               <name>ABRT_SBYTE_ACKDET</name>
               <description>This is a master-mode-only bit.
 This field indicates that the master has sent a START BYTE and the START BYTE was acknowledged (wrong behavior).
@@ -37775,29 +38401,6 @@ Role of I2C: Master</description>
                 <enumeratedValue>
                   <name>Val_0x1</name>
                   <description>ACK detected for START BYTE</description>
-                  <value>0x1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>ABRT_HS_ACKDET</name>
-              <description>This is a master-mode-only bit.
-This field indicates that the master is in High-Speed mode
-and the High-Speed master code was acknowledged (wrong
-behavior).
-Role of I2C: Master
-acknowledged in HS mode</description>
-              <bitRange>[6:6]</bitRange>
-              <access>read-only</access>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Val_0x0</name>
-                  <description>This abort is not generated</description>
-                  <value>0x0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0x1</name>
-                  <description>HS master code</description>
                   <value>0x1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -38157,26 +38760,6 @@ This register can only be written when the I2C module is disabled, which corresp
           </fields>
         </register>
         <register>
-          <name>I2C_HS_SPKLEN</name>
-          <description>HS Spike Suppression Limit Register</description>
-          <addressOffset>0xA4</addressOffset>
-          <size>32</size>
-          <access>read-write</access>
-          <resetValue>0x00000001</resetValue>
-          <resetMask>0xFFFFFFFF</resetMask>
-          <fields>
-            <field>
-              <name>IC_HS_SPKLEN</name>
-              <description>This register must be set before any I2C bus transaction can take place to ensure stable operation.
-This register sets the duration, measured in IC_CLK cycles, of the longest spike in the SCL or SDA lines that will be filtered out by the spike suppression logic.
-This register can only be written when the I2C module is disabled, which corresponds to the I2C_ENABLE[ENABLE] bit being set to 0. Writes at other times have no effect.
-The minimum valid value is 1; hardware prevents values less than this being written, and if attempted, results in 1 being set.</description>
-              <bitRange>[7:0]</bitRange>
-              <access>read-write</access>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>I2C_SCL_STUCK_AT_LOW_TIMEOUT</name>
           <description>SCL Stuck at Low Timeout Register</description>
           <addressOffset>0xAC</addressOffset>
@@ -38353,16 +38936,10 @@ counting down. A zero on this counter will break the waited APB transaction with
             </field>
             <field>
               <name>MAX_SPEED_MODE</name>
-              <description>This field defines the maximum speed mode.</description>
+              <description>This field defines the maximum speed mode.
+Note: Although this field reads as 0x3, the device supports up to FM+ mode (0x2).</description>
               <bitRange>[3:2]</bitRange>
               <access>read-only</access>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Val_0x3</name>
-                  <description>High-Speed</description>
-                  <value>0x3</value>
-                </enumeratedValue>
-              </enumeratedValues>
             </field>
             <field>
               <name>APB_DATA_WIDTH</name>
@@ -39496,24 +40073,6 @@ Step Size = 1/16</description>
               <access>read-write</access>
             </field>
             <field>
-              <name>ADC_VREF_BUF_RDIV_EN</name>
-              <description>ADC Vref divider enable</description>
-              <bitRange>[16:16]</bitRange>
-              <access>read-write</access>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Val_0x0</name>
-                  <description>Vref = 1.8 V</description>
-                  <value>0x0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0x1</name>
-                  <description>Vref = 1.5 V</description>
-                  <value>0x1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
               <name>ADC_VREF_BUF_EN</name>
               <description>ADC Vref buffer enable.</description>
               <bitRange>[15:15]</bitRange>
@@ -39528,30 +40087,6 @@ Step Size = 1/16</description>
                   <name>Val_0x1</name>
                   <description>ADC Vref is on</description>
                   <value>0x1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>ADC_VREF_CONT</name>
-              <description>Control for ADC Vref: 1.8 V +- 100 mV, where:
- Step size = 7 mV</description>
-              <bitRange>[14:10]</bitRange>
-              <access>read-write</access>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Val_0b00000</name>
-                  <description>-100 mV</description>
-                  <value>0b00000</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0b11111</name>
-                  <description>100 mV</description>
-                  <value>0b11111</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Val_0b10000</name>
-                  <description>1.8 V = Default (0x10)</description>
-                  <value>0b10000</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -50038,8 +50573,13 @@ n: Clock divided by n</description>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>Val_0x0</name>
-                  <description>Select SYST_ACLK</description>
+                  <description>Select 160 MHz clock source (SYST_ACLK)</description>
                   <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Select 160 MHz clock source (PLL_CLK1)</description>
+                  <value>0x1</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -50092,7 +50632,8 @@ n: Clock divided by n</description>
             </field>
             <field>
               <name>USB_CKEN</name>
-              <description>Enable clock for USB</description>
+              <description>Enable clock for USB
+Note: Bit SDC_CKEN must also be set to 0x1 for the USB clock to be enabled.</description>
               <bitRange>[20:20]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -54484,7 +55025,7 @@ This bit enables Dual Data-Rate transfer for instruction phase.</description>
             <field>
               <name>SPI_DDR_EN</name>
               <description>SPI DDR Enable bit.
-This bit enables Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+This bit enables Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[16:16]</bitRange>
               <access>read-write</access>
             </field>
@@ -54497,7 +55038,7 @@ Note: If wait cycles during the write transfer are not needed this field can be 
             </field>
             <field>
               <name>INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.
+              <description>Enhanced SPI mode instruction length in bits.
 Note: For enhanced SPI modes, INST_L and ADDR_L cannot be both programmed to 0x0 at the same time.</description>
               <bitRange>[9:8]</bitRange>
               <access>read-write</access>
@@ -54813,7 +55354,7 @@ Once this bit is set to 1, OSPI will use Read data strobe (RXDS) to capture read
             <field>
               <name>DDR_EN</name>
               <description>SPI DDR Enable bit.
-This bit enables Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+This bit enables Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[19:19]</bitRange>
               <access>read-write</access>
             </field>
@@ -54839,7 +55380,7 @@ If this bit is set to 1 then data frame size for XIP transfers is fixed to the p
             </field>
             <field>
               <name>INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.</description>
+              <description>Enhanced SPI mode instruction length in bits.</description>
               <bitRange>[10:9]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -55128,13 +55669,13 @@ Selects if data frame format for XIP Write transfers is in Hyperbus mode.</descr
             </field>
             <field>
               <name>WR_SPI_DDR_EN</name>
-              <description>SPI DDR Enable bit. This will enable Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+              <description>SPI DDR Enable bit. This will enable Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[10:10]</bitRange>
               <access>read-write</access>
             </field>
             <field>
               <name>WR_INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.</description>
+              <description>Enhanced SPI mode instruction length in bits.</description>
               <bitRange>[9:8]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -56081,13 +56622,13 @@ Write 0x1: Clear pending state of interrupt</description>
         </clk>
       </module>
       <module name="LPGPIO">
-        <clk name="DBCLK" clkSource="S32K_CLK">
+        <clk name="DBCLK" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO debounce clock</clkDesc>
         </clk>
-        <clk name="PCLK" clkSource="S32K_CLK">
+        <clk name="PCLK" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO APB interface clock</clkDesc>
         </clk>
-        <clk name="PCLK_INTR" clkSource="S32K_CLK">
+        <clk name="PCLK_INTR" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO interrupt clock</clkDesc>
         </clk>
       </module>
@@ -56346,7 +56887,7 @@ Write 0x1: Clear pending state of interrupt</description>
         <clk name="PCLK" clkSource="SYST_PCLK">
           <clkDesc>CDC APB slave interface clock</clkDesc>
         </clk>
-        <clk name="PIXEL_CLK" clkSource="SYST_ACLK / Div; (divider value can be configured in the CDC200_PIXCLK_CTRL[CLK_DIVISOR] register field)">
+        <clk name="PIXEL_CLK" clkSource="(SYST_ACLK or PLL_CLK1) / Div; (source selection and divider value can be configured in the CDC200_PIXCLK_CTRL[CLK_SEL] and [CLK_DIVISOR] register fields)">
           <clkDesc>CDC pixel data clock</clkDesc>
         </clk>
       </module>

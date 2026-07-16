@@ -581,8 +581,8 @@
         <device Dname="AE402FA0D5597BS0">
           <compile Pname="M55_HP" header="Device/core/common/include/alif.h" define="RTSS_HP"/>
           <compile Pname="M55_HE" header="Device/core/common/include/alif.h" define="RTSS_HE"/>
-          <debug svd="Debug/SVD/AE402FA0E5597BE0_CM55_HP_View.svd" Pname="M55_HP" __apid="0"/>
-          <debug svd="Debug/SVD/AE402FA0E5597BE0_CM55_HE_View.svd" Pname="M55_HE" __apid="1"/>
+          <debug svd="Debug/SVD/AE402FA0D5597BE0_CM55_HE_View.svd" Pname="M55_HP" __apid="0"/>
+          <debug svd="Debug/SVD/AE402FA0D5597BE0_CM55_HE_View.svd" Pname="M55_HE" __apid="1"/>
           <!-- GPIO -->
           <feature type="IOs" n="136" name="General Purpose I/Os, 1.8V"/>
           <!-- Package -->

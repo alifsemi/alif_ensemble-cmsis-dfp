@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--v2.3: Aligned with HWRM v2.10 and CONDUCTOR v1.0.14-->
+<!--v2.4: Aligned with HWRM v2.10 and CONDUCTOR v1.0.15-->
 <device xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.1" xs:noNamespaceSchemaLocation="CMSIS-SVD.xsd">
   <vendor>Alif Semiconductor</vendor>
   <vendorID>ALIF</vendorID>
@@ -26689,7 +26689,7 @@ When this bit is reset, the AFM module passes all received broadcast packets.</d
             <field>
               <name>PM</name>
               <description>Pass All Multicast
-When this bit is set, it indicates that all the received packets with a multicast destination address (first bit in the destination address field is '1') are passed. When this bit is reset, filtering of multicast packet depends on HMC bit.</description>
+When this bit is set, it indicates that all the received packets with a multicast destination address (first bit in the destination address field is '1') are passed.</description>
               <bitRange>[4:4]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -62681,6 +62681,11 @@ n: Clock divided by n</description>
                   <description>Select 400 MHz clock source (SYST_ACLK)</description>
                   <value>0x0</value>
                 </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Select 480 MHz clock source (PLL_CLK3)</description>
+                  <value>0x1</value>
+                </enumeratedValue>
               </enumeratedValues>
             </field>
             <field>
@@ -62752,6 +62757,11 @@ n: Clock divided by n</description>
                   <description>Select 400 MHz clock source (SYST_ACLK)</description>
                   <value>0x0</value>
                 </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Select 480 MHz clock source (PLL_CLK3)</description>
+                  <value>0x1</value>
+                </enumeratedValue>
               </enumeratedValues>
             </field>
             <field>
@@ -62822,6 +62832,11 @@ n: Clock divided by n</description>
                   <name>Val_0x0</name>
                   <description>Select 400 MHz clock source (SYST_ACLK)</description>
                   <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Val_0x1</name>
+                  <description>Select 480 MHz clock source (PLL_CLK3)</description>
+                  <value>0x1</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -68153,7 +68168,7 @@ This bit enables Dual Data-Rate transfer for instruction phase.</description>
             <field>
               <name>SPI_DDR_EN</name>
               <description>SPI DDR Enable bit.
-This bit enables Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+This bit enables Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[16:16]</bitRange>
               <access>read-write</access>
             </field>
@@ -68165,7 +68180,7 @@ This bit enables Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SP
             </field>
             <field>
               <name>INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.
+              <description>Enhanced SPI mode instruction length in bits.
 Note: For enhanced SPI modes, INST_L and ADDR_L cannot be both programmed to 0x0 at the same time.</description>
               <bitRange>[9:8]</bitRange>
               <access>read-write</access>
@@ -68474,7 +68489,7 @@ Once this bit is set to 1, OSPI will use Read data strobe (RXDS) to capture read
             <field>
               <name>DDR_EN</name>
               <description>SPI DDR Enable bit.
-This bit enables Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+This bit enables Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[19:19]</bitRange>
               <access>read-write</access>
             </field>
@@ -68500,7 +68515,7 @@ If this bit is set to 1 then data frame size for XIP transfers is fixed to the p
             </field>
             <field>
               <name>INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.</description>
+              <description>Enhanced SPI mode instruction length in bits.</description>
               <bitRange>[10:9]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -68783,13 +68798,13 @@ Selects if data frame format for XIP Write transfers is in Hyperbus mode.</descr
             </field>
             <field>
               <name>WR_SPI_DDR_EN</name>
-              <description>SPI DDR Enable bit. This will enable Dual Data-Rate transfers in Dual/Quad/Octal frame formats of SPI.</description>
+              <description>SPI DDR Enable bit. This will enable Dual Data-Rate transfers in Enhanced SPI frame formats of SPI.</description>
               <bitRange>[10:10]</bitRange>
               <access>read-write</access>
             </field>
             <field>
               <name>WR_INST_L</name>
-              <description>Dual/Quad/Octal mode instruction length in bits.</description>
+              <description>Enhanced SPI mode instruction length in bits.</description>
               <bitRange>[9:8]</bitRange>
               <access>read-write</access>
               <enumeratedValues>
@@ -70048,13 +70063,13 @@ Write 0x1: Clear pending state of interrupt</description>
         </clk>
       </module>
       <module name="LPGPIO">
-        <clk name="DBCLK" clkSource="S32K_CLK">
+        <clk name="DBCLK" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO debounce clock</clkDesc>
         </clk>
-        <clk name="PCLK" clkSource="S32K_CLK">
+        <clk name="PCLK" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO APB interface clock</clkDesc>
         </clk>
-        <clk name="PCLK_INTR" clkSource="S32K_CLK">
+        <clk name="PCLK_INTR" clkSource="S32K_CLK; Clock selection is done via the SEL_FAST_APB_REG[SEL_FAST_APB_REG] register bit">
           <clkDesc>LPGPIO interrupt clock</clkDesc>
         </clk>
       </module>
@@ -70351,13 +70366,13 @@ Write 0x1: Clear pending state of interrupt</description>
         </clk>
       </module>
       <module name="CPI">
-        <clk name="ACLK" clkSource="RTSS_HE_CLK">
+        <clk name="ACLK" clkSource="SYST_HCLK">
           <clkDesc>CPI AXI interface clock</clkDesc>
         </clk>
-        <clk name="PCLK" clkSource="RTSS_HE_CLK">
+        <clk name="PCLK" clkSource="SYST_PCLK">
           <clkDesc>CPI APB interface clock</clkDesc>
         </clk>
-        <clk name="PIXEL_CLK" clkSource="SYST_ACLK/Div or CAM_PCLK pin or CAM_PCLK inverted pin">
+        <clk name="PIXEL_CLK" clkSource="(SYST_ACLK or PLL_CLK3)/Div or CAM_PCLK pin or CAM_PCLK inverted pin">
           <clkDesc>CPI pixel clock</clkDesc>
         </clk>
       </module>
@@ -70376,7 +70391,7 @@ Write 0x1: Clear pending state of interrupt</description>
         <clk name="PCLK" clkSource="SYST_PCLK">
           <clkDesc>CSI APB slave interface clock</clkDesc>
         </clk>
-        <clk name="PIXCLK" clkSource="SYST_ACLK / Div ; (divider value can be configured in the CSI_PIXCLK_CTRL[CLK_DIVISOR] register field)">
+        <clk name="PIXCLK" clkSource="(SYST_ACLK or PLL_CLK3) / Div ; (source selection and divider value can be configured in the CSI_PIXCLK_CTRL[CLK_SEL][CLK_DIVISOR] register field)">
           <clkDesc>CSI IPI interface pixel clock</clkDesc>
         </clk>
         <clk name="RXBYTECLKHS" clkSource="D-PHY RX">
@@ -70395,7 +70410,7 @@ Write 0x1: Clear pending state of interrupt</description>
         <clk name="PCLK" clkSource="SYST_PCLK">
           <clkDesc>CDC APB slave interface clock</clkDesc>
         </clk>
-        <clk name="PIXEL_CLK" clkSource="SYST_ACLK / Div; (divider value can be configured in the CDC200_PIXCLK_CTRL[CLK_DIVISOR] register field)">
+        <clk name="PIXEL_CLK" clkSource="(SYST_ACLK or PLL_CLK3) / Div; (source selection and divider value can be configured in the CDC200_PIXCLK_CTRL[CLK_SEL][CLK_DIVISOR] register field)">
           <clkDesc>CDC pixel data clock</clkDesc>
         </clk>
       </module>
