@@ -42,47 +42,19 @@
 #include "vsi_comm_awb.h"
 #include "vsios_log.h"
 
-#if (RTE_ISP_AE_MODULE)
 #include "vsi_comm_ae.h"
 #include "vsi_comm_sns.h"
 #include "sensor_attributes.h"
-#endif /* RTE_ISP_AE_MODULE */
 
-#if (RTE_ISP_BINNING_MODULE)
 #include "mpi_isp_binning.h"
-#endif /* RTE_ISP_BINNING_MODULE */
-
-#if (RTE_ISP_BLS_MODULE)
 #include "mpi_isp_bls.h"
-#endif /* RTE_ISP_BLS_MODULE */
-
-#if (RTE_ISP_DMSC_MODULE)
 #include "mpi_isp_dmsc.h"
-#endif /* RTE_ISP_DMSC_MODULE */
-
-#if (RTE_ISP_FLT_MODULE)
 #include "mpi_isp_flt.h"
-#endif /* RTE_ISP_FLT_MODULE */
-
-#if (RTE_ISP_CCM_MODULE)
 #include "mpi_isp_ccm.h"
-#endif /* RTE_ISP_CCM_MODULE */
-
-#if (RTE_ISP_GAMMAOUT_MODULE)
 #include "mpi_isp_gamma_out.h"
-#endif /* RTE_ISP_GAMMAOUT_MODULE */
-
-#if (RTE_ISP_CSM_MODULE)
 #include "mpi_isp_csm.h"
-#endif /* RTE_ISP_CSM_MODULE */
-
-#if (RTE_ISP_EXPM_MODULE)
 #include "mpi_isp_expm.h"
-#endif /* RTE_ISP_EXPM_MODULE */
-
-#if (RTE_ISP_WBM_MODULE)
 #include "mpi_isp_wbm.h"
-#endif /* RTE_ISP_WBM_MODULE */
 
 /* CMSIS ISP driver Includes */
 #include "Driver_ISP.h"
@@ -91,13 +63,9 @@
 
 extern void VSI_ISP_IrqProcessFrameEnd(ISP_PORT IspPort);
 
-#if (RTE_ISP_WB_MODULE)
 extern ISP_AWB_FUNC_S vsiAwbAlgo;
-#endif /* RTE_ISP_WB_MODULE */
 
-#if (RTE_ISP_AE_MODULE)
 extern ISP_AE_FUNC_S vsiAeAlgo;
-#endif /* RTE_ISP_AE_MODULE */
 
 #define ARM_ISP_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(0, 1) /* driver version */
 
@@ -128,7 +96,6 @@ static int log_level(void)
     return LIB_LOG_LEVEL;
 }
 
-#if (RTE_ISP_AE_MODULE)
 /* Cached sensor values for AE - written in ISR context, read in thread context.
  * All fields are written only from ISP_IRQHandler; readers must hold a
  * critical section (PRIMASK) while snapshotting.
@@ -212,10 +179,8 @@ int ISP_Sensor_AEGetCachedValues(uint32_t *pIntLine, uint32_t *pAgain, uint32_t 
     return 0;
 }
 
-#endif /* RTE_ISP_AE_MODULE */
 
 
-#if (RTE_ISP_AE_MODULE)
 int ISP_Sensor_AEIsStable(ISP_RESOURCES *isp)
 {
     int ret = 0;
@@ -227,7 +192,6 @@ int ISP_Sensor_AEIsStable(ISP_RESOURCES *isp)
     }
     return (int)info.isStable;
 }
-#endif /* RTE_ISP_AE_MODULE */
 
 /*
  * fn        ARM_DRIVER_VERSION ISP_GetVersion(void)
@@ -296,18 +260,12 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
         return ARM_DRIVER_ERROR;
     }
 
-    // Technically it should be set when we are setting AWB.
-    // The algorithm must be first registered and then Init.
-#if (RTE_ISP_WB_MODULE)
-    if (isp->isp_calib_info->modules.wb.opType == OP_TYPE_AUTO) {
-        ret = VSI_MPI_ISP_AwbRegCallBack(isp->isp_port_id, &vsiAwbAlgo);
-        if (ret) {
-            return ARM_DRIVER_ERROR;
-        }
+    /* Register AWB algorithm callback. Must be done before ISP_Init. */
+    ret = VSI_MPI_ISP_AwbRegCallBack(isp->isp_port_id, &vsiAwbAlgo);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
     }
-#endif /* RTE_ISP_WB_MODULE */
 
-#if (RTE_ISP_AE_MODULE)
     /* Register AE sensor function table */
     {
         AE_SNS_FUNC_S aeSnsFunc = {0};
@@ -323,23 +281,18 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
         }
     }
 
-    /* Register AE algorithm if auto mode */
-    if (isp->isp_calib_info->modules.ae.opType == OP_TYPE_AUTO) {
-        ret = VSI_MPI_ISP_AeRegCallBack(isp->isp_port_id, &vsiAeAlgo);
-        if (ret) {
-            return ARM_DRIVER_ERROR;
-        }
+    /* Register AE algorithm callback. Must be done before ISP_Init. */
+    ret = VSI_MPI_ISP_AeRegCallBack(isp->isp_port_id, &vsiAeAlgo);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
     }
-#endif /* RTE_ISP_AE_MODULE */
 
-#if (RTE_ISP_BINNING_MODULE)
     if (isp->isp_binning_attr && isp->isp_binning_attr->enable) {
         ret = VSI_MPI_ISP_SetBinningAttr(isp->isp_port_id, isp->isp_binning_attr);
         if (ret) {
             return ARM_DRIVER_ERROR;
         }
     }
-#endif /* RTE_ISP_BINNING_MODULE */
 
     ret = VSI_MPI_ISP_GetPortAttr(isp->isp_port_id, &isp_port_config);
     if (ret) {
@@ -378,10 +331,11 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
      * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
      * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
      */
-    vsi_u32_t side = cam_sensor->width < cam_sensor->height
-                   ? cam_sensor->width : cam_sensor->height;
-    vsi_u32_t v_off = cam_sensor->height > side ? (cam_sensor->height - side) / 2 : 0;
-    vsi_u32_t h_off = cam_sensor->width  > side ? (cam_sensor->width  - side) / 2 : 0;
+    vsi_u32_t sensor_width = (vsi_u32_t)cam_sensor->width;
+    vsi_u32_t sensor_height = (vsi_u32_t)cam_sensor->height;
+    vsi_u32_t side = sensor_width < sensor_height ? sensor_width : sensor_height;
+    vsi_u32_t v_off = sensor_height > side ? (sensor_height - side) / 2U : 0U;
+    vsi_u32_t h_off = sensor_width > side ? (sensor_width - side) / 2U : 0U;
 
     isp->isp_port_attr->outFormRect.top    = h_off;  /* libisp: horizontal offset */
     isp->isp_port_attr->outFormRect.left   = v_off;  /* libisp: vertical offset */
@@ -459,19 +413,15 @@ static int32_t ISP_Uninit(ISP_RESOURCES *isp)
         return ARM_DRIVER_OK;
     }
 
-#if (RTE_ISP_WB_MODULE)
     ret = VSI_MPI_ISP_AwbUnRegCallBack(isp->isp_port_id);
     if (ret) {
         return ARM_DRIVER_ERROR;
     }
-#endif /* RTE_ISP_WB_MODULE */
 
-#if (RTE_ISP_AE_MODULE)
     ret = VSI_MPI_ISP_AeUnRegCallBack(isp->isp_port_id);
     if (ret) {
         return ARM_DRIVER_ERROR;
     }
-#endif /* RTE_ISP_AE_MODULE */
 
     ret = VSI_MPI_ISP_Exit(isp->isp_dev_id);
     if (ret) {
@@ -607,12 +557,9 @@ static int32_t ISP_stop(ISP_RESOURCES *isp)
 
     return ARM_DRIVER_OK;
 }
-#if (RTE_ISP_AE_MODULE)
+
 static int32_t ISP_set_param_ae(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_AE)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_ae_param *ae = &params->ae;
     ISP_EXPOSURE_ATTR_S exp_attr = {0};
@@ -659,14 +606,9 @@ static int32_t ISP_set_param_ae(ISP_RESOURCES *isp, const struct isp_params *par
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_WB_MODULE)
 static int32_t ISP_set_param_wb(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_WB)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_wb_param *wb = &params->wb;
     ISP_WB_ATTR_S wb_attr = {0};
@@ -711,14 +653,9 @@ static int32_t ISP_set_param_wb(ISP_RESOURCES *isp, const struct isp_params *par
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_BLS_MODULE)
 static int32_t ISP_set_param_bls(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_BLS)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_bls_param *bls = &params->bls;
     ISP_BLS_ATTR_S bls_attr = {0};
@@ -739,14 +676,9 @@ static int32_t ISP_set_param_bls(ISP_RESOURCES *isp, const struct isp_params *pa
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_DMSC_MODULE)
 static int32_t ISP_set_param_dmsc(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_DMSC)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_dmsc_param *dmsc = &params->dmsc;
     ISP_DMSC_ATTR_S dmsc_attr = {0};
@@ -774,14 +706,9 @@ static int32_t ISP_set_param_dmsc(ISP_RESOURCES *isp, const struct isp_params *p
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_FLT_MODULE)
 static int32_t ISP_set_param_flt(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_FLT)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_flt_param *flt = &params->flt;
     ISP_FLT_ATTR_S flt_attr = {0};
@@ -800,15 +727,10 @@ static int32_t ISP_set_param_flt(ISP_RESOURCES *isp, const struct isp_params *pa
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
 
-#if (RTE_ISP_CCM_MODULE)
 static int32_t ISP_set_param_ccm(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_CCM)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_ccm_param *ccm = &params->ccm;
     ISP_CCM_ATTR_S ccm_attr = {0};
@@ -833,14 +755,9 @@ static int32_t ISP_set_param_ccm(ISP_RESOURCES *isp, const struct isp_params *pa
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_GAMMAOUT_MODULE)
 static int32_t ISP_set_param_gamma(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_GAMMA_OUT)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_gamma_param *gamma = &params->gamma_out;
     ISP_GAMMA_OUT_ATTR_S gamma_attr = {0};
@@ -853,14 +770,9 @@ static int32_t ISP_set_param_gamma(ISP_RESOURCES *isp, const struct isp_params *
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_CSM_MODULE)
 static int32_t ISP_set_param_csm(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_CSM)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_csm_param *csm = &params->csm;
     ISP_CSM_ATTR_S csm_attr = {0};
@@ -874,14 +786,9 @@ static int32_t ISP_set_param_csm(ISP_RESOURCES *isp, const struct isp_params *pa
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_EXPM_MODULE)
 static int32_t ISP_set_param_expm(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_AEM)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_aem_param *aem = &params->aem;
     ISP_EXPM_ATTR_S expm_attr = {0};
@@ -898,14 +805,9 @@ static int32_t ISP_set_param_expm(ISP_RESOURCES *isp, const struct isp_params *p
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_WBM_MODULE)
 static int32_t ISP_set_param_wbm(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_WBM)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_wbm_param *wbm = &params->wbm;
     ISP_WBM_ATTR_S wbm_attr = {0};
@@ -928,14 +830,9 @@ static int32_t ISP_set_param_wbm(ISP_RESOURCES *isp, const struct isp_params *pa
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_BINNING_MODULE)
 static int32_t ISP_set_param_binning(ISP_RESOURCES *isp, const struct isp_params *params)
 {
-    if (!(params->valid_mask & ISP_PARAM_MASK_BINNING)) {
-        return ARM_DRIVER_OK;
-    }
     int ret;
     const struct isp_binning_param *binning = &params->binning;
     ISP_BINNING_ATTR_S binning_attr = {0};
@@ -949,7 +846,6 @@ static int32_t ISP_set_param_binning(ISP_RESOURCES *isp, const struct isp_params
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
 
 static int32_t ISP_set_param(ISP_RESOURCES *isp, const struct isp_params *params)
@@ -959,72 +855,72 @@ static int32_t ISP_set_param(ISP_RESOURCES *isp, const struct isp_params *params
     if (!params) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
-#if (RTE_ISP_AE_MODULE)
-    ret = ISP_set_param_ae(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_AE) {
+        ret = ISP_set_param_ae(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_WB_MODULE)
-    ret = ISP_set_param_wb(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_WB) {
+        ret = ISP_set_param_wb(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_BLS_MODULE)
-    ret = ISP_set_param_bls(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_BLS) {
+        ret = ISP_set_param_bls(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_DMSC_MODULE)
-    ret = ISP_set_param_dmsc(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_DMSC) {
+        ret = ISP_set_param_dmsc(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_FLT_MODULE)
-    ret = ISP_set_param_flt(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_FLT) {
+        ret = ISP_set_param_flt(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_CCM_MODULE)
-    ret = ISP_set_param_ccm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_CCM) {
+        ret = ISP_set_param_ccm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_GAMMAOUT_MODULE)
-    ret = ISP_set_param_gamma(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_GAMMA_OUT) {
+        ret = ISP_set_param_gamma(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_CSM_MODULE)
-    ret = ISP_set_param_csm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_CSM) {
+        ret = ISP_set_param_csm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_EXPM_MODULE)
-    ret = ISP_set_param_expm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_AEM) {
+        ret = ISP_set_param_expm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_WBM_MODULE)
-    ret = ISP_set_param_wbm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_WBM) {
+        ret = ISP_set_param_wbm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_BINNING_MODULE)
-    ret = ISP_set_param_binning(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_BINNING) {
+        ret = ISP_set_param_binning(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
     if (params->valid_mask & ISP_PARAM_MASK_AUTO_ROUTE) {
         ISP_AUTO_ROUTE_S route = {0};
 
@@ -1040,16 +936,11 @@ static int32_t ISP_set_param(ISP_RESOURCES *isp, const struct isp_params *params
 }
 
 
-#if (RTE_ISP_AE_MODULE)
 static int32_t ISP_get_param_ae(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret = 0;
     ISP_EXPOSURE_ATTR_S exp_attr = {0};
     struct isp_ae_param *ae = &params->ae;
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_AE)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetExposureAttr(isp->isp_port_id, &exp_attr);
     if (ret) {
@@ -1093,18 +984,12 @@ static int32_t ISP_get_param_ae(ISP_RESOURCES *isp, struct isp_params *params)
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_WB_MODULE)
 static int32_t ISP_get_param_wb(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_wb_param *wb = &params->wb;
     ISP_WB_ATTR_S wb_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_WB)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetWbAttr(isp->isp_port_id, &wb_attr);
     if (ret) {
@@ -1151,18 +1036,12 @@ static int32_t ISP_get_param_wb(ISP_RESOURCES *isp, struct isp_params *params)
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_BLS_MODULE)
 static int32_t ISP_get_param_bls(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_bls_param *bls = &params->bls;
     ISP_BLS_ATTR_S bls_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_BLS)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetBlsAttr(isp->isp_port_id, &bls_attr);
     if (ret) {
@@ -1180,18 +1059,12 @@ static int32_t ISP_get_param_bls(ISP_RESOURCES *isp, struct isp_params *params)
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_DMSC_MODULE)
 static int32_t ISP_get_param_dmsc(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_dmsc_param *dmsc = &params->dmsc;
     ISP_DMSC_ATTR_S dmsc_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_DMSC)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetDmscAttr(isp->isp_port_id, &dmsc_attr);
     if (ret) {
@@ -1216,18 +1089,12 @@ static int32_t ISP_get_param_dmsc(ISP_RESOURCES *isp, struct isp_params *params)
     dmsc->cac_y_norm_factor = dmsc_attr.cacAttr.yNormFactor;
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_FLT_MODULE)
 static int32_t ISP_get_param_flt(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_flt_param *flt = &params->flt;
     ISP_FLT_ATTR_S flt_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_FLT)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetFltAttr(isp->isp_port_id, &flt_attr);
     if (ret) {
@@ -1243,18 +1110,12 @@ static int32_t ISP_get_param_flt(ISP_RESOURCES *isp, struct isp_params *params)
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_CCM_MODULE)
 static int32_t ISP_get_param_ccm(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_ccm_param *ccm = &params->ccm;
     ISP_CCM_ATTR_S ccm_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_CCM)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetCcmAttr(isp->isp_port_id, &ccm_attr);
     if (ret) {
@@ -1276,18 +1137,12 @@ static int32_t ISP_get_param_ccm(ISP_RESOURCES *isp, struct isp_params *params)
     }
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_GAMMAOUT_MODULE)
 static int32_t ISP_get_param_gamma(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_gamma_param *gamma = &params->gamma_out;
     ISP_GAMMA_OUT_ATTR_S gamma_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_GAMMA_OUT)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetGammaOutAttr(isp->isp_port_id, &gamma_attr);
     if (ret) {
@@ -1297,18 +1152,12 @@ static int32_t ISP_get_param_gamma(ISP_RESOURCES *isp, struct isp_params *params
     memcpy(gamma->gamma_y, gamma_attr.gammaY, sizeof(gamma->gamma_y));
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_CSM_MODULE)
 static int32_t ISP_get_param_csm(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_csm_param *csm = &params->csm;
     ISP_CSM_ATTR_S csm_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_CSM)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetCsmAttr(isp->isp_port_id, &csm_attr);
     if (ret) {
@@ -1319,18 +1168,12 @@ static int32_t ISP_get_param_csm(ISP_RESOURCES *isp, struct isp_params *params)
     memcpy(csm->coef, csm_attr.coef, sizeof(csm->coef));
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_EXPM_MODULE)
 static int32_t ISP_get_param_expm(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_aem_param *aem = &params->aem;
     ISP_EXPM_ATTR_S expm_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_AEM)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetExpmAttr(isp->isp_port_id, &expm_attr);
     if (ret) {
@@ -1344,18 +1187,12 @@ static int32_t ISP_get_param_expm(ISP_RESOURCES *isp, struct isp_params *params)
     aem->v_size   = expm_attr.blockWin.vSize;
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_WBM_MODULE)
 static int32_t ISP_get_param_wbm(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_wbm_param *wbm = &params->wbm;
     ISP_WBM_ATTR_S wbm_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_WBM)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetWbmAttr(isp->isp_port_id, &wbm_attr);
     if (ret) {
@@ -1375,18 +1212,12 @@ static int32_t ISP_get_param_wbm(ISP_RESOURCES *isp, struct isp_params *params)
     wbm->min_c        = wbm_attr.wpRange.minC;
     return ARM_DRIVER_OK;
 }
-#endif
 
-#if (RTE_ISP_BINNING_MODULE)
 static int32_t ISP_get_param_binning(ISP_RESOURCES *isp, struct isp_params *params)
 {
     int ret;
     struct isp_binning_param *binning = &params->binning;
     ISP_BINNING_ATTR_S binning_attr = {0};
-
-    if (!(params->valid_mask & ISP_PARAM_MASK_BINNING)) {
-        return ARM_DRIVER_OK;
-    }
 
     ret = VSI_MPI_ISP_GetBinningAttr(isp->isp_port_id, &binning_attr);
     if (ret) {
@@ -1397,7 +1228,6 @@ static int32_t ISP_get_param_binning(ISP_RESOURCES *isp, struct isp_params *para
     binning->v_step = binning_attr.binVStep;
     return ARM_DRIVER_OK;
 }
-#endif
 
 static int32_t ISP_get_param(ISP_RESOURCES *isp, struct isp_params *params)
 {
@@ -1407,72 +1237,72 @@ static int32_t ISP_get_param(ISP_RESOURCES *isp, struct isp_params *params)
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-#if (RTE_ISP_AE_MODULE)
-    ret = ISP_get_param_ae(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_AE) {
+        ret = ISP_get_param_ae(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_WB_MODULE)
-    ret = ISP_get_param_wb(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_WB) {
+        ret = ISP_get_param_wb(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_BLS_MODULE)
-    ret = ISP_get_param_bls(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_BLS) {
+        ret = ISP_get_param_bls(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_DMSC_MODULE)
-    ret = ISP_get_param_dmsc(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_DMSC) {
+        ret = ISP_get_param_dmsc(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_FLT_MODULE)
-    ret = ISP_get_param_flt(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_FLT) {
+        ret = ISP_get_param_flt(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_CCM_MODULE)
-    ret = ISP_get_param_ccm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_CCM) {
+        ret = ISP_get_param_ccm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_GAMMAOUT_MODULE)
-    ret = ISP_get_param_gamma(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_GAMMA_OUT) {
+        ret = ISP_get_param_gamma(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_CSM_MODULE)
-    ret = ISP_get_param_csm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_CSM) {
+        ret = ISP_get_param_csm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_EXPM_MODULE)
-    ret = ISP_get_param_expm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_AEM) {
+        ret = ISP_get_param_expm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_WBM_MODULE)
-    ret = ISP_get_param_wbm(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_WBM) {
+        ret = ISP_get_param_wbm(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
-#if (RTE_ISP_BINNING_MODULE)
-    ret = ISP_get_param_binning(isp, params);
-    if (ret != ARM_DRIVER_OK) {
-        return ret;
+    if (params->valid_mask & ISP_PARAM_MASK_BINNING) {
+        ret = ISP_get_param_binning(isp, params);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
     }
-#endif
     if (params->valid_mask & ISP_PARAM_MASK_AUTO_ROUTE) {
         ISP_AUTO_ROUTE_S route = {0};
 
@@ -1524,7 +1354,6 @@ static int32_t ISP_control(uint32_t control, uint32_t arg, ISP_RESOURCES *isp)
     case ISP_CONTROL_GET_PARAM:
         ret = ISP_get_param(isp, (struct isp_params *)arg);
         break;
-#if (RTE_ISP_AE_MODULE)
     case ISP_CONTROL_AE_GET_CACHED:
         ret = ISP_Sensor_AEGetCachedValues(
             &((struct isp_ae_cached_values *)arg)->int_line,
@@ -1537,7 +1366,6 @@ static int32_t ISP_control(uint32_t control, uint32_t arg, ISP_RESOURCES *isp)
     case ISP_CONTROL_AE_IS_STABLE:
         ret = ISP_Sensor_AEIsStable(isp);
         break;
-#endif
     case ISP_CONTROL_SET_CROP: {
         const struct isp_crop_info *crop = (const struct isp_crop_info *)arg;
 
@@ -1644,13 +1472,11 @@ static int32_t ISP_control(uint32_t control, uint32_t arg, ISP_RESOURCES *isp)
 /* ISP sensor access structure */
 static CAMERA_SENSOR_DEVICE *sensor;
 
-#if (RTE_ISP_BINNING_MODULE)
 static ISP_BINNING_ATTR_S binning_attr = {
     .enable   = RTE_ISP_BINNING_ENABLE,
     .binHStep = RTE_ISP_BINNING_HSTEP,
     .binVStep = RTE_ISP_BINNING_VSTEP,
 };
-#endif /* RTE_ISP_BINNING_MODULE */
 
 ISP_RESOURCES ISP_RES = {
     .isp_calib_info = &calibration_data,
@@ -1668,9 +1494,7 @@ ISP_RESOURCES ISP_RES = {
         0, /* Port ID */
         0, /* Channel ID */
     },
-#if (RTE_ISP_BINNING_MODULE)
     .isp_binning_attr = &binning_attr,
-#endif /* RTE_ISP_BINNING_MODULE */
     .state = {0},
 };
 

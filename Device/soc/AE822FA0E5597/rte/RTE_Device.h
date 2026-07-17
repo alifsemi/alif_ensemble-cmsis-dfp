@@ -374,83 +374,6 @@
 // <i> Default: 0
 #define RTE_ISP_IRQ_PRIORITY                    0
 
-// <o> ISP Enable AE Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if AE Module is enabled or not
-// <i> default: false
-#define RTE_ISP_AE_MODULE 1
-
-// <o> ISP Enable BLS Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Black Level Subtraction Module is enabled or not
-// <i> default: false
-#define RTE_ISP_BLS_MODULE 1
-
-// <o> ISP Enable DMSC Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Demosaic Module is enabled or not
-// <i> default: false
-#define RTE_ISP_DMSC_MODULE 1
-
-// <o> ISP Enable FLT Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Noise/Sharpening-Filter Module is enabled or not
-// <i> default: false
-#define RTE_ISP_FLT_MODULE 1
-
-// <o> ISP Enable CCM Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Color Correction Matrix Module is enabled or not
-// <i> default: false
-#define RTE_ISP_CCM_MODULE 1
-
-// <o> ISP Enable CSM Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Color Space Conversion Module is enabled or not
-// <i> default: false
-#define RTE_ISP_CSM_MODULE 1
-
-// <o> ISP Enable WB Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if White Balancing Module is enabled or not
-// <i> default: false
-#define RTE_ISP_WB_MODULE 1
-
-// <o> ISP Enable EXPM Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Auto-Exposure Statistics Module is enabled or not
-// <i> default: false
-#define RTE_ISP_EXPM_MODULE 1
-
-// <o> ISP Enable Gamma-out Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Gamma-out Module is enabled or not
-// <i> default: false
-#define RTE_ISP_GAMMAOUT_MODULE 1
-
-// <o> ISP Enable WBM Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if White-Balancing Statistics Module is enabled or not
-// <i> default: false
-#define RTE_ISP_WBM_MODULE 1
-
-// <o> ISP Enable Binning Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if Binning Module is enabled or not
-// <i> default: false
-#define RTE_ISP_BINNING_MODULE 1
-
 // <o> ISP Binning Enable
 //     <0=> disable
 //     <1=> enable
@@ -467,13 +390,6 @@
 // <i> Vertical binning step size
 // <i> default: 0
 #define RTE_ISP_BINNING_VSTEP 0
-
-// <o> ISP Enable Scaling Module
-//     <0=> disable
-//     <1=> enable
-// <i> defines if scaling Module is enabled or not
-// <i> default: true
-#define RTE_ISP_SCALAR_MODULE 1
 
 // <o> ISP log level
 //    <0=> NONE

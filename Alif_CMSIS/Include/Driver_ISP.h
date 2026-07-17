@@ -57,7 +57,6 @@ struct vsiISP_CHN_ATTR_S;
  */
 #define ISP_CONTROL_GET_PARAM                  (0x14UL)
 
-#if (RTE_ISP_AE_MODULE)
 /**
  * @brief Get cached AE sensor values (int_line, again, dgain).
  *
@@ -72,7 +71,6 @@ struct vsiISP_CHN_ATTR_S;
  * Returns 1 if stable, 0 if not yet stable, or ARM_DRIVER_ERROR on failure.
  */
 #define ISP_CONTROL_AE_IS_STABLE               (0x16UL)
-#endif /* RTE_ISP_AE_MODULE */
 
 /**
  * @brief Set crop region for the ISP input.
