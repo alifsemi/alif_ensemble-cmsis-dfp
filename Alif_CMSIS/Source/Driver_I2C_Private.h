@@ -88,6 +88,7 @@ typedef struct _I2C_RESOURCES {
     uint8_t            tx_fifo_threshold; /* Tx Fifo Buffer threshold                */
     uint8_t            rx_fifo_threshold; /* Rx Fifo Buffer threshold                */
     uint32_t           scl_stuck_timeout; /* SCL Stuck at Low Timeout                */
+    uint32_t           sda_stuck_timeout; /* SDA Stuck at Low Timeout                */
     const I2C_INSTANCE instance;          /* I2C Instance number                     */
 } I2C_RESOURCES;
 
