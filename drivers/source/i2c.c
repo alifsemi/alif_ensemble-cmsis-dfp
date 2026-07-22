@@ -9,7 +9,6 @@
  */
 
 #include "i2c.h"
-#include "sys_utils.h"
 
 /**
  * @brief   Set scl count
@@ -436,8 +435,9 @@ void i2c_master_init(I2C_Type *i2c, const uint32_t tar_addr)
     i2c->I2C_TAR =
         (tar_addr & I2C_IC_TAR_10BIT_ADDR_MASK) | I2C_IC_TAR_SPECIAL | I2C_IC_TAR_GC_OR_START;
 
-    /* master mode, restart enabled */
-    ic_con_reg_value = I2C_IC_CON_ENABLE_MASTER_MODE | I2C_IC_CON_MASTER_RESTART_EN;
+    /* master mode, restart enabled , Bus Clear Feature Control*/
+    ic_con_reg_value = I2C_IC_CON_ENABLE_MASTER_MODE | I2C_IC_CON_MASTER_RESTART_EN |
+                       I2C_IC_CON_BUS_CLEAR_FEATURE_CTRL;
 
     /* Set final IC_CON value */
     i2c->I2C_CON     = ic_con_reg_value;

@@ -18,6 +18,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 #include "soc.h"
+#include "sys_utils.h"
 
 /*!< FIFO Depth for Tx & Rx  */
 #define I2C_FIFO_DEPTH                       32
@@ -34,6 +35,9 @@ extern "C" {
 /* Field of IC_ENABLE register */
 #define I2C_IC_ENABLE_ABORT                  (1 << 1)
 #define I2C_IC_SDA_STUCK_RECOVERY_ENABLE     (1 << 3)
+
+/* 100us covers 9 SCL clocks cycles at the slowest 100 kHz mode with margin */
+#define I2C_BUS_CLEAR_TIMEOUT_US    (100U)
 
 /* Field of IC_ENABLE_STATUS register*/
 #define I2C_ENABLE_STATUS_IC_EN              (1 << 0)
@@ -69,6 +73,9 @@ extern "C" {
 #define I2C_IC_CON_MST_SLV_MODE_MASK         (0x41)
 #define I2C_IC_CON_ENABLE_MASTER_MODE        (0x41)
 #define I2C_IC_CON_ENA_SLAVE_MODE            (0)
+
+/* Bus Clear Feature Control of IC CON */
+#define I2C_IC_CON_BUS_CLEAR_FEATURE_CTRL    (1 << 11)
 
 #define I2C_HS_MADDR_I2C_HS_MAR_MASK                (0x7 << 0)
 
@@ -347,14 +354,22 @@ static inline void i2c_disable(I2C_Type *i2c)
 }
 
 /**
- * @brief   Recover the I2C SDA stuck at low
- * @note    none
- * @param   i2c : Pointer to i2c register map
- * @retval  none
+ * @brief   Recover the I2C SDA stuck at low condition
+ * @note    Enables the hardware SDA recovery mechanism and waits for
+ *          the bus-clear sequence to complete.
+ * @param   i2c Pointer to I2C register map
+ * @retval  true  SDA recovery successful
+ * @retval  false SDA recovery failed
  */
-static inline void i2c_master_recover_sda(I2C_Type *i2c)
+static inline bool i2c_master_recover_sda(I2C_Type *i2c)
 {
     i2c->I2C_ENABLE |= I2C_IC_SDA_STUCK_RECOVERY_ENABLE;
+
+    /* Wait for hardware to complete bus-clear sequence */
+    (void)sys_busy_loop_us(I2C_BUS_CLEAR_TIMEOUT_US);
+
+    /* Check whether SDA recovery was successful */
+    return (i2c->I2C_STATUS & I2C_IC_STATUS_SDA_STUCK_NOT_RECOVERED) ? false : true;
 }
 
 /**
@@ -599,6 +614,18 @@ static inline void i2c_set_rx_threshold(I2C_Type *i2c, const uint8_t threshold)
 static inline void i2c_set_scl_stuck_timeout(I2C_Type *i2c, const uint32_t timeout)
 {
     i2c->I2C_SCL_STUCK_AT_LOW_TIMEOUT = timeout;
+}
+
+/**
+ * @brief   Sets the SDA Stuck at Low Timeout
+ * @note    none
+ * @param   i2c     : Pointer to i2c register map
+ * @param   timeout : SDA stuck at Low Timeout value
+ * @retval  None
+ */
+static inline void i2c_set_sda_stuck_timeout(I2C_Type *i2c, const uint32_t timeout)
+{
+    i2c->I2C_SDA_STUCK_AT_LOW_TIMEOUT = timeout;
 }
 
 /**

@@ -8185,6 +8185,12 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C0_SCL_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C0 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 100MHz)
+#define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 1000000
+
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -8232,6 +8238,11 @@
 // <i> Defines SCL stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C1_SCL_STUCK_LOW_TIMEOUT 1000000
+
+// <o> I2C1 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 100MHz)
+#define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 1000000
 
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
@@ -8281,6 +8292,11 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C2_SCL_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C2 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 100MHz)
+#define RTE_I2C2_SDA_STUCK_LOW_TIMEOUT 1000000
+
 // <o> I2C2 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -8329,6 +8345,11 @@
 // <i> Defines SCL stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C3_SCL_STUCK_LOW_TIMEOUT 1000000
+
+// <o> I2C3 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 100MHz)
+#define RTE_I2C3_SDA_STUCK_LOW_TIMEOUT 1000000
 
 // <o> I2C3 DMA ENABLE
 //    <0=> DISABLE

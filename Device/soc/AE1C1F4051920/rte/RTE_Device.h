@@ -3670,6 +3670,11 @@
 // <i> Default: 10ms (Considered the input clock as 40MHz)
 #define RTE_I2C0_SCL_STUCK_LOW_TIMEOUT 400000
 
+// <o> I2C0 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 40MHz)
+#define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 400000
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -3717,6 +3722,11 @@
 // <i> Defines SCL stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 40MHz)
 #define RTE_I2C1_SCL_STUCK_LOW_TIMEOUT 400000
+
+// <o> I2C1 SDA Stuck at Low Timeout <0x00000000-0xFFFFFFFF>
+// <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
+// <i> Default: 10ms (Considered the input clock as 40MHz)
+#define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 400000
 
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
