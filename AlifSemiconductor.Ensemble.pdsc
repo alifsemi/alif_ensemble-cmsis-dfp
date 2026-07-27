@@ -2425,6 +2425,9 @@
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_potentiometer_freertos.c" attr="template" select="ADC Potentiometer FreeRTOS Demo" condition="Ensemble_NonE1C"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_arx3a0_freertos.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_interface_video_freertos.c" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_isp_video_freertos.c" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/alif_logo/alif_logo.c" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
+        <file category="header" name="Boards/Templates/alif_logo/alif_logo.h" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_busmonitor_freertos.c" attr="template" select="CANFD Bus Monitor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_normalmode_freertos.c" attr="template" select="CANFD Data transfer FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_extloopback_freertos.c" attr="template" select="CANFD External Loopback FreeRTOS Demo"/>
