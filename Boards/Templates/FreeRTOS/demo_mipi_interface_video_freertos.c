@@ -23,6 +23,7 @@
 #include <inttypes.h>
 
 #include "RTE_Components.h"
+#include "RTE_Device.h"
 #if defined(RTE_Compiler_IO_STDOUT)
 #include "retarget_init.h"
 #include "retarget_stdout.h"
@@ -37,11 +38,26 @@
 
 #include "se_services_port.h"
 
+/* AIPL
+ *
+ * This application requires the AIPL pack. In the RTE configuration
+ * (RTE -> Graphics), enable all AIPL-related components before building.
+ */
+#include "aipl_error.h"
+#include "aipl_crop.h"
+#include "aipl_demosaic.h"
+
 /*RTOS Includes */
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
 #include "task.h"
 #include "app_utils.h"
+
+#if defined(RTE_CPI_AXI_PORT)
+#if (RTE_CPI_AXI_PORT != 1)
+#error "Enable the CPI AXI port in RTE_Device.h"
+#endif
+#endif
 
 /* Camera  Driver instance 0 */
 extern ARM_DRIVER_CPI Driver_CPI;
@@ -98,20 +114,38 @@ void vApplicationIdleHook(void)
 }
 
 /*****************Only for FreeRTOS use *************************/
-
-/* @Note: ARX3A0 Camera Sensor configurations
- *        are directly borrowed from ARX3A0 Camera Sensor drivers,
- *        for detail refer ARX3A0 driver.
+/* Camera Sensor Selection
+ * Supports: ARX3A0, MT9M114, OV5675
  *
- * Selected ARX3A0 Camera Sensor configurations:
- *   - Interface     : MIPI CSI2
- *   - Resolution    : 560X560
- *   - Output Format : RAW Bayer10
+ * Selection is driven by the RTE components enabled in RTE_Components.h.
+ * Enable the corresponding CAMERA_SENSOR driver in the RTE configuration.
+ *
+ *   - RTE_Drivers_CAMERA_SENSOR_ARX3A0  (560x560,  IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_MT9M114 (1280x720, IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_OV5675  (1296x972, IPI-16 RAW8)
+ *
+ * Note: Sensors output RAW10, but CPI interface default is IPI-16 RAW8.
+ *       CPI color mode can be changed via RTE configuration if needed.
  */
 
-/* ARX3A0 Camera Sensor Resolution. */
-#define CAM_FRAME_WIDTH        (560)
-#define CAM_FRAME_HEIGHT       (560)
+#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
+  #define SELECTED_CAMERA_SENSOR     "ARX3A0"
+  #define CAM_FRAME_WIDTH            RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
+  #define CAM_FRAME_HEIGHT           RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT
+
+#elif defined(RTE_Drivers_CAMERA_SENSOR_MT9M114)
+  #define SELECTED_CAMERA_SENSOR     "MT9M114"
+  #define CAM_FRAME_WIDTH            RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH
+  #define CAM_FRAME_HEIGHT           RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT
+
+#elif defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
+  #define SELECTED_CAMERA_SENSOR     "OV5675"
+  #define CAM_FRAME_WIDTH            RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH
+  #define CAM_FRAME_HEIGHT           RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT
+
+#else
+  #error "Enable one RTE_Drivers_CAMERA_SENSOR_* definition"
+#endif
 
 /* Allocate Camera frame buffer memory using memory pool section in
  *  Linker script (sct scatter) file.
@@ -119,7 +153,7 @@ void vApplicationIdleHook(void)
 
 #if BOARD_CAMERA_HAS_STREAM_BIT_ENABLED
 #define N_FRAMEBUFF            2
-#define MAX_FRAMEBUFFERS       4
+#define MAX_FRAMEBUFFERS       N_FRAMEBUFF
 
 static void *framebuffers[N_FRAMEBUFF];
 
@@ -166,11 +200,6 @@ uint8_t cam_framebuffer_pool[CAMERA_FRAMEBUFFER_POOL_SIZE]
 /*Number of bytes per pixel in RGB888*/
 #define RGB_BYTES_PER_PIXEL 3
 
-/* Enable image Cropping and interpolate. */
-#define IMAGE_CROP_AND_INTERPOLATE_EN      1
-
-#if IMAGE_CROP_AND_INTERPOLATE_EN
-
 /* Allocate LCD Panel buffer memory using memory pool section in
  *  Linker script (sct scatter) file.
  */
@@ -188,117 +217,34 @@ uint8_t cam_framebuffer_pool[CAMERA_FRAMEBUFFER_POOL_SIZE]
 uint8_t lcd_framebuffer_pool[LCD_FRAMEBUFFER_POOL_SIZE]
         LCD_FRAMEBUFFER_ATTR;
 
-/* Required to Crop and interpolate the captured image data format to
- * LCD Panel supported image format.
- *
- *  - for ARX3A0 Camera sensor,
- *     it gives frame resolution as 560x560
- *  - for ILI9806E LCD Panel,
- *     it supports resolution 480x800
- *  - in-order to display the camera image on LCD panel,
- *     we have Crop and interpolate the captured image
- *     to 480x480.
- */
+/* Crop the captured camera image to LCD panel resolution using AIPL crop. */
 #if (ILI9806E_Panel_RESOLUTION == ILI9806E_Panel_RESOLUTION_480x800)
 #define CRP_FRAME_WIDTH        (480)
 #define CRP_FRAME_HEIGHT       (480)
 #endif
-
-#define CRP_FRAMEBUFFER_ATTR  __attribute__((section(".bss.lcd_crop_and_interpolate_buf")))
-
-/* pool size for crop the image:
- *  which will be crop frame width x frame height
- */
-#define CRP_FRAMEBUFFER_POOL_SIZE   ((CAM_FRAME_WIDTH) * (CAM_FRAME_HEIGHT) * RGB_BYTES_PER_PIXEL)
-
-/**
- * Image processing:
- *
- * \fn         int crop_and_interpolate( uint8_t const *srcImage, \
- *                     uint32_t srcWidth, uint32_t srcHeight, \
- *                     uint8_t *dstImage, uint32_t dstWidth, \
- *                     uint32_t dstHeight, uint32_t bpp);
- * \brief      Crop and interpolate the image to the given resolution.
- * \param[in]  srcImage source image buffer address.
- * \param[in]  srcWidth source image width.
- * \param[in]  srcHeight source image height.
- * \param[in]  dstImage destination image buffer address to save the cropped image.
- * \param[in]  dstWidth destination image width.
- * \param[in]  dstHeight destination image height.
- * \param[in]  bpp number of bits per pixel.
- * \return     return error status zero for success negative value for error.
- */
-extern uint32_t crop_and_interpolate(uint8_t const *srcImage,
-        uint32_t srcWidth, uint32_t srcHeight,
-        uint8_t *dstImage, uint32_t dstWidth,
-        uint32_t dstHeight, uint32_t bpp);
-
-/* pool area for crop the captured camera image.
- *  Allocated in the "lcd_crop_and_interpolate_buf" section.
- */
-uint8_t crop_and_interpolate_buffer_pool[CRP_FRAMEBUFFER_POOL_SIZE]
-        CRP_FRAMEBUFFER_ATTR;
-
 
 /* Required convert captured image data format to RGB image format.
  *
  *  - for ARX3A0 Camera sensor,
  *     selected Bayer output format:
  *      in-order to get the color image,
- *       Bayer format must be converted in to RGB format.
- *       User can use below provided
- *        "Open-Source" code for Bayer to RGB Conversion
- *        which uses DC1394 library.
+ *       Bayer format must be converted in to RGB format using AIPL demosaic.
  */
-#endif
-
-/* @Note: Bayer to RGB configurations
- *        are directly borrowed from "Open-Source" code for
- *        Bayer to RGB Conversion, for detail refer bayer2rgb.c.
- *
- * Selected Bayer to RGB configurations:
- *   - converted image format : tiff
- *   - bpp bit per pixel      : 8-bit
- */
-#define TIFF_HDR_NUM_ENTRY 8
-#define TIFF_HDR_SIZE (10 + TIFF_HDR_NUM_ENTRY * 12)
-
-/* bpp bit per pixel
- *  Valid parameters are:
- *   -  8-bit
- *   - 16-bit
- */
-#define BITS_PER_PIXEL_8_BIT      8
-#define BITS_PER_PIXEL            BITS_PER_PIXEL_8_BIT
 
 #define BAYER_TO_RGB_FRAMEBUFFER_ATTR   \
     __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf")))
 
 /* pool size for Camera frame buffer for Bayer to RGB conversion:
- *   which will be frame width x frame height x (bpp / 8) * 3 + tiff header(106 Bytes).
+ *   frame width x frame height x RGB bytes per pixel.
  */
-#if IMAGE_CROP_AND_INTERPOLATE_EN
 #define BAYER_TO_RGB_BUFFER_POOL_SIZE   \
-    ((CAM_FRAME_WIDTH) * (CAM_FRAME_HEIGHT) * (BITS_PER_PIXEL / 8) * RGB_BYTES_PER_PIXEL \
-    + TIFF_HDR_SIZE)
-#else
-#define BAYER_TO_RGB_BUFFER_POOL_SIZE   \
-    ((LCD_FRAME_WIDTH) * (LCD_FRAME_HEIGHT) * (BITS_PER_PIXEL / 8) * RGB_BYTES_PER_PIXEL \
-    + TIFF_HDR_SIZE)
-#endif
+    ((CAM_FRAME_WIDTH) * (CAM_FRAME_HEIGHT) * RGB_BYTES_PER_PIXEL)
 
 /* pool area for Camera frame buffer for Bayer to RGB conversion.
  *  Allocated in the "camera_frame_bayer_to_rgb_buf" section.
  */
 uint8_t bayer_to_rgb_buffer_pool[BAYER_TO_RGB_BUFFER_POOL_SIZE]
         BAYER_TO_RGB_FRAMEBUFFER_ATTR;
-
-/* Optional:
- *  Camera Image Conversions
- */
-typedef enum {
-    BAYER_TO_RGB_CONVERSION   = (1 << 0),
-} IMAGE_CONVERSION;
 
 /* Camera callback events */
 typedef enum {
@@ -494,69 +440,6 @@ int hardware_init(void)
 }
 
 /**
- * \fn          int camera_image_conversion(IMAGE_CONVERSION  image_conversion,
- *                                          uint8_t *src, uint8_t *dest,
- *                                          uint32_t frame_width,
- *                                          uint32_t frame_height)
- *
- * \brief       Convert image data from one format to any other image format.
- *                  - Supported conversions
- *                  - Bayer(RAW) to RGB Conversion
- *                  - User can use below provided
- *                    "Open-Source" Bayer to RGB Conversion code
- *                    which uses DC1394 library.
- *                  - This code will,
- *                  - Add header for tiff image format
- *                  - Convert RAW Bayer to RGB depending on
- *                  - bpp bit per pixel 8/16 bit
- *                  - DC1394 Color Filter
- *                  - DC1394 Bayer interpolation methods
- *                  - Output image size will be
- *                  - width x height x (bpp / 8) x 3 + tiff header(106 Bytes)
- * \param[in]   image_conversion : image conversion methods \ref IMAGE_CONVERSION
- * \param[in]   src              : Source address, Pointer to already available
- * image data Address
- * \param[in]   dest             : Destination address,Pointer to Address,
- * where converted image data will be stored.
- * \param[in]   frame_width      : image frame width
- * \param[in]   frame_height     : image frame height
- * \return      success          : 0
- * \return      failure          : -1
- */
-int camera_image_conversion(IMAGE_CONVERSION  image_conversion,
-                            uint8_t *src, uint8_t *dest,
-                            uint32_t frame_width,
-                            uint32_t frame_height)
-
-{
-    /* Bayer to RGB Conversion. */
-    extern int32_t bayer_to_RGB(uint8_t  *src, uint8_t *dest,
-                                uint32_t width, uint32_t height);
-
-    int32_t ret;
-
-    switch (image_conversion) {
-    case BAYER_TO_RGB_CONVERSION:
-        {
-            ret = bayer_to_RGB(src, dest, frame_width, frame_height);
-            if (ret != 0) {
-                printf("\r\n Error: CAMERA image conversion: Bayer to RGB failed.\r\n");
-                return ret;
-            }
-            break;
-        }
-
-    default:
-        {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-
-/**
  * \fn          void video_demo_thread_entry(void *pvParameters)
  * \brief       TestApp to verify ARX3A0 Camera Sensor and ILI9806E LCD Panel
  *              with FreeRTOS as an Operating System.
@@ -582,7 +465,6 @@ void video_demo_thread_entry(void *pvParameters)
 {
     int32_t   ret;
     uint32_t actual_events = 0;
-    uint32_t row = 0, col = 0, index = 0, row_location = 0;
     uint32_t  service_error_code;
     uint32_t  error_code;
 
@@ -599,7 +481,8 @@ void video_demo_thread_entry(void *pvParameters)
     }
 #endif
 
-    printf("\r\n >>> ARX3A0 Camera Sensor and ILI9806E LCD Panel demo ");
+    printf("\r\n >>> %s Camera Sensor and ILI9806E LCD Panel demo ",
+           SELECTED_CAMERA_SENSOR);
     printf("with FreeRTOS is starting up!!! <<< \r\n");
 
     /* Allocated memory address for
@@ -612,17 +495,11 @@ void video_demo_thread_entry(void *pvParameters)
     printf("\n \t bayer_to_rgb buffer pool size: 0x%"PRIx32" pool addr: 0x%"PRIx32" \r\n ",
             BAYER_TO_RGB_BUFFER_POOL_SIZE, (uint32_t) bayer_to_rgb_buffer_pool);
 
-#if IMAGE_CROP_AND_INTERPOLATE_EN
-    /* Allocated memory address for
-     *   - Crop and interpolate buffer and
+/* Allocated memory address for
      *   - LCD frame buffer.
      */
     printf("\n \t lcd frame buffer pool size: 0x%"PRIx32" pool addr: 0x%"PRIx32" \r\n ",
             LCD_FRAMEBUFFER_POOL_SIZE, (uint32_t) lcd_framebuffer_pool);
-
-    printf("crop_and_interpolate buffer pool size: 0x%"PRIx32" pool addr: 0x%"PRIx32" \r\n ",
-            CRP_FRAMEBUFFER_POOL_SIZE, (uint32_t) crop_and_interpolate_buffer_pool);
-#endif
 
     /* Initialize i3c and Camera hardware pins using PinMux Driver. */
     ret = hardware_init();
@@ -669,7 +546,7 @@ void video_demo_thread_entry(void *pvParameters)
      * almost everything.
      */
 
-    runp.memory_blocks = MRAM_MASK | SRAM0_MASK;
+    runp.memory_blocks = MRAM_MASK | SRAM0_MASK | SRAM1_MASK;
     runp.phy_pwr_gating = MIPI_PLL_DPHY_MASK | MIPI_TX_DPHY_MASK | MIPI_RX_DPHY_MASK | LDO_PHY_MASK;
 
     /* Set the new run configuration */
@@ -716,12 +593,7 @@ void video_demo_thread_entry(void *pvParameters)
     }
 
     /* Configure the Display and set Frame buffer*/
-#if IMAGE_CROP_AND_INTERPOLATE_EN
     ret = CDCdrv->Control(CDC200_CONFIGURE_DISPLAY, (uint32_t)(lcd_framebuffer_pool));
-#else
-    ret = CDCdrv->Control(CDC200_CONFIGURE_DISPLAY, (uint32_t)(bayer_to_rgb_buffer_pool
-                          + TIFF_HDR_SIZE));
-#endif
     if (ret != 0) {
         printf("\r\n Error: CDC200 Configuration failed.\r\n");
         goto error_poweroff_camera;
@@ -802,44 +674,38 @@ void video_demo_thread_entry(void *pvParameters)
         uint8_t *src_frame_buffer =
             (uint8_t *)framebuffers[completed_buf_idx & (N_FRAMEBUFF - 1U)];
 
-        ret = camera_image_conversion(BAYER_TO_RGB_CONVERSION, src_frame_buffer,
-                                      bayer_to_rgb_buffer_pool, CAM_FRAME_WIDTH,
-                                      CAM_FRAME_HEIGHT);
+        ret = aipl_demosaic_rgb888(src_frame_buffer,
+                                   bayer_to_rgb_buffer_pool,
+                                   CAM_FRAME_WIDTH,
+                                   CAM_FRAME_WIDTH,
+                                   CAM_FRAME_HEIGHT,
+                                   AIPL_BAYER_GBRG);
 #else
-        ret = camera_image_conversion(BAYER_TO_RGB_CONVERSION, cam_framebuffer_pool,
-                                      bayer_to_rgb_buffer_pool, CAM_FRAME_WIDTH,
-                                      CAM_FRAME_HEIGHT);
+        ret = aipl_demosaic_rgb888(cam_framebuffer_pool,
+                                   bayer_to_rgb_buffer_pool,
+                                   CAM_FRAME_WIDTH,
+                                   CAM_FRAME_WIDTH,
+                                   CAM_FRAME_HEIGHT,
+                                   AIPL_BAYER_GBRG);
 #endif
         if (ret != 0) {
             printf("\r\n Error: CAMERA image conversion failed.\r\n");
             goto error_poweroff_camera;
         }
 
-#if IMAGE_CROP_AND_INTERPOLATE_EN
-        ret = crop_and_interpolate((void *)(bayer_to_rgb_buffer_pool + TIFF_HDR_SIZE),
-                                            CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT,
-                                            (void *)crop_and_interpolate_buffer_pool,
-                                            CRP_FRAME_WIDTH, CRP_FRAME_HEIGHT,
-                                            RGB_BYTES_PER_PIXEL * 8);
+        ret = aipl_crop(bayer_to_rgb_buffer_pool,
+                        lcd_framebuffer_pool,
+                        CAM_FRAME_WIDTH,
+                        CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT,
+                        AIPL_COLOR_RGB888,
+                        (CAM_FRAME_WIDTH - CRP_FRAME_WIDTH) / 2,
+                        (CAM_FRAME_HEIGHT - CRP_FRAME_HEIGHT) / 2,
+                        (CAM_FRAME_WIDTH + CRP_FRAME_WIDTH) / 2,
+                        (CAM_FRAME_HEIGHT + CRP_FRAME_HEIGHT) / 2);
         if (ret != 0) {
-            printf("\r\n Error: CAMERA image crop and interpolate failed.\r\n");
+            printf("\r\n Error: CAMERA AIPL crop failed.\r\n");
             goto error_poweroff_camera;
         }
-
-        for (row = 0, row_location = 0, index = 0; row < CRP_FRAME_HEIGHT; row++) {
-            //height
-            row_location = row * CRP_FRAME_WIDTH * RGB_BYTES_PER_PIXEL;
-            for (col = 0; col < CRP_FRAME_WIDTH; col++) {
-                //width
-                lcd_framebuffer_pool[row_location + (col * RGB_BYTES_PER_PIXEL)]
-                = crop_and_interpolate_buffer_pool[index++]; //R
-                lcd_framebuffer_pool[row_location + (col * RGB_BYTES_PER_PIXEL) + 1]
-                = crop_and_interpolate_buffer_pool[index++]; //G
-                lcd_framebuffer_pool[row_location + (col * RGB_BYTES_PER_PIXEL) + 2]
-                = crop_and_interpolate_buffer_pool[index++]; //B
-            }
-        }
-#endif
     }
 
 error_poweroff_camera:
