@@ -455,7 +455,8 @@ typedef enum _I3C_XFER_TYPE {
     I3C_XFER_TYPE_ADDR_ASSIGN = 0x1U,
     I3C_XFER_CCC_SET          = 0x2U,
     I3C_XFER_CCC_GET          = 0x3U,
-    I3C_XFER_TYPE_DATA        = 0x4U
+    I3C_XFER_TYPE_TX_DATA     = 0x4U,
+    I3C_XFER_TYPE_RX_DATA     = 0x5U
 } I3C_XFER_TYPE;
 
 /* i3c message communication errors */
