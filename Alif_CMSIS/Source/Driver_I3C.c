@@ -1573,7 +1573,7 @@ static int I3Cx_SlaveTransmit(I3C_RESOURCES *i3c, const uint8_t *data, uint16_t 
 /**
   \fn           int I3Cx_SlaveReceive(I3C_RESOURCES *i3c,
                                       uint8_t       *data,
-                                      uint32_t       len)
+                                      uint16_t       len)
   \brief        Read data from the master
   \param[in]    i3c      : Pointer to i3c resources structure
   \param[in]    data     : Pointer to buffer for data
@@ -1581,7 +1581,7 @@ static int I3Cx_SlaveTransmit(I3C_RESOURCES *i3c, const uint8_t *data, uint16_t 
   \param[in]    len      : Number of bytes needs to be receive
   \return       \ref execution_status
 */
-static int I3Cx_SlaveReceive(I3C_RESOURCES *i3c, uint8_t *data, uint32_t len)
+static int I3Cx_SlaveReceive(I3C_RESOURCES *i3c, uint8_t *data, uint16_t len)
 {
 #if I3C_DMA_ENABLE
     int32_t ret;
