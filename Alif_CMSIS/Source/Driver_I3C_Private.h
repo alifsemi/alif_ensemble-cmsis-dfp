@@ -23,9 +23,6 @@ extern "C" {
 #include "i3c.h"
 #include "sys_ctrl_i3c.h"
 
-#define I3C_DIR_TRANSMITTER    (0) /* direction transmitter  */
-#define I3C_DIR_RECEIVER       (1) /* direction receiver     */
-
 /* Check if DMA Support is enable? */
 #if (RTE_I3C_DMA_ENABLE || RTE_LPI3C_DMA_ENABLE)
 #define I3C_DMA_ENABLE 1
@@ -40,6 +37,7 @@ extern "C" {
 #endif
 
 #define I3C_TARGET_SLAVE_TYPE_I2C (1U << 7U) /* Represents slave type */
+
 /**
 \brief I3C Driver states.
 */

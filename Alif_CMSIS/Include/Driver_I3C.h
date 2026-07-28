@@ -92,6 +92,8 @@ extern "C" {
     (1UL << 10)  ///< Bus reset is done(Available only for Master mode)
 #define ARM_I3C_EVENT_READ_REQUEST_RCVD                                                            \
     (1UL << 11)  ///< Read request received from master when the slave is not in Tx mode
+#define ARM_I3C_EVENT_TX_DONE  (1UL << 12)  ///< Transmit transfer done
+#define ARM_I3C_EVENT_RX_DONE  (1UL << 13)  ///< Receive transfer done
 
 /****** I3C Error Status codes *****/
 #define ARM_I3C_LEC_NO_ERROR        (0U)  ///< Last error code: No error
@@ -108,6 +110,14 @@ extern "C" {
 #define ARM_I3C_LEC_PEC_BYTE_ERROR (9U)  ///< Last error code: PEC byte check error
 #define ARM_I3C_LEC_EARLY_TERMINATION_ERROR                                                        \
     (10U)  ///< Last error code: Master early termination error
+
+/* Tx and Rx Data count macro codes */
+#define ARM_I3C_RX_DATA_CNT_Pos   0U
+#define ARM_I3C_RX_DATA_CNT_Msk   (0xFFFFU << ARM_I3C_RX_DATA_CNT_Pos)
+#define ARM_I3C_RX_DATA_CNT(x)    ((x) & ARM_I3C_RX_DATA_CNT_Msk)
+#define ARM_I3C_TX_DATA_CNT_Pos   16U
+#define ARM_I3C_TX_DATA_CNT_Msk   (0xFFFFU << ARM_I3C_TX_DATA_CNT_Pos)
+#define ARM_I3C_TX_DATA_CNT(x)    ((x) & ARM_I3C_TX_DATA_CNT_Msk)
 
 /* I3C CCC (Common Command Codes) related definitions */
 #define I3C_CCC_DIRECT                BIT(7)
@@ -174,9 +184,9 @@ typedef struct _ARM_I3C_CMD {
 \brief I3C Status
 */
 typedef struct _ARM_I3C_STATUS {
-    uint32_t busy           : 1;  ///< Busy flag
+    uint32_t rx_busy        : 1;  ///< Rx busy flag
+    uint32_t tx_busy        : 1;  ///< Tx busy flag
     uint32_t mode           : 1;  ///< Mode: 0=Slave, 1=Master
-    uint32_t direction      : 1;  ///< Direction: 0=Transmitter, 1=Receiver
     uint32_t ibi_slv_addr   : 8;  ///< Address of last IBI slave
     uint32_t last_error_code: 4;  ///< Last occurred error
     uint32_t defslv_cnt: 8;  ///< Slave count from last DEFSLVS (Applicable for Sec masters only)

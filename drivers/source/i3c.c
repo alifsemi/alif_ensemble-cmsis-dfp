@@ -89,7 +89,11 @@ static void i3c_set_tx_buf_thld(I3C_Type *i3c, const uint16_t len)
     uint32_t temp =
         (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Msk));
 
-    thld = i3c_get_buflen_to_threshold(len);
+    if (len) {
+        thld = i3c_get_buflen_to_threshold(len);
+    } else {
+        thld = 0;
+    }
 
     /* Set the calculated threshold */
     temp |= ((thld << I3C_DATA_BUFFER_THLD_CTRL_TX_EMPTY_BUF_THLD_Pos) &
@@ -112,7 +116,11 @@ static void i3c_set_rx_buf_thld(I3C_Type *i3c, const uint16_t len)
 
     uint32_t temp = (i3c->I3C_DATA_BUFFER_THLD_CTRL & (~I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Msk));
 
-    thld  = i3c_get_buflen_to_threshold(len);
+    if (len) {
+        thld  = i3c_get_buflen_to_threshold(len);
+    } else {
+        thld = 0;
+    }
 
     /* Set the calculated threshold */
     temp |= ((thld << I3C_DATA_BUFFER_THLD_CTRL_RX_BUF_THLD_Pos) &
@@ -166,7 +174,8 @@ static void i3c_set_port(I3C_Type *i3c, i3c_xfer_t *xfer)
     bool is_master = true;
 
     switch (xfer->xfer_cmd.cmd_type) {
-    case I3C_XFER_TYPE_DATA:
+    case I3C_XFER_TYPE_TX_DATA:
+    case I3C_XFER_TYPE_RX_DATA:
         xfer->xfer_cmd.cmd_id = 0U;
 
         /* Checks about instance mastership */
@@ -176,13 +185,13 @@ static void i3c_set_port(I3C_Type *i3c, i3c_xfer_t *xfer)
         }
 
         if (is_master) {
-            if (xfer->rx_len) {
+            if (xfer->xfer_cmd.cmd_type == I3C_XFER_TYPE_RX_DATA) {
                 xfer->xfer_cmd.port_id = I3C_MST_RX_TID;
             } else {
                 xfer->xfer_cmd.port_id = I3C_MST_TX_TID;
             }
         } else {
-            if (xfer->rx_len) {
+            if (xfer->xfer_cmd.cmd_type == I3C_XFER_TYPE_RX_DATA) {
                 xfer->xfer_cmd.port_id = I3C_SLV_RX_TID;
             } else {
                 xfer->xfer_cmd.port_id = I3C_SLV_TX_TID;
@@ -1412,10 +1421,8 @@ void i3c_setup_tx(I3C_Type *i3c, i3c_xfer_t *xfer, const uint16_t len)
 
     xfer->xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
 
-    if (i3c_is_dma_enable(i3c)) {
-        /* Don't enable command queue ready and Tx data threshold interrupts */
         temp = 0;
-    } else {
+    if (!i3c_is_dma_enable(i3c)) {
         /* write data to tx port (if any) */
         if ((xfer->tx_buf) && (xfer->tx_cur_cnt < xfer->tx_len)) {
             resp = i3c_get_empty_tx_buf_len(i3c);
