@@ -857,8 +857,8 @@ static inline void canfd_disable_error_interrupts(CANFD_Type *canfd)
 static inline void canfd_clear_interrupts(CANFD_Type *canfd)
 {
     /* Clears data and error interrupts */
-    canfd->CANFD_RTIF    = 0U;
-    canfd->CANFD_ERRINT &= ~CANFD_ERRINT_REG_Msk;
+    canfd->CANFD_RTIF = CANFD_RTIF_REG_Msk;
+    canfd->CANFD_ERRINT |= CANFD_ERRINT_REG_Msk;
 }
 
 /**
