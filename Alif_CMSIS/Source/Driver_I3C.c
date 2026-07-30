@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 1) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 2) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -1053,47 +1053,56 @@ static ARM_I3C_STATUS I3Cx_GetStatus(I3C_RESOURCES *i3c)
 }
 
 /**
-  \fn      int32_t I3Cx_GetDataCount(I3C_RESOURCES *i3c)
-  \brief   Get transferred data count.
-  \         Lower 2bytes is rx count, upper 2bytes is tx count
+  \fn       int32_t I3Cx_GetTxCount(I3C_RESOURCES *i3c)
+  \brief    Get transferred Tx data count.
  * @param   i3c   : Pointer to i3c resources structure
- * @retval  transfer data count
+ * @retval  transfer tx data count
 */
-static int32_t I3Cx_GetDataCount(I3C_RESOURCES *i3c)
+static int32_t I3Cx_GetTxCount(I3C_RESOURCES *i3c)
 {
-    int32_t count = 0;
+    int32_t count;
 #if I3C_DMA_ENABLE
         if (i3c->dma_enable) {
             uint32_t dma_count = 0;
             ARM_DRIVER_DMA *dma_drv;
             DMA_Handle_Type *handle;
-            if (i3c->status.rx_busy) {
+
+            dma_drv = i3c->dma_cfg->dma_tx.dma_drv;
+            handle  = (DMA_Handle_Type *)&i3c->dma_cfg->dma_tx.dma_handle;
+            (void) dma_drv->GetStatus(handle, &dma_count);
+            /* TX DMA transfers 8-bit bytes */
+            count = (int32_t)dma_count;
+        } else
+#endif
+        {
+            count = i3c->xfer.tx_cur_cnt;
+        }
+        return count;
+}
+/**
+  \fn       int32_t I3Cx_GetRxCount(I3C_RESOURCES *i3c)
+  \brief    Get transferred Rx data count.
+ * @param   i3c   : Pointer to i3c resources structure
+ * @retval  transfer rx data count
+*/
+static int32_t I3Cx_GetRxCount(I3C_RESOURCES *i3c)
+{
+    int32_t count;
+#if I3C_DMA_ENABLE
+        if (i3c->dma_enable) {
+            uint32_t dma_count = 0;
+            ARM_DRIVER_DMA *dma_drv;
+            DMA_Handle_Type *handle;
+
                 dma_drv = i3c->dma_cfg->dma_rx.dma_drv;
                 handle  = (DMA_Handle_Type *)&i3c->dma_cfg->dma_rx.dma_handle;
                 (void) dma_drv->GetStatus(handle, &dma_count);
                 /* RX DMA transfers 8-bit bytes */
-                count = (((int16_t)dma_count << ARM_I3C_RX_DATA_CNT_Pos)
-                           & ARM_I3C_RX_DATA_CNT_Msk);
-            }
-            if (i3c->status.tx_busy) {
-                dma_drv = i3c->dma_cfg->dma_tx.dma_drv;
-                handle  = (DMA_Handle_Type *)&i3c->dma_cfg->dma_tx.dma_handle;
-                (void) dma_drv->GetStatus(handle, &dma_count);
-                /* TX DMA transfers 8-bit bytes */
-                count |= (((int16_t)dma_count << ARM_I3C_TX_DATA_CNT_Pos)
-                           & ARM_I3C_TX_DATA_CNT_Msk);
-            }
+            count = (int32_t)dma_count;
         } else
 #endif
         {
-            if (i3c->status.rx_busy) {
-                count  = ((i3c->xfer.rx_cur_cnt << ARM_I3C_RX_DATA_CNT_Pos) &
-                          ARM_I3C_RX_DATA_CNT_Msk);
-            }
-            if (i3c->status.tx_busy) {
-                count |= ((i3c->xfer.tx_cur_cnt << ARM_I3C_TX_DATA_CNT_Pos) &
-                          ARM_I3C_TX_DATA_CNT_Msk);
-        }
+            count = i3c->xfer.rx_cur_cnt;
     }
     return count;
 }
@@ -2786,9 +2795,13 @@ static ARM_I3C_STATUS I3C_GetStatus(void)
     return I3Cx_GetStatus(&i3c);
 }
 
-static int32_t I3C_GetDataCount(void)
+static int32_t I3C_GetTxCount(void)
 {
-    return I3Cx_GetDataCount(&i3c);
+    return I3Cx_GetTxCount(&i3c);
+}
+static int32_t I3C_GetRxCount(void)
+{
+    return I3Cx_GetRxCount(&i3c);
 }
 static ARM_I3C_DEVICE_INFO I3C_GetDeviceInfo(void)
 {
@@ -2876,7 +2889,8 @@ ARM_DRIVER_I3C        Driver_I3C = {
     I3C_GetVersion,
     I3C_GetCapabilities,
     I3C_GetStatus,
-    I3C_GetDataCount,
+    I3C_GetTxCount,
+    I3C_GetRxCount,
     I3C_GetDeviceInfo,
     I3C_Initialize,
     I3C_Uninitialize,
@@ -2979,9 +2993,13 @@ static ARM_I3C_STATUS LPI3C_GetStatus(void)
     return I3Cx_GetStatus(&LPI3C_RES);
 }
 
-static int32_t LPI3C_GetDataCount(void)
+static int32_t LPI3C_GetTxCount(void)
 {
-    return I3Cx_GetDataCount(&LPI3C_RES);
+    return I3Cx_GetTxCount(&LPI3C_RES);
+}
+static int32_t LPI3C_GetRxCount(void)
+{
+    return I3Cx_GetRxCount(&LPI3C_RES);
 }
 
 static ARM_I3C_DEVICE_INFO LPI3C_GetDeviceInfo(void)
@@ -3070,7 +3088,8 @@ ARM_DRIVER_I3C        Driver_I3CLP = {
     I3C_GetVersion,
     I3C_GetCapabilities,
     LPI3C_GetStatus,
-    LPI3C_GetDataCount,
+    LPI3C_GetTxCount,
+    LPI3C_GetRxCount,
     LPI3C_GetDeviceInfo,
     LPI3C_Initialize,
     LPI3C_Uninitialize,

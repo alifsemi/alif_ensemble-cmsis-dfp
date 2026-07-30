@@ -16,7 +16,7 @@ extern "C" {
 
 #include "Driver_Common.h"
 
-#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 0) /* API version */
+#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 1) /* API version */
 
 /****** I3C Control Codes *****/
 
@@ -110,14 +110,6 @@ extern "C" {
 #define ARM_I3C_LEC_PEC_BYTE_ERROR (9U)  ///< Last error code: PEC byte check error
 #define ARM_I3C_LEC_EARLY_TERMINATION_ERROR                                                        \
     (10U)  ///< Last error code: Master early termination error
-
-/* Tx and Rx Data count macro codes */
-#define ARM_I3C_RX_DATA_CNT_Pos   0U
-#define ARM_I3C_RX_DATA_CNT_Msk   (0xFFFFU << ARM_I3C_RX_DATA_CNT_Pos)
-#define ARM_I3C_RX_DATA_CNT(x)    ((x) & ARM_I3C_RX_DATA_CNT_Msk)
-#define ARM_I3C_TX_DATA_CNT_Pos   16U
-#define ARM_I3C_TX_DATA_CNT_Msk   (0xFFFFU << ARM_I3C_TX_DATA_CNT_Pos)
-#define ARM_I3C_TX_DATA_CNT(x)    ((x) & ARM_I3C_TX_DATA_CNT_Msk)
 
 /* I3C CCC (Common Command Codes) related definitions */
 #define I3C_CCC_DIRECT                BIT(7)
@@ -385,7 +377,8 @@ typedef struct _ARM_DRIVER_I3C {
     (void);  ///< Pointer to \ref GetCapabilities   : Get I3C driver capabilities.
     ARM_I3C_STATUS (*GetStatus)
     (void);  ///< Pointer to \ref GetStatus         : Get I3C driver status.
-    int32_t (*GetDataCount) (void);  ///< Pointer to \ref GetDataCount: Get transferred data count.
+    int32_t (*GetTxCount) (void);  ///< Pointer to \ref GetTxCount : Get transferred tx data count.
+    int32_t (*GetRxCount) (void);  ///< Pointer to \ref GetRxCount : Get transferred rx data count.
     ARM_I3C_DEVICE_INFO (*GetDeviceInfo)
     (void);  ///< Pointer to \ref GetDeviceInfo     : Get I3C device information.
     int32_t (*Initialize)(ARM_I3C_SignalEvent_t cb_event);  ///< Pointer to \ref Initialize        :
