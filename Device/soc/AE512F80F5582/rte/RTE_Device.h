@@ -9682,6 +9682,7 @@
 //    <o> SDC BUS WIDTH SELECT
 //    <0=> BUS_WIDTH_1BIT
 //    <1=> BUS_WIDTH_4BIT
+//    <2=> BUS_WIDTH_8BIT
 // <i> Defines SDC0 size of bus width
 // <i> Default: BUS_WIDTH_4BIT
 #define RTE_SDC_BUS_WIDTH       1
