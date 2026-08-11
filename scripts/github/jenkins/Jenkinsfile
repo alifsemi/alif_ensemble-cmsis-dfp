@@ -1,7 +1,6 @@
 def allRecipientEmails = ""
 def rebaseNeeded = "-1"
-
-def gDevices   = ['AE722F80F55D5', 'AE1C1F4051920', 'AE822FA0E5597', 'AE402FA0E5597']
+def gDevices = []
 
 def buildDevice(deviceList) {
     def stagesMap = [:]
@@ -17,11 +16,48 @@ def buildDevice(deviceList) {
                     sh """
                         #!/bin/bash
                         set -x
+
+                        CURR_DEV=()
+                        base="\${REPO_NAME}/Device/soc"
+                        if [[ -d "\$base" ]]; then
+                            for dir in "\$base"/*/; do
+                                dir="\${dir%/}"
+                                CURR_DEV+=("\$(basename "\$dir")")
+                            done
+                            echo "Discovered Devices:"
+                            printf '%s\\n' "\${CURR_DEV[@]}"
+                        else
+                            echo "Warning: \$base not found, CURR_DEV will be empty"
+                        fi
+
+                        CURR_BOARDS=()
+                        base="\${REPO_NAME}/Boards/"
+                        if [[ -d "\$base" ]]; then
+                            for dir in "\$base"/*/; do
+                                name="\${dir%/}"     # Remove trailing /
+                                name="\${name##*/}"  # Extract basename
+                                if [[ ! "\$name" =~ ^(Templates|build|out|\.git)\$ ]]; then
+                                    CURR_BOARDS+=("\$name")
+                                fi
+                            done
+                            echo "Discovered Boards:"
+                            printf '%s\\n' "\${CURR_BOARDS[@]}"
+                        else
+                            echo "Error: \$base not found"
+                        fi
+
+                        if [[ \${#CURR_BOARDS[@]} -eq 0 ]]; then
+                            echo "Error: No boards discovered under \${REPO_NAME}/Boards/"
+                            exit 1
+                        fi
+
                         mkdir -pv ${currentDev}
                         cp -r \${REPO_NAME}  ${currentDev}/
                         cd "${currentDev}/$REPO_NAME/scripts/cmake" || { echo -e "🚫Error: $REPO_NAME/scripts/cmake folder/dir not found."; exit 1; }
                         echo "PWD : \${PWD}"
                         chmod -Rv 777 *.sh
+
+                        devPN="${currentDev}"
 
                         total_cfg_run_cnt=0
                         skipped_cfg_run_cnt=0
@@ -50,20 +86,30 @@ def buildDevice(deviceList) {
 
                         CURR_OS=("NONE" "FREERTOS")
                         #CURR_COMPILER=("armclang" "gcc")
-                        CURR_BOARDS=("DevKit-e7" "DevKit-e1c" "DevKit-e8" "DevKit-e4")
                         CURR_RTSS=("HE" "HP")
                         CURR_BOOT=("TCM" "MRAM")
 
                         for bootType in \${!CURR_BOOT[@]} ; do
                             for rtssType in \${!CURR_RTSS[@]} ; do
                                 for brdName in \${!CURR_BOARDS[@]} ; do
-                                    devShortName="\${CURR_BOARDS[brdName]#*-}"
-                                    alifDevShortName="A\$(echo "\${devShortName}" | tr '[:lower:]' '[:upper:]')"
-                                    echo "Device : ${currentDev}, Board: \${CURR_BOARDS[brdName]}, ShortName:\${alifDevShortName}."
-                                    number_of_iter=\$((number_of_iter + 1))
+                                    shortBrdName=\$(echo "\${CURR_BOARDS[brdName]}" | grep -oE '(DevKit|StartKit|AppKit)-[a-z][0-9][a-z]?' | cut -d- -f2)
+                                    boardName=\$(echo "\${CURR_BOARDS[brdName]}" | grep -oE '(DevKit|StartKit|AppKit)-[a-z][0-9][a-z]?' | cut -d- -f1)
+                                    socAbbr="\${devPN:1:2}"
+                                    additionalAbbr="\${devPN:3:1}"
+                                    if [[ "\${additionalAbbr}" == "C" ]]; then
+                                        soc="\${socAbbr}\${additionalAbbr}"
+                                    else
+                                        soc="\${socAbbr}"
+                                    fi
+                                    if [[ "\$soc" =~ ^E[35]\$ && "\$boardName" == "DevKit" ]]; then
+                                        soc="E7"
+                                    fi
+                                    shortNameInUpper="\$(echo "\$shortBrdName" | tr '[:lower:]' '[:upper:]')"
+                                    if [[ "\${soc}" == "\${shortNameInUpper}" ]]; then
+                                        echo "Device : ${currentDev}, Board: \${CURR_BOARDS[brdName]}, ShortName:\${shortNameInUpper}."
+                                        number_of_iter=\$((number_of_iter + 1))
 
-                                    echo "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱 # \${number_of_iter} starts 🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱"
-                                    if [[ "${currentDev}" == "\$alifDevShortName"* ]]; then
+                                        echo "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱 # \${number_of_iter} starts 🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱"
                                         for osName in \${!CURR_OS[@]} ; do
                                             echo "=================================================================================="
                                             if [ -d build ]; then
@@ -192,8 +238,8 @@ def buildDevice(deviceList) {
                                             git reset --hard
                                             echo "=================================================================================="
                                         done
-                                    fi
                                     echo "🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩 # \${number_of_iter} ends 🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩🧩"
+                                    fi
                                     echo -e ""
                                 done
                             done
@@ -448,6 +494,24 @@ pipeline {
         stage('build') {
             steps {
                 script {
+                    def deviceListStr = sh(
+                        script: '''#!/bin/bash
+                            set -e
+                            cd ${REPO_NAME}/Device/soc
+                            for d in */ ; do
+                                echo "${d%/}"
+                            done
+                        ''',
+                        returnStdout: true
+                    ).trim()
+
+                    gDevices = deviceListStr ? deviceListStr.split("\n").collect { it.trim() }.findAll { it } : []
+
+                    if (gDevices.isEmpty()) {
+                        error "❌ No devices discovered under ${REPO_NAME}/Device/soc"
+                    }
+                    echo "🔎 Discovered devices: ${gDevices}"
+
                     try {
                         def buildDeviceStatus = buildDevice(gDevices)
                         parallel buildDeviceStatus
