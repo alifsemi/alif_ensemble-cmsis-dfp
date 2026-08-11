@@ -759,6 +759,15 @@ void ADC_demo()
     }
 #endif /* ARM_ADC_CONTINOUS_CH_CONV */
 
+    printf("\n--- Comparator hits (A=0x%03x, B=0x%03x) ---\n"
+           "  above_A=%" PRIu32 " above_B=%" PRIu32
+           " below_A=%" PRIu32 " below_B=%" PRIu32
+           " between=%" PRIu32 " outside=%" PRIu32 "\n",
+           COMP_A_THLD_VALUE, COMP_B_THLD_VALUE,
+           comp_value[0], comp_value[1],
+           comp_value[2], comp_value[3],
+           comp_value[4], comp_value[5]);
+
     printf("\n ---END--- \r\n wait forever >>> \n");
     WAIT_FOREVER_LOOP
 
