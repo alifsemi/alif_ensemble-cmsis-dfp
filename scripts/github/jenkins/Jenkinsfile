@@ -36,7 +36,7 @@ def buildDevice(deviceList) {
                             for dir in "\$base"/*/; do
                                 name="\${dir%/}"     # Remove trailing /
                                 name="\${name##*/}"  # Extract basename
-                                if [[ ! "\$name" =~ ^(Templates|build|out|\.git)\$ ]]; then
+                                if [[ ! "\$name" =~ ^(Templates|build|out|\\.git)\$ ]]; then
                                     CURR_BOARDS+=("\$name")
                                 fi
                             done
