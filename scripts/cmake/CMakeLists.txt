@@ -138,9 +138,15 @@ set (RETARGET_SRC_DIR       "${ALIF_DEV_SRC_DIR}/libs")
 set (BOARD_DIR              "${ALIF_DEV_SRC_DIR}/libs/board_config")
 set (BOARD_CMAKE_FILE       "${USER_CMAKE_SCRIPT_DIR}/board_cmake/board.cmake")
 
-string(REGEX REPLACE    "^[^-]*-"   ""      BOARD_ABERRATION    "${BOARD_NAME}")
-string(TOUPPER  "${BOARD_ABERRATION}"   BOARD_ABERRATION_IN_UPPER)
-string(FIND     "${DEVICE}"    "A${BOARD_ABERRATION_IN_UPPER}"      found_subStr)
+# Kit type = everything before the first hyphen (DevKit / AppKit / StartKit)
+string(REGEX MATCH  "^[^-]*"                BOARD_KIT_TYPE           "${BOARD_NAME}")
+string(TOUPPER      "${BOARD_KIT_TYPE}"     BOARD_KIT_TYPE_IN_UPPER)
+
+# SoC aberration = the token right after the first hyphen, ignoring any further suffix (e.g. -AIML)
+string(REGEX REPLACE "^[^-]*-([^-]*).*$" "\\1"  BOARD_ABERRATION    "${BOARD_NAME}")
+string(TOLOWER      "${BOARD_ABERRATION}"       BOARD_ABERRATION)
+string(TOUPPER      "${BOARD_ABERRATION}"       BOARD_ABERRATION_IN_UPPER)
+string(FIND         "${DEVICE}"    "A${BOARD_ABERRATION_IN_UPPER}"      found_subStr)
 
 # Determine if DEVICE starts with "AE1C"
 string(SUBSTRING "${DEVICE}" 0 4 BOARD_ABERRATION_ID_4)
