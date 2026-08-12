@@ -258,6 +258,7 @@ static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI_RES,
 
             /* Reset the power status of Camera. */
             CPI_RES->status.powered = 0;
+            CPI_RES->status.sensor_configured = 0;
             break;
         }
 
@@ -423,6 +424,14 @@ static int32_t CPI_StopCapture(CPI_RESOURCES *CPI_RES)
 
     /* Stop Clear CPI control */
     cpi_stop_capture(CPI_RES->regs);
+
+    /*
+     * Issue a software reset to return the controller to a clean idle state
+     * after stopping capture.
+     */
+    CPI_RES->regs->CAM_CTRL = 0;
+    CPI_RES->regs->CAM_CTRL |= CAM_CTRL_SW_RESET;
+    CPI_RES->regs->CAM_CTRL = 0;
 
     return ARM_DRIVER_OK;
 }
