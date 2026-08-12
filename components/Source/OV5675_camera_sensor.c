@@ -1159,7 +1159,10 @@ static int32_t OV5675_Uninit(void)
         return ret;
     }
 
-    return GPIO_Driver_CAM_RST->Uninitialize(BOARD_CAMERA_RESET_GPIO_PIN);
+    ret = GPIO_Driver_CAM_RST->Uninitialize(BOARD_CAMERA_RESET_GPIO_PIN);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
 
     ret = GPIO_Driver_CAM_PWR->SetValue(BOARD_CAMERA_POWER_GPIO_PIN,
                                         GPIO_PIN_OUTPUT_STATE_LOW);
