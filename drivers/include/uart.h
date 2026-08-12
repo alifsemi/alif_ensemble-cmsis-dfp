@@ -510,6 +510,56 @@ static inline void uart_reset_rxfifo(UART_Type *uart)
 }
 
 /**
+ * @fn      uint32_t uart_critical_enter (void)
+ * @brief   enter a short critical section by masking interrupts
+ * @note    uart.h is also compiled for the A32/fusion core in multi-core
+ *          Ensemble projects, where PRIMASK does not exist, hence the guard.
+ * @retval  previous interrupt-mask state, to be restored by uart_critical_exit()
+ */
+static inline uint32_t uart_critical_enter(void)
+{
+#if defined(__CORTEX_M)
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+    return primask;
+#else
+    return 0U; /* Cortex-A has no PRIMASK */
+#endif
+}
+
+/**
+ * @fn      void uart_critical_exit (uint32_t state)
+ * @brief   leave the critical section, restoring the previous mask state
+ * @param   state : value returned by uart_critical_enter()
+ * @retval  none
+ */
+static inline void uart_critical_exit(uint32_t state)
+{
+#if defined(__CORTEX_M)
+    __set_PRIMASK(state);
+#else
+    (void) state;
+#endif
+}
+
+/**
+ * @fn      void uart_ier_modify (UART_Type *uart, uint32_t set, uint32_t clear)
+ * @brief   atomically set/clear bits in the IER register
+ * @note    IER is read-modify-written from both thread and ISR context; without
+ *          this guard a stale write-back drops the other context's bit.
+ * @param   uart  : Pointer to uart register set structure
+ * @param   set   : IER bits to set
+ * @param   clear : IER bits to clear
+ * @retval  none
+ */
+static inline void uart_ier_modify(UART_Type *uart, uint32_t set, uint32_t clear)
+{
+    uint32_t state = uart_critical_enter();
+    uart->UART_IER = (uart->UART_IER | set) & ~clear;
+    uart_critical_exit(state);
+}
+
+/**
  * @fn      void uart_enable_tx_irq (UART_Type *uart)
  * @brief   enable transmitter interrupt
  * @note    none
@@ -520,7 +570,7 @@ static inline void uart_enable_tx_irq(UART_Type *uart)
 {
     /* enable transmit_holding_register_empty bit in
      * ier interrupt enable register */
-    uart->UART_IER |= UART_IER_ENABLE_TRANSMIT_HOLD_REG_EMPTY;
+    uart_ier_modify(uart, UART_IER_ENABLE_TRANSMIT_HOLD_REG_EMPTY, 0U);
 }
 
 /**
@@ -534,7 +584,7 @@ static inline void uart_disable_tx_irq(UART_Type *uart)
 {
     /* disable transmit_holding_register_empty bit in
      * ier interrupt enable register */
-    uart->UART_IER &= ~UART_IER_ENABLE_TRANSMIT_HOLD_REG_EMPTY;
+    uart_ier_modify(uart, 0U, UART_IER_ENABLE_TRANSMIT_HOLD_REG_EMPTY);
 }
 
 /**
@@ -546,13 +596,12 @@ static inline void uart_disable_tx_irq(UART_Type *uart)
  */
 static inline void uart_enable_rx_irq(UART_Type *uart)
 {
-    /* enable receiver interrupt */
-    /* enable receive_data_available_interrupt bit in
-     * ier interrupt enable register */
-    uart->UART_IER |= UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE;
-
-    /* also enable receiver line status interrupt. */
-    uart->UART_IER |= UART_IER_ENABLE_RECEIVER_LINE_STATUS;
+    /* enable receive_data_available and receiver_line_status bits in
+     * ier interrupt enable register (single atomic update) */
+    uart_ier_modify(uart,
+                    UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE |
+                        UART_IER_ENABLE_RECEIVER_LINE_STATUS,
+                    0U);
 }
 
 /**
@@ -564,13 +613,11 @@ static inline void uart_enable_rx_irq(UART_Type *uart)
  */
 static inline void uart_disable_rx_irq(UART_Type *uart)
 {
-    /* disable receiver interrupt */
-    /* disable receive_data_available_interrupt bit in
-     * ier interrupt enable register */
-    uart->UART_IER &= ~UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE;
-
-    /* also disable receiver line status interrupt. */
-    uart->UART_IER &= ~UART_IER_ENABLE_RECEIVER_LINE_STATUS;
+    /* disable receive_data_available and receiver_line_status bits in
+     * ier interrupt enable register (single atomic update) */
+    uart_ier_modify(uart, 0U,
+                    UART_IER_ENABLE_RECEIVED_DATA_AVAILABLE |
+                        UART_IER_ENABLE_RECEIVER_LINE_STATUS);
 }
 
 /* --------------------------------- RS485 Functions ---------------------------*/
