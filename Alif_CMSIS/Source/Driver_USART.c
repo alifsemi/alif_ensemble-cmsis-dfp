@@ -711,13 +711,19 @@ static int32_t ARM_USART_Send(const void *data, uint32_t num, UART_RESOURCES *ua
         return ARM_DRIVER_ERROR_BUSY;
     }
 
-    /* Set TX busy flag to active */
-    uart->status.tx_busy        = UART_STATUS_BUSY;
-
-    /* fill the uart transfer structure as per user input */
-    uart->transfer.tx_buf       = (uint8_t *) data;
-    uart->transfer.tx_total_num = num;
-    uart->transfer.tx_curr_cnt  = 0U;
+    /* Fill the transfer counts before publishing the busy flag, all under a
+     * critical section. The ISR treats (tx_busy == BUSY && tx_curr_cnt ==
+     * tx_total_num) as send-complete, so a busy flag published ahead of the
+     * counts (which still hold the previous transfer's equal values) lets an
+     * interrupt taken in the gap raise a spurious SEND_COMPLETE. */
+    {
+        uint32_t tx_state           = uart_critical_enter();
+        uart->transfer.tx_buf       = (uint8_t *) data;
+        uart->transfer.tx_total_num = num;
+        uart->transfer.tx_curr_cnt  = 0U;
+        uart->status.tx_busy        = UART_STATUS_BUSY;
+        uart_critical_exit(tx_state);
+    }
 
 #if UART_DMA_ENABLE
     /* DMA enable? */
@@ -810,19 +816,26 @@ static int32_t ARM_USART_Receive(void *data, uint32_t num, UART_RESOURCES *uart)
         return ARM_DRIVER_ERROR_BUSY;
     }
 
-    /* set rx busy flag to active */
-    uart->status.rx_busy          = UART_STATUS_BUSY;
-
     /* clear rx status */
     uart->status.rx_break         = 0U;
     uart->status.rx_framing_error = 0U;
     uart->status.rx_overflow      = 0U;
     uart->status.rx_parity_error  = 0U;
 
-    /* fill the uart transfer structure as per user input */
-    uart->transfer.rx_buf         = (uint8_t *) data;
-    uart->transfer.rx_total_num   = num;
-    uart->transfer.rx_curr_cnt    = 0U;
+    /* Fill the transfer counts before publishing the busy flag, all under a
+     * critical section. The ISR treats (rx_busy == BUSY && rx_curr_cnt ==
+     * rx_total_num) as receive-complete, so a busy flag published ahead of the
+     * counts (which still hold the previous transfer's equal values) lets an
+     * interrupt taken in the gap raise a spurious RECEIVE_COMPLETE for an
+     * unfilled buffer. */
+    {
+        uint32_t rx_state           = uart_critical_enter();
+        uart->transfer.rx_buf       = (uint8_t *) data;
+        uart->transfer.rx_total_num = num;
+        uart->transfer.rx_curr_cnt  = 0U;
+        uart->status.rx_busy        = UART_STATUS_BUSY;
+        uart_critical_exit(rx_state);
+    }
 
 #if UART_DMA_ENABLE
     /* DMA enable? */
