@@ -1009,8 +1009,21 @@ static int32_t ARM_I2C_MasterTransmit(I2C_RESOURCES *I2C, uint32_t addr, const u
         I2C->transfer.tx_buf       = (const uint8_t *) data;
         I2C->transfer.tx_total_num = num;
 
-        /* enable master tx interrupt */
-        i2c_master_enable_tx_interrupt(I2C->regs);
+#if RTE_I2C_BLOCKING_MODE_ENABLE
+        if (I2C->blocking_mode) {
+            i2c_master_tx_blocking(I2C->regs, &I2C->transfer);
+
+            /* set busy flag to 0U */
+            I2C->status.busy = 0U;
+	    if (!(I2C->transfer.evt_sts & I2C_XFER_EVENT_DONE)) {
+		    return ARM_DRIVER_ERROR;
+            }
+        } else
+#endif
+        {
+            /* enable master TX interrupt */
+            i2c_master_enable_tx_interrupt(I2C->regs);
+        }
     }
 
     return ARM_DRIVER_OK;
@@ -1190,8 +1203,22 @@ static int32_t ARM_I2C_MasterReceive(I2C_RESOURCES *I2C, uint32_t addr, uint8_t 
         I2C->transfer.tx_curr_cnt  = 0U;
         I2C->transfer.wr_mode      = true;
     }
-    /* enable master rx interrupt */
-    i2c_master_enable_rx_interrupt(I2C->regs);
+#if RTE_I2C_BLOCKING_MODE_ENABLE
+    if (I2C->blocking_mode) {
+        i2c_master_rx_blocking(I2C->regs, &I2C->transfer);
+
+        /* set busy flag to 0U */
+        I2C->status.busy = 0U;
+	if (!(I2C->transfer.evt_sts & I2C_XFER_EVENT_DONE)) {
+		return ARM_DRIVER_ERROR;
+        }
+    } else
+#endif
+    {
+        /* enable master rx interrupt */
+        i2c_master_enable_rx_interrupt(I2C->regs);
+    }
+
     return ARM_DRIVER_OK;
 }
 
@@ -1295,8 +1322,21 @@ static int32_t ARM_I2C_SlaveTransmit(I2C_RESOURCES *I2C, const uint8_t *data, ui
         I2C->transfer.tx_buf       = (const uint8_t *) data;
         I2C->transfer.tx_total_num = num;
 
-        /* enable slave tx interrupt */
-        i2c_slave_enable_tx_interrupt(I2C->regs);
+#if RTE_I2C_BLOCKING_MODE_ENABLE
+        if (I2C->blocking_mode) {
+            i2c_slave_tx_blocking(I2C->regs, &I2C->transfer);
+
+            /* set busy flag to 0U */
+            I2C->status.busy = 0U;
+	    if (!(I2C->transfer.evt_sts & I2C_XFER_EVENT_DONE)) {
+		    return ARM_DRIVER_ERROR;
+            }
+        } else
+#endif
+        {
+            /* enable slave TX interrupt */
+            i2c_slave_enable_tx_interrupt(I2C->regs);
+        }
     }
 
     return ARM_DRIVER_OK;
@@ -1409,12 +1449,25 @@ static int32_t ARM_I2C_SlaveReceive(I2C_RESOURCES *I2C, uint8_t *data, uint32_t 
         I2C->transfer.rx_buf       = (uint8_t *) data;
         I2C->transfer.rx_total_num = num;
 
-        /* enable slave rx interrupt */
-        i2c_slave_enable_rx_interrupt(I2C->regs);
+#if RTE_I2C_BLOCKING_MODE_ENABLE
+        if (I2C->blocking_mode) {
+            i2c_slave_rx_blocking(I2C->regs, &I2C->transfer);
+
+            /* set busy flag to 0U */
+            I2C->status.busy = 0U;
+	    if (!(I2C->transfer.evt_sts & I2C_XFER_EVENT_DONE)) {
+		    return ARM_DRIVER_ERROR;
+            }
+        } else
+#endif
+        {
+            /* enable slave RX interrupt */
+            i2c_slave_enable_rx_interrupt(I2C->regs);
+        }
     }
+
     return ARM_DRIVER_OK;
 }
-
 /**
  * @brief   CMSIS-Driver i2c get transfer data count
  * @note    Returns data count
@@ -2137,6 +2190,9 @@ static I2C_RESOURCES I2C0_RES = {
     .regs              = (I2C_Type *) I2C0_BASE,
     .irq_num           = (IRQn_Type) I2C0_IRQ_IRQn,
     .irq_priority      = (uint32_t) RTE_I2C0_IRQ_PRIORITY,
+#if RTE_I2C0_BLOCKING_MODE_ENABLE
+    .blocking_mode     = true,
+#endif
 #if RTE_I2C0_DMA_ENABLE
     .dma_enable        = RTE_I2C0_DMA_ENABLE,
     .dma_irq_priority  = RTE_I2C0_DMA_IRQ_PRI,
@@ -2269,6 +2325,9 @@ static I2C_RESOURCES I2C1_RES = {
     .regs              = (I2C_Type *) I2C1_BASE,
     .irq_num           = (IRQn_Type) I2C1_IRQ_IRQn,
     .irq_priority      = (uint32_t) RTE_I2C1_IRQ_PRIORITY,
+#if RTE_I2C1_BLOCKING_MODE_ENABLE
+    .blocking_mode     = true,
+#endif
 #if RTE_I2C1_DMA_ENABLE
     .dma_enable        = RTE_I2C1_DMA_ENABLE,
     .dma_irq_priority  = RTE_I2C1_DMA_IRQ_PRI,
@@ -2401,6 +2460,9 @@ static I2C_RESOURCES I2C2_RES = {
     .regs              = (I2C_Type *) I2C2_BASE,
     .irq_num           = (IRQn_Type) I2C2_IRQ_IRQn,
     .irq_priority      = (uint32_t) RTE_I2C2_IRQ_PRIORITY,
+#if RTE_I2C2_BLOCKING_MODE_ENABLE
+    .blocking_mode     = true,
+#endif
 #if RTE_I2C2_DMA_ENABLE
     .dma_enable        = RTE_I2C2_DMA_ENABLE,
     .dma_irq_priority  = RTE_I2C2_DMA_IRQ_PRI,
@@ -2533,6 +2595,9 @@ static I2C_RESOURCES I2C3_RES = {
     .regs              = (I2C_Type *) I2C3_BASE,
     .irq_num           = (IRQn_Type) I2C3_IRQ_IRQn,
     .irq_priority      = (uint32_t) RTE_I2C3_IRQ_PRIORITY,
+#if RTE_I2C3_BLOCKING_MODE_ENABLE
+    .blocking_mode     = true,
+#endif
 #if RTE_I2C3_DMA_ENABLE
     .dma_enable        = RTE_I2C3_DMA_ENABLE,
     .dma_irq_priority  = RTE_I2C3_DMA_IRQ_PRI,
@@ -2665,6 +2730,9 @@ static I2C_RESOURCES LPI2C1_RES = {
     .regs              = (I2C_Type *) LPI2C1_BASE,
     .irq_num           = (IRQn_Type) LPI2C1_IRQ_IRQn,
     .irq_priority      = (uint32_t) RTE_LPI2C1_IRQ_PRIORITY,
+#if RTE_LPI2C1_BLOCKING_MODE_ENABLE
+    .blocking_mode     = true,
+#endif
 #if RTE_LPI2C1_DMA_ENABLE
     .dma_enable        = RTE_LPI2C1_DMA_ENABLE,
     .dma_irq_priority  = RTE_LPI2C1_DMA_IRQ_PRI,
