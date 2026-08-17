@@ -134,6 +134,31 @@ COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_utimer.c              ENABLE_UTIMER    
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_wdt.c                 ENABLE_WDT         TEST_APP_SRCS   "test-apps")
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_dma_memcpy.c          ENABLE_DMA         TEST_APP_SRCS   "test-apps")
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_i2c.c                 ENABLE_I2C         TEST_APP_SRCS   "test-apps")
+
+if( ${EN_APP_FLAG} AND (TEST_APP STREQUAL "demo_i2c_master_blockingmode"))
+    message(STATUS      "✏️ I2C IS BY_DEFAULT DISABLED, SO ENABLING I2C1 BLOCKING MODE")
+    CHANGE_MACRO_VAL("#define RTE_I2C1_BLOCKING_MODE_ENABLE 0"     "${DEVICE_SKU_RTE}/RTE_Device.h"
+        "#define RTE_I2C1_BLOCKING_MODE_ENABLE 1"    i2c1_blocking_status_ret    ON)
+    message(STATUS      "🕵️‍♂️ FORCEFULLY I2C1 BLOCKING MODE IS ENABLED")
+	COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_i2c_master_blockingmode.c  ENABLE_I2C   TEST_APP_SRCS   "test-apps")
+
+else()
+    list(APPEND     RM_TEST_APPS_LIST      "demo_i2c_master_blockingmode")
+
+endif()
+
+if( ${EN_APP_FLAG} AND (TEST_APP STREQUAL "demo_i2c_slave_blockingmode"))
+    message(STATUS      "✏️ I2C IS BY_DEFAULT DISABLED, SO ENABLING I2C0 BLOCKING MODE")
+    CHANGE_MACRO_VAL("#define RTE_I2C0_BLOCKING_MODE_ENABLE 0"     "${DEVICE_SKU_RTE}/RTE_Device.h"
+        "#define RTE_I2C0_BLOCKING_MODE_ENABLE 1"    i2c0_blocking_status_ret    ON)
+    message(STATUS      "🕵️‍♂️ FORCEFULLY I2C0 BLOCKING MODE IS ENABLED")
+	COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_i2c_slave_blockingmode.c  ENABLE_I2C   TEST_APP_SRCS   "test-apps")
+
+else()
+    list(APPEND     RM_TEST_APPS_LIST      "demo_i2c_slave_blockingmode")
+
+endif()
+
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_i3c_i2cbusproxy.c     ENABLE_I2C         TEST_APP_SRCS   "test-apps")
 
 eval_flags(TMP_FLAG     OR     ENABLE_RTC          ENABLE_LPTIMER)
