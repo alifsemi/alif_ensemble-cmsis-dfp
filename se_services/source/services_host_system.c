@@ -147,7 +147,7 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle, SERVICES_cp
 {
     uint32_t toc_number  = 0;               /* Number of TOCs from SE */
     uint32_t return_code = SERVICE_SUCCESS; /* Service error code */
-
+    *error_code = SERVICE_SUCCESS;
     /* defend against the application */
     if (toc_info == NULL) {
         return SERVICE_INVALID_PARAMETER;
@@ -168,6 +168,8 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle, SERVICES_cp
         if (SERVICE_SUCCESS == SERVICES_send_request(services_handle,
                                                      SERVICE_SYSTEM_MGMT_GET_TOC_INFO,
                                                      DEFAULT_TIMEOUT)) {
+	 *error_code = p_svc->resp_error_code;
+
             if (cpuid == p_svc->resp_toc_entry.resp_cpu) {
                 memcpy(&toc_info->toc_entry[toc_info->number_of_toc_entries],
                        &p_svc->resp_toc_entry,
@@ -176,8 +178,6 @@ uint32_t SERVICES_system_get_toc_via_cpuid(uint32_t services_handle, SERVICES_cp
             }
         }
     }
-
-    *error_code = p_svc->resp_error_code;
 
     return return_code;
 }
@@ -199,7 +199,7 @@ uint32_t SERVICES_system_get_toc_data(uint32_t services_handle, SERVICES_toc_dat
 {
     uint32_t toc_number  = 0;               /* retrieve number of TOCs from SE */
     uint32_t return_code = SERVICE_SUCCESS; /* Service error code */
-
+    *error_code = SERVICE_SUCCESS;
     /* defend against the application */
     if (toc_info == NULL) {
         *error_code = 0;
@@ -220,13 +220,12 @@ uint32_t SERVICES_system_get_toc_data(uint32_t services_handle, SERVICES_toc_dat
 
         p_svc->send_entry_idx = i;
         if (SERVICE_SUCCESS == SERVICES_send_request(services_handle,
-                                                     SERVICE_SYSTEM_MGMT_GET_TOC_INFO,
-                                                     DEFAULT_TIMEOUT)) {
+						     SERVICE_SYSTEM_MGMT_GET_TOC_INFO,
+						     DEFAULT_TIMEOUT)) {
+	    *error_code = p_svc->resp_error_code;
             memcpy(&toc_info->toc_entry[i], &p_svc->resp_toc_entry, sizeof(get_toc_entry_t));
         }
     }
-
-    *error_code = p_svc->resp_error_code;
 
     return return_code;
 }
@@ -551,6 +550,13 @@ uint32_t SERVICES_system_get_eui_extension(uint32_t services_handle, bool is_eui
     if (return_code != SERVICES_REQ_SUCCESS) {
         return return_code;
     }
+
+    mfg_data_t *p_mfg_data = (mfg_data_t *)device_data.MfgData;
+    TEST_print(services_handle, "******* x-loc:%d y-loc:%d fab:%d, wafer:%d\n",
+	     p_mfg_data->x_loc, p_mfg_data->y_loc, p_mfg_data->fab_id,
+	     p_mfg_data->wfr_id);
+    TEST_print(services_handle, "******* year:%d, week:%d, lot:%d\n",
+	     p_mfg_data->year, p_mfg_data->week, p_mfg_data->lot_no);
 
     // init_test_mgf_data(device_data.MfgData);
 

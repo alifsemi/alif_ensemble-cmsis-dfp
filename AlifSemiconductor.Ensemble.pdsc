@@ -3434,7 +3434,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.110.0" condition="SE SERVICES MHU">
+    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="MHU" Cversion="1.112.0" condition="SE SERVICES MHU">
       <description>Message Handling Unit driver for Alif Soc</description>
       <files>
         <file category="header" name="drivers/include/drivers_common.h"/>
@@ -3456,10 +3456,10 @@
       </files>
     </component> -->
 
-    <component Cclass="Services" Cgroup="Secure Enclave" Csub="core" Cvariant="Source" Cversion="1.110.0" condition="SE SERVICES SRC">
+    <component Cclass="Services" Cgroup="Secure Enclave" Csub="core" Cvariant="Source" Cversion="1.112.0" condition="SE SERVICES SRC">
       <description>SE runtime Services for RTSS cores</description>
       <files>
-        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.110.0.pdf"/>
+        <file category="doc" name="se_services/document/SE_Host_Services_API_v1.112.0.pdf"/>
         <file category="include" name="se_services/include/"/>
         <file category="source" name="se_services/source/services_host_application.c"/>
         <file category="source" name="se_services/source/services_host_boot.c"/>
@@ -3474,12 +3474,15 @@
         <file category="source" name="se_services/source/services_host_clocks.c"/>
         <file category="source" name="se_services/source/services_host_extsys0.c"/>
         <file category="source" name="se_services/source/services_host_update.c"/>
+        <file category="source" name="se_services/source/services_host_key_management.c"/>
         <!--se services example-->
         <file category="source" name="se_services/templates/m55_services_main.c" attr="template" select="SE Services Example"/>
         <file category="header" name="se_services/templates/services_lib_interface.h" attr="template" select="SE Services Example"/>
         <file category="source" name="se_services/templates/services_lib_interface.c" attr="template" select="SE Services Example"/>
         <file category="source" name="se_services/templates/services_test.c" attr="template" select="SE Services Example"/>
         <file category="source" name="se_services/templates/services_test_crypto.c" attr="template" select="SE Services Example"/>
+        <file category="source" name="se_services/templates/services_test_key_management.c" attr="template" select="SE Services Example"/>
+        <file category="source" name="se_services/templates/decode_clks.c" attr="template" select="SE Services Example"/>
       </files>
     </component>
 

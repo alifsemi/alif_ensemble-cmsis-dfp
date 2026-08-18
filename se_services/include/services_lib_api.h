@@ -121,7 +121,7 @@ extern "C" {
 #define BL_ERROR_UPD_SIGNATURE_INCORRECT             0x21
 #define BL_ERROR_UPD_IMG_IN_MRAM_NOT_SUPPORTED       0x22
 #define BL_ERROR_HAVE_FAILED_ATOC_IMAGES             0x23
-
+#define BL_ERROR_UPD_IMG_IN_EXT_MEM_NOT_SUPPORTED    0x24
 /**
  * OTP Offsets
  */
@@ -162,7 +162,136 @@ extern "C" {
 #define MBEDTLS_CHACHAPOLY_ENCRYPT_AND_TAG           0
 #define MBEDTLS_CHACHAPOLY_AUTH_DECRYPT              1
 
-#define SERVICES_NUMBER_OF_TOC_ENTRIES               15
+/**
+ * Key Management
+ */
+
+/**
+ * Error codes specific to key management services.
+ */
+#define SE_KM_SUCCESS 0x0
+#define SE_KM_ERROR_NO_FREE_SLOTS 0x1001
+#define SE_KM_ERROR_INVALID_HANDLE 0x1002
+#define SE_KM_ERROR_INVALID_KEY_TYPE 0x1003
+#define SE_KM_ERROR_INVALID_KEY_SIZE 0x1004
+#define SE_KM_ERROR_INVALID_KEY_FOR_OPERATION 0x1005
+#define SE_KM_ERROR_INVALID_CURVE_TYPE 0x1006
+#define SE_KM_ERROR_INVALID_KDF_TYPE 0x1007
+#define SE_KM_ERROR_INVALID_CRYPT_TYPE 0x1008
+#define SE_KM_ERROR_INVALID_HMAC_TYPE 0x1009
+#define SE_KM_ERROR_INVALID_LABEL_LEN 0x100A
+#define SE_KM_ERROR_INVALID_NONCE_LEN 0x100B
+#define SE_KM_ERROR_KEY_SERVICES_DISABLED                                      \
+  0x100C /* After DISABLE_KEY_SERVICES */
+#define SE_KM_ERROR_AES_CRYPT_FAILED 0x100D
+#define SE_KM_ERROR_GENERATE_ECC_KEY_FAILED 0x100E
+#define SE_KM_ERROR_GET_ECC_PUBLIC_KEY_FAILED 0x100F
+#define SE_KM_ERROR_HMAC_BY_HANDLE_FAILED 0x1010
+#define SE_KM_ERROR_WRAP_FAILED 0x1011
+#define SE_KM_ERROR_UNWRAP_AUTH_FAILED 0x1012 /* Tampered or wrong device */
+#define SE_KM_ERROR_ECDH_FAILED 0x1013
+#define SE_KM_ERROR_ECDSA_SIGN_FAILED 0x1014
+#define SE_KM_ERROR_ECDSA_VERIFY_FAILED 0x1015
+#define SE_KM_ERROR_DERIVE_KEY_FAILED 0x1016
+
+typedef uint32_t se_key_handle_t;
+#define SE_KEY_HANDLE_INVALID ((se_key_handle_t)0xFFFFFFFF)
+#define SE_KEY_HANDLE_DEVICE_ROOT ((se_key_handle_t)0x00000000)
+
+// CC312-controlled keys
+#define SE_KEY_ID_HUK ((se_key_handle_t)0x00000000)
+#define SE_KEY_ID_RTL ((se_key_handle_t)0x00000001)
+#define SE_KEY_ID_KCP ((se_key_handle_t)0x00000002)
+#define SE_KEY_ID_KCE ((se_key_handle_t)0x00000003)
+#define SE_KEY_ID_KPICV ((se_key_handle_t)0x00000004)
+#define SE_KEY_ID_KCEICV ((se_key_handle_t)0x00000005)
+// Other OTP keys
+#define SE_KEY_ID_DEVICE_ECC ((se_key_handle_t)0x00000010)
+#define SE_KEY_ID_AES1 ((se_key_handle_t)0x00000011)
+#define SE_KEY_ID_AES2 ((se_key_handle_t)0x00000012)
+// Keys from SE key storage
+#define SE_KEY_STORAGE_BASE 0x00000100
+
+#define SE_NUM_KEY_SLOTS 8
+
+#define WRAPPED_KEY_KEYTYPE_LEN 4
+#define WRAPPED_KEY_METADATA_LEN 16
+#define WRAPPED_KEY_IV_LEN 12
+#define WRAPPED_KEY_TAG_LEN 16
+
+#define SE_ECDSA_P256_SIG_LEN 64 /* 32B r + 32B s */
+#define SE_ECDSA_P384_SIG_LEN 96 /* 48B r + 48B s */
+
+#define SE_LABEL_MAX_LEN 64
+#define SE_NONCE_MAX_LEN 64
+
+/**
+ * Key types supported by the SE key management services.
+ */
+typedef enum {
+  SE_KEY_TYPE_NONE = 0x0000,           /* No key */
+  SE_KEY_TYPE_AES_128 = 0x0001,        /* 128-bit AES key */
+  SE_KEY_TYPE_AES_256 = 0x0002,        /* 256-bit AES key */
+  SE_KEY_TYPE_ECC_P256_ECDSA = 0x0010, /* NIST P-256 for ECDSA */
+  SE_KEY_TYPE_ECC_P384_ECDSA = 0x0011, /* NIST P-384 for ECDSA */
+  SE_KEY_TYPE_ECC_P256_ECDH = 0x0020,  /* NIST P-256 for ECDH */
+  SE_KEY_TYPE_ECC_P384_ECDH = 0x0021,  /* NIST P-384 for ECDH */
+  SE_KEY_TYPE_HMAC_256 = 0x0030,       /* 256-bit HMAC key */
+  SE_KEY_TYPE_HMAC_384 = 0x0031,       /* 384-bit HMAC key */
+} se_key_type_t;
+
+typedef enum {
+  SE_CRYPT_DIRECTION_DECRYPT,
+  SE_CRYPT_DIRECTION_ENCRYPT
+} se_crypt_direction_t;
+
+typedef enum {
+  SE_CRYPT_TYPE_ECB,
+  SE_CRYPT_TYPE_CBC,
+  SE_CRYPT_TYPE_CTR,
+  SE_CRYPT_TYPE_OFB,
+  SE_CRYPT_TYPE_CCM,
+  SE_CRYPT_TYPE_CCM_STAR,
+  SE_CRYPT_TYPE_GCM
+} se_crypt_type_t;
+
+/**
+ * ECC curve identifiers.
+ */
+typedef enum {
+  SE_ECC_CURVE_P256 = 0,
+  SE_ECC_CURVE_P384 = 1,
+} se_ecc_curve_t;
+
+/**
+ * Hash algorithms for HMAC.
+ */
+typedef enum {
+  SE_HMAC_SHA256 = 0,
+  SE_HMAC_SHA384 = 1,
+} se_hmac_algo_t;
+
+/**
+ * Hash algorithms for HKDF.
+ */
+typedef enum {
+  SE_HKDF_SHA256 = 0,
+  SE_HKDF_SHA384 = 1,
+} se_hkdf_algo_t;
+
+/**
+ * secure key management
+ * @enum key_attributes_t
+ * @brief Secure key attributes
+ */
+typedef struct {
+  uint32_t lifetime;       /*!< key storage     */
+  uint32_t key_identifier; /*!< key handle      */
+  uint32_t key_type;       /*!< Key slot type   */
+  uint32_t key_size;       /*!< key size        */
+  uint32_t usage_flags;    /*!< key usage flags */
+  uint32_t algorithm;      /*!< key algorithm   */
+} key_attributes_t;
 
 /**
  * OSPI write key commands
@@ -178,6 +307,7 @@ extern "C" {
  * TOC related
  */
 #define TOC_NAME_LENGTH                              8
+#define SERVICES_NUMBER_OF_TOC_ENTRIES               15
 
 /**
  * Global standby configuration macros
@@ -466,7 +596,40 @@ typedef enum {
     CLOCK_SETTING_SYSREF_FREQ,  /**< CLOCK_SETTING_SYSREF_FREQ */
     CLOCK_SETTING_ACLK_FORCE_EN,    /**< CLOCK_SETTING_ACLK_FORCE_EN */
     CLOCK_SETTING_ACLK_ENTRY_DELAY, /**< CLOCK_SETTING_ACLK_ENTRY_DELAY */
+    CLOCK_SETTING_LF_FREQ,          /**< CLOCK_SETTING_LF_FREQ */
+    CLOCK_SETTING_LF_SOURCE         /**< CLOCK_SETTING_LF_SOURCE */
 } clock_setting_t;
+
+/**
+ * @struct clock_get_t
+ * @brief  return structure for clocks
+ */
+typedef struct {
+  uint32_t status;
+  float se_frequency_mhz;
+  uint32_t hostcpuclk_ctrl;
+  uint32_t hostcpuclk_div0;
+  uint32_t hostcpuclk_div1;
+  uint32_t aclk_ctrl;
+  uint32_t aclk_div0;
+  uint32_t cgu_osc_ctrl;
+  uint32_t cgu_pll_lock_ctrl;
+  uint32_t cgu_pll_sel;
+  uint32_t cgu_escclk_sel;
+  uint32_t cgu_clk_ena;
+  uint32_t systop_clk_div;
+  uint32_t misc_reg1;
+  uint32_t xo_reg1;
+  uint32_t pd4_clk_sel;
+  uint32_t pd4_clk_pll;
+  uint32_t misc_ctrl;
+  uint32_t dcdc_reg1;
+  uint32_t dcdc_reg2;
+  uint32_t vbat_ana_reg1;
+  uint32_t vbat_ana_reg2;
+  uint32_t lf_oscillator_source;
+  uint32_t lf_frequency_hz;
+} clock_get_t;
 
 /*******************************************************************************
  *  G L O B A L   D E F I N E S
@@ -502,6 +665,13 @@ uint32_t SERVICES_application_dmpu(uint32_t services_handle,
 uint32_t SERVICES_cryptocell_get_rnd(uint32_t services_handle, uint16_t rnd_len, void *rnd_value,
                                      int32_t *error_code);
 
+uint32_t SERVICES_application_configure_lpcmp(
+    uint32_t services_handle, uint8_t lpcmp_hyst, uint8_t lpcmp_in_m_sel,
+    uint8_t lpcmp_in_p_sel, uint8_t lpcmp_en, uint8_t lpcmp_clk_sel,
+    uint8_t lpcmp_clk32_en, uint32_t *error_code);
+
+uint32_t SERVICES_cryptocell_get_rnd(uint32_t services_handle, uint16_t rnd_len,
+				     void *rnd_value, int32_t *error_code);
 uint32_t SERVICES_cryptocell_get_lcs(uint32_t services_handle,
 					uint32_t *lcs_state,
 					int32_t *error_code);
@@ -700,6 +870,10 @@ uint32_t SERVICES_clocks_setting_get(uint32_t services_handle, clock_setting_t s
                                      uint32_t *value, uint32_t *error_code);
 uint32_t SERVICES_clocks_set_aclk(uint32_t services_handle, uint32_t *aclk_entry_delay,
                                   uint32_t *aclk_force_en, uint32_t *error_code);
+uint32_t SERVICES_clocks_set_vbat_clk(uint32_t services_handle, uint32_t *vbat_fast_clk_en,
+					      uint32_t *error_code);
+uint32_t SERVICES_clocks_get_data(uint32_t services_handle, clock_get_t *clk_settings,
+				  uint32_t *error_code);
 
 // PLL services
 uint32_t SERVICES_pll_initialize(uint32_t services_handle, uint32_t *error_code);
@@ -723,6 +897,91 @@ uint32_t SERVICES_Shutdown_Net_Proc(uint32_t services_handle, uint32_t *error_co
 // Update services
 uint32_t SERVICES_update_stoc(uint32_t services_handle, uint32_t image_address, uint32_t image_size,
                               uint32_t *error_code);
+
+// Key management services
+uint32_t SERVICES_key_mgmt_import_key(uint32_t services_handle,
+					      se_key_type_t key_type,
+					      const uint8_t *key, uint32_t key_len,
+					      se_key_handle_t *key_handle,
+					      uint32_t *error_code);
+
+uint32_t SERVICES_key_mgmt_clear_key(uint32_t services_handle,
+					     se_key_handle_t key_handle,
+					     uint32_t *error_code);
+
+uint32_t SERVICES_key_mgmt_aes_crypt_by_handle(
+    uint32_t services_handle, se_key_handle_t key_handle,
+    se_crypt_direction_t direction, se_crypt_type_t crypt_type, uint8_t *iv,
+    uint32_t iv_len, const uint8_t *input, uint32_t input_len, uint8_t *output,
+    const uint8_t *aad, uint32_t aad_len, uint8_t *tag, uint32_t tag_len,
+    uint32_t *error_code, uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_generate_ecc_key(
+    uint32_t services_handle, se_key_type_t key_type, uint32_t *key_handle,
+    uint8_t *public_key, uint32_t *public_key_len, uint32_t *error_code,
+    uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_get_ecc_public_key(uint32_t services_handle,
+						      uint32_t key_handle,
+						      uint8_t *public_key,
+						      uint32_t *public_key_len,
+						      uint32_t *error_code,
+						      uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_hmac_by_handle(
+    uint32_t services_handle, uint32_t key_handle, se_hmac_algo_t hmac_algo,
+    const uint8_t *input, uint32_t input_len, uint8_t *resp_mac,
+    uint32_t *resp_mac_len, uint32_t *error_code, uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_wrap_key(uint32_t services_handle,
+					    uint32_t key_handle, uint8_t *wrapped_key,
+					    uint32_t *wrapped_key_len,
+					    uint32_t *error_code,
+					    uint32_t *crypto_error_code);
+uint32_t SERVICES_key_mgmt_unwrap_key(uint32_t services_handle,
+					      const uint8_t *wrapped_key,
+					      uint32_t wrapped_key_len,
+					      uint32_t *key_handle,
+					      uint32_t *error_code,
+					      uint32_t *crypto_error_code);
+
+uint32_t
+SERVICES_key_mgmt_ecdh(uint32_t services_handle, uint32_t key_handle,
+		       se_ecc_curve_t curve, const uint8_t *peer_pubkey,
+		       uint32_t peer_pubkey_len, se_hkdf_algo_t kdf_algo,
+		       se_key_type_t derived_key_type, const uint8_t *salt,
+		       uint32_t salt_len, uint32_t *session_key_handle,
+		       uint32_t *error_code, uint32_t *crypto_error_code);
+
+uint32_t
+SERVICES_key_mgmt_ecdsa_sign(uint32_t services_handle, uint32_t key_handle,
+			     const uint8_t *digest, uint32_t digest_len,
+			     uint8_t *signature, uint32_t *signature_len,
+			     uint32_t *error_code, uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_ecdsa_verify(
+    uint32_t services_handle, se_ecc_curve_t curve, const uint8_t *digest,
+    uint32_t digest_len, const uint8_t *pubkey, uint32_t pubkey_len,
+    const uint8_t *signature, uint32_t signature_len, uint32_t *error_code,
+    uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_derive_key(
+    uint32_t services_handle, uint32_t base_key_handle, se_hkdf_algo_t kdf_algo,
+    se_key_type_t derived_key_type, const uint8_t *nonce, uint32_t nonce_len,
+    const uint8_t *label, uint32_t label_len, uint32_t *derived_key_handle,
+    uint32_t *error_code, uint32_t *crypto_error_code);
+
+uint32_t SERVICES_key_mgmt_disable_key_services(uint32_t services_handle,
+							uint32_t *error_code);
+
+uint32_t SERVICES_key_get_key_attributes(uint32_t services_handle,
+						 uint32_t key_index,
+						 key_attributes_t *key_attr,
+						 uint32_t *error_code);
+uint32_t SERVICES_key_get_key_handle_attributes(uint32_t services_handle,
+							uint32_t key_index,
+							key_attributes_t *key_attr,
+							uint32_t *error_code);
 
 #ifdef __cplusplus
 }

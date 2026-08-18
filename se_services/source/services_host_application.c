@@ -179,3 +179,26 @@ uint32_t SERVICES_application_dmpu(uint32_t services_handle,
     *error_code            = p_svc->resp_error_code;
     return ret;
 }
+
+uint32_t SERVICES_application_configure_lpcmp(
+    uint32_t services_handle, uint8_t lpcmp_hyst, uint8_t lpcmp_in_m_sel,
+    uint8_t lpcmp_in_p_sel, uint8_t lpcmp_en, uint8_t lpcmp_clk_sel,
+    uint8_t lpcmp_clk32_en, uint32_t *error_code)
+{
+	lp_cmp_configure_svc_t *p_svc =
+		(lp_cmp_configure_svc_t *)SERVICES_prepare_packet_buffer(
+			sizeof(lp_cmp_configure_svc_t));
+
+  p_svc->comp_lp0_hyst = lpcmp_hyst;
+  p_svc->comp_lp0_in_m_sel = lpcmp_in_m_sel;
+  p_svc->comp_lp0_in_p_sel = lpcmp_in_p_sel;
+  p_svc->comp_lp_en = lpcmp_en;
+  p_svc->lpcomp_clk_sel = lpcmp_clk_sel;
+  p_svc->lpcomp_clk32k_en = lpcmp_clk32_en;
+
+  uint32_t ret = SERVICES_send_request(
+      services_handle, SERVICE_APPLICATION_LPCMP_CONFIGURE_ID, DEFAULT_TIMEOUT);
+
+  *error_code = p_svc->resp_error_code;
+  return ret;
+}
