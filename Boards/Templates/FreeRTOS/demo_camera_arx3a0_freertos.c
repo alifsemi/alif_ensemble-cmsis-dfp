@@ -47,6 +47,7 @@
 
 #include "Driver_IO.h"
 
+
 // set to 0: enable selfie camera (cam1)
 // set to 1: enable standard camera (cam2)
 #define STANDARD_CAM_EN                0
@@ -117,44 +118,54 @@ void vApplicationIdleHook(void)
 /* Camera Sensor Selection
  * Supports: ARX3A0, MT9M114, OV5675
  *
- * Select sensor by defining one of:
- *   - CAMERA_SENSOR_ARX3A0  (560x560,  IPI-16 RAW8)
- *   - CAMERA_SENSOR_MT9M114 (1280x720, IPI-16 RAW8)
- *   - CAMERA_SENSOR_OV5675  (1296x972, IPI-16 RAW8)
+ * Selection is driven by the RTE components enabled in RTE_Components.h.
+ * Enable the corresponding CAMERA_SENSOR driver in the RTE configuration.
+ *
+ *   - RTE_Drivers_CAMERA_SENSOR_ARX3A0  (560x560,  IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_MT9M114 (1280x720, IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_OV5675  (1296x972, IPI-16 RAW8)
  *
  * Note: Sensors output RAW10, but CPI interface default is IPI-16 RAW8.
  *       CPI color mode can be changed via RTE configuration if needed.
  */
 
-/* Default sensor selection - modify as needed */
-#ifndef CAMERA_SENSOR_SELECT
-#define CAMERA_SENSOR_SELECT         CAMERA_SENSOR_OV5675
-#endif
 
-/* Sensor definitions */
-#define CAMERA_SENSOR_ARX3A0         0
-#define CAMERA_SENSOR_MT9M114        1
-#define CAMERA_SENSOR_OV5675         2
 
-/* Sensor Configuration based on selection */
-#if (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_ARX3A0)
+
+#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
   #define SELECTED_CAMERA_SENSOR     "ARX3A0"
-  #define FRAME_WIDTH                (560)
-  #define FRAME_HEIGHT               (560)
+  #define FRAME_WIDTH                RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
+  #define FRAME_HEIGHT               RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT
+  #define BYTES_PER_PIXEL 1
 
-#elif (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_MT9M114)
+#elif defined(RTE_Drivers_CAMERA_SENSOR_MT9M114)
   #define SELECTED_CAMERA_SENSOR     "MT9M114"
-  #define FRAME_WIDTH                (1280)
-  #define FRAME_HEIGHT               (720)
+  #define FRAME_WIDTH                 RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH
+  #define FRAME_HEIGHT                RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT
 
-#elif (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_OV5675)
+  /* MT9M114 image configuration 0 and 1 uses IPI-16 RAW8 format.
+   * RAW8 requires 1 byte per pixel for the framebuffer.
+   */
+  #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 0 ||  \
+       RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 1)
+     #define BYTES_PER_PIXEL 1
+  #elif(RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG >= 2 &&  \
+        RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG <= 5)
+     #define BYTES_PER_PIXEL 2
+  #else
+     #error "Unsupported RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG"
+  #endif
+
+#elif defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
   #define SELECTED_CAMERA_SENSOR     "OV5675"
-  #define FRAME_WIDTH                (1296)
-  #define FRAME_HEIGHT               (972)
+  #define FRAME_WIDTH                RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH
+  #define FRAME_HEIGHT               RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT
+  #define BYTES_PER_PIXEL 1
 
 #else
-  #error "Invalid CAMERA_SENSOR_SELECT! Valid: ARX3A0, MT9M114, OV5675"
+  #error  "Enable one RTE_Drivers_CAMERA_SENSOR_* definition"
 #endif
+
 
 /* Camera Sensor configurations
  * Resolution and IPI format based on selected sensor:
@@ -168,71 +179,16 @@ void vApplicationIdleHook(void)
  */
 
 /* pool size for Camera frame buffer:
- *  which will be frame width x frame height
+ *  which will be frame width x frame height x bytes per pixel
  */
-#define FRAMEBUFFER_POOL_SIZE ((FRAME_WIDTH) * (FRAME_HEIGHT))
+#define FRAMEBUFFER_POOL_SIZE ((FRAME_WIDTH) * (FRAME_HEIGHT) * (BYTES_PER_PIXEL))
 
 /* pool area for Camera frame buffer.
  *  Allocated in the "camera_frame_buf" section.
  */
 uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] __attribute__((section(".bss.camera_frame_buf")));
 
-/* (optional)
- * if required convert captured image data format to any other image format.
- *
- *  - for ARX3A0 Camera sensor,
- *    selected Bayer output format:
- *    in-order to get the color image,
- *    Bayer format must be converted in to RGB format.
- *    User can use below provided
- *    "Open-Source" code for Bayer to RGB Conversion
- *    which uses DC1394 library.
- */
-/* Enable image conversion Bayer to RGB. */
-#define IMAGE_CONVERSION_BAYER_TO_RGB_EN 0
 
-/* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-
-/* @Note: Bayer to RGB configurations
- *        are directly borrowed from "Open-Source" code for
- *        Bayer to RGB Conversion, for detail refer bayer2rgb.c.
- *
- * Selected Bayer to RGB configurations:
- *   - converted image format : tiff
- *   - bpp bit per pixel      : 8-bit
- */
-#define TIFF_HDR_NUM_ENTRY   8
-#define TIFF_HDR_SIZE        10 + TIFF_HDR_NUM_ENTRY * 12
-
-/* bpp bit per pixel
- *  Valid parameters are:
- *   -  8-bit
- *   - 16-bit
- */
-#define BITS_PER_PIXEL_8_BIT 8
-#define BITS_PER_PIXEL       BITS_PER_PIXEL_8_BIT
-
-/* pool size for Camera frame buffer for Bayer to RGB conversion:
- *   which will be frame width x frame height x (bpp / 8) * 3 + tiff header(106 Bytes).
- */
-#define BAYER_TO_RGB_BUFFER_POOL_SIZE                                                              \
-    ((FRAME_WIDTH) * (FRAME_HEIGHT) * (BITS_PER_PIXEL / 8) * 3 + TIFF_HDR_SIZE)
-
-/* pool area for Camera frame buffer for Bayer to RGB conversion.
- *  Allocated in the "camera_frame_bayer_to_rgb_buf" section.
- */
-uint8_t bayer_to_rgb_buffer_pool[BAYER_TO_RGB_BUFFER_POOL_SIZE]
-    __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf")));
-
-/* Optional:
- *  Camera Image Conversions
- */
-typedef enum {
-    BAYER_TO_RGB_CONVERSION = (1 << 0),
-} IMAGE_CONVERSION;
-
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
 
 /* Camera callback events */
 typedef enum {
@@ -396,70 +352,7 @@ int32_t hardware_init(void)
 }
 #endif
 
-/* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-/**
-  \fn          int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion,
-                                               uint8_t  *src,
-                                               uint8_t  *dest,
-                                               uint32_t  frame_width,
-                                               uint32_t  frame_height)
-  \brief       Convert image data from one format to any other image format.
-                - Supported conversions
-                - Bayer(RAW) to RGB Conversion
-                - User can use below provided
-                  "Open-Source" Bayer to RGB Conversion code
-                  which uses DC1394 library.
-                - This code will,
-                - Add header for tiff image format
-                - Convert RAW Bayer to RGB depending on
-                - bpp bit per pixel 8/16 bit
-                - DC1394 Color Filter
-                - DC1394 Bayer interpolation methods
-                - Output image size will be
-                - width x height x (bpp / 8) x 3 + tiff header(106 Bytes)
-  \param[in]   image_conversion : image conversion methods \ref IMAGE_CONVERSION
-  \param[in]   src              : Source address, Pointer to already available
-                                  image data Address
-  \param[in]   dest             : Destination address,Pointer to Address,
-                                  where converted image data will be stored.
-  \param[in]   frame_width      : image frame width
-  \param[in]   frame_height     : image frame height
-  \return      success          :  0
-  \return      failure          : -1
-  */
-int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion, uint8_t *src, uint8_t *dest,
-                                uint32_t frame_width, uint32_t frame_height)
-{
-    /* Bayer to RGB Conversion. */
-    extern int32_t bayer_to_RGB(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
 
-    int32_t ret = 0;
-
-    switch (image_conversion) {
-    case BAYER_TO_RGB_CONVERSION:
-        {
-            printf("\r\n Start Bayer to RGB Conversion: \r\n");
-            printf("\t Frame Buffer Addr: 0x%" PRIx32 " \r\n \t Bayer_to_RGB Addr: 0x%" PRIx32 "\n",
-                   (uint32_t) src,
-                   (uint32_t) dest);
-            ret = bayer_to_RGB(src, dest, frame_width, frame_height);
-            if (ret != 0) {
-                printf("\r\n Error: CAMERA image conversion: Bayer to RGB failed.\r\n");
-                return -1;
-            }
-            break;
-        }
-
-    default:
-        {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
 
 /**
   \fn          void camera_demo_thread_entry(void *pvParameters)
@@ -474,17 +367,7 @@ int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion, uint8_t *src,
                     - captured data will be stored in to allocated
                       frame buffer address
                     - stop Camera capture
-                    - (optional)
-                    -if required convert captured image format
-                     in to any other image format
-                    - for ARX3A0 Camera sensor,
-                         - selected Bayer output format;
-                         - in-order to get the color image,
-                           Bayer format must be converted in to RGB format.
-                         - User can use below provided
-                           "Open-Source" code for Bayer to RGB Conversion
-                           which uses DC1394 library.
-                    - dump captured/converted image data from memory address
+                    - dump captured  image data from memory address
                       using any debugger
                     - display image
   @param       pvParameters.
@@ -505,18 +388,14 @@ void camera_demo_thread_entry(void *pvParameters)
     printf("\r\n \t\t Resolution: %dx%d \r\n", FRAME_WIDTH, FRAME_HEIGHT);
 
     /* Allocated memory address for
-     *   - Camera frame buffer and
-     *   - (Optional) Camera frame buffer for Bayer to RGB Conversion
+     *   - Camera frame buffer
      */
+
     printf("\n \t frame buffer        pool size: 0x%0X  pool addr: 0x%08" PRIx32 " \r\n ",
            FRAMEBUFFER_POOL_SIZE,
            (uint32_t) framebuffer_pool);
 
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    printf("\n \t bayer_to_rgb buffer pool size: 0x%0X  pool addr: 0x%08" PRIX32 " \r\n ",
-           BAYER_TO_RGB_BUFFER_POOL_SIZE,
-           (uint32_t) bayer_to_rgb_buffer_pool);
-#endif
+
 
 #if USE_CONDUCTOR_TOOL_PINS_CONFIG
     /* pin mux and configuration for all device IOs requested from pins.h */
@@ -687,28 +566,7 @@ void camera_demo_thread_entry(void *pvParameters)
         goto error_poweroff_camera;
     }
 
-    /* (optional)
-     * if required convert captured image data format to any other image format.
-     *  - for ARX3A0 Camera sensor,
-     *     selected Bayer output format:
-     *      in-order to get the color image,
-     *       Bayer format must be converted in to RGB format.
-     *       User can use below provided
-     *        "Open-Source" code for Bayer to RGB Conversion
-     *        which uses DC1394 library.
-     */
-    /* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    ret = camera_image_conversion(BAYER_TO_RGB_CONVERSION,
-                                  framebuffer_pool,
-                                  bayer_to_rgb_buffer_pool,
-                                  FRAME_WIDTH,
-                                  FRAME_HEIGHT);
-    if (ret != 0) {
-        printf("\r\n Error: CAMERA image conversion failed.\r\n");
-        return;
-    }
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
+
 
     /* How to dump captured/converted image data from memory address?
      *  1)To dump memory using ARM DS(Development Studio) and Ulink Pro Debugger
@@ -719,20 +577,14 @@ void camera_demo_thread_entry(void *pvParameters)
      *   example:(update user directory name)
      *    dump binary memory ~/cam_image0_560p.bin 0x8000000 0x804C8FF
      *
-     *   Bayer to RGB:
-     *    dump binary memory ~/cam_image0_Bayer_to_RGB_560p.tif 0x8000000
-     * 0x80E5B69
      *
-     *   2)To dump memory using Trace32
+     *  2)To dump memory using Trace32
      *  Use below command in "Commands" tab:
      *   data.save.binary path_with_filename.fileformat starting_address--ending_address
      *
      *   example:(update user directory name)
      *    data.save.binary ~/cam_image0_%s_%dx%d.bin 0x8000000--0x804C8FF
      *
-     *   Bayer to RGB:
-     *    data.save.binary ~/cam_image0_%s_Bayer_to_RGB_%dx%d.tif
-     * 0x8000000--0x80E5B69
      *
      *   This commands will dump memory from staring address to ending address
      *   and store it in to given path with filename.
@@ -742,17 +594,7 @@ void camera_demo_thread_entry(void *pvParameters)
     printf("\n To dump memory using ARM DS with Ulink Pro Debugger or Trace32 :");
     printf("\n  Use below commands in Commands tab: update user directory name \r\n");
 
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    printf("dump binary memory ~/%s_rgb_%dx%d.tif 0x%X 0x%X\n",
-           SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uint32_t) bayer_to_rgb_buffer_pool,
-           (uint32_t) (bayer_to_rgb_buffer_pool + BAYER_TO_RGB_BUFFER_POOL_SIZE - 1));
-    printf("T32: data.save.binary ~/%s_rgb_%dx%d.tif 0x%X--0x%X\n",
-           SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uint32_t) bayer_to_rgb_buffer_pool,
-           (uint32_t) (bayer_to_rgb_buffer_pool + BAYER_TO_RGB_BUFFER_POOL_SIZE - 1));
 
-#else
     printf("Ulink: ~/%s_%dx%d.bin 0x%" PRIX32 " 0x%" PRIX32 "\n",
            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
            (uint32_t) framebuffer_pool,
@@ -762,7 +604,7 @@ void camera_demo_thread_entry(void *pvParameters)
            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
            (uint32_t) framebuffer_pool,
            (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
-#endif
+
 
     printf("\n  This command will dump memory from staring address to ending address \r");
     printf("\n  and store it in to given path with filename.\r\n\r\n");
