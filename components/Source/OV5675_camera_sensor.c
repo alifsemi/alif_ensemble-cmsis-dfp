@@ -68,9 +68,8 @@
 #define OV5675_COARSE_INTEGRATION_TIME_H    0x3500
 #define OV5675_COARSE_INTEGRATION_TIME_M    0x3501
 #define OV5675_COARSE_INTEGRATION_TIME_L    0x3502
-/* AEC/AGC manual control: bit[3]=manual AEC, bit[2]=manual AGC */
 #define OV5675_AEC_MANUAL_REG               0x3503
-#define OV5675_AEC_MANUAL_BOTH              0x0C
+#define OV5675_AEC_MANUAL_VAL               0x08
 /* ISP AE gain registers (Q7 format: 0x0080 = 1x, 0x0780 = 15x max) */
 #define OV5675_GLOBAL_GAIN_H                0x3508
 #define OV5675_GLOBAL_GAIN_L                0x3509
@@ -854,8 +853,7 @@ static const OV5675_REG OV5675_640x480_regs[] = {
  */
 static int32_t OV5675_Camera_Exposure_Set(uint32_t intLine)
 {
-    /* Exposure register stores value in 1/16 row units: reg = intLine << 4. */
-    uint32_t reg_val = intLine << 4;
+    uint32_t reg_val = intLine << 3;
     int32_t  ret;
 
     ret = OV5675_WRITE_REG(OV5675_COARSE_INTEGRATION_TIME_H, (reg_val >> 16) & 0x0FU, 1);
@@ -1119,8 +1117,8 @@ static int32_t OV5675_Control(uint32_t control, uint32_t arg)
             return ret;
         }
 #if (RTE_ISP_AE_MODULE)
-        /* Disable internal AEC and AGC; ISP AE module will drive exposure/gain. */
-        return OV5675_WRITE_REG(OV5675_AEC_MANUAL_REG, OV5675_AEC_MANUAL_BOTH, 1);
+        /* Disable internal AE; ISP AE module will drive exposure/gain. */
+        return OV5675_WRITE_REG(OV5675_AEC_MANUAL_REG, OV5675_AEC_MANUAL_VAL, 1);
 #else
         return ARM_DRIVER_OK;
 #endif
