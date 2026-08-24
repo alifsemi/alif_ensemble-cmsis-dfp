@@ -165,61 +165,9 @@ void vApplicationIdleHook(void)
  */
 uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] __attribute__((section(".bss.camera_frame_buf")));
 
-/* (optional)
- * if required convert captured image data format to any other image format.
- *
- *  - for MT9M114 Camera sensor,
- *     selected Bayer output format:
- *      in-order to get the color image,
- *       Bayer format must be converted in to RGB format.
- *       User can use below provided
- *        "Open-Source" code for Bayer to RGB Conversion
- *        which uses DC1394 library.
+/* Captured data is RAW Bayer. Dump framebuffer_pool with a debugger
+ * and convert offline if a color image is required.
  */
-/* Enable image conversion Bayer to RGB. */
-#define IMAGE_CONVERSION_BAYER_TO_RGB_EN 0
-
-/* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-/* @Note: Bayer to RGB configurations
- *        are directly borrowed from "Open-Source" code for
- *        Bayer to RGB Conversion, for detail refer bayer2rgb.c.
- *
- * Selected Bayer to RGB configurations:
- *   - converted image format : tiff
- *   - bpp bit per pixel      : 8-bit
- */
-#define TIFF_HDR_NUM_ENTRY   8
-#define TIFF_HDR_SIZE        10 + TIFF_HDR_NUM_ENTRY * 12
-
-/* bpp bit per pixel
- *  Valid parameters are:
- *   -  8-bit
- *   - 16-bit
- */
-#define BITS_PER_PIXEL_8_BIT 8
-#define BITS_PER_PIXEL       BITS_PER_PIXEL_8_BIT
-
-/* pool size for Camera frame buffer for Bayer to RGB conversion:
- *   which will be frame width x frame height x (bpp / 8) * 3 + tiff header(106 Bytes).
- */
-#define BAYER_TO_RGB_BUFFER_POOL_SIZE                                                              \
-    ((FRAME_WIDTH) * (FRAME_HEIGHT) * (BITS_PER_PIXEL / 8) * 3 + TIFF_HDR_SIZE)
-
-/* pool area for Camera frame buffer for Bayer to RGB conversion.
- *  Allocated in the "camera_frame_bayer_to_rgb_buf" section.
- */
-uint8_t bayer_to_rgb_buffer_pool[BAYER_TO_RGB_BUFFER_POOL_SIZE]
-    __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf")));
-
-/* Optional:
- *  Camera Image Conversions
- */
-typedef enum {
-    BAYER_TO_RGB_CONVERSION = (1 << 0),
-} IMAGE_CONVERSION;
-
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
 
 /* Camera callback events */
 typedef enum {
@@ -585,71 +533,6 @@ int32_t hardware_init(void)
 }
 #endif
 
-/* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-/**
-  \fn          int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion,
-                                               uint8_t  *src,
-                                               uint8_t  *dest,
-                                               uint32_t  frame_width,
-                                               uint32_t  frame_height)
-  \brief       Convert image data from one format to any other image format.
-                - Supported conversions
-                - Bayer(RAW) to RGB Conversion
-                - User can use below provided
-                  "Open-Source" Bayer to RGB Conversion code
-                  which uses DC1394 library.
-                - This code will,
-                - Add header for tiff image format
-                - Convert RAW Bayer to RGB depending on
-                - bpp bit per pixel 8/16 bit
-                - DC1394 Color Filter
-                - DC1394 Bayer interpolation methods
-                - Output image size will be
-                - width x height x (bpp / 8) x 3 + tiff header(106 Bytes)
-  \param[in]   image_conversion : image conversion methods \ref IMAGE_CONVERSION
-  \param[in]   src              : Source address, Pointer to already available
-  image data Address
-  \param[in]   dest             : Destination address,Pointer to Address,
-  where converted image data will be stored.
-  \param[in]   frame_width      : image frame width
-  \param[in]   frame_height     : image frame height
-  \return      success          :  0
-  \return      failure          : -1
-  */
-int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion, uint8_t *src, uint8_t *dest,
-                                uint32_t frame_width, uint32_t frame_height)
-{
-    /* Bayer to RGB Conversion. */
-    extern int32_t bayer_to_RGB(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
-
-    int32_t ret = 0;
-
-    switch (image_conversion) {
-    case BAYER_TO_RGB_CONVERSION:
-        {
-            printf("\r\n Start Bayer to RGB Conversion: \r\n");
-            printf("\t Frame Buffer Addr: 0x%X \r\n \t Bayer_to_RGB Addr: 0x%" PRIX32 "\n",
-                   (uint32_t) src,
-                   (uint32_t) dest);
-            ret = bayer_to_RGB(src, dest, frame_width, frame_height);
-            if (ret != 0) {
-                printf("\r\n Error: CAMERA image conversion: Bayer to RGB failed.\r\n");
-                return -1;
-            }
-            break;
-        }
-
-    default:
-        {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
-
 /**
   \fn          void camera_demo_thread_entry(void *pvParameters)
   \brief       TestApp to verify MT9M114 Camera Sensor with
@@ -663,19 +546,8 @@ int32_t camera_image_conversion(IMAGE_CONVERSION image_conversion, uint8_t *src,
                    - captured data will be stored in to allocated
                      frame buffer address
                  - stop Camera capture
-                 - (optional)
-                   -if required convert captured image format
-                    in to any other image format
-                   - for MT9M114 Camera sensor,
-                        - selected Bayer output format;
-                        - in-order to get the color image,
-                           Bayer format must be converted in to RGB format.
-                        - User can use below provided
-                           "Open-Source" code for Bayer to RGB Conversion
-                           which uses DC1394 library.
-                 - dump captured/converted image data from memory address
+                 - dump captured RAW Bayer image data from memory address
                     using any debugger
-                 - display image
   @param       pvParameters.
   \return      none
 */
@@ -689,18 +561,9 @@ void camera_demo_thread_entry(void *pvParameters)
 
     printf("\r\n \t\t >>> MT9M114 Camera Sensor demo with FREERTOS is starting up!!! <<< \r\n");
 
-    /* Allocated memory address for
-     *   - Camera frame buffer and
-     *   - (Optional) Camera frame buffer for Bayer to RGB Conversion.
-     */
+    /* Allocated memory address for Camera frame buffer. */
     printf("\n \t frame buffer        pool size: %u  pool addr: 0x%08" PRIX32 " \r\n ",
             FRAMEBUFFER_POOL_SIZE, (uint32_t) framebuffer_pool);
-
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    printf("\n \t bayer_to_rgb buffer pool size: 0x%0X  pool addr: 0x%0X \r\n ",
-           BAYER_TO_RGB_BUFFER_POOL_SIZE,
-           (uint32_t) bayer_to_rgb_buffer_pool);
-#endif
 
 #if USE_CONDUCTOR_TOOL_PINS_CONFIG
     /* pin mux and configuration for all device IOs requested from pins.h */
@@ -814,30 +677,7 @@ void camera_demo_thread_entry(void *pvParameters)
         goto error_poweroff;
     }
 
-    /* (optional)
-     * if required convert captured image data format to any other image format.
-     *  - for MT9M114 Camera sensor,
-     *     selected Bayer output format:
-     *      in-order to get the color image,
-     *       Bayer format must be converted in to RGB format.
-     *       User can use below provided
-     *        "Open-Source" code for Bayer to RGB Conversion
-     *        which uses DC1394 library.
-     */
-    /* Check if image conversion Bayer to RGB is Enabled? */
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    ret = camera_image_conversion(BAYER_TO_RGB_CONVERSION,
-                                  framebuffer_pool,
-                                  bayer_to_rgb_buffer_pool,
-                                  FRAME_WIDTH,
-                                  FRAME_HEIGHT);
-    if (ret != 0) {
-        printf("\r\n Error: CAMERA image conversion failed.\r\n");
-        return;
-    }
-#endif /* end of IMAGE_CONVERSION_BAYER_TO_RGB_EN */
-
-    /* How to dump captured/converted image data from memory address?
+    /* How to dump captured RAW Bayer image data from memory address?
      *  To dump memory using ARM DS(Development Studio) and Ulink Pro Debugger
      *
      *  Use below command in "Commands" tab:
@@ -846,33 +686,22 @@ void camera_demo_thread_entry(void *pvParameters)
      *   example:(update user directory name)
      *    dump binary memory /home/user/camera_dump/cam_image0_640p.bin 0x8000000 0x804D33F
      *
-     *   Bayer to RGB:
-     *    dump binary memory /home/user/camera_dump/cam_image0_Bayer_to_RGB_640p.tif 0x8000000
-     * 0x80E7A29
-     *
      *   This command will dump memory from staring address to ending address
      *   and store it in to given path with filename.
      */
     printf("\n To dump memory using ARM DS and Ulink Pro Debugger:");
     printf("\n  Use below command in Commands tab: update user directory name \r\n");
 
-#if IMAGE_CONVERSION_BAYER_TO_RGB_EN
-    printf("\n   dump binary memory /home/user/camera_dump/cam_image0_Bayer_to_RGB_640p.tif"
-            "0x% " PRIX32 "0x%" PRIX32 " \r\n",
-           (uint32_t) bayer_to_rgb_buffer_pool,
-           (uint32_t) (bayer_to_rgb_buffer_pool + BAYER_TO_RGB_BUFFER_POOL_SIZE - 1));
-#else
     printf("\n   dump binary memory /home/user/camera_dump/cam_image0_640p.bin "
            "0x%" PRIX32 " 0x%" PRIX32 " \r\n",
            (uint32_t) framebuffer_pool,
            (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
-#endif
 
     printf("\n  This command will dump memory from staring address to ending address \r");
     printf("\n  and store it in to given path with filename.\r\n\r\n");
 
     printf("\r\n\r\n XXX Camera demo thread is halting here! XXX...\r\n");
-    printf("\r\n Now User can dump captured/converted image data from memory address using any "
+    printf("\r\n Now User can dump captured image data from memory address using any "
            "debugger!!!\r\n");
 
     /* wait forever. */

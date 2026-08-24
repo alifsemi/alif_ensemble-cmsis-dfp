@@ -72,8 +72,7 @@ add_library (${OS_LIB_FILE}     STATIC      ${OS_C_SRC})
 
 # Free-RTOS Alif testApps files and directories
 set (FREE_RTOS_APP_DIR          "${ALIF_BOARD_DIR}/Templates/FreeRTOS")
-set (TEST_APP_INC_PATHS         "${ALIF_BOARD_DIR}/Templates/bayer2rgb"
-                                "${ALIF_BOARD_DIR}/Templates/Common/Include")
+set (TEST_APP_INC_PATHS         "${ALIF_BOARD_DIR}/Templates/Common/Include")
 
 
 include_directories ("${TEST_APP_INC_PATHS}")

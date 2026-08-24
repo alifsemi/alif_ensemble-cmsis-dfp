@@ -399,9 +399,8 @@ int32_t hardware_init(void)
  *                  - captured data will be stored in to allocated
  *                    frame buffer address
  *                - stop Camera capture
- *                - dump captured/converted image data from memory address
+ *                - dump captured RGB565 image data from memory address
  *                   using any debugger
- *                - display image
  * @param       pvParameters.
  * \return      none
  */
@@ -416,10 +415,7 @@ void camera_demo_thread_entry(void *pvParameters)
 
     printf("\r\n \t\t >>> OV5640 Camera Sensor demo with FREERTOS is starting up!!! <<< \r\n");
 
-    /* Allocated memory address for
-     *   - Camera frame buffer and
-     *   - (Optional) Camera frame buffer for Bayer to RGB Conversion.
-     */
+    /* Allocated memory address for Camera RGB565 frame buffer. */
     printf("\n \t frame buffer        pool size: %u  pool addr: 0x%08" PRIX32 " \r\n ",
             FRAMEBUFFER_POOL_SIZE, (uint32_t) framebuffer_pool);
 
@@ -559,7 +555,7 @@ void camera_demo_thread_entry(void *pvParameters)
         goto error_poweroff;
     }
 
-    /* How to dump captured/converted image data from memory address?
+    /* How to dump captured RGB565 image data from memory address?
      *  To dump memory using ARM DS(Development Studio) and Ulink Pro Debugger
      *
      *  Use below command in "Commands" tab:
@@ -581,7 +577,7 @@ void camera_demo_thread_entry(void *pvParameters)
     printf("\n  and store it in to given path with filename.\r\n\r\n");
 
     printf("\r\n\r\n XXX Camera demo thread is halting here! XXX...\r\n");
-    printf("\r\n Now User can dump captured/converted image data");
+    printf("\r\n Now User can dump captured RGB565 image data ");
     printf("from memory address using any debugger!!!\r\n");
 
     /* wait forever. */
