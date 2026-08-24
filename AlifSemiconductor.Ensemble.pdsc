@@ -2425,9 +2425,6 @@
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_potentiometer_freertos.c" attr="template" select="ADC Potentiometer FreeRTOS Demo" condition="Ensemble_NonE1C"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_arx3a0_freertos.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_interface_video_freertos.c" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer2rgb.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
-        <file category="header" name="Boards/Templates/bayer2rgb/bayer.h" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_busmonitor_freertos.c" attr="template" select="CANFD Bus Monitor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_normalmode_freertos.c" attr="template" select="CANFD Data transfer FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_extloopback_freertos.c" attr="template" select="CANFD External Loopback FreeRTOS Demo"/>
@@ -2450,13 +2447,7 @@
         <file category="source" name="Boards/Templates/FreeRTOS/demo_mram_freertos.c" attr="template" select="MRAM FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_spi_microwire_freertos.c" attr="template" select="Microwire FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_mt9m114_freertos.c" attr="template" select="MT9M114 Camera Sensor FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer2rgb.c" attr="template" select="MT9M114 Camera Sensor FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer.c" attr="template" select="MT9M114 Camera Sensor FreeRTOS Demo"/>
-        <file category="header" name="Boards/Templates/bayer2rgb/bayer.h" attr="template" select="MT9M114 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_ov5640_freertos.c" attr="template" select="OV5640 Camera Sensor FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer2rgb.c" attr="template" select="OV5640 Camera Sensor FreeRTOS Demo"/>
-        <file category="source" name="Boards/Templates/bayer2rgb/bayer.c" attr="template" select="OV5640 Camera Sensor FreeRTOS Demo"/>
-        <file category="header" name="Boards/Templates/bayer2rgb/bayer.h" attr="template" select="OV5640 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_flash_freertos.c" attr="template" select="OSPI Flash FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_hyperram_freertos.c" attr="template" select="OSPI Hyperram XIP FreeRTOS Demo" condition="E7"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_parallel_display_freertos.c" attr="template" select="Parallel Display FreeRTOS Demo"/>

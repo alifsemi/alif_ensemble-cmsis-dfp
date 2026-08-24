@@ -1,7 +1,6 @@
 # Bare-Metal related files and directories
 set (BARE_METAL_APP_DIR         "${ALIF_BOARD_DIR}/Templates/Baremetal")
-set (TEST_APP_INC_PATHS         "${ALIF_BOARD_DIR}/Templates/bayer2rgb"
-                                "${ALIF_BOARD_DIR}/Templates/Common/Include"
+set (TEST_APP_INC_PATHS         "${ALIF_BOARD_DIR}/Templates/Common/Include"
                                 "${BARE_METAL_APP_DIR}/Include"
                                 "${BARE_METAL_APP_DIR}/FatFS"
                                 "${ALIF_BOARD_DIR}/ospi_xip")
