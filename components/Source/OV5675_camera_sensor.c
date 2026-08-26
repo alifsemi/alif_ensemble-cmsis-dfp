@@ -846,7 +846,6 @@ static const OV5675_REG OV5675_640x480_regs[] = {
 };
 #endif /* RTE_OV5675_CAMERA_SENSOR_IMAGE_CONFIG == 3 */
 
-#if (RTE_ISP_AE_MODULE)
 /**
  * @brief Set OV5675 coarse integration time (exposure lines).
  * @param intLine  : integration time in rows (from ISP AE).
@@ -891,7 +890,7 @@ static int32_t OV5675_Camera_Gain_Set(uint32_t gain_q16_16)
     }
     return OV5675_WRITE_REG(OV5675_GLOBAL_GAIN_L, reg_val & 0xFFU, 1);
 }
-#endif /* RTE_ISP_AE_MODULE */
+
 
 /**
  * @fn           void OV5675_Sensor_Enable_Clk_Src(void)
@@ -1116,20 +1115,19 @@ static int32_t OV5675_Control(uint32_t control, uint32_t arg)
         if (ret != ARM_DRIVER_OK) {
             return ret;
         }
-#if (RTE_ISP_AE_MODULE)
-        /* Disable internal AE; ISP AE module will drive exposure/gain. */
+#if (RTE_ISP)
+        /* Disable internal AE; ISP will drive exposure/gain. */
         return OV5675_WRITE_REG(OV5675_AEC_MANUAL_REG, OV5675_AEC_MANUAL_VAL, 1);
 #else
         return ARM_DRIVER_OK;
 #endif
 
-#if (RTE_ISP_AE_MODULE)
     case CPI_ISP_CAMERA_SENSOR_EXPOSURE:
         return OV5675_Camera_Exposure_Set(arg & 0xFFFFU);
 
     case CPI_ISP_CAMERA_SENSOR_GAIN:
         return OV5675_Camera_Gain_Set(arg);
-#endif
+
     default:
         return ARM_DRIVER_ERROR_PARAMETER;
     }

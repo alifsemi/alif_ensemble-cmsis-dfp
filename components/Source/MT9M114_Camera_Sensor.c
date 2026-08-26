@@ -1586,9 +1586,9 @@ static int32_t mt9m114_Init(CAMERA_SENSOR_DEVICE           *cpi_mt9m114_camera_s
     }
 #endif
 
-#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE) && (RTE_ISP_AE_MODULE)
+#if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE) && (RTE_ISP)
     if (cpi_mt9m114_camera_sensor->interface == CAMERA_SENSOR_INTERFACE_MIPI) {
-        /* Disable sensor's internal AE; ISP AE module will drive exposure/gain. */
+        /* Disable sensor's internal AE; ISP will drive exposure/gain. */
         ret = MT9M114_Camera_AE(0, i2c_cfg);
         if (ret != ARM_DRIVER_OK) {
             return ARM_DRIVER_ERROR;
@@ -1675,14 +1675,12 @@ static int32_t mt9m114_Control(CAMERA_SENSOR_DEVICE           *cpi_mt9m114_camer
         }
 #endif
 
-#if (RTE_ISP_AE_MODULE)
     case CPI_ISP_CAMERA_SENSOR_EXPOSURE:
         return camera_sensor_i2c_write(i2c_cfg,
                    MT9M114_COARSE_INTEGRATION_TIME_REGISTER, arg & 0xFFFFU, 2);
 
     case CPI_ISP_CAMERA_SENSOR_GAIN:
         return MT9M114_Camera_Gain_Set(arg, i2c_cfg);
-#endif
 
 
     default:
