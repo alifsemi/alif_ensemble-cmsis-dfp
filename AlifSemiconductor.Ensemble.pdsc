@@ -8,6 +8,11 @@
   <license>License.txt</license>
 
   <releases>
+    <release version="2.2.1"  tag="v2.2.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.2.1/AlifSemiconductor.Ensemble.2.2.1.pack" date="2026-08-26">
+       - Update ISP Libs
+       - Fixes in SD, I2C, I3C and ISP drivers
+       - Fixes in mram FreeRTOS app, pdm pins in board def
+    </release>
     <release version="2.2.0"  tag="v2.2.0" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.2.0/AlifSemiconductor.Ensemble.2.2.0.pack" date="2026-06-30">
       - Updates in LPTIMER, UTIMER, CPI, UART, I3C, ISP, I2C, GPIO, RTC Driver
       - update SE FW v110 in DFP pack
