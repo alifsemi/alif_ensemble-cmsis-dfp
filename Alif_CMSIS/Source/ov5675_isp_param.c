@@ -34,7 +34,6 @@ ISP_CALIB_DATA_S calibration_data = {
             .autoRoute = {100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200,
                     102400, 204800, 409600, 819200, 1638400, 3276800},
         },
-#if (RTE_ISP_BLS_MODULE)
         .bls = {
             .enable = 1,
             .opType = OP_TYPE_MANUAL,
@@ -62,8 +61,6 @@ ISP_CALIB_DATA_S calibration_data = {
                 },
             },
         },
-#endif /* RTE_ISP_BLS_MODULE */
-#if (RTE_ISP_EXPM_MODULE)
         .aem = {
             .enable = 1,
             .expAltMode = 0,
@@ -74,9 +71,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 .vSize = RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT,
             },
         },
-#endif /* RTE_ISP_EXPM_MODULE */
 
-#if (RTE_ISP_AE_MODULE)
         .ae = {
             .opType = OP_TYPE_AUTO,
             .manualAttr = {
@@ -124,9 +119,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 },
             },
         },
-#endif /* RTE_ISP_AE_MODULE */
 
-#if (RTE_ISP_WBM_MODULE)
         .wbm = {
             .enable   = 0,
             .measMode = ISP_AWB_MEAS_MODE_RGB,
@@ -145,9 +138,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 .minC       = 0x14,
             },
         },
-#endif /* RTE_ISP_WBM_MODULE */
 
-#if (RTE_ISP_WB_MODULE)
         .wb = {
             .enable = 0,
             .opType = OP_TYPE_AUTO,
@@ -240,9 +231,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 },
             },
         },
-#endif /* RTE_ISP_WB_MODULE */
 
-#if (RTE_ISP_DMSC_MODULE)
         .dmsc = {
             .enable    = 1,
             .threshold = 10,
@@ -264,9 +253,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 .yNormFactor = 29,
             },
         },
-#endif /* RTE_ISP_DMSC_MODULE */
 
-#if (RTE_ISP_FLT_MODULE)
         .flt = {
             .enable = 1,
             .opType = OP_TYPE_MANUAL,
@@ -279,9 +266,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 .sharpenLevel = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             },
         },
-#endif /* RTE_ISP_FLT_MODULE */
 
-#if (RTE_ISP_CCM_MODULE)
         .ccm = {
             .opType = OP_TYPE_MANUAL,
             .manualAttr = {
@@ -322,9 +307,7 @@ ISP_CALIB_DATA_S calibration_data = {
                 },
             },
         },
-#endif /* RTE_ISP_CCM_MODULE */
 
-#if (RTE_ISP_GAMMAOUT_MODULE)
         .gammaOut = {
             .enable = 1,
             .gammaY = {
@@ -332,14 +315,11 @@ ISP_CALIB_DATA_S calibration_data = {
                 0x1F6, 0x235, 0x26F, 0x2D3, 0x32A, 0x378, 0x3BF, 0x3FF
             },
         },
-#endif /* RTE_ISP_GAMMAOUT_MODULE */
 
-#if (RTE_ISP_CSM_MODULE)
         .csm = {
             .type = ISP_CSM_TYPE_601,
             .quantization = ISP_CSM_LIM_RANGE,
         },
-#endif /* RTE_ISP_CSM_MODULE */
     },
 };
 
@@ -402,7 +382,6 @@ void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_
     port_attr.outFormRect.width  = width;
     port_attr.outFormRect.height = height;
 }
-
 
 void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height)
 {

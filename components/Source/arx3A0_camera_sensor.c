@@ -1625,9 +1625,9 @@ static int32_t ARX3A0_Camera_Gain(const uint32_t gain)
             fine_gain = 0x80000;
         }
 
-#if !defined(RTE_ISP_AE_MODULE) || (RTE_ISP_AE_MODULE == 0)
-        /* Integration-time auto-management is only active when ISP AE is
-         * NOT handling exposure. With ISP AE enabled, exposure is set
+#if !defined(RTE_ISP) || (RTE_ISP == 0)
+        /* Integration-time auto-management is only active when ISP is
+         * NOT handling exposure. With ISP enabled, exposure is set
          * independently via CPI_ISP_CAMERA_SENSOR_EXPOSURE and must not be
          * overridden here.
          */
@@ -1648,7 +1648,7 @@ static int32_t ARX3A0_Camera_Gain(const uint32_t gain)
             }
             current_integration_time = new_integration_time;
         }
-#endif /* !RTE_ISP_AE_MODULE */
+#endif /* !RTE_ISP */
 
         /*
          * First get coarse analogue power of two, leaving fine gain in range [0x10000,0x1FFFF]
@@ -1912,7 +1912,6 @@ static int32_t ARX3A0_Control(uint32_t control, uint32_t arg)
     case CPI_CAMERA_SENSOR_GAIN:
         return ARX3A0_Camera_Gain(arg);
         break;
-#if (RTE_ISP_AE_MODULE)
     case CPI_ISP_CAMERA_SENSOR_GAIN:
         return ARX3A0_Camera_Gain_Set(arg);
         break;
@@ -1924,7 +1923,6 @@ static int32_t ARX3A0_Control(uint32_t control, uint32_t arg)
          */
         return ARX3A0_WRITE_REG(ARX3A0_COARSE_INTEGRATION_TIME_REGISTER,
                                 arg & 0xFFFF, 2);
-#endif /* RTE_ISP_AE_MODULE */
     default:
         return ARM_DRIVER_ERROR_PARAMETER;
     }

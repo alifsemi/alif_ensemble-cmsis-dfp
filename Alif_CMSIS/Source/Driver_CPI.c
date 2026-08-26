@@ -52,7 +52,7 @@ extern ARM_DRIVER_MIPI_CSI2 Driver_MIPI_CSI2;
 void ARM_MIPI_CSI2_Event_Callback(uint32_t int_event);
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
 #include "Driver_ISP.h"
 extern ARM_DRIVER_ISP Driver_ISP;
 
@@ -137,7 +137,7 @@ static int32_t CPIx_Initialize(CPI_RESOURCES *CPI_RES, ARM_CPI_SignalEvent_t cb_
     }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
     ret = Driver_ISP.Initialize(ARM_ISP_Event_Callback);
     if (ret != ARM_DRIVER_OK) {
         return ret;
@@ -179,7 +179,7 @@ static int32_t CPIx_Uninitialize(CPI_RESOURCES *CPI_RES)
     }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
     /*Uninitializing MIPI CSI2 if the sensor is MIPI CSI2 sensor*/
     ret = Driver_ISP.Uninitialize();
     if (ret != ARM_DRIVER_OK) {
@@ -248,7 +248,7 @@ static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI_RES,
             }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
             /*Disable ISP */
             ret = Driver_ISP.PowerControl(ARM_POWER_OFF);
             if (ret != ARM_DRIVER_OK) {
@@ -300,7 +300,7 @@ static int32_t CPIx_PowerControl(CPI_RESOURCES *CPI_RES,
             }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
             /*Enable ISP */
             ret = Driver_ISP.PowerControl(ARM_POWER_FULL);
             if (ret != ARM_DRIVER_OK) {
@@ -484,7 +484,7 @@ static int32_t CPIx_Capture(CPI_RESOURCES *CPI_RES,
     }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
     ret = Driver_ISP.Start();
     if (ret != ARM_DRIVER_OK) {
         return ret;
@@ -589,7 +589,7 @@ Error_Stop_CSI:
     }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
     ret = Driver_ISP.Stop();
     if (ret != ARM_DRIVER_OK) {
         return ret;
@@ -624,7 +624,7 @@ static int32_t CPIx_Stop(CPI_RESOURCES *CPI_RES, CAMERA_SENSOR_DEVICE *camera_se
     }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
     ret = Driver_ISP.Stop();
     if (ret != ARM_DRIVER_OK) {
         return ret;
@@ -748,10 +748,8 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI_RES,
     case CPI_CAMERA_SENSOR_GAIN:
     case CPI_CAMERA_SENSOR_AE:
     case CPI_CAMERA_SENSOR_AE_TARGET_LUMA:
-#if (RTE_ISP_AE_MODULE)
     case CPI_ISP_CAMERA_SENSOR_EXPOSURE:
     case CPI_ISP_CAMERA_SENSOR_GAIN:
-#endif
         {
             /*Camera sensor controls*/
             ret = camera_sensor->ops->Control(control, arg);
@@ -763,7 +761,7 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI_RES,
 
     default:
         {
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
             return Driver_ISP.Control(control, arg);
 #else
             return ARM_DRIVER_ERROR_UNSUPPORTED;
@@ -941,7 +939,7 @@ void ARM_MIPI_CSI2_Event_Callback(uint32_t int_event)
 }
 #endif
 
-#if (RTE_ISP)
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
 /*
  * \fn        void ARM_ISP_Event_Callback (uint32_t int_event)
  * \brief     Signal ISP Events.
