@@ -2382,6 +2382,9 @@
         <!--file category="source" name="Boards/Templates/Baremetal/lv_port_disp.c" attr="template" select="LVGL Baremetal Demo"/-->
         <file category="source" name="Boards/Templates/Baremetal/demo_mram.c" attr="template" select="MRAM Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_spi_microwire.c" attr="template" select="Microwire Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_mipi_isp_video.c" attr="template" select="MIPI ISP Video Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/alif_logo/alif_logo.c" attr="template" select="MIPI ISP Video Baremetal Demo"/>
+        <file category="header" name="Boards/Templates/alif_logo/alif_logo.h" attr="template" select="MIPI ISP Video Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_flash.c" attr="template" select="OSPI FLASH Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_hyperram_e7.c" attr="template" select="OSPI Hyperram XIP Baremetal Demo" condition="E7"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_parallel_display.c" attr="template" select="Parallel Display Baremetal Demo"/>
