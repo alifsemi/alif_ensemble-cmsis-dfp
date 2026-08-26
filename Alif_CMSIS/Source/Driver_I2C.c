@@ -1905,6 +1905,11 @@ void I2C_IRQHandler(I2C_RESOURCES *I2C_RES)
     }
 #endif
 
+    if (transfer->evt_sts & I2C_XFER_EVENT_MASTER_ON_HOLD) {
+        I2C_RES->cb_event(ARM_I2C_EVENT_MASTER_ON_HOLD);
+        transfer->evt_sts &= ~I2C_XFER_EVENT_MASTER_ON_HOLD;
+    }
+
     /* Handle the status only if any event occurred */
     if (transfer->evt_sts != I2C_XFER_EVENT_NONE) {
         I2C_HandleIRQStatus(I2C_RES);
