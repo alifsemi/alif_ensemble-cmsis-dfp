@@ -77,6 +77,7 @@ extern "C" {
 
 /* Interrupt Register Fields */
 #define I2C_IC_INTR_STAT_SCL_STUCK_AT_LOW    (1 << 14)
+#define I2C_IC_INTR_STAT_MASTER_ON_HOLD      (1 << 13) /* raw interrupt status */
 #define I2C_IC_INTR_STAT_GEN_CALL            (1 << 11)
 #define I2C_IC_INTR_STAT_START_DET           (1 << 10)
 #define I2C_IC_INTR_STAT_STOP_DET            (1 << 9)
@@ -294,6 +295,7 @@ typedef enum _I2C_XFER_EVENT{
     I2C_XFER_EVENT_DEV_ID_NOACK     = (1 << 15), /* Xfer event: No ack for Device ID transfer */
     I2C_XFER_EVENT_DEV_ID_WRITE     = (1 << 16), /* Xfer event: Some data available in Tx FIFO during Device ID communication */
     I2C_XFER_EVENT_UNDEF_TX_ABORT   = (1 << 17), /* Xfer event: Undefined Tx abort            */
+    I2C_XFER_EVENT_MASTER_ON_HOLD   = (1 << 18), /* Xfer event: Master on Hold          */
 } I2C_XFER_EVENT;
 
 /* i2c Transfer Information (Run-Time) */

@@ -57,6 +57,7 @@ extern "C" {
 #define ARM_I2C_EVENT_DEV_ID_TX_DATA      (1UL << 25) ///< Tx FIFO not empty during Device-ID xfer;
 #define ARM_I2C_EVENT_TX_FIFO_FLUSHED     (1UL << 26) ///< Stale Tx FIFO flushed (master switched to fresh read)
 #define ARM_I2C_EVENT_UNDEF_TX_ABORT      (1UL << 27) ///< Undefined Tx abort
+#define ARM_I2C_EVENT_MASTER_ON_HOLD      (1UL << 28) ///< Master is holding the bus
 
 #ifdef __cplusplus
 }

@@ -223,6 +223,11 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
 
     status = i2c->I2C_RAW_INTR_STAT;
 
+    /* Master is holding the bus and Tx FIFO is empty */
+    if (status & I2C_IC_INTR_STAT_MASTER_ON_HOLD) {
+        transfer->evt_sts |= I2C_XFER_EVENT_MASTER_ON_HOLD;
+    }
+
     /* during transmit set once TX_fifo is at max buffer_length and
      * processor sends another i2c cmd by writing to IC_DATA_CMD
      */
@@ -246,7 +251,7 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
         /* SCL is stuck at low . */
         i2c_mask_interrupt(i2c, I2C_IC_MST_INTR_STAT_ALL);
 
-        transfer->evt_sts = I2C_XFER_EVENT_SCL_STUCK_AT_LOW;
+        transfer->evt_sts |= I2C_XFER_EVENT_SCL_STUCK_AT_LOW;
         (void)i2c->I2C_CLR_SCL_STUCK_DET;
     }
 
@@ -257,44 +262,44 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
         /* Check USER_ABRT first - it's a deliberate user action */
         if (status & I2C_IC_TX_ABRT_USER_ABRT) {
             /* User aborted the xfer */
-            transfer->evt_sts = I2C_XFER_EVENT_USER_ABORT;
+            transfer->evt_sts |= I2C_XFER_EVENT_USER_ABORT;
         } else if (status & I2C_ABRT_ARBITRATION_LOST) {
             /* Master lost arbitration. */
-            transfer->evt_sts = I2C_XFER_EVENT_ARBITRATION_LOST;
+            transfer->evt_sts |= I2C_XFER_EVENT_ARBITRATION_LOST;
         } else if (status & I2C_MST_ABRT_ADDR_NOACK) {
             /* Slave not acknowledge 7bit/10bit/Device ID addr. */
-            transfer->evt_sts = I2C_XFER_EVENT_ADDR_NOACK;
+            transfer->evt_sts |= I2C_XFER_EVENT_ADDR_NOACK;
         }
         /* Master got ack from slave for 7/10bit addr then
          * master sends data, no ack for the data
          */
         else if (status & I2C_MST_ABRT_DATA_NOACK) {
             /* Slave not acknowledged for the data. */
-            transfer->evt_sts = I2C_XFER_EVENT_INCOMPLETE;
+            transfer->evt_sts |= I2C_XFER_EVENT_INCOMPLETE;
         } else if (status & I2C_MST_ABRT_GCALL) {
             /* General call error */
-            transfer->evt_sts = I2C_XFER_EVENT_GCALL_ERR;
+            transfer->evt_sts |= I2C_XFER_EVENT_GCALL_ERR;
         } else if (status & I2C_MST_ABRT_UNEXPECTED_ACK_DET) {
             /* Unexpected ack received */
-            transfer->evt_sts = I2C_XFER_EVENT_UNEXPECTED_ACK;
+            transfer->evt_sts |= I2C_XFER_EVENT_UNEXPECTED_ACK;
         } else if (status & I2C_MST_ABRT_NORSTRT) {
             /* Restart not enabled which is strictly required for the given mode */
-            transfer->evt_sts = I2C_XFER_EVENT_NO_RESTART;
+            transfer->evt_sts |= I2C_XFER_EVENT_NO_RESTART;
         } else if (status & I2C_IC_TX_ABRT_MASTER_DIS) {
             /* Master mode disabled */
-            transfer->evt_sts = I2C_XFER_EVENT_MASTER_DIS;
+            transfer->evt_sts |= I2C_XFER_EVENT_MASTER_DIS;
         } else if (status & I2C_IC_TX_ABRT_SDA_STUCK_AT_LOW) {
             /* SDA line stuck at low  */
-            transfer->evt_sts = I2C_XFER_EVENT_SDA_STUCK_AT_LOW;
+            transfer->evt_sts |= I2C_XFER_EVENT_SDA_STUCK_AT_LOW;
         } else if (status & I2C_IC_TX_ABRT_DEVICE_NOACK) {
             /* NO ack received for Device ID xfer */
-            transfer->evt_sts = I2C_XFER_EVENT_DEV_ID_NOACK;
+            transfer->evt_sts |= I2C_XFER_EVENT_DEV_ID_NOACK;
         } else if (status & I2C_IC_TX_ABRT_DEVICE_WRITE) {
             /* Tx buffer not empty during Device ID xfer */
-            transfer->evt_sts = I2C_XFER_EVENT_DEV_ID_WRITE;
+            transfer->evt_sts |= I2C_XFER_EVENT_DEV_ID_WRITE;
         }  else {
             /* Undefined Tx abort */
-            transfer->evt_sts = I2C_XFER_EVENT_UNDEF_TX_ABORT;
+            transfer->evt_sts |= I2C_XFER_EVENT_UNDEF_TX_ABORT;
         }
         (void)i2c->I2C_CLR_TX_ABRT;
         transfer->abort = true;

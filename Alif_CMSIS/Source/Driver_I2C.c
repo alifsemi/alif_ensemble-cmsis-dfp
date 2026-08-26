@@ -1695,6 +1695,9 @@ void I2C_HandleIRQError(I2C_RESOURCES *I2C_RES)
 
     } else if (transfer->evt_sts & I2C_XFER_EVENT_UNDEF_TX_ABORT) {
         I2C_RES->cb_event(ARM_I2C_EVENT_UNDEF_TX_ABORT);
+
+    } else if (transfer->evt_sts & I2C_XFER_EVENT_MASTER_ON_HOLD) {
+        I2C_RES->cb_event(ARM_I2C_EVENT_MASTER_ON_HOLD);
     }
 }
 
