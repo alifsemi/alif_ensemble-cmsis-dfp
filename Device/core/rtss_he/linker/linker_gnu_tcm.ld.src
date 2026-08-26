@@ -161,6 +161,8 @@ SECTIONS
   {
     *(.bss.lcd_crop_and_interpolate_buf)  /* LCD crop and intrepolate image processing buffer. */
     *(.bss.lcd_frame_buf)                 /* LCD frame Buffer. */
+    *(.bss.lcd_frame_buf1)                /* LCD frame Buffer 1 (double buffering). */
+    *(.bss.lcd_frame_buf2)                /* LCD frame Buffer 2 (double buffering). */
     *(.bss.camera_frame_buf)              /* Camer Frame Buffer */
     *(.bss.camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
     *(.data.audio_samples)               /* Audio sample data */
