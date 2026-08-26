@@ -2272,24 +2272,24 @@
 
         <file category="header" name="Device/core/rtss_hp/config/core_config.h" version="2.1.0"  attr="config" condition="M55_HP CMSIS-Core"/>
         <!-- linker Script for HP -->
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_mram.sct" version="2.2.1"  attr="config" condition="ARMCC6_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_tcm.sct" version="2.1.1"  attr="config" condition="ARMCC6_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_mram.sct" version="2.3.0"  attr="config" condition="ARMCC6_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_tcm.sct" version="2.2.0"  attr="config" condition="ARMCC6_HP"/>
         <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_ospi_boot.sct" version="2.1.1"  attr="config" condition="ARMCC6_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="GCC_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="GCC_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="CLANG_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="CLANG_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="GCC_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="GCC_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="CLANG_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="CLANG_HP"/>
 
         <file category="header" name="Device/core/rtss_he/config/core_config.h" version="2.1.0"  attr="config" condition="M55_HE CMSIS-Core"/>
         <file category="header" name="Device/core/rtss_he/config/core_config.h" version="2.1.0"  attr="config" condition="E1C"/>
         <!-- linker Script for HE -->
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_mram.sct" version="2.2.1"  attr="config" condition="ARMCC6_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_tcm.sct" version="2.1.1"  attr="config" condition="ARMCC6_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_mram.sct" version="2.3.0"  attr="config" condition="ARMCC6_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_tcm.sct" version="2.2.0"  attr="config" condition="ARMCC6_HE"/>
         <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_ospi_boot.sct" version="2.1.1"  attr="config" condition="ARMCC6_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="GCC_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="GCC_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="CLANG_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="CLANG_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="GCC_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="GCC_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="CLANG_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="CLANG_HE"/>
 
         <!-- AE822FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE822FA0E5597/include/" condition="SoC AE822FA0E5597"/>
