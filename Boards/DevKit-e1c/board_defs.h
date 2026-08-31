@@ -81,7 +81,7 @@
 #define BOARD_CLICKBOARD_I2C_INSTANCE                   1
 
 // <o> "Slave" I2C instance number <0-3>
-#define BOARD_SLAVE_I2C_INSTANCE                        1
+#define BOARD_SLAVE_I2C_INSTANCE                        0
 
 // <o> "Camera" I2C instance number <0-3>
 #define BOARD_CAMERA_I2C_INSTANCE                       1
