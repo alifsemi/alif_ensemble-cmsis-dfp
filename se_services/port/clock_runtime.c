@@ -81,8 +81,24 @@ int32_t system_update_clock_values(void)
         return -1;
     }
     SystemAPBClock = frequency;
-    SystemAHBClock = frequency * 2;
-    SystemAXIClock = frequency * 4;
+
+    error_code       = SERVICES_clocks_setting_get(se_services_s_handle,
+                                             CLOCK_SETTING_AHB_FREQ,
+                                             &frequency,
+                                             &service_error_code);
+    if (error_code) {
+        return -1;
+    }
+    SystemAHBClock = frequency;
+
+    error_code       = SERVICES_clocks_setting_get(se_services_s_handle,
+                                             CLOCK_SETTING_AXI_FREQ,
+                                             &frequency,
+                                             &service_error_code);
+    if (error_code) {
+        return -1;
+    }
+    SystemAXIClock = frequency;
 
     error_code     = SERVICES_clocks_setting_get(se_services_s_handle,
                                              CLOCK_SETTING_SYSREF_FREQ,
