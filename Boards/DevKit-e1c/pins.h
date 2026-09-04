@@ -258,6 +258,14 @@ const struct pinconf board_pinconf[] = {
     /* Selected: GPIO6_7 */
     {PORT_6, PIN_7, PINMUX_ALTERNATE_FUNCTION_0, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
+    /* P7_0 on pin D9. Functions: [0]: GPIO7_0, [1]: OSPI0_SCLK_C, [2]: LPUART_RX_B, [3]: SPI2_MISO_B, [4]: >>>I2C0_SDA_C<<<, [5]: LPCAM_D0_B, [6]: CDC_D16_A */
+	/* Selected: I2C0_SDA_C for "My I2C0" */
+	{PORT_7, PIN_0, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+
+	/* P7_1 on pin A5. Functions: [0]: GPIO7_1, [1]: OSPI0_SCLKN_C, [2]: LPUART_TX_B, [3]: SPI2_MOSI_B, [4]: >>>I2C0_SCL_C<<<, [5]: LPCAM_D1_B, [6]: CDC_D17_A */
+	/* Selected: I2C0_SCL_C for "My I2C0" */
+	{PORT_7, PIN_1, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+
     /* P7_2 on pin A4. Functions: [0]: GPIO7_2, [1]: OSPI0_SS0_C, [2]: LPUART_CTS_B, [3]: SPI2_SCLK_B, [4]: >>>I2C1_SDA_C<<<, [5]: LPCAM_D2_B, [6]: CDC_D18_A, [7]: BLE_DBG26 */
     /* Selected: I2C1_SDA_C */
     {PORT_7, PIN_2, PINMUX_ALTERNATE_FUNCTION_4, PADCTRL_READ_ENABLE },
