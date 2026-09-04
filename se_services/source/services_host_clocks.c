@@ -472,6 +472,54 @@ uint32_t SERVICES_clocks_setting_get(uint32_t services_handle, clock_setting_t s
 }
 
 /**
+ * @brief
+ * @param services_handle
+ * @param clk_settings
+ * @param error_code
+ * @return
+ */
+uint32_t SERVICES_clocks_get_data(uint32_t services_handle,
+				  clock_get_t *clk_settings,
+				  uint32_t *error_code)
+{
+	clk_get_clocks_svc_t *p_svc =
+		(clk_get_clocks_svc_t *)SERVICES_prepare_packet_buffer(
+			sizeof(clk_get_clocks_svc_t));
+
+  uint32_t ret = SERVICES_send_request(
+      services_handle, SERVICE_CLOCK_GET_CLOCKS, DEFAULT_TIMEOUT);
+
+  clk_settings->status = p_svc->status;
+  clk_settings->se_frequency_mhz = p_svc->se_frequency_mhz;
+  clk_settings->cgu_osc_ctrl = p_svc->cgu_osc_ctrl;
+  clk_settings->cgu_pll_sel = p_svc->cgu_pll_sel;
+  clk_settings->cgu_clk_ena = p_svc->cgu_clk_ena;
+  clk_settings->cgu_escclk_sel = p_svc->cgu_escclk_sel;
+  clk_settings->systop_clk_div = p_svc->systop_clk_div;
+  clk_settings->hostcpuclk_ctrl = p_svc->hostcpuclk_ctrl;
+  clk_settings->hostcpuclk_div0 = p_svc->hostcpuclk_div0;
+  clk_settings->hostcpuclk_div1 = p_svc->hostcpuclk_div1;
+  clk_settings->aclk_ctrl = p_svc->aclk_ctrl;
+  clk_settings->aclk_div0 = p_svc->aclk_div0;
+
+  /* Extended fields to match returns from ISP */
+  clk_settings->cgu_pll_lock_ctrl = p_svc->cgu_pll_lock_ctrl;
+  clk_settings->misc_reg1 = p_svc->misc_reg1;
+  clk_settings->xo_reg1 = p_svc->xo_reg1;
+  clk_settings->pd4_clk_sel = p_svc->pd4_clk_sel;
+  clk_settings->pd4_clk_pll = p_svc->pd4_clk_pll;
+  clk_settings->misc_ctrl = p_svc->misc_ctrl;
+  clk_settings->dcdc_reg1 = p_svc->dcdc_reg1;
+  clk_settings->dcdc_reg2 = p_svc->dcdc_reg2;
+  clk_settings->vbat_ana_reg1 = p_svc->vbat_ana_reg1;
+  clk_settings->vbat_ana_reg2 = p_svc->vbat_ana_reg2;
+  clk_settings->lf_oscillator_source = p_svc->lf_oscillator_source;
+  clk_settings->lf_frequency_hz = p_svc->lf_frequency_hz;
+
+  *error_code = p_svc->resp_error_code;
+  return ret;
+}
+/**
  * @brief Function to set aclk entry delay and force enable/disable
  *
  * @param services_handle
@@ -494,4 +542,33 @@ uint32_t SERVICES_clocks_set_aclk(uint32_t services_handle, uint32_t *aclk_entry
 
     *error_code = p_svc->resp_error_code;
     return ret;
+}
+
+/**
+ * @brief Function to set vbat clk for fast or slow mode
+ *
+ * Slow mode uses 32k clock for all vbat access. Fast clock uses 10M clock.
+ * If fast clock is used RTC access is restricted. if RTC is used vbat clock
+ * needs to be changed to slow.
+ *
+ * @param services_handle
+ * @param vbat_fast_clk_en
+ * @param error_code
+ * @return
+ */
+uint32_t SERVICES_clocks_set_vbat_clk(uint32_t services_handle,
+					      uint32_t *vbat_fast_clk_en,
+					      uint32_t *error_code)
+{
+	set_vbat_clk_svc_t *p_svc =
+		(set_vbat_clk_svc_t *)SERVICES_prepare_packet_buffer(
+			sizeof(set_vbat_clk_svc_t));
+
+  p_svc->send_vbat_fast_clk_en = *vbat_fast_clk_en;
+
+  uint32_t ret = SERVICES_send_request(
+      services_handle, SERVICE_CLOCK_SET_VBAT_CLK_REQ_ID, DEFAULT_TIMEOUT);
+
+  *error_code = p_svc->resp_error_code;
+  return ret;
 }

@@ -39,7 +39,7 @@ static char s_print_buf[256] = {0};
  * @param buf
  * @param length
  */
-static void fill_print_buf(uint8_t *buf, uint32_t length)
+char *fill_print_buf(uint8_t *buf, uint32_t length)
 {
     length         *= 2;  // 1 byte == 2 characters
     s_print_buf[0]  = 0;
@@ -50,6 +50,7 @@ static void fill_print_buf(uint8_t *buf, uint32_t length)
         strcat(s_print_buf, temp_buf);
     }
     s_print_buf[length] = 0;
+    return s_print_buf;
 }
 
 /**
@@ -204,15 +205,25 @@ static void test_mbedtls_aes(uint32_t services_handle)
     TEST_print(services_handle, "Decrypted data: %s\n", s_print_buf);
 
     // Single-part AES tests
-    TEST_print(services_handle, "Singe-part AES:\n");
+    TEST_print(services_handle, "Singe-part AES using the KCP key:\n");
+
+    // KCP key that is shipped with the APP releases
+    static const uint8_t KEY_KCP[] = {
+       0x17, 0x46, 0x6C, 0x9F, 0x7C, 0x5A, 0x52, 0x47,
+       0x1F, 0xBE, 0xA0, 0x58, 0x55, 0x19, 0xFB, 0x66};
+    // KCP key handle (defined in services_lib_api.h - SE_KEY_ID_KCP)
+    static const uint8_t KEY_KCP_ID[] = {0x02, 0x00, 0x00, 0x00};
+
+    memcpy(key, KEY_KCP, MBEDTLS_AES_KEY_128 / 8);
+    memcpy(buf, PLAIN, sizeof(buf));
 
     // encrypt
     memcpy(iv, IV, sizeof(iv));
     SERVICES_cryptocell_mbedtls_aes(services_handle,
-                                    &error_code,
-                                    (uint32_t) key,
-                                    MBEDTLS_AES_KEY_256,
-                                    MBEDTLS_OP_ENCRYPT,
+				    &error_code,
+				    (uint32_t) key,
+				    MBEDTLS_AES_KEY_128,
+				    MBEDTLS_OP_ENCRYPT,
                                     MBEDTLS_AES_CRYPT_OFB,
                                     (uint32_t) iv,
                                     sizeof(buf),
@@ -227,12 +238,15 @@ static void test_mbedtls_aes(uint32_t services_handle)
     TEST_print(services_handle, "Encrypted data: %s\n", s_print_buf);
 
     // decrypt
+    // pass the KCP key handle instead of the plain key
+    memcpy(key, KEY_KCP_ID, 4);
+
     memcpy(iv, IV, sizeof(iv));
     SERVICES_cryptocell_mbedtls_aes(services_handle,
-                                    &error_code,
-                                    (uint32_t) key,
-                                    MBEDTLS_AES_KEY_256,
-                                    MBEDTLS_OP_DECRYPT,
+				    &error_code,
+				    (uint32_t) key,
+				    MBEDTLS_AES_KEY_128,
+				    MBEDTLS_OP_DECRYPT,
                                     MBEDTLS_AES_CRYPT_OFB,
                                     (uint32_t) iv,
                                     sizeof(buf),

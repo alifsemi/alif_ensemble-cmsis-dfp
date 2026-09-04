@@ -53,6 +53,7 @@ enum SERVICE_ID_t {
     SERVICE_APPLICATION_OSPI_WRITE_KEY_ID,                               /**< 105 (0x69) */
     SERVICE_APPLICATION_DMPU_ID,                                         /**< 106 (0x6A) */
     SERVICE_APPLICATION_VERIFY_IMAGE_ID,                                 /**< 107 (0x6B) */
+    SERVICE_APPLICATION_LPCMP_CONFIGURE_ID,                              /**< 108 (0x6C) */
     SERVICE_APPLICATION_END             = 199,                           /**< 199 (0xC7) */
 
     /**
@@ -174,6 +175,7 @@ enum SERVICE_ID_t {
     SERVICE_CLOCK_GET_CLOCKS,                              /**< 716 (0x2CC) */
     SERVICE_CLOCK_SETTING_GET_REQ_ID,                      /**< 717 (0x2CD) */
     SERVICE_CLOCK_SET_ACLK_REQ_ID,                         /**< 718 (0x2CE) */
+    SERVICE_CLOCK_SET_VBAT_CLK_REQ_ID,                     /**< 719 (0x2CF) */
     SERVICE_CLOCK_END             = 799,                   /**< 799 (0x31F) */
 
     /**
@@ -183,7 +185,28 @@ enum SERVICE_ID_t {
     SERVICE_EXTSYS0_BOOT_SET_ARGS = SERVICE_EXTSYS0_START, /**< 800 (0x320) */
     SERVICE_EXTSYS0_EXTSYS1_WAKEUP,                        /**< 801 (0x321) */
     SERVICE_EXTSYS0_SHUTDOWN,                              /**< 802 (0x322) */
-    SERVICE_EXTSYS0_END = 899                              /**< 899 (0x383) */
+    SERVICE_EXTSYS0_END = 899,                              /**< 899 (0x383) */
+
+  /**
+   * Key Management Services
+   */
+  SERVICE_KEY_MGMT_START = 900,
+  SERVICE_KEY_MGMT_IMPORT_KEY = SERVICE_KEY_MGMT_START, /**< 900 (0x384) */
+  SERVICE_KEY_MGMT_CLEAR_KEY,                           /**< 901 (0x385) */
+  SERVICE_KEY_MGMT_GENERATE_ECC_KEY,                    /**< 902 (0x386) */
+  SERVICE_KEY_MGMT_GET_ECC_PUBLIC_KEY,                  /**< 903 (0x387) */
+  SERVICE_KEY_MGMT_WRAP_KEY,                            /**< 904 (0x388) */
+  SERVICE_KEY_MGMT_UNWRAP_KEY,                          /**< 905 (0x389) */
+  SERVICE_KEY_MGMT_ECDSA_SIGN,                          /**< 906 (0x390) */
+  SERVICE_KEY_MGMT_ECDSA_VERIFY,                        /**< 907 (0x391) */
+  SERVICE_KEY_MGMT_ECDH,                                /**< 908 (0x392) */
+  SERVICE_KEY_MGMT_DERIVE_KEY,                          /**< 909 (0x393) */
+  SERVICE_KEY_MGMT_AES_CRYPT_BY_HANDLE,                 /**< 910 (0x394) */
+  SERVICE_KEY_MGMT_DISABLE_KEY_SERVICES,                /**< 911 (0x395) */
+  SERVICE_KEY_MGMT_HMAC_BY_HANDLE,                      /**< 912 (0x396) */
+  SERVICE_KEY_MGMT_GET_ATTRIBUTES,                      /**< 913 (0x397) */
+  SERVICE_KEY_MGMT_GET_ATTRIBUTES_HANDLE,               /**< 914 (0x398) */
+  SERVICE_KEY_MGMT_END = 999
 };
 
 #endif /* __SERVICES_LIB_IDS_H__ */

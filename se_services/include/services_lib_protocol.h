@@ -58,13 +58,26 @@ extern "C" {
  *  M A C R O   D E F I N E S
  ******************************************************************************/
 /* See SERVICES documentation for change log */
-#define SE_SERVICES_VERSION_STRING                "0.50.10"
+#define SE_SERVICES_VERSION_STRING                "0.50.12"
 #define SE_SERVICES_VERSION_MAJOR                 0
 #define SE_SERVICES_VERSION_MINOR                 50
-#define SE_SERVICES_VERSION_PATCH                 10
+#define SE_SERVICES_VERSION_PATCH                 12
 
 #define IMAGE_NAME_LENGTH             8
 #define VERSION_RESPONSE_LENGTH       80
+
+#define SE_ECC_P256_PUBKEY_SIZE 65 /* 0x4 + 32B X + 32B Y */
+#define SE_ECC_P384_PUBKEY_SIZE 97 /* 0x4 + 48B X + 48B Y */
+
+#define SE_ECC_P256_PRIVKEY_SIZE 32
+#define SE_ECC_P384_PRIVKEY_SIZE 48
+
+#define SE_HMAC_MAX_OUTPUT_SIZE 48 /* SHA-384 = 48 bytes */
+#define SE_HMAC_256_OUTPUT_SIZE 32
+#define SE_HMAC_384_OUTPUT_SIZE 48
+
+#define SE_PLAIN_KEY_MAX_SIZE 48
+#define SE_WRAPPED_KEY_MAX_SIZE 96
 
 /**
  * @brief Flag positions with the SERVICES_toc_data_t flag string
@@ -557,6 +570,21 @@ typedef struct {
   volatile uint32_t resp_error_code;
 } verify_image_svc_t;
 
+// Low Power Comparator Configuration
+// SEE: HWRM: 19.6.1.3.6 VBAT_ANA_REG2 Register
+//            19.6.1.3.5 VBAT_ANA_REG1 Register
+//            19.6.1.3.7 VBAT_ANA_REG3 Register
+typedef struct {
+  service_header_t header;
+  volatile uint8_t comp_lp0_hyst;
+  volatile uint8_t comp_lp0_in_m_sel;
+  volatile uint8_t comp_lp0_in_p_sel;
+  volatile uint8_t comp_lp_en;
+  volatile uint8_t lpcomp_clk32k_en;
+  volatile uint8_t lpcomp_clk_sel;
+  volatile uint32_t resp_error_code;
+} lp_cmp_configure_svc_t;
+
 /**
  * @struct get_se_revision_t
  * @brief  Retrieve SERAM version banner
@@ -922,8 +950,11 @@ typedef struct {
 // struct for returning clock registers
 typedef struct {
     service_header_t  header;
+    volatile uint32_t status;
+    volatile float se_frequency_mhz;
     volatile uint32_t cgu_osc_ctrl;
     volatile uint32_t cgu_pll_sel;
+    volatile uint32_t cgu_pll_lock_ctrl;
     volatile uint32_t cgu_clk_ena;
     volatile uint32_t cgu_escclk_sel;
     volatile uint32_t systop_clk_div;
@@ -932,6 +963,17 @@ typedef struct {
     volatile uint32_t hostcpuclk_div1;
     volatile uint32_t aclk_ctrl;
     volatile uint32_t aclk_div0;
+    volatile uint32_t misc_reg1;
+    volatile uint32_t xo_reg1;
+    volatile uint32_t pd4_clk_sel;
+    volatile uint32_t pd4_clk_pll;
+    volatile uint32_t misc_ctrl;
+    volatile uint32_t dcdc_reg1;
+    volatile uint32_t dcdc_reg2;
+    volatile uint32_t vbat_ana_reg1;
+    volatile uint32_t vbat_ana_reg2;
+    volatile uint32_t lf_oscillator_source;
+    volatile uint32_t lf_frequency_hz;
     volatile uint32_t resp_error_code;
 } clk_get_clocks_svc_t;
 
@@ -983,6 +1025,190 @@ typedef struct {
 	uint32_t send_aclk_force_en;
 	uint32_t resp_error_code;
 } set_aclk_svc_t;
+
+// struct for Set VBAT CLK API
+typedef struct {
+  service_header_t header;
+  uint32_t send_vbat_fast_clk_en;
+  uint32_t resp_error_code;
+} set_vbat_clk_svc_t;
+
+/**
+ * Key Management Services
+ */
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_type; /* se_key_type_t (AES or ECC) */
+  volatile uint32_t send_key_addr; /* Global address of key material */
+  volatile uint32_t send_key_len;  /* Key length in bytes */
+  /* Response */
+  volatile uint32_t resp_key_handle; /* Opaque handle */
+  volatile uint32_t resp_error_code;
+} key_mgmt_import_key_svc_t;
+
+typedef struct {
+  service_header_t header;
+  volatile uint32_t send_key_handle;
+  volatile uint32_t resp_error_code;
+} key_mgmt_clear_key_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  volatile uint32_t send_direction;  /* 0 = decrypt, 1 = encrypt */
+  volatile uint32_t send_crypt_type; /* ECB/CBC/CTR/GCM/CCM */
+  volatile uint32_t send_iv_addr;
+  volatile uint32_t send_iv_len;
+  volatile uint32_t send_input_addr;
+  volatile uint32_t send_input_len;
+  volatile uint32_t send_output_addr;
+  volatile uint32_t send_aad_addr; /* For GCM/CCM */
+  volatile uint32_t send_aad_len;
+  volatile uint32_t send_tag_addr; /* For GCM/CCM */
+  volatile uint32_t send_tag_len;
+  /* Response */
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_aes_crypt_by_handle_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_type; /* An ECC key type */
+  /* Response */
+  volatile uint32_t resp_key_handle; /* Handle to private key */
+  volatile uint8_t public_key[SE_ECC_P384_PUBKEY_SIZE];
+  volatile uint32_t resp_public_key_len;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_generate_ecc_key_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  /* Response */
+  volatile uint8_t resp_public_key[SE_ECC_P384_PUBKEY_SIZE];
+  volatile uint32_t resp_public_key_len;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_get_ecc_pubkey_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  /* Response */
+  volatile uint32_t resp_lifetime;       /*!< key storage     */
+  volatile uint32_t resp_key_identifier; /*!< key handle      */
+  volatile uint32_t resp_key_type;       /*!< Key slot type   */
+  volatile uint32_t resp_key_size;       /*!< key size        */
+  volatile uint32_t resp_usage_flags;    /*!< key usage flags */
+  volatile uint32_t resp_algorithm;      /*!< key algorithm   */
+  volatile uint32_t resp_error_code;
+} key_mgmt_get_attributes_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  volatile uint32_t send_hmac_algo;  /*!< se_hmac_algo_t   */
+  volatile uint32_t send_input_addr; /*!< Global address of message data */
+  volatile uint32_t send_input_len;  /*!< Message length in bytes */
+  /* Response */
+  volatile uint8_t resp_mac[SE_HMAC_MAX_OUTPUT_SIZE]; /*!< HMAC output */
+  volatile uint32_t resp_mac_len; /*!< Actual MAC length (32 or 48)   */
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_hmac_by_handle_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  /* Response */
+  volatile uint8_t resp_wrapped_key[SE_WRAPPED_KEY_MAX_SIZE];
+  volatile uint32_t resp_wrapped_key_len;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_wrap_key_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint8_t send_wrapped_key[SE_WRAPPED_KEY_MAX_SIZE];
+  volatile uint32_t send_wrapped_key_len;
+  /* Response */
+  volatile uint32_t resp_key_handle;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_unwrap_key_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_private_key_handle;
+  volatile uint32_t send_curve;
+  volatile uint32_t send_peer_pubkey_addr;
+  volatile uint32_t send_peer_pubkey_len;
+  volatile uint32_t send_kdf_algo;         /* 0 = HKDF-SHA256 */
+  volatile uint32_t send_derived_key_type; /* se_key_type_t for output */
+  volatile uint32_t send_salt_addr;
+  volatile uint32_t send_salt_len;
+  /* Response */
+  volatile uint32_t resp_session_key_handle;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_ecdh_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_key_handle;
+  volatile uint32_t send_digest_addr;    /* Global address of hash */
+  volatile uint32_t send_digest_len;     /* 32 for SHA-256, etc. */
+  volatile uint32_t send_signature_addr; /* r || s [SE_ECDSA_P384_SIG_SIZE] */
+  /* Response */
+  volatile uint32_t resp_signature_len;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_ecdsa_sign_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t send_curve;
+  volatile uint32_t send_digest_addr;
+  volatile uint32_t send_digest_len;
+  volatile uint32_t
+      send_pubkey_addr; /* Global addr of public key (Compression byte||X||Y) */
+  volatile uint32_t send_pubkey_len;
+  volatile uint32_t send_signature_addr; /* Global addr of signature (r||s) */
+  volatile uint32_t send_signature_len;
+  /* Response */
+  volatile uint32_t resp_error_code; /* SE_KM_SUCCESS = valid */
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_ecdsa_verify_svc_t;
+
+typedef struct {
+  service_header_t header;
+  /* Request */
+  volatile uint32_t
+      send_base_key_handle; /* SE handle, or SE_KEY_HANDLE_DEVICE_ROOT */
+  volatile uint32_t send_kdf_algo;
+  volatile uint32_t send_derived_key_type;
+  volatile uint32_t send_nonce_addr;
+  volatile uint32_t send_nonce_len;
+  volatile uint32_t send_label_addr; /* Optional; 0 if unused */
+  volatile uint32_t send_label_len;
+  /* Response */
+  volatile uint32_t resp_derived_key_handle;
+  volatile uint32_t resp_error_code;
+  volatile uint32_t resp_crypto_error_code;
+} key_mgmt_derive_key_svc_t;
 
 /*******************************************************************************
  *  G L O B A L   D E F I N E S

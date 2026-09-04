@@ -31,6 +31,11 @@
 
 void test_crypto(uint32_t services_handle);
 
+extern void display_clock_info(uint32_t services_handle, const clock_get_t *clk);
+
+void test_key_management(uint32_t services_handle);
+
+
 /* forward tests */
 static uint32_t test_services_heartbeat(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_pinmux(char *p_test_name, uint32_t services_handle);
@@ -73,7 +78,8 @@ static uint32_t test_services_select_a32_source(char *p_test_name, uint32_t serv
 static uint32_t test_services_select_aclk_source(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_set_divider(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_aclk_configure(char *p_test_name, uint32_t services_handle);
-
+static uint32_t test_services_vbat_clk_configure(char *p_test_name, uint32_t services_handle);
+static uint32_t test_services_get_clock_data(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_pll_deinit(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_pll_initialize(char *p_test_name, uint32_t services_handle);
 static uint32_t test_services_xtal_start(char *p_test_name, uint32_t services_handle); /*unused*/
@@ -212,6 +218,8 @@ typedef enum {
     TEST_SET_DIVIDER,
     TEST_BOOT_RESET_SOC,
     TEST_ACLK_CONFIGURE,
+    TEST_GET_CLOCKS,
+    TEST_VBAT_CLK_CONFIGURE,
 
     TEST_PLL_XTAL,
     TEST_CLKPLL_START,
@@ -284,6 +292,8 @@ static services_test_t s_tests[TEST_COUNT] = {
     {test_services_set_divider, "Set a clock divider     ", false},            /*42*/
     {test_services_boot_reset_soc, "Reset SOC               ", false},         /*43*/
     {test_services_aclk_configure, "Configure ACLK          ", false},         /*44*/
+    {test_services_vbat_clk_configure, "Configure vbat clk      ", false}, /*45*/
+    {test_services_get_clock_data, "Get Clock configurations", false}, /*45*/
 
     {test_services_pll_xtal, "Test PLL/XTAL sequences", false},     /*45*/
     {test_services_clkpll_start, "Test CLK/PLL start     ", false}, /*46*/
@@ -1047,6 +1057,28 @@ static uint32_t test_services_get_device_data(char *p_test_name, uint32_t servic
     return error_code;
 }
 
+static uint32_t test_services_get_clock_data(char *p_test_name,
+					     uint32_t services_handle)
+{
+  uint32_t error_code = SERVICES_REQ_SUCCESS;
+  uint32_t service_error_code;
+  clock_get_t all_clock;
+
+  service_error_code = SERVICES_clocks_get_data(services_handle,
+						 &all_clock,
+						 &error_code);
+
+  TEST_print(services_handle,
+	     "** TEST %s  error_code=%s service_resp=0x%08X\n",
+	     p_test_name,
+	     SERVICES_error_to_string(error_code),
+	     service_error_code);
+
+  display_clock_info(services_handle, (clock_get_t *)&all_clock);
+
+  return error_code;
+}
+
 static uint32_t test_services_ewic_config(char *p_test_name, uint32_t services_handle)
 {
     uint32_t error_code = SERVICES_REQ_SUCCESS;
@@ -1626,6 +1658,7 @@ static uint32_t test_services_aclk_configure(char *p_test_name, uint32_t service
     uint32_t service_error_code;
     uint32_t aclk_entry_delay_orig, aclk_force_st_orig;
     uint32_t aclk_entry_delay = 5, aclk_force_st = 0;
+    uint32_t lf_freq = 0, lf_src = 0;
 
     TEST_print(services_handle, "** TEST %s:\n", p_test_name);
 
@@ -1679,9 +1712,48 @@ static uint32_t test_services_aclk_configure(char *p_test_name, uint32_t service
                                 &service_error_code);
     TEST_print(services_handle, "ACLK Entry Delay: %d\n", aclk_entry_delay_orig);
 
+  SERVICES_clocks_setting_get(services_handle,
+			       CLOCK_SETTING_LF_FREQ, &lf_freq,
+			       &service_error_code);
+  TEST_print(services_handle, "LF Frequency: %d\n", lf_freq);
+
+  SERVICES_clocks_setting_get(services_handle,
+			      CLOCK_SETTING_LF_SOURCE, &lf_src,
+			      &service_error_code);
+  TEST_print(services_handle, "LF Source %s\n",
+	     (lf_src == OSCILLATOR_SOURCE_RC) ?
+	     "LFRC" : "LFXO");
+
     return error_code;
 }
 
+/**
+ * @brief VBAT clock Configure test
+ */
+static uint32_t test_services_vbat_clk_configure(char *p_test_name, uint32_t services_handle)
+{
+  uint32_t error_code = SERVICES_REQ_SUCCESS;
+  uint32_t service_error_code;
+  uint32_t vbat_clk_st = 0;
+
+
+  TEST_print(services_handle, "** TEST %s:\n", p_test_name);
+
+  SERVICES_clocks_set_vbat_clk(services_handle,
+			       &vbat_clk_st,
+			       &service_error_code);
+
+  TEST_print(services_handle, "VBAT CLK status: %d\n", service_error_code);
+
+  vbat_clk_st = 1;
+  SERVICES_clocks_set_vbat_clk(services_handle,
+			   &vbat_clk_st,
+			   &service_error_code);
+
+  TEST_print(services_handle, "VBAT CLK status: %d\n", service_error_code);
+
+  return error_code;
+}
 /**
  * @brief PLL Initialize service test
  */
@@ -2395,7 +2467,12 @@ void SERVICES_test(uint32_t services_handle)
 {
     TEST_init(services_handle);
 
-    SERVICES_test_guts(services_handle);
-    test_crypto(services_handle);
+#ifdef ENABLE_KEY_MGMT_TESTS
+    test_key_management(services_handle);
+#else  /* All SERVICES tests are enabled */
+  SERVICES_test_guts(services_handle);
+  test_crypto(services_handle);
+  test_key_management(services_handle);
+#endif
 }
 
