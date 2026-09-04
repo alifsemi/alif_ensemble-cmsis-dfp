@@ -1769,21 +1769,25 @@ void i3c_slave_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
             break;
 
         case I3C_SLV_RX_TID:
+            if (i3c_is_dma_enable(i3c) && xfer->slv_rx_resp_pending) {
+                xfer->slv_rx_resp_pending = 0;
+                if (rx_len == xfer->slv_rx_done_len) {
+                    /* Trailing RESP for the xfer DMA already completed.
+                     * Match on that xfer's armed length so a newly
+                     * armed STOP-short (DATA_LEN < done_len) is not
+                     * discarded after an immediate SlaveReceive re-arm.
+                     */
+                    break;
+                }
+                /* DATA_LEN does not match the completed xfer — this is
+                 * STOP-short / abort of the currently armed receive.
+                 */
+            }
             if (xfer->rx_len) {
                 if (i3c_is_dma_enable(i3c)) {
-                    if (xfer->slv_rx_resp_pending) {
-                        /* Trailing RESP for a slave-RX xfer whose DMA
-                         * cb already delivered success. Drop it — the
-                         * response word has already been read from
-                         * I3C_RESPONSE_QUEUE_PORT above
-                         */
-                        xfer->slv_rx_resp_pending = 0;
-                        break;
-                    }
-                    /* No pending flag: this RESP is the abort of the
-                     * currently-armed xfer (DMA cb never fires on
-                     * abort). Record actual byte count so
-                     * HandleSuccess can detect the short read
+                    /* RESP is the abort / STOP-short of the currently
+                     * armed xfer (DMA cb never fires). Record actual
+                     * byte count so HandleSuccess can detect it.
                      */
                     xfer->rx_cur_cnt = rx_len;
                 } else {
