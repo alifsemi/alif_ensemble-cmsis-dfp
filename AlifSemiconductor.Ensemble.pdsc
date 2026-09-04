@@ -1844,7 +1844,6 @@
 
     <condition id="Ensemble">
       <description>Alif Semiconductor Ensemble Series devices</description>
-      <require Dvendor="Alif Semiconductor:165"/>
       <accept condition="Ensemble_NonE1C"/>
       <accept Dvendor="Alif Semiconductor:165" Dname="AE1C1F*"/>
     </condition>
@@ -1976,6 +1975,13 @@
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
       <!--<require Cclass="Device" Cgroup="Conf" Csub="RTE_Device"/>-->
     </condition>
+    <condition id="Ensemble_CMSIS_Driver_NonE1C">
+      <description>CMSIS Driver support for Ensemble devices excluding E1C</description>
+      <require condition="Ensemble_NonE1C"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+    </condition>
     <condition id="Ensemble Camera Driver">
       <description>Requirement for CMSIS CAMERA Driver</description>
       <require condition="Ensemble"/>
@@ -2033,7 +2039,7 @@
     </condition>
     <condition id="MIPI CSI2 Driver">
       <description>Requirement for MIPI CSI2 Driver</description>
-      <require condition="Ensemble CMSIS_Driver"/>
+      <require condition="Ensemble_CMSIS_Driver_NonE1C"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="MIPI DSI CSI2 DPHY"/>
     </condition>
@@ -2078,15 +2084,26 @@
       <require condition="Ensemble"/>
       <require Cclass="BSP" Cgroup="OSPI FLASH XIP" Csub="core"/>
     </condition>
-    <condition id="Camera Sensor Driver">
-      <description>Requirement for Camera SENSOR Driver</description>
+    <condition id="Camera Sensor Driver Parallel">
+      <description>Requirement for Camera SENSOR Driver Parallel</description>
       <require condition="Ensemble"/>
       <require Cclass="CMSIS" Cgroup="CORE"/>
       <require Cclass="Device" Cgroup="Startup"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
       <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C"/>
       <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C"/>
-      <!-- <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C"/> -->
+      <accept Cclass="CMSIS Driver" Cgroup="I2C"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO"/>
+    </condition>
+    <condition id="Camera Sensor Driver Serial">
+      <description>Requirement for Camera SENSOR Driver Serial</description>
+      <require condition="Ensemble_NonE1C"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
+      <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I3C"/>
+      <accept Cclass="Device" Cgroup="SOC Peripherals" Csub="I2C_I3C"/>
       <accept Cclass="CMSIS Driver" Cgroup="I2C"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="GPIO"/>
@@ -2675,9 +2692,9 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="Ethernet PHY" Cversion="2.2.0" condition="Ensemble CMSIS_Driver">
-      <description>Generic Ethernet PHY Driver</description>
-      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+   <component Cclass="BSP" Cgroup="External peripherals" Csub="Ethernet PHY" Cversion="2.2.0" condition="Ensemble_CMSIS_Driver_NonE1C">
+     <description>Generic Ethernet PHY Driver</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_PHY_GENERIC           /* Driver PHY generic */
       </RTE_Components_h>
       <files>
@@ -2686,9 +2703,9 @@
       </files>
     </component>
 
-    <component Cclass="CMSIS Driver" Cgroup="Ethernet MAC" Cversion="2.2.0" Capiversion="2.2.0" condition="Ensemble CMSIS_Driver">
-      <description>Ethernet MAC driver for Alif Semiconductor SOC</description>
-      <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
+   <component Cclass="CMSIS Driver" Cgroup="Ethernet MAC" Cversion="2.2.0" Capiversion="2.2.0" condition="Ensemble_CMSIS_Driver_NonE1C">
+     <description>Ethernet MAC driver for Alif Semiconductor SOC</description>
+     <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_ETH_MAC           /* Driver ETH MAC */
       </RTE_Components_h>
       <files>
@@ -2880,7 +2897,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor MT9M114" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor MT9M114" Cversion="2.2.0" condition="Camera Sensor Driver Parallel">
       <description>CAMERA Sensor Driver for MT9M114</description>
       <RTE_Components_h> <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_MT9M114            /* Driver CAMERA Sensor */
@@ -2891,7 +2908,8 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5640" Cversion="2.2.0" condition="Camera Sensor Driver">
+
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5640" Cversion="2.2.0" condition="Camera Sensor Driver Parallel">
       <description>CAMERA Sensor Driver for OV5640</description>
       <RTE_Components_h> <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_OV5640           /* Driver CAMERA Sensor */
@@ -2901,7 +2919,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor HM0360" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor HM0360" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for HM0360</description>
       <RTE_Components_h> <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_HM0360           /* Driver CAMERA Sensor */
@@ -2911,7 +2929,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor ARX3A0" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor ARX3A0" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for ARX3A0</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_ARX3A0           /* Driver CAMERA Sensor */
@@ -2922,7 +2940,8 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0144" Cversion="2.2.0" condition="Camera Sensor Driver">
+
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0144" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for AR0144</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_AR0144           /* Driver CAMERA Sensor */
@@ -2932,7 +2951,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0145" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0145" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for AR0145</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_AR0145           /* Driver CAMERA Sensor */
@@ -2942,7 +2961,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0246" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor AR0246" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for AR0246</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_AR0246           /* Driver CAMERA Sensor */
@@ -2952,7 +2971,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5647" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5647" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for OV5647</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_OV5647           /* Driver CAMERA Sensor */
@@ -2962,7 +2981,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5675" Cversion="2.2.0" condition="Camera Sensor Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="CAMERA Sensor OV5675" Cversion="2.2.0" condition="Camera Sensor Driver Serial">
       <description>CAMERA Sensor Driver for OV5675</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_CAMERA_SENSOR_OV5675           /* Driver CAMERA Sensor */
@@ -3141,7 +3160,7 @@
       </files>
     </component>
 
-    <component Cclass="Device" Cgroup="SOC Peripherals" Csub="HWSEM" Cversion="2.2.0" condition="Ensemble CMSIS_Driver">
+	 <component Cclass="Device" Cgroup="SOC Peripherals" Csub="HWSEM" Cversion="2.2.0" condition="Ensemble_CMSIS_Driver_NonE1C">
       <description>HWSEM Driver for Alif Semiconductor SOC</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_HWSEM                     /* Driver HWSEM*/
