@@ -2277,24 +2277,24 @@
 
         <file category="header" name="Device/core/rtss_hp/config/core_config.h" version="2.1.0"  attr="config" condition="M55_HP CMSIS-Core"/>
         <!-- linker Script for HP -->
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_mram.sct" version="2.2.1"  attr="config" condition="ARMCC6_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_tcm.sct" version="2.1.1"  attr="config" condition="ARMCC6_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_mram.sct" version="2.3.0"  attr="config" condition="ARMCC6_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_tcm.sct" version="2.2.0"  attr="config" condition="ARMCC6_HP"/>
         <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_ac6_ospi_boot.sct" version="2.1.1"  attr="config" condition="ARMCC6_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="GCC_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="GCC_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="CLANG_HP"/>
-        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="CLANG_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="GCC_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="GCC_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="CLANG_HP"/>
+        <file category="linkerScript" name="Device/core/rtss_hp/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="CLANG_HP"/>
 
         <file category="header" name="Device/core/rtss_he/config/core_config.h" version="2.1.0"  attr="config" condition="M55_HE CMSIS-Core"/>
         <file category="header" name="Device/core/rtss_he/config/core_config.h" version="2.1.0"  attr="config" condition="E1C"/>
         <!-- linker Script for HE -->
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_mram.sct" version="2.2.1"  attr="config" condition="ARMCC6_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_tcm.sct" version="2.1.1"  attr="config" condition="ARMCC6_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_mram.sct" version="2.3.0"  attr="config" condition="ARMCC6_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_tcm.sct" version="2.2.0"  attr="config" condition="ARMCC6_HE"/>
         <file category="linkerScript" name="Device/core/rtss_he/linker/linker_ac6_ospi_boot.sct" version="2.1.1"  attr="config" condition="ARMCC6_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="GCC_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="GCC_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.2.1"  attr="config" condition="CLANG_HE"/>
-        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.1.1"  attr="config" condition="CLANG_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="GCC_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="GCC_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_mram.ld.src" version="2.3.0"  attr="config" condition="CLANG_HE"/>
+        <file category="linkerScript" name="Device/core/rtss_he/linker/linker_gnu_tcm.ld.src" version="2.2.0"  attr="config" condition="CLANG_HE"/>
 
         <!-- AE822FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE822FA0E5597/include/" condition="SoC AE822FA0E5597"/>
@@ -2387,6 +2387,9 @@
         <!--file category="source" name="Boards/Templates/Baremetal/lv_port_disp.c" attr="template" select="LVGL Baremetal Demo"/-->
         <file category="source" name="Boards/Templates/Baremetal/demo_mram.c" attr="template" select="MRAM Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_spi_microwire.c" attr="template" select="Microwire Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_mipi_isp_video.c" attr="template" select="MIPI ISP Video Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/alif_logo/alif_logo.c" attr="template" select="MIPI ISP Video Baremetal Demo"/>
+        <file category="header" name="Boards/Templates/alif_logo/alif_logo.h" attr="template" select="MIPI ISP Video Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_flash.c" attr="template" select="OSPI FLASH Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_hyperram_e7.c" attr="template" select="OSPI Hyperram XIP Baremetal Demo" condition="E7"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_parallel_display.c" attr="template" select="Parallel Display Baremetal Demo"/>
@@ -2430,6 +2433,9 @@
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_potentiometer_freertos.c" attr="template" select="ADC Potentiometer FreeRTOS Demo" condition="Ensemble_NonE1C"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_arx3a0_freertos.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_interface_video_freertos.c" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_isp_video_freertos.c" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/alif_logo/alif_logo.c" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
+        <file category="header" name="Boards/Templates/alif_logo/alif_logo.h" attr="template" select="MIPI ISP Video FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_busmonitor_freertos.c" attr="template" select="CANFD Bus Monitor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_normalmode_freertos.c" attr="template" select="CANFD Data transfer FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_canfd_extloopback_freertos.c" attr="template" select="CANFD External Loopback FreeRTOS Demo"/>
