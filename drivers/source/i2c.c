@@ -914,4 +914,311 @@ void i2c_slave_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer)
     }
 }
 
+/**
+ * @brief    I2C Master Transmit in Blocking Mode
+ * @param    i2c       : Pointer to I2C register map
+ * @param    transfer  : Pointer to transfer structure
+ * @retval   none
+ */
+void i2c_master_tx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer)
+{
+    uint16_t xmit_data = 0;
+
+    /* Transmit all bytes */
+    while (transfer->tx_curr_cnt < transfer->tx_total_num) {
+
+        /* Wait until TX FIFO has space */
+        while (!i2c_tx_ready(i2c)) {
+            i2c_master_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+        }
+
+        xmit_data =
+            (uint16_t)transfer->tx_buf[transfer->tx_curr_cnt++] |
+            I2C_IC_DATA_CMD_WRITE_REQ;
+
+        /* Last byte */
+        if ((transfer->tx_curr_cnt >= transfer->tx_total_num) &&
+            (!transfer->xfer_pending)) {
+
+            xmit_data |= I2C_IC_DATA_CMD_STOP;
+        }
+
+        /* Write into TX FIFO */
+        i2c->I2C_DATA_CMD = xmit_data;
+
+        transfer->curr_cnt = transfer->tx_curr_cnt;
+    }
+
+     /*Wait for STOP condition */
+     while (!(i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET)) {
+
+	     i2c_master_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+        }
+    /* Clear STOP interrupt */
+    (void)i2c->I2C_CLR_STOP_DET;
+
+    transfer->curr_stat = I2C_XFER_NONE;
+
+    /* Report transfer completion only when no abort/error occurred */
+    if (!transfer->abort) {
+        transfer->evt_sts |= I2C_XFER_EVENT_DONE;
+    }
+}
+
+/**
+ * @brief    i2c master receive data using blocking method
+ * @param    i2c      : Pointer to i2c register map
+ * @param    transfer : Pointer to i2c_transfer_info_t
+ * @retval   none
+ */
+void i2c_master_rx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer)
+{
+    uint16_t xmit_data = 0;
+
+    /* Check error status */
+    i2c_master_check_error(i2c, transfer);
+
+    if (transfer->abort) {
+        return;
+    }
+
+    /* Write phase (Register Address) */
+    if (transfer->wr_mode) {
+
+        while (transfer->tx_curr_cnt < transfer->tx_total_num) {
+
+            /* Wait until TX FIFO has space */
+            while (!i2c_tx_ready(i2c)) {
+
+                i2c_master_check_error(i2c, transfer);
+
+                if (transfer->abort) {
+                    return;
+                }
+            }
+
+            xmit_data = (uint16_t)(transfer->tx_buf[transfer->tx_curr_cnt++]) |
+                        I2C_IC_DATA_CMD_WRITE_REQ;
+
+            /* Updating transmitting data to FIFO */
+            i2c->I2C_DATA_CMD = xmit_data;
+        }
+
+        transfer->wr_mode = false;
+    }
+
+    /* Send all read requests */
+    while (transfer->rx_curr_tx_index < transfer->rx_total_num) {
+
+        /* Wait until TX FIFO has space */
+        while (!i2c_tx_ready(i2c)) {
+
+            i2c_master_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+        }
+
+        xmit_data = I2C_IC_DATA_CMD_READ_REQ;
+
+        /* Last read request */
+        if ((++transfer->rx_curr_tx_index >= transfer->rx_total_num) &&
+            (!transfer->xfer_pending)) {
+
+            xmit_data |= I2C_IC_DATA_CMD_STOP;
+        }
+
+        /* Updating data to FIFO */
+        i2c->I2C_DATA_CMD = xmit_data;
+    }
+
+    /* Receive all data */
+    while (transfer->rx_curr_cnt < transfer->rx_total_num) {
+
+        /* Wait until RX FIFO has data */
+        while (!i2c_rx_ready(i2c)) {
+
+            i2c_master_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+        }
+
+        /* Read received data */
+        transfer->rx_buf[transfer->rx_curr_cnt] =
+            i2c_read_data_from_buffer(i2c);
+
+        transfer->rx_curr_cnt++;
+        transfer->curr_cnt = transfer->rx_curr_cnt;
+    }
+
+    /* Wait for STOP condition */
+    while (!(i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET)) {
+
+        i2c_master_check_error(i2c, transfer);
+
+        if (transfer->abort) {
+            return;
+        }
+    }
+
+    /* Clear STOP interrupt */
+    (void)i2c->I2C_CLR_STOP_DET;
+
+    transfer->curr_stat = I2C_XFER_NONE;
+
+    /* Report transfer completion only when no abort/error occurred */
+    if (!transfer->abort) {
+        transfer->evt_sts |= I2C_XFER_EVENT_DONE;
+    }
+}
+
+/**
+ * @brief    I2C Slave Transmit in Blocking Mode
+ * @param    i2c       : Pointer to I2C register map
+ * @param    transfer  : Pointer to transfer structure
+ * @retval   none
+ */
+void i2c_slave_tx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer)
+{
+    uint16_t xmit_data = 0;
+
+    while (transfer->tx_curr_cnt < transfer->tx_total_num) {
+
+        /* Wait for master to request data */
+        while (!(i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_RD_REQ)) {
+
+            i2c_slave_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+
+            /* Check for STOP condition */
+            if (i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET) {
+                (void)i2c->I2C_CLR_STOP_DET;
+
+                transfer->curr_stat = I2C_XFER_NONE;
+                transfer->evt_sts |= I2C_XFER_EVENT_INCOMPLETE;
+
+                return;
+            }
+        }
+
+        /* Fill TX FIFO while it is ready */
+        while (i2c_tx_ready(i2c) &&
+               (transfer->tx_curr_cnt < transfer->tx_total_num)) {
+
+            xmit_data =
+                (uint16_t)transfer->tx_buf[transfer->tx_curr_cnt] |
+                I2C_IC_DATA_CMD_WRITE_REQ;
+
+            i2c->I2C_DATA_CMD = xmit_data;
+
+            transfer->tx_curr_cnt++;
+            transfer->curr_cnt = transfer->tx_curr_cnt;
+        }
+
+        /* Clear read request */
+        (void)i2c->I2C_CLR_RD_REQ;
+    }
+
+    /* Wait for master to generate STOP */
+    while (!(i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET)) {
+
+        i2c_slave_check_error(i2c, transfer);
+
+        if (transfer->abort) {
+            return;
+        }
+    }
+
+    /* Clear STOP interrupt */
+    (void)i2c->I2C_CLR_STOP_DET;
+
+    transfer->curr_stat = I2C_XFER_NONE;
+
+    /* Report transfer completion only when no abort/error occurred */
+    if (!transfer->abort) {
+        if (transfer->tx_curr_cnt >= transfer->tx_total_num) {
+            transfer->evt_sts |= I2C_XFER_EVENT_DONE;
+        } else {
+            transfer->evt_sts |= I2C_XFER_EVENT_INCOMPLETE;
+        }
+    }
+}
+
+/**
+ * @brief    I2C slave receive data using blocking method
+ * @param    i2c      : Pointer to i2c register map
+ * @param    transfer : Pointer to i2c_transfer_info_t
+ * @retval   none
+ */
+void i2c_slave_rx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer)
+{
+    while (transfer->rx_curr_cnt < transfer->rx_total_num) {
+
+        /* Wait until data is available in RX FIFO */
+        while (!i2c_rx_ready(i2c)) {
+
+            i2c_slave_check_error(i2c, transfer);
+
+            if (transfer->abort) {
+                return;
+            }
+
+            /* Check for STOP before receiving all expected bytes */
+            if (i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET) {
+                (void)i2c->I2C_CLR_STOP_DET;
+
+                transfer->curr_stat = I2C_XFER_NONE;
+                transfer->evt_sts |= I2C_XFER_EVENT_INCOMPLETE;
+
+                return;
+            }
+        }
+
+        /* Read available data from RX FIFO */
+        while (i2c_rx_ready(i2c) &&
+               (transfer->rx_curr_cnt < transfer->rx_total_num)) {
+
+            transfer->rx_buf[transfer->rx_curr_cnt] =
+                i2c_read_data_from_buffer(i2c);
+
+            transfer->rx_curr_cnt++;
+            transfer->curr_cnt = transfer->rx_curr_cnt;
+        }
+    }
+
+    /* Wait for STOP condition */
+    while (!(i2c->I2C_RAW_INTR_STAT & I2C_IC_INTR_STAT_STOP_DET)) {
+
+        i2c_slave_check_error(i2c, transfer);
+
+        if (transfer->abort) {
+            return;
+        }
+    }
+
+    /* Clear STOP interrupt */
+    (void)i2c->I2C_CLR_STOP_DET;
+
+    transfer->curr_stat = I2C_XFER_NONE;
+
+    /* Report transfer completion only when no abort/error occurred */
+    if (!transfer->abort) {
+        transfer->evt_sts |= I2C_XFER_EVENT_DONE;
+    }
+}
+
 /************************ (C) COPYRIGHT ALIF SEMICONDUCTOR *****END OF FILE****/
