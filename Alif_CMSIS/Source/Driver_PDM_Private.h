@@ -92,6 +92,7 @@ typedef struct _PDM_RESOURCES {
     uint32_t  error_irq_priority;   /* PDM error IRQ priority             */
     uint32_t  warning_irq_priority; /* PDM warning IRQ priority           */
     uint32_t  audio_irq_priority;   /* PDM audio IRQ priority             */
+    bool shared_irq;     /* LPPDM only: WARN, overflow, and audio-detect share one IRQ */
 } PDM_RESOURCES;
 
 #endif /* DRIVER_PDM_PRIVATE_H_ */

@@ -114,10 +114,10 @@ typedef struct {
 #define PDM_CHANNEL_7              (1U << 7U)
 
 typedef enum _PDM_TRANSFER_STATUS {
-    PDM_CAPTURE_STATUS_NONE,     /* PDM capture status none     */
-    PDM_AUDIO_STATUS_DETECTION,  /* PDM status audio detection  */
-    PDM_CAPTURE_STATUS_COMPLETE, /* PDM capture status complete */
-    PDM_ERROR_DETECT,            /* PDM error detection status  */
+    PDM_CAPTURE_STATUS_NONE = 0U,     /* PDM capture status none     */
+    PDM_AUDIO_STATUS_DETECTION = (1U << 0), /* PDM status audio detection  */
+    PDM_CAPTURE_STATUS_COMPLETE = (1U << 1), /* PDM capture status complete */
+    PDM_ERROR_DETECT = (1U << 2),            /* PDM error detection status  */
 } PDM_TRANSFER_STATUS;
 
 /**
@@ -221,6 +221,8 @@ static inline void pdm_dma_enable_irq(PDM_Type *pdm)
 {
 
     pdm->PDM_IRQ_ENABLE &= ~(PDM0_IRQ_ENABLE); /* Clear IRQ */
+     /* ack leftover overflow */
+    (void) pdm->PDM_ERROR_IRQ;
 
     /* Enable the Interrupt */
     pdm->PDM_IRQ_ENABLE |= (PDM_FIFO_OVERFLOW_IRQ);
@@ -237,6 +239,8 @@ static inline void pdm_enable_irq(PDM_Type *pdm)
     uint32_t audio_ch;
 
     pdm->PDM_IRQ_ENABLE &= ~(PDM0_IRQ_ENABLE); /* Clear IRQ */
+     /* ack leftover overflow */
+    (void) pdm->PDM_ERROR_IRQ;
 
     /* get user enabled channel */
     audio_ch             = ((pdm->PDM_CTL0)) & PDM_CHANNEL_ENABLE;
