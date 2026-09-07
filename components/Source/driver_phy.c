@@ -18,6 +18,8 @@
  * @bug      None.
  * @Note     None
  ******************************************************************************/
+#include "RTE_Components.h"
+#if defined(RTE_Drivers_PHY_GENERIC)
 
 #include "driver_phy.h"
 
@@ -274,3 +276,4 @@ ARM_DRIVER_ETH_PHY        ARM_Driver_ETH_PHY_(ETH_PHY_NUM) = {
     GetLinkState,
     GetLinkInfo
 };
+#endif /* RTE_Drivers_PHY_GENERIC */

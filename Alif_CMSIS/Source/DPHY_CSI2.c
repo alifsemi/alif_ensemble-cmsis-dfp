@@ -18,11 +18,13 @@
  * @bug      None.
  * @Note     None.
  ******************************************************************************/
+
 #include <stdint.h>
 #include "Driver_Common.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
 #include "RTE_Device.h"
+#if defined(RTE_Drivers_MIPI_CSI2)
 #include "DPHY_Test_and_Control_Interface.h"
 #include "DPHY_Private.h"
 #include "dphy.h"
@@ -574,3 +576,4 @@ int32_t CSI2_DPHY_Uninitialize(void)
 
     return ARM_DRIVER_OK;
 }
+#endif /* RTE_Drivers_MIPI_CSI2 */
