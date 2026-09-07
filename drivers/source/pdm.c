@@ -19,6 +19,7 @@
 void pdm_error_detect_irq_handler(PDM_Type *pdm)
 {
     pdm->PDM_IRQ_ENABLE &= ~(PDM_FIFO_OVERFLOW_IRQ);
+    (void) pdm->PDM_ERROR_IRQ;
 }
 
 /**
@@ -30,14 +31,11 @@ void pdm_error_detect_irq_handler(PDM_Type *pdm)
 */
 void pdm_audio_detect_irq_handler(PDM_Type *pdm, pdm_transfer_t *transfer)
 {
-    /* Check current count is greater than the buffer size */
-    if (transfer->curr_cnt >= (transfer->total_cnt)) {
-        transfer->status    |= PDM_AUDIO_STATUS_DETECTION;
+    uint32_t audio_status = pdm->PDM_AUDIO_DETECT_IRQ;
 
-        /* disable irq */
-        pdm->PDM_IRQ_ENABLE &= ~(PDM_AUDIO_DETECT_IRQ_STAT);
+    if (audio_status != 0U) {
+        transfer->status |= PDM_AUDIO_STATUS_DETECTION;
     }
-    (void) pdm->PDM_AUDIO_DETECT_IRQ;
 }
 
 /**
@@ -125,11 +123,11 @@ void pdm_warning_irq_handler(PDM_Type *pdm, pdm_transfer_t *transfer)
             /* disable irq */
             pdm->PDM_IRQ_ENABLE &=
                 ~(PDM_FIFO_ALMOST_FULL_IRQ | PDM_AUDIO_DETECT_IRQ_STAT | PDM_FIFO_OVERFLOW_IRQ);
+            pdm_enable_fifo_clear(pdm);
             transfer->status |= PDM_CAPTURE_STATUS_COMPLETE;
         }
     }
 
-    (void) pdm->PDM_ERROR_IRQ;
 }
 
 /**
