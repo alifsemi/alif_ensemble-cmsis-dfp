@@ -947,6 +947,17 @@ static int32_t ARM_CAN_MessageSend(CANFD_RESOURCES *CANFD, uint32_t obj_idx,
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
+    /* Reject CAN FD frame if FD mode is disabled */
+    if ((msg_info->edl != 0x0U) &&
+        (canfd_in_fd_mode(CANFD->instance) == false)) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    /* Reject BRS flag if FDF is not set */
+    if ((msg_info->brs != 0x0U) && (msg_info->edl == 0x0U)) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
     /* Returns error if data message length is greater than 8 bytes
      * when its a classical can data or fd mode is disabled */
     if ((size > 0x8U) && ((msg_info->edl == 0x0U) ||
