@@ -513,11 +513,18 @@ void pdm_demo_thread_entry(void *pvParameters)
     }
 
     /* wait for the call back event */
-    xTaskNotifyWait(0,
-                    PDM_CALLBACK_ERROR_EVENT | PDM_CALLBACK_WARNING_EVENT |
-                        PDM_CALLBACK_AUDIO_DETECTION_EVENT,
-                    &ulNotificationValue,
-                    portMAX_DELAY);
+    ulNotificationValue = 0;
+
+    do {
+        uint32_t notified = 0;
+
+        xTaskNotifyWait(0,
+                        PDM_CALLBACK_ERROR_EVENT | PDM_CALLBACK_WARNING_EVENT |
+                            PDM_CALLBACK_AUDIO_DETECTION_EVENT,
+                        &notified,
+                        portMAX_DELAY);
+        ulNotificationValue |= notified;
+    } while ((ulNotificationValue & PDM_CALLBACK_WARNING_EVENT) == 0);
 
     /* PDM channel audio detection event */
     if (ulNotificationValue & PDM_CALLBACK_AUDIO_DETECTION_EVENT) {
