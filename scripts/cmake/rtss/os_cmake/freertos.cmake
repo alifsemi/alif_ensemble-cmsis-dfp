@@ -147,7 +147,7 @@ else()
     list(APPEND     RM_TEST_APPS_LIST   "demo_lpi2c0_freertos")
 endif()
 
-if (NOT ${ENABLE_E1C_DEVKIT})
+if (NOT (ENABLE_E1C_DEVKIT OR ENABLE_E1C_STARTKIT))
     COND_FILE_ADD(${FREE_RTOS_APP_DIR}/demo_pdm_freertos.c             ENABLE_PDM         TEST_APP_SRCS   "test-apps")
 else()
     list(APPEND     RM_TEST_APPS_LIST   "demo_pdm_freertos")

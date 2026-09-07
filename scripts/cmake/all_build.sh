@@ -33,9 +33,33 @@ collective_total_Error=0
 number_of_iter=0
 
 CURR_OS=("NONE")
-CURR_COMPILER=("armclang" "gcc")
-CURR_DEV=("AE722F80F55D5" "AE1C1F4051920" "AE822FA0E5597" "AE402FA0E5597")
-CURR_BOARDS=("DevKit-e7" "DevKit-e1c" "DevKit-e8" "DevKit-e4")
+CURR_COMPILER=("armclang" "gcc" "clang")
+CURR_DEV=()
+CURR_BOARDS=()
+
+base="../../Device/soc"
+
+if [[ -d "$base" ]]; then
+    for dir in "$base"/*/; do
+        dir="${dir%/}"
+        CURR_DEV+=("$(basename "$dir")")
+    done
+    #printf '%s\n' "${CURR_DEV[@]}"
+fi
+
+base="../../Boards/"
+if [[ -d "$base" ]]; then
+
+    for dir in "$base"/*/; do
+        name="${dir%/}"     # Remove trailing /
+        name="${name##*/}"  # Extract basename
+        if [[ ! "$name" =~ ^(Templates|build|out|\.git)$ ]]; then
+            CURR_BOARDS+=("$name")
+        fi
+    done
+    printf '%s\n' "${CURR_BOARDS[@]}"
+fi
+
 CURR_RTSS=("HE" "HP")
 CURR_BOOT=("TCM" "MRAM")
 
@@ -45,17 +69,28 @@ do
     do
         for rtssType in ${!CURR_RTSS[@]}
         do
-            for devName in ${!CURR_DEV[@]}
-            do
-                for brdName in ${!CURR_BOARDS[@]}
-                do
-                    devShortName="${CURR_BOARDS[brdName]#*-}"
-                    alifDevShortName="A$(echo "$devShortName" | tr '[:lower:]' '[:upper:]')"
-                    echo "Device : ${CURR_DEV[devName]}, Board: ${CURR_BOARDS[brdName]}, ShortName:${alifDevShortName}."
+           for devName in ${!CURR_DEV[@]} ; do
+            for brdName in ${!CURR_BOARDS[@]} ; do
+            shortBrdName=$(echo "${CURR_BOARDS[brdName]}" | grep -oE '(DevKit|StartKit|AppKit)-[a-z][0-9][a-z]?' | cut -d- -f2)
+            boardName=$(echo "${CURR_BOARDS[brdName]}" | grep -oE '(DevKit|StartKit|AppKit)-[a-z][0-9][a-z]?' | cut -d- -f1)
+            socAbbr="${CURR_DEV[devName]:1:2}"
+           additionalAbbr="${CURR_DEV[devName]:3:1}"
+           if [[ "${additionalAbbr}" == "C" ]]; then
+            soc=${socAbbr}${additionalAbbr}
+           else
+            soc=${socAbbr}
+        fi
+        if [[ "$soc" =~ ^E[35]$ && "$boardName" == "DevKit" ]]; then
+            soc="E7"
+        fi
+
+        shortNameInUpper="$(echo "$shortBrdName" | tr '[:lower:]' '[:upper:]')"
+        if [[ "${soc}" == "${shortNameInUpper}" ]] ; then
+
                     number_of_iter=$((number_of_iter + 1))
 
                     echo "🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱 # ${number_of_iter} starts 🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱"
-                    if [[ "${CURR_DEV[devName]}" == "$alifDevShortName"* ]]; then
+
                         for osName in ${!CURR_OS[@]}
                         do
                             echo "======================================================================================"
@@ -85,6 +120,7 @@ do
                             echo -e "🚫Error Status total_cmakeError: $total_cmakeError and tmp: $tmp"
                             if [ "$tmp" -ne 0 ] ; then
                                 fail_cfg_run_cnt=$((fail_cfg_run_cnt + 1))
+                                echo "**FAILED***::Build ${CURR_COMPILER[comp]}, ${CURR_DEV[devName]}, ${CURR_OS[osName]}, ${CURR_BOOT[bootType]} ${CURR_RTSS[rtssType]} ${CURR_BOARDS[brdName]}"
                             fi
                             echo "======================================================================================"
                         done

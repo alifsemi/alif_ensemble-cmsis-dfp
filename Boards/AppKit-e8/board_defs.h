@@ -84,6 +84,8 @@
 // </e>
 // </e>
 
+// <o> "Trigger Mode" UTIMER instance number <0-12>
+#define BOARD_TRIGGER_MODE_UTIMER_INSTANCE              3
 // <o> "Camera" I2C instance number <0-3>
 #define BOARD_CAMERA_I2C_INSTANCE            1
 
@@ -1358,6 +1360,123 @@
 #define BOARD_DAC_OUTPUT_WS_GPIO_PIN                    4
 // <o> "DAC_OUTPUT_WS" GPIO pin alternate function <0-7>
 #define BOARD_DAC_OUTPUT_WS_ALTERNATE_FUNCTION          1
+
+// <o> "LCD_BL_LED" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_LCD_BL_LED_GPIO_PORT                      6
+// <o> "LCD_BL_LED" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5
+// <6=> PIN6 <7=> PIN7
+#define BOARD_LCD_BL_LED_GPIO_PIN                       1
+
+
+// <o> "QEC0_X_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=> GPIO5
+// <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=> GPIO13
+// <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC0_X_B_GPIO_PORT                        8
+// <o> "QEC0_X_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC0_X_B_GPIO_PIN                         4
+
+// <o> "QEC0_Y_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=> GPIO5
+// <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=> GPIO13
+// <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC0_Y_B_GPIO_PORT                        8
+// <o> "QEC0_Y_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC0_Y_B_GPIO_PIN                         5
+
+// <o> "QEC0_Z_B" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=> GPIO5
+// <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=> GPIO13
+// <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC0_Z_B_GPIO_PORT                        8
+// <o> "QEC0_Z_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC0_Z_B_GPIO_PIN                         6
+
+// <o> "QEC_X_GPO" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC_X_GPO_GPIO_PORT                       1
+// <o> "QEC0_X_B" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC_X_GPO_GPIO_PIN                        0
+
+// <o> "QEC_Y_GPO" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC_Y_GPO_GPIO_PORT                       1
+// <o> "QEC_Y_GPO" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC_Y_GPO_GPIO_PIN                        1
+
+// <o> "QEC_Z_GPO" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_QEC_Z_GPO_GPIO_PORT                       1
+// <o> "QEC_Z_GPO" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5 <6=>
+// PIN6 <7=> PIN7
+#define BOARD_QEC_Z_GPO_GPIO_PIN                        2
+
+// <o> "UT_TRIGGER_MODE_GPO0" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=>
+// GPIO4 <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=>
+// GPIO12 <13=> GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_TRIGGER_MODE_GPO0_GPIO_PORT            3
+// <o> "UT_TRIGGER_MODE_GPO0" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=>
+// PIN5 <6=> PIN6 <7=> PIN7
+#define BOARD_UT_TRIGGER_MODE_GPO0_GPIO_PIN             5
+
+// <o> "UTIMER_GPO1" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_TRIGGER_MODE_GPO1_GPIO_PORT            3
+// <o> "UTIMER_GPO1" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5
+// <6=> PIN6 <7=> PIN7
+#define BOARD_UT_TRIGGER_MODE_GPO1_GPIO_PIN             6
+
+// <o> "UT_CAPTURE_MODE_GPO0" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=>
+// GPIO4 <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=>
+// GPIO12 <13=> GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_CAPTURE_MODE_GPO0_GPIO_PORT            3
+// <o> "UT_CAPTURE_MODE_GPO0" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=>
+// PIN5 <6=> PIN6 <7=> PIN7
+#define BOARD_UT_CAPTURE_MODE_GPO0_GPIO_PIN             3
+
+// <o> "UT_CAPTURE_MODE_GPO1" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=>
+// GPIO4 <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=>
+// GPIO12 <13=> GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_CAPTURE_MODE_GPO1_GPIO_PORT            3
+// <o> "UT_CAPTURE_MODE_GPO1" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=>
+// PIN5 <6=> PIN6 <7=> PIN7
+#define BOARD_UT_CAPTURE_MODE_GPO1_GPIO_PIN             4
+
+// <o> "UT_TRIGGER_MODE_T0_GPO" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=>
+// GPIO4 <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=>
+// GPIO12 <13=> GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_TRIGGER_MODE_T0_GPO_GPIO_PORT          0
+// <o> "UT_TRIGGER_MODE_T0_GPO" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4
+// <5=> PIN5 <6=> PIN6 <7=> PIN7
+#define BOARD_UT_TRIGGER_MODE_T0_GPO_GPIO_PIN           6
+// <o> "UT_TRIGGER_MODE_T0_GPO" GPIO pin alternate function <0-7>
+#define BOARD_UT_TRIGGER_MODE_T0_GPO_ALTERNATE_FUNCTION 5
+
+// <o> "UT_TRIGGER_MODE_T1_GPO" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=>
+// GPIO4 <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=>
+// GPIO12 <13=> GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_UT_TRIGGER_MODE_T1_GPO_GPIO_PORT          0
+// <o> "UT_TRIGGER_MODE_T1_GPO" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4
+// <5=> PIN5 <6=> PIN6 <7=> PIN7
+#define BOARD_UT_TRIGGER_MODE_T1_GPO_GPIO_PIN           7
+// <o> "UT_TRIGGER_MODE_T1_GPO" GPIO pin alternate function <0-7>
+#define BOARD_UT_TRIGGER_MODE_T1_GPO_ALTERNATE_FUNCTION 5
+
+// <o> "CAMERA_XSLEEP" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
+// GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12 <13=>
+// GPIO13 <14=> GPIO14 <15=> LPGPIO
+#define BOARD_CAMERA_XSLEEP_GPIO_PORT                   6
+// <o> "CAMERA_XSLEEP" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5
+// <6=> PIN6 <7=> PIN7
+#define BOARD_CAMERA_XSLEEP_GPIO_PIN                    3
 
 // <o> "DAC_OUTPUT_SCLK" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4
 // <5=> GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <10=> GPIO10 <11=> GPIO11 <12=> GPIO12
