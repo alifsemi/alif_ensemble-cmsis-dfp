@@ -167,6 +167,9 @@ void crc_calculate_32bit_unaligned_sw(CRC_Type *crc, crc_transfer_t *transfer)
         if (polynomial_status) {
             /* assign the user polynomial */
             custom = crc_get_custom_poly(crc);
+	} else if ((control_val & CRC_ALGO_SEL) == CRC_32C) {
+	    /* Hardware CRC32C mode: use the Castagnoli polynomial */
+	    custom = CRC_32C_POLY;
         } else {
             /* Assign the 32 bit CRC standard polynomial */
             custom = CRC_STANDARD_POLY;
