@@ -513,9 +513,8 @@ void PDM_AUDIO_DETECT_IRQ_handler(PDM_RESOURCES *PDM_RES)
 
     pdm_audio_detect_irq_handler(PDM_RES->regs, transfer);
 
-    if (transfer->status == PDM_AUDIO_STATUS_DETECTION) {
-        transfer->status = PDM_CAPTURE_STATUS_NONE;
-
+    if (transfer->status & PDM_AUDIO_STATUS_DETECTION) {
+        transfer->status &= ~(PDM_AUDIO_STATUS_DETECTION);
         /* call user callback */
         PDM_RES->cb_event(ARM_PDM_EVENT_AUDIO_DETECTION);
     }
@@ -532,9 +531,14 @@ void PDM_WARNING_IRQ_handler(PDM_RESOURCES *PDM_RES)
     pdm_transfer_t *transfer = &(PDM_RES->transfer);
 
     pdm_warning_irq_handler(PDM_RES->regs, transfer);
+    /* LPPDM has no separate error/audio IRQs; ack both so the combined line can deassert */
+    if (PDM_RES->shared_irq) {
+        (void) PDM_RES->regs->PDM_ERROR_IRQ;
+        (void) PDM_RES->regs->PDM_AUDIO_DETECT_IRQ;
+    }
 
-    if (transfer->status == PDM_CAPTURE_STATUS_COMPLETE) {
-        transfer->status = PDM_CAPTURE_STATUS_NONE;
+    if (transfer->status & PDM_CAPTURE_STATUS_COMPLETE) {
+        transfer->status &= ~(PDM_CAPTURE_STATUS_COMPLETE);
 
         /* call user callback */
         PDM_RES->cb_event(ARM_PDM_EVENT_CAPTURE_COMPLETE);
@@ -1045,15 +1049,15 @@ static int32_t PDMx_Receive(void *data, uint32_t num, PDM_RESOURCES *PDM_RES)
             pdm_receive_blocking(PDM_RES->regs, transfer);
 
             /* Check for error detection status */
-            if (transfer->status == PDM_ERROR_DETECT) {
+            if (transfer->status & PDM_ERROR_DETECT) {
                 PDM_RES->status.rx_overflow = 1U;
-                transfer->status            = PDM_CAPTURE_STATUS_NONE;
+                transfer->status  &= ~(PDM_ERROR_DETECT);
             }
 
             /* Check for capture complete status */
-            if (transfer->status == PDM_CAPTURE_STATUS_COMPLETE) {
+            if (transfer->status & PDM_CAPTURE_STATUS_COMPLETE) {
                 PDM_RES->status.rx_busy = 0U;
-                transfer->status        = PDM_CAPTURE_STATUS_NONE;
+                transfer->status &= ~(PDM_CAPTURE_STATUS_COMPLETE);
             }
         } else
 #endif
@@ -1211,6 +1215,7 @@ static PDM_RESOURCES LPPDM_RES = {.cb_event             = NULL,
                                   .fifo_watermark       = RTE_LPPDM_FIFO_WATERMARK,
                                   .warning_irq          = (IRQn_Type) LPPDM_IRQ_IRQn,
                                   .warning_irq_priority = (uint32_t) RTE_LPPDM_IRQ_PRIORITY,
+                                  .shared_irq = true,
 #if RTE_LPPDM_DMA_ENABLE
                                   .dma_cb           = LPPDM_DMACallback,
                                   .dma_cfg          = &LPPDM_DMA_HW_CONFIG,

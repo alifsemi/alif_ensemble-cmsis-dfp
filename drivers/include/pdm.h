@@ -221,6 +221,8 @@ static inline void pdm_dma_enable_irq(PDM_Type *pdm)
 {
 
     pdm->PDM_IRQ_ENABLE &= ~(PDM0_IRQ_ENABLE); /* Clear IRQ */
+     /* ack leftover overflow */
+    (void) pdm->PDM_ERROR_IRQ;
 
     /* Enable the Interrupt */
     pdm->PDM_IRQ_ENABLE |= (PDM_FIFO_OVERFLOW_IRQ);
@@ -237,6 +239,8 @@ static inline void pdm_enable_irq(PDM_Type *pdm)
     uint32_t audio_ch;
 
     pdm->PDM_IRQ_ENABLE &= ~(PDM0_IRQ_ENABLE); /* Clear IRQ */
+     /* ack leftover overflow */
+    (void) pdm->PDM_ERROR_IRQ;
 
     /* get user enabled channel */
     audio_ch             = ((pdm->PDM_CTL0)) & PDM_CHANNEL_ENABLE;
