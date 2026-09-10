@@ -113,6 +113,28 @@ __STATIC_INLINE void Control_Bit(uint32_t control, uint32_t arg, CRC_RESOURCES *
     }
 }
 
+/**
+ @fn           CRC_ResetToKnownState(CRC_RESOURCES *CRC)
+ @brief        Reset CRC hardware and software state to a known state.
+               Clears the CRC accumulator, configuration, and transfer state.
+ @param[in]    CRC : Pointer to CRC resources
+ @return       none
+ */
+
+__STATIC_INLINE void CRC_ResetToKnownState(CRC_RESOURCES *CRC)
+{
+    /* Reload accumulator with a known seed before clearing configuration. */
+    crc_set_seed(CRC->regs, 0U);
+    crc_enable(CRC->regs);
+
+    /* Clear CRC configuration. */
+    crc_clear_config(CRC->regs);
+
+    /* Clear software state. */
+    CRC->busy     = 0;
+    CRC->transfer = (crc_transfer_t){0};
+}
+
 #if CRC_DMA_ENABLE
 /**
   \fn          int32_t CRC_DMA_Initialize(DMA_PERIPHERAL_CONFIG *dma_periph)
@@ -399,11 +421,13 @@ static int32_t CRC_Uninitialize(CRC_RESOURCES *CRC)
     /* set call back to NULL */
     CRC->cb_event = NULL;
 
-    /* Clear the CRC configuration */
-    crc_clear_config(CRC->regs);
+    /* Reset CRC hardware and software state to a known state. */
+    CRC_ResetToKnownState(CRC);
+
 #if CRC_DMA_ENABLE
     if (CRC->dma_enable) {
         CRC->dma_cfg.dma_handle = -1;
+        CRC->dma_event          = 0U;
     }
 #endif
     /* Reset the state */
@@ -431,8 +455,8 @@ static int32_t CRC_PowerControl(ARM_POWER_STATE status, CRC_RESOURCES *CRC)
     switch (status) {
     case ARM_POWER_OFF:
 
-        /* Clear the CRC configuration */
-        crc_clear_config(CRC->regs);
+        /* Reset CRC hardware and software state to a known state. */
+        CRC_ResetToKnownState(CRC);
 
         /* Reset the power state */
         CRC->state.powered = 0;
@@ -450,8 +474,8 @@ static int32_t CRC_PowerControl(ARM_POWER_STATE status, CRC_RESOURCES *CRC)
             return ARM_DRIVER_OK;
         }
 
-        /* Clear the CRC configuration */
-        crc_clear_config(CRC->regs);
+        /* Reset CRC hardware and software state to a known state. */
+        CRC_ResetToKnownState(CRC);
 
         /* Set the power state enabled */
         CRC->state.powered = 1;
@@ -508,6 +532,19 @@ static int32_t CRC_Control(uint32_t control, uint32_t arg, CRC_RESOURCES *CRC)
     } else {
         switch (control) {
         case ARM_CRC_ALGORITHM_SEL:
+
+    /* Validate algorithm before modifying hardware state. */
+    switch (arg) {
+        case ARM_CRC_ALGORITHM_SEL_8_BIT_CCITT:
+        case ARM_CRC_ALGORITHM_SEL_16_BIT:
+        case ARM_CRC_ALGORITHM_SEL_16_BIT_CCITT:
+        case ARM_CRC_ALGORITHM_SEL_32_BIT:
+        case ARM_CRC_ALGORITHM_SEL_32_BIT_CUSTOM_POLY:
+            break;
+         default:
+        /* Keep the existing hardware configuration unchanged. */
+        return ARM_DRIVER_ERROR_UNSUPPORTED;
+    }
 
             /* clear 8,16 and 32 bit algorithm */
             crc_clear_algo(CRC->regs);
@@ -707,6 +744,8 @@ static int32_t CRC_Compute(const void *data_in, uint32_t len, uint32_t *data_out
 
         /* Unaligned data is not supported, if Bit swap is disabled */
         if ((CRC->transfer.unaligned_len > 0) & !(control_val & CRC_BIT_SWAP)) {
+        /* Clear busy flag before returning on unsupported alignment. */
+        CRC->busy = 0;
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
 
