@@ -639,7 +639,8 @@ static SDHC_STATUS sdhc_config_dma(sd_handle_t *pHsd, uint8_t dmaMask)
 
     /* Host Version 4 Param */
     pHsd->regs->SDMMC_HOST_CTRL2_R = SDHC_HOST_CTRL2_ASYNC_INT_EN_Msk |
-                                     SDHC_HOST_CTRL2_VER4_EN_Msk;
+                                     SDHC_HOST_CTRL2_VER4_EN_Msk |
+                                     SDHC_HOST_CTRL2_CMD23_EN_Msk;
 
     pHsd->regs->SDMMC_HOST_CTRL1_R = dmaMask;
 

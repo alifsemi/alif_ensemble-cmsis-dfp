@@ -27,6 +27,10 @@
 #include "string.h"
 #include "sys_utils.h"
 
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+#include "Driver_IO.h"
+#endif
+
 /* Global SD Handle */
 sd_handle_t Hsd __attribute__((section("sd_dma_buf")));
 
@@ -1023,6 +1027,10 @@ RE_INIT:
  * \brief        Check SD card presence and status
  * \return       sd driver status (OK if card present and ready, ERR if not)
  */
+
+#ifdef BOARD_SD_CARD_DETECT_GPIO_PORT
+ extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_SD_CARD_DETECT_GPIO_PORT);
+#endif
 SD_DRV_STATUS sd_status(void)
 {
     uint32_t card_status;

@@ -136,6 +136,6 @@
 
 #define SOC_FEAT_U55_M1_CAN_ACCESS_HIGHER_ADDRESS (1)
 
-#define SOC_FEAT_SDMMC_SUPPORT_1V8                (1)
+#define SOC_FEAT_SDMMC_SUPPORT_1V8                (0)
 
 #endif /* SOC_FEATURES_H */
