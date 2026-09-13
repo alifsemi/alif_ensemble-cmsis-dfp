@@ -2299,49 +2299,49 @@
         <!-- AE822FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE822FA0E5597/include/" condition="SoC AE822FA0E5597"/>
         <file category="header" name="Device/soc/AE822FA0E5597/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE822FA0E5597"/>
-        <file category="header" name="Device/soc/AE822FA0E5597/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE822FA0E5597"/>
+        <file category="header" name="Device/soc/AE822FA0E5597/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE822FA0E5597"/>
         <file category="include" name="Device/soc/AE822FA0E5597/include/rtss_hp/" condition="SoC AE822FA0E5597 M55_HP"/>
         <file category="include" name="Device/soc/AE822FA0E5597/include/rtss_he/" condition="SoC AE822FA0E5597 M55_HE"/>
 
         <!-- AE402FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE402FA0E5597/include/" condition="SoC AE402FA0E5597"/>
         <file category="header" name="Device/soc/AE402FA0E5597/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE402FA0E5597"/>
-        <file category="header" name="Device/soc/AE402FA0E5597/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE402FA0E5597"/>
+        <file category="header" name="Device/soc/AE402FA0E5597/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE402FA0E5597"/>
         <file category="include" name="Device/soc/AE402FA0E5597/include/rtss_hp/" condition="SoC AE402FA0E5597 M55_HP"/>
         <file category="include" name="Device/soc/AE402FA0E5597/include/rtss_he/" condition="SoC AE402FA0E5597 M55_HE"/>
 
         <!-- AE722F80F55D5 specific files -->
         <file category="include" name="Device/soc/AE722F80F55D5/include/" condition="SoC AE722F80F55D5"/>
         <file category="header" name="Device/soc/AE722F80F55D5/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE722F80F55D5"/>
-        <file category="header" name="Device/soc/AE722F80F55D5/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE722F80F55D5"/>
+        <file category="header" name="Device/soc/AE722F80F55D5/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE722F80F55D5"/>
         <file category="include" name="Device/soc/AE722F80F55D5/include/rtss_hp/" condition="SoC AE722F80F55D5 M55_HP"/>
         <file category="include" name="Device/soc/AE722F80F55D5/include/rtss_he/" condition="SoC AE722F80F55D5 M55_HE"/>
 
         <!-- AE512F80F55D5 specific files -->
         <file category="include" name="Device/soc/AE512F80F55D5/include/" condition="SoC AE512F80F55D5"/>
         <file category="header" name="Device/soc/AE512F80F55D5/config/app_mem_regions.h" version="2.1.0"  attr="config" condition="SoC AE512F80F55D5"/>
-        <file category="header" name="Device/soc/AE512F80F55D5/rte/RTE_Device.h"         version="2.4.0"  attr="config" condition="SoC AE512F80F55D5"/>
+        <file category="header" name="Device/soc/AE512F80F55D5/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE512F80F55D5"/>
         <file category="include" name="Device/soc/AE512F80F55D5/include/rtss_hp/" condition="SoC AE512F80F55D5 M55_HP"/>
         <file category="include" name="Device/soc/AE512F80F55D5/include/rtss_he/" condition="SoC AE512F80F55D5 M55_HE"/>
 
         <!-- AE512F80F5582 specific files -->
         <file category="include" name="Device/soc/AE512F80F5582/include/" condition="SoC AE512F80F5582"/>
         <file category="header" name="Device/soc/AE512F80F5582/config/app_mem_regions.h" version="2.1.0"  attr="config" condition="SoC AE512F80F5582"/>
-        <file category="header" name="Device/soc/AE512F80F5582/rte/RTE_Device.h"         version="2.4.0"  attr="config" condition="SoC AE512F80F5582"/>
+        <file category="header" name="Device/soc/AE512F80F5582/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE512F80F5582"/>
         <file category="include" name="Device/soc/AE512F80F5582/include/rtss_hp/" condition="SoC AE512F80F5582 M55_HP"/>
         <file category="include" name="Device/soc/AE512F80F5582/include/rtss_he/" condition="SoC AE512F80F5582 M55_HE"/>
 
         <!-- AE302F80F55D5 specific files -->
         <file category="include" name="Device/soc/AE302F80F55D5/include/" condition="SoC AE302F80F55D5"/>
         <file category="header" name="Device/soc/AE302F80F55D5/config/app_mem_regions.h" version="2.1.0"  attr="config" condition="SoC AE302F80F55D5"/>
-        <file category="header" name="Device/soc/AE302F80F55D5/rte/RTE_Device.h"         version="2.4.0"  attr="config" condition="SoC AE302F80F55D5"/>
+        <file category="header" name="Device/soc/AE302F80F55D5/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE302F80F55D5"/>
         <file category="include" name="Device/soc/AE302F80F55D5/include/rtss_hp/" condition="SoC AE302F80F55D5 M55_HP"/>
         <file category="include" name="Device/soc/AE302F80F55D5/include/rtss_he/" condition="SoC AE302F80F55D5 M55_HE"/>
 
         <!-- AE302F80F5582 specific files -->
         <file category="include" name="Device/soc/AE302F80F5582/include/" condition="SoC AE302F80F5582"/>
         <file category="header" name="Device/soc/AE302F80F5582/config/app_mem_regions.h" version="2.1.0"  attr="config" condition="SoC AE302F80F5582"/>
-        <file category="header" name="Device/soc/AE302F80F5582/rte/RTE_Device.h"         version="2.4.0"  attr="config" condition="SoC AE302F80F5582"/>
+        <file category="header" name="Device/soc/AE302F80F5582/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE302F80F5582"/>
         <file category="include" name="Device/soc/AE302F80F5582/include/rtss_hp/" condition="SoC AE302F80F5582 M55_HP"/>
         <file category="include" name="Device/soc/AE302F80F5582/include/rtss_he/" condition="SoC AE302F80F5582 M55_HE"/>
 
@@ -2350,7 +2350,7 @@
         <!-- AE1C1F4051920 specific files -->
         <file category="include" name="Device/soc/AE1C1F4051920/include/" condition="SoC AE1C1F4051920"/>
         <file category="header" name="Device/soc/AE1C1F4051920/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE1C1F4051920"/>
-        <file category="header" name="Device/soc/AE1C1F4051920/rte/RTE_Device.h"         version="2.5.0"  attr="config" condition="SoC AE1C1F4051920"/>
+        <file category="header" name="Device/soc/AE1C1F4051920/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE1C1F4051920"/>
         <file category="include" name="Device/soc/AE1C1F4051920/include/rtss_he/" condition="SoC AE1C1F4051920 M55_HE"/>
 
         <!-- Baremetal Common Templates for HP and HE Core -->

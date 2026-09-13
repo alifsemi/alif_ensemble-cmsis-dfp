@@ -864,6 +864,38 @@ void i2c_slave_tx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer);
  */
 void i2c_slave_rx_isr(I2C_Type *i2c, i2c_transfer_info_t *transfer);
 
+/**
+ * @brief    i2c master transmit data using blocking method
+ * @param    i2c      : Pointer to i2c register map
+ * @param    transfer : Pointer to i2c_transfer_info_t
+ * @retval   none
+ */
+void i2c_master_tx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer);
+
+/**
+ * @brief    I2C master receive data using blocking mode
+ * @param    i2c       : Pointer to I2C register map
+ * @param    transfer  : Pointer to I2C transfer structure
+ * @retval   none
+ */
+void i2c_master_rx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer);
+
+/**
+ * @brief    I2C slave transmit data using blocking method
+ * @param    i2c       : Pointer to i2c register map
+ * @param    transfer  : Pointer to i2c_transfer_info_t
+ * @retval   none
+ */
+void i2c_slave_tx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer);
+
+/**
+ * @brief    I2C slave receive data using blocking method
+ * @param    i2c       : Pointer to i2c register map
+ * @param    transfer  : Pointer to i2c_transfer_info_t
+ * @retval   none
+ */
+void i2c_slave_rx_blocking(I2C_Type *i2c, i2c_transfer_info_t *transfer);
+
 #ifdef __cplusplus
 }
 #endif
