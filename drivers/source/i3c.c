@@ -331,7 +331,7 @@ static void i3c_dispatch_xfer_cmd(I3C_Type *i3c, i3c_xfer_t *xfer)
 
         /* Add Command present macro if command is present or
          * is a HDR-DDR communicatoin */
-        if ((xfer->xfer_cmd.cmd_id) || (xfer->xfer_cmd.speed == I3C_SPEED_HDR_DDR)) {
+        if ((xfer->xfer_cmd.cmd_id) || (xfer->xfer_cmd.speed == I3C_SPD_HDR_DDR)) {
             xfer->xfer_cmd.cmd_lo |= I3C_COMMAND_QUEUE_PORT_CP;
 
             /* Add Defining byte */
