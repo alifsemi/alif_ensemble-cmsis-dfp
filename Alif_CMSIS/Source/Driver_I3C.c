@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(9, 0) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(9, 2) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -1161,6 +1161,50 @@ static bool I3Cx_DiscKick(I3C_RESOURCES *i3c)
 }
 
 /**
+  \fn           uint8_t I3Cx_CccSpeed(I3C_RESOURCES *i3c, bool is_read)
+  \brief        SDR grade for a CCC staged in i3c->xfer.
+                A direct CCC uses that target's GETMXDS grade. A
+                broadcast CCC uses the slowest attached I3C target.
+                Outside NORMAL, EXT_LCNT is 0, so the grade stays SDR0.
+  \param[in]    i3c     : Pointer to i3c resources structure
+  \param[in]    is_read : true for a read CCC, false for a write CCC
+  \return       command SPEED value
+*/
+static uint8_t I3Cx_CccSpeed(I3C_RESOURCES *i3c, bool is_read)
+{
+    uint8_t speed = I3C_SPEED_SDR0;
+    uint8_t pos;
+    uint8_t grade;
+
+    if (!i3c->state.scl_normal) {
+        return I3C_SPEED_SDR0;
+    }
+
+    if (i3c->xfer.xfer_cmd.cmd_id & I3C_CCC_DIRECT) {
+        pos = i3c->xfer.xfer_cmd.addr_index;
+        if (!I3Cx_DiscSlotIsI3c(i3c, pos)) {
+            return I3C_SPEED_SDR0;
+        }
+        grade = is_read ? i3c->targets.profile[pos].speed_rd
+                        : i3c->targets.profile[pos].speed_wr;
+        return I3Cx_SdrGrade(grade);
+    }
+
+    for (pos = 0U; pos < i3c->targets.maxdevs; pos++) {
+        if (!I3Cx_DiscSlotIsI3c(i3c, pos)) {
+            continue;
+        }
+        grade = is_read ? i3c->targets.profile[pos].speed_rd
+                        : i3c->targets.profile[pos].speed_wr;
+        grade = I3Cx_SdrGrade(grade);
+        if (grade > speed) {
+            speed = grade;
+        }
+    }
+    return speed;
+}
+
+/**
   \fn           void I3Cx_DiscOnGetDone(I3C_RESOURCES *i3c)
   \brief        Handles a successful discovery GET. Stores BCR; queues
                 GETMXDS only if BCR[0] is set, else SDR0 and finish slot.
@@ -1216,6 +1260,38 @@ static void I3Cx_DiscOnError(I3C_RESOURCES *i3c)
     }
     I3Cx_DiscFinishSlot(i3c);
 }
+
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+/**
+  \fn           void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+  \brief        Runs GETBCR/GETMXDS for every pending DAT slot in
+                blocking mode (same MIPI rules as the IRQ chain).
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+{
+    i3c->disc.pos  = 0U;
+    i3c->disc.step = I3C_DISC_GETBCR;
+
+    while (I3Cx_DiscNextGet(i3c)) {
+        i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
+        i3c->status.rx_busy = 0U;
+
+        if (i3c->xfer.status & I3C_XFER_STATUS_DONE) {
+            I3Cx_DiscOnGetDone(i3c);
+        } else {
+            I3Cx_DiscOnError(i3c);
+            /* A short GET can leave its byte in the RX FIFO. */
+            i3c_flush_rx_fifo(i3c->regs);
+            i3c_clear_xfer_error(i3c->regs);
+            i3c_resume(i3c->regs);
+        }
+    }
+    i3c->xfer.rx_buf = NULL;
+    i3c->xfer.rx_len = 0U;
+}
+#endif
 
 /**
   \fn           ARM_DRIVER_VERSION I3C_GetVersion(void)
@@ -1437,7 +1513,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
         i3c->xfer.xfer_cmd.addr_depth = 1U;
         i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
         i3c->xfer.xfer_cmd.data_len   = ccc->len;
-        i3c->xfer.xfer_cmd.speed      = I3C_SPEED_SDR0;
+        i3c->xfer.xfer_cmd.speed      = I3Cx_CccSpeed(i3c, true);
         i3c->status.rx_busy           = 1;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
@@ -1481,7 +1557,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
             i3c->xfer.xfer_cmd.addr_depth = 1U;
             i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
             i3c->xfer.xfer_cmd.data_len   = ccc->len;
-            i3c->xfer.xfer_cmd.speed      = I3C_SPEED_SDR0;
+            i3c->xfer.xfer_cmd.speed      = I3Cx_CccSpeed(i3c, false);
             i3c->status.tx_busy           = 1;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
@@ -2072,11 +2148,13 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
             /* Error during address assignment,
              * so remove slave from Device address table */
             I3C_DetachSlaves(i3c, i3c->xfer.rx_len, i3c->xfer.xfer_cmd.cmd_id);
-            i3c->targets.last_asgd_addr_pos = 0U;
-
             i3c_resume(i3c->regs);
+            /* Assigned targets still need GETBCR/GETMXDS. */
+            I3Cx_DiscRunBlocking(i3c);
             return ARM_DRIVER_ERROR;
         }
+        /* GETBCR/GETMXDS walk after ADDR_ASSIGN_DONE */
+        I3Cx_DiscRunBlocking(i3c);
     } else
 #endif
     {
@@ -2218,7 +2296,6 @@ static int I3Cx_DetachSlvDev(I3C_RESOURCES *i3c, uint8_t addr)
 */
 static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
 {
-    I3C_I2C_SPEED_MODE i2c_speed_mode = 0;
     uint8_t            slv_addr       = 0U;
     int32_t            pos            = 0;
     uint8_t            retry_cnt      = 0U;
@@ -2262,53 +2339,41 @@ static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
     case I3C_MASTER_SET_BUS_MODE:
 
         switch (arg) {
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS:
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS:
-        case I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS:
+        case I3C_BUS_MODE_MIXED_FAST:
         case I3C_BUS_MODE_MIXED_LIMITED:
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FMP_1_MBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FM_400_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_SS_100_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_LIMITED) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_LIMITED;
-            }
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i2c clock configuration for selected Speed mode. */
-            i2c_clk_cfg(i3c->regs, i3c->core_clk, i2c_speed_mode);
-
-            /* fall through */
-        case I3C_BUS_SLOW_MODE:
-
-            if (!(i3c->core_clk)) {
-                return ARM_DRIVER_ERROR;
-            }
-
-            /* i3c clock configuration */
+            /* Both I2C SCL banks; Fm vs Fm+ is AttachSlvDev SPEED */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_MIXED_FAST);
             i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
+            i3c->state.scl_normal = 0U;
+            break;
+
+        case I3C_BUS_MODE_I2C_SS:
+            if (!(i3c->core_clk)) {
+                return ARM_DRIVER_ERROR;
+            }
+            /* FM bank = 100 kHz; Attach SPEED must be 0 (I3C_XFER_SPEED_I2C_SS) */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_SS_100_KBPS);
+            break;
+
+        case I3C_BUS_SLOW_MODE:
+            if (!(i3c->core_clk)) {
+                return ARM_DRIVER_ERROR;
+            }
+            /* i3c slow bus clock configuration */
+            i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
+            i3c->state.scl_normal = 0U;
             break;
 
         case I3C_BUS_NORMAL_MODE:
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i3c clock configuration */
+            /* i3c normal bus clock configuration */
             i3c_normal_bus_clk_cfg(i3c->regs, i3c->core_clk);
+            i3c->state.scl_normal = 1U;
             break;
 
         default:
