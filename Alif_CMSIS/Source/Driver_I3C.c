@@ -1181,6 +1181,36 @@ static void I3Cx_DiscOnError(I3C_RESOURCES *i3c)
     I3Cx_DiscFinishSlot(i3c);
 }
 
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+/**
+  \fn           void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+  \brief        Runs GETBCR/GETMXDS for every pending DAT slot in
+                blocking mode (same MIPI rules as the IRQ chain).
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+{
+    i3c->disc.pos  = 0U;
+    i3c->disc.step = I3C_DISC_GETBCR;
+
+    while (I3Cx_DiscNextGet(i3c)) {
+        i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
+        i3c->status.rx_busy = 0U;
+
+        if (i3c->xfer.status & I3C_XFER_STATUS_DONE) {
+            I3Cx_DiscOnGetDone(i3c);
+        } else {
+            /* GET NACK: SDR0 for this slot */
+            I3Cx_DiscOnError(i3c);
+            i3c_resume(i3c->regs);
+        }
+    }
+    i3c->xfer.rx_buf = NULL;
+    i3c->xfer.rx_len = 0U;
+}
+#endif
+
 /**
   \fn           ARM_DRIVER_VERSION I3C_GetVersion(void)
   \brief        Get i3c driver version
@@ -2025,6 +2055,8 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
             i3c_resume(i3c->regs);
             return ARM_DRIVER_ERROR;
         }
+        /* GETBCR/GETMXDS walk after ADDR_ASSIGN_DONE */
+        I3Cx_DiscRunBlocking(i3c);
     } else
 #endif
     {
