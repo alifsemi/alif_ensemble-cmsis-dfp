@@ -67,7 +67,8 @@ typedef volatile struct _I3C_DRIVER_STATE {
     uint32_t powered    : 1;  /* Driver powered        */
     uint32_t is_master  : 1;  /* Driver master mode    */
     uint32_t enabled    : 1;  /* Driver enabled        */
-    uint32_t reserved   : 28; /* Reserved              */
+    uint32_t scl_normal : 1;  /* 1: NORMAL programmed EXT_LCNT for SDR1-4 */
+    uint32_t reserved   : 27; /* Reserved              */
 } I3C_DRIVER_STATE;
 
 /**
