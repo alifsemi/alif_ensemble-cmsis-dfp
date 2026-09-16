@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(9, 0) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(9, 2) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -1205,6 +1205,36 @@ static void I3Cx_DiscOnError(I3C_RESOURCES *i3c)
     I3Cx_DiscFinishSlot(i3c);
 }
 
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+/**
+  \fn           void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+  \brief        Runs GETBCR/GETMXDS for every pending DAT slot in
+                blocking mode (same MIPI rules as the IRQ chain).
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+{
+    i3c->disc.pos  = 0U;
+    i3c->disc.step = I3C_DISC_GETBCR;
+
+    while (I3Cx_DiscNextGet(i3c)) {
+        i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
+        i3c->status.rx_busy = 0U;
+
+        if (i3c->xfer.status & I3C_XFER_STATUS_DONE) {
+            I3Cx_DiscOnGetDone(i3c);
+        } else {
+            /* GET NACK: SDR0 for this slot */
+            I3Cx_DiscOnError(i3c);
+            i3c_resume(i3c->regs);
+        }
+    }
+    i3c->xfer.rx_buf = NULL;
+    i3c->xfer.rx_len = 0U;
+}
+#endif
+
 /**
   \fn           ARM_DRIVER_VERSION I3C_GetVersion(void)
   \brief        Get i3c driver version
@@ -2058,6 +2088,8 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
             i3c_resume(i3c->regs);
             return ARM_DRIVER_ERROR;
         }
+        /* GETBCR/GETMXDS walk after ADDR_ASSIGN_DONE */
+        I3Cx_DiscRunBlocking(i3c);
     } else
 #endif
     {
@@ -2199,7 +2231,6 @@ static int I3Cx_DetachSlvDev(I3C_RESOURCES *i3c, uint8_t addr)
 */
 static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
 {
-    I3C_I2C_SPEED_MODE i2c_speed_mode = 0;
     uint8_t            slv_addr       = 0U;
     int32_t            pos            = 0;
     uint8_t            retry_cnt      = 0U;
@@ -2243,52 +2274,37 @@ static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
     case I3C_MASTER_SET_BUS_MODE:
 
         switch (arg) {
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS:
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS:
-        case I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS:
+        case I3C_BUS_MODE_MIXED_FAST:
         case I3C_BUS_MODE_MIXED_LIMITED:
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FMP_1_MBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FM_400_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_SS_100_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_LIMITED) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_LIMITED;
-            }
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
+            /* Both I2C SCL banks; Fm vs Fm+ is AttachSlvDev SPEED */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_MIXED_FAST);
+            i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
+            break;
 
-            /* i2c clock configuration for selected Speed mode. */
-            i2c_clk_cfg(i3c->regs, i3c->core_clk, i2c_speed_mode);
+        case I3C_BUS_MODE_I2C_SS:
+            if (!(i3c->core_clk)) {
+                return ARM_DRIVER_ERROR;
+            }
+            /* FM bank = 100 kHz; Attach SPEED must be 0 (I3C_XFER_SPEED_I2C_SS) */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_SS_100_KBPS);
+            break;
 
-            /* fall through */
         case I3C_BUS_SLOW_MODE:
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i3c clock configuration */
+            /* i3c slow bus clock configuration */
             i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
             break;
 
         case I3C_BUS_NORMAL_MODE:
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i3c clock configuration */
+            /* i3c normal bus clock configuration */
             i3c_normal_bus_clk_cfg(i3c->regs, i3c->core_clk);
             break;
 
