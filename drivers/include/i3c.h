@@ -75,8 +75,7 @@ extern "C" {
 
 #define I3C_SDA_TX_HOLD_TIME_MAX           0x7U
 
-#define I3C_SPEED_HDR_DDR                  0x6U
-#define I3C_SPEED_SDR0                     0x0U
+#define I3C_SPD_HDR_DDR                   (0x6U)
 #define I3C_NEXT_SLAVE_ADDR_OFFSET         0x9U
 
 #define I3C_HOT_JOIN_ID                    0x4U /* MIPI std val: 2. Here it's stored in bit 2 of reg. So val:4 */
