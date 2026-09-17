@@ -3312,6 +3312,7 @@
         <file category="header" name="drivers/include/ospi.h"/>
         <file category="header" name="drivers/include/sys_ctrl_ospi.h"/>
         <file category="header" name="drivers/include/sys_ctrl_aes.h"/>
+        <file category="header" name="drivers/include/ospi_delay.h"/>
       </files>
     </component>
 

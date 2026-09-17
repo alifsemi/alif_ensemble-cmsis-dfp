@@ -669,9 +669,10 @@ void ospi_dma_transfer(OSPI_Type *ospi, ospi_transfer_t *transfer);
  * \param[in]   ospi          Pointer to the OSPI register map
  * \param[in]   wait_cycles   Wait cycles for the RAM device
  * \param[in]   is_dual_octal OSPI transfer type is Dual Octal
+ * \param[in]   rxds_sig_en   Enable RXDS signaling
  * \return      none
  */
-void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal);
+void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal, bool rxds_sig_en);
 
 /**
   \fn          void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal)
@@ -681,7 +682,7 @@ void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal
   \param[in]   is_dual_octal OSPI transfer type is Dual Octal
   \return      none
 */
-void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal);
+void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal, bool rxds_sig_en);
 
 /**
   \fn          void ospi_hyperbus_send(OSPI_Type *spi, ospi_transfer_t *transfer)

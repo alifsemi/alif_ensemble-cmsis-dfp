@@ -162,6 +162,7 @@ extern "C" {
 #define ARM_OSPI_SET_FRAME_FORMAT           (0x16UL << ARM_OSPI_CONTROL_POS)
 #define ARM_OSPI_SET_DDR_MODE               (0x17UL << ARM_OSPI_CONTROL_POS)
 #define ARM_OSPI_SET_INST_LENGTH            (0x18UL << ARM_OSPI_CONTROL_POS)
+#define ARM_OSPI_SET_SIGNAL_DELAY_CFG       (0x19UL << ARM_OSPI_CONTROL_POS) ///< Set OSPI signal delay cfg; arg = pointer to ospi_delay_cfg_t
 
 /*----- OSPI Custom Control codes -----*/
 

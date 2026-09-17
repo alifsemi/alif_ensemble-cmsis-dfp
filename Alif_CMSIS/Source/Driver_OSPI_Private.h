@@ -30,6 +30,7 @@ extern "C" {
 
 #include "Driver_OSPI.h"
 #include "ospi.h"
+#include "ospi_delay.h"
 #include "sys_clocks.h"
 #include "sys_ctrl_aes.h"
 #include "sys_ctrl_ospi.h"
@@ -85,7 +86,7 @@ typedef struct _OSPI_RESOURCES {
     uint8_t  rxds_delay;          /* RXDS delay */
     uint8_t  chip_selection_pin;  /* chip selection pin from 0-3 */
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-    uint8_t signal_delay; /* delay for OSPI signals */
+    ospi_delay_cfg_t signal_delay; /* delay config for OSPI signals */
 #endif
 } OSPI_RESOURCES;
 

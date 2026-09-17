@@ -58,9 +58,6 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
             aes_set_baud2_delay(aes);
         }
 #elif SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-        {
-            aes_set_signal_delay(aes, config->signal_delay);
-        }
 #else
         {
             ARG_UNUSED(aes);
@@ -68,6 +65,25 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
         }
 #endif
     }
+
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    // Configure OSPI signal delays if the values are calibrated for the chosen frequency
+    if (config->signal_delay &&
+        config->signal_delay->idx == config->instance &&
+        config->signal_delay->sclk_freq == config->bus_speed) {
+        aes_set_signal_delay(aes, config->signal_delay);
+    } else {
+        // Set zero signal delays and default RXDS for non-calibrated frequency (backwards compatibility)
+        ospi_delay_cfg_t signal_delay = { 0 };
+        signal_delay.idx = config->instance;
+        signal_delay.rxds[0] = config->rxds_delay;
+        signal_delay.rxds[1] = config->rxds_delay;
+        aes_set_signal_delay(aes, &signal_delay);
+    }
+#else
+    aes_set_rxds_delay(aes, config->rxds_delay);
+#endif
+
     ospi_set_baud(ospi, baud);
 
     return 0;
@@ -99,6 +115,10 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
         return -1;
     }
 
+    if (config->config_mode != CONFIG_MODE_USER_PARAMETERS) {
+        config->rxds_sig_en = config->ram_type == RAM_TYPE_HYPERRAM;
+    }
+
     if (config->instance == OSPI_INSTANCE_0) {
         ospi = (OSPI_Type *) OSPI0_BASE;
         aes  = (AES_Type *) AES0_BASE;
@@ -109,7 +129,7 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
             config->ddr_drive_edge = RTE_OSPI0_DDR_DRIVE_EDGE;
             config->rxds_delay = RTE_OSPI0_RXDS_DELAY;
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-            config->signal_delay = RTE_OSPI0_SIGNAL_DELAY;
+            config->signal_delay = NULL;
 #endif
             config->dfs = RTE_OSPI0_DFS;
             config->slave_select = RTE_OSPI0_CHIP_SELECTION_PIN;
@@ -126,7 +146,7 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
             config->ddr_drive_edge = RTE_OSPI1_DDR_DRIVE_EDGE;
             config->rxds_delay = RTE_OSPI1_RXDS_DELAY;
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-            config->signal_delay = RTE_OSPI1_SIGNAL_DELAY;
+            config->signal_delay = NULL;
 #endif
             config->dfs = RTE_OSPI1_DFS;
             config->slave_select = RTE_OSPI1_CHIP_SELECTION_PIN;
@@ -147,8 +167,6 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
         return -1;
     }
 
-    aes_set_rxds_delay(aes, config->rxds_delay);
-
     if (config->spi_frf == OSPI_SPI_FRF_DUAL_OCTAL) {
         is_dual_octal = 1;
     }
@@ -166,13 +184,13 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
 
     if (config->ram_type == RAM_TYPE_HYPERRAM) {
         /* Initialize OSPI hyperbus xip configuration */
-        ospi_hyperbus_xip_init(ospi, config->wait_cycles, is_dual_octal);
+        ospi_hyperbus_xip_init(ospi, config->wait_cycles, is_dual_octal, config->rxds_sig_en);
     } else if (config->ram_type == RAM_TYPE_PSRAM) {
         /* Initialize OSPI psram xip configuration */
         if (config->wait_cycles == 0) {
             return -1;
         }
-        ospi_psram_xip_cfg(ospi, config->wait_cycles-1, is_dual_octal);
+        ospi_psram_xip_cfg(ospi, config->wait_cycles-1, is_dual_octal, config->rxds_sig_en);
     } else {
         return -1;
     }
