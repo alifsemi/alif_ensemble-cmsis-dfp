@@ -399,13 +399,11 @@ extern "C" {
 #define I3C_DEV_ADDR_TABLE_LOC1_DEV_STATIC_ADDR(x)  ((x) & GENMASK(6, 0))
 
 /**
- \brief I3C Control Codes: I2C Bus Speed mode
+ \brief I2C SCL bank programming for mixed-bus.
  */
 typedef enum {
-    I3C_I2C_SPEED_MODE_FMP_1_MBPS  = 0, /* Speed: Fast Mode Plus    1 MBPS */
-    I3C_I2C_SPEED_MODE_FM_400_KBPS = 1, /* Speed: Fast Mode       400 KBPS */
-    I3C_I2C_SPEED_MODE_SS_100_KBPS = 2, /* Speed: Standard Mode   100 KBPS */
-    I3C_I2C_SPEED_MODE_LIMITED     = 3  /* Speed: Limited                  */
+    I3C_I2C_SPEED_MODE_MIXED_FAST  = 0, /* Load FM 400 kHz and FMP 1 MHz banks */
+    I3C_I2C_SPEED_MODE_SS_100_KBPS = 1  /* FM bank = Standard Mode 100 kHz    */
 } I3C_I2C_SPEED_MODE;
 
 /**
@@ -1456,9 +1454,8 @@ void i3c_normal_bus_clk_cfg(I3C_Type *i3c, const uint32_t core_clk);
   \param[in]    i3c             : Pointer to i3c register set structure
   \param[in]    core_clk        : core clock
   \param[in]    i2c_speed_mode  : i2c Speed mode
-                 I3C_I2C_SPEED_MODE_FMP_1_MBPS  : Fast Mode Plus 1   MBPS
-                 I3C_I2C_SPEED_MODE_FM_400_KBPS : Fast Mode      400 KBPS
-                 I3C_I2C_SPEED_MODE_SS_100_KBPS : Standard Mode  100 KBPS
+                 I3C_I2C_SPEED_MODE_MIXED_FAST  : load FM and FMP banks
+                 I3C_I2C_SPEED_MODE_SS_100_KBPS : FM bank = 100 kHz
   \return        none
 */
 void i2c_clk_cfg(I3C_Type *i3c, uint32_t core_clk, I3C_I2C_SPEED_MODE i2c_speed_mode);

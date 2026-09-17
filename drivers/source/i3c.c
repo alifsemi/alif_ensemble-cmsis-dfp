@@ -1180,9 +1180,8 @@ void i3c_normal_bus_clk_cfg(I3C_Type *i3c, const uint32_t core_clk)
   \param[in]    i3c             : Pointer to i3c register set structure
   \param[in]    core_clk        : core clock
   \param[in]    i2c_speed_mode  : i2c Speed mode
-                 I3C_I2C_SPEED_MODE_FMP_1_MBPS  : Fast Mode Plus 1   MBPS
-                 I3C_I2C_SPEED_MODE_FM_400_KBPS : Fast Mode      400 KBPS
-                 I3C_I2C_SPEED_MODE_SS_100_KBPS : Standard Mode  100 KBPS
+                 I3C_I2C_SPEED_MODE_MIXED_FAST  : load FM and FMP banks
+                 I3C_I2C_SPEED_MODE_SS_100_KBPS : FM bank = 100 kHz
   \return        none
 */
 void i2c_clk_cfg(I3C_Type *i3c, uint32_t core_clk, I3C_I2C_SPEED_MODE i2c_speed_mode)
@@ -1194,48 +1193,28 @@ void i2c_clk_cfg(I3C_Type *i3c, uint32_t core_clk, I3C_I2C_SPEED_MODE i2c_speed_
     uint32_t      scl_timing  = 0U;
 
     core_rate                 = core_clk;
-
-    /* Calculate core clk period */
     core_period               = DIV_ROUND_UP(REF_CLK_RATE, core_rate);
 
-    /* Speed Mode: Fast Mode Plus >1 MBPS (approximately 3.124 MBPS) */
-    if (i2c_speed_mode == I3C_I2C_SPEED_MODE_FMP_1_MBPS) {
-        /* Calculate the SCL clock high period and low period count for
-         *  I2C Fast Mode Plus transfers. */
-        lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FMP_TLOW_MIN_NS, core_period);
-        hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_PLUS_SCL_RATE) - lcnt;
-
-        scl_timing =
-            (I3C_SCL_I2C_FMP_TIMING_I2C_FMP_HCNT(hcnt) | I3C_SCL_I2C_FMP_TIMING_I2C_FMP_LCNT(lcnt));
-
-        i3c->I3C_SCL_I2C_FMP_TIMING = scl_timing;
-    }
-
-    /* Speed Mode: Fast Mode 400 KBPS */
-    if (i2c_speed_mode == I3C_I2C_SPEED_MODE_FM_400_KBPS) {
-        /* Calculate the SCL clock high period and low period count for
-         *  I2C Fast Mode transfers. */
-        lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FM_TLOW_MIN_NS, core_period);
-        hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_SCL_RATE) - lcnt;
-
-        scl_timing =
-            (I3C_SCL_I2C_FM_TIMING_I2C_FM_HCNT(hcnt) | I3C_SCL_I2C_FM_TIMING_I2C_FM_LCNT(lcnt));
-
-        /* Set the high and low period count for FM mode */
-        i3c->I3C_SCL_I2C_FM_TIMING = scl_timing;
-    }
-
-    /* Speed Mode: Standard Mode 100 KBPS */
     if (i2c_speed_mode == I3C_I2C_SPEED_MODE_SS_100_KBPS) {
-        /* Calculate the SCL clock high period and low period count for
-         *  I2C Fast Mode transfers. */
+        /* SS shares the FM timing register; command SPEED=0 then means 100 kHz */
         lcnt = DIV_ROUND_UP(I3C_BUS_I2C_SS_TLOW_MIN_NS, core_period);
         hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_SS_SCL_RATE) - lcnt;
-
         scl_timing =
             (I3C_SCL_I2C_FM_TIMING_I2C_FM_HCNT(hcnt) | I3C_SCL_I2C_FM_TIMING_I2C_FM_LCNT(lcnt));
-
         i3c->I3C_SCL_I2C_FM_TIMING = scl_timing;
+    } else {
+        /* Mixed Fast / Limited: load both banks so Attach SPEED 0=FM, 1=FMP */
+        lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FM_TLOW_MIN_NS, core_period);
+        hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_SCL_RATE) - lcnt;
+        scl_timing =
+            (I3C_SCL_I2C_FM_TIMING_I2C_FM_HCNT(hcnt) | I3C_SCL_I2C_FM_TIMING_I2C_FM_LCNT(lcnt));
+        i3c->I3C_SCL_I2C_FM_TIMING = scl_timing;
+
+        lcnt = DIV_ROUND_UP(I3C_BUS_I2C_FMP_TLOW_MIN_NS, core_period);
+        hcnt = DIV_ROUND_UP(core_rate, I3C_BUS_I2C_FM_PLUS_SCL_RATE) - lcnt;
+        scl_timing =
+            (I3C_SCL_I2C_FMP_TIMING_I2C_FMP_HCNT(hcnt) | I3C_SCL_I2C_FMP_TIMING_I2C_FMP_LCNT(lcnt));
+        i3c->I3C_SCL_I2C_FMP_TIMING = scl_timing;
     }
 
     /* set the Bus free time for initiating the transfer in master mode.*/
