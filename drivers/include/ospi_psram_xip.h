@@ -26,6 +26,7 @@
 #include "soc_features.h"
 #include "sys_ctrl_ospi.h"
 #include "sys_ctrl_aes.h"
+#include "ospi_delay.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,8 +97,7 @@ typedef struct _ospi_psram_xip_config {
     CONFIG_MODE config_mode;
 
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-    /**< Delay applied to the OSPI baud2 signal delay */
-    uint8_t signal_delay;
+    ospi_delay_cfg_t signal_delay;
 #endif
 
 } ospi_psram_xip_config;

@@ -58,9 +58,6 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
             aes_set_baud2_delay(aes);
         }
 #elif SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-        {
-            aes_set_signal_delay(aes, config->signal_delay);
-        }
 #else
         {
             ARG_UNUSED(aes);
@@ -68,6 +65,21 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
         }
 #endif
     }
+
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    // Configure OSPI signal delays if the values are calibrated for the chosen frequency
+    if (config->signal_delay.idx == config->instance &&
+        config->signal_delay.sclk_freq == config->bus_speed) {
+        aes_set_signal_delay(aes, &config->signal_delay);
+    } else {
+        // Set zero signal delays and default RXDS for non-calibrated frequncy (backwards compatibility)
+        ospi_delay_cfg_t signal_delay = { 0 };
+        signal_delay.idx = config->instance;
+        signal_delay.rxds[0] = config->rxds_delay;
+        signal_delay.rxds[1] = config->rxds_delay;
+        aes_set_signal_delay(aes, &signal_delay);
+    }
+#endif
     ospi_set_baud(ospi, baud);
 
     return 0;
@@ -109,7 +121,7 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
             config->ddr_drive_edge = RTE_OSPI0_DDR_DRIVE_EDGE;
             config->rxds_delay = RTE_OSPI0_RXDS_DELAY;
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-            config->signal_delay = RTE_OSPI0_SIGNAL_DELAY;
+            config->signal_delay.idx = OSPI_DELAY_INVALID_IDX;
 #endif
             config->dfs = RTE_OSPI0_DFS;
             config->slave_select = RTE_OSPI0_CHIP_SELECTION_PIN;
@@ -126,7 +138,7 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
             config->ddr_drive_edge = RTE_OSPI1_DDR_DRIVE_EDGE;
             config->rxds_delay = RTE_OSPI1_RXDS_DELAY;
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-            config->signal_delay = RTE_OSPI1_SIGNAL_DELAY;
+            config->signal_delay.idx = OSPI_DELAY_INVALID_IDX;
 #endif
             config->dfs = RTE_OSPI1_DFS;
             config->slave_select = RTE_OSPI1_CHIP_SELECTION_PIN;
