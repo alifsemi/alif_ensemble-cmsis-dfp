@@ -16,7 +16,7 @@ extern "C" {
 
 #include "Driver_Common.h"
 
-#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 2) /* API version */
+#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 3) /* API version */
 
 /****** I3C Control Codes *****/
 
@@ -45,17 +45,15 @@ extern "C" {
 #define I3C_MASTER_BUS_RESET                                                                       \
     (1UL << 13)  ///< Reset the bus; arg: ref "I3C Control arguments: For Bus Reset arguments"
 
-/* I3C Control Codes: Bus mode arguments */
-#define I3C_BUS_SLOW_MODE (0x00UL)  ///< Slow bus mode for pure i3c devices - For slave addressing
-#define I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS                                               \
-    (0x01UL)  ///< Mixed i3c + i2c device, Speed: Fast Mode Plus   1 MBPS
-#define I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS                                              \
-    (0x02UL)  ///< Mixed i3c + i2c device, Speed: Fast Mode      400 KBPS
-#define I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS                                              \
-    (0x03UL)  ///< Mixed i3c + i2c device, Speed: Standard Mode  100 KBPS
-#define I3C_BUS_MODE_MIXED_LIMITED (0x04UL)
-#define I3C_BUS_NORMAL_MODE                                                                        \
-    (0x05UL)  ///< Normal bus mode for pure i3c devices - For actual data comm
+/* I3C Control Codes: Bus mode arguments
+ * Topology (mixed) vs I3C SCL profile (SLOW/NORMAL) are separate.
+ * I2C Fm vs Fm+ is per target via AttachSlvDev xfer_speed, not bus mode.
+ */
+#define I3C_BUS_SLOW_MODE          (0x00UL)  ///< I3C OD/PP for DAA / addressing (~2 MHz)
+#define I3C_BUS_MODE_MIXED_FAST    (0x01UL)  ///< MIPI Mixed Fast: I2C present, program FM+FMP banks
+#define I3C_BUS_MODE_MIXED_LIMITED (0x02UL)  ///< MIPI Mixed Limited: I2C present, max SDR allowed
+#define I3C_BUS_MODE_I2C_SS        (0x03UL)  ///< I2C Standard Mode 100 kHz
+#define I3C_BUS_NORMAL_MODE        (0x04UL)  ///< I3C SDR0 PP + EXT_LCNT; leaves mixed I2C state
 
 /* I3C Control arguments: For Slave Nack retry count */
 #define I3C_SLAVE_NACK_RETRY_COUNT_Pos 8U
@@ -170,8 +168,9 @@ extern "C" {
 #define I3C_SPEED_HDR_DDR       (0x6U)  ///< HDR-DDR
 #define I3C_SPEED_HDR_TS        (0x7U)  ///< HDR-TS
 /* I2C (LEGACY_I2C_DEV = 1) */
-#define I3C_SPEED_I2C_FM        (0x0U)  ///< 400 kHz
+#define I3C_SPEED_I2C_FM        (0x0U)  ///< 400 kHz (or 100 kHz if bus is I3C_BUS_MODE_I2C_SS)
 #define I3C_SPEED_I2C_FMP       (0x1U)  ///< 1 MHz
+#define I3C_SPEED_I2C_SS        I3C_SPEED_I2C_FM  ///< SPEED=0; FM bank holds 100 kHz in SS bus mode
 
 /* Packed xfer_speed: [3:0] write, [7:4] read */
 #define I3C_XFER_SPEED_WR_Pos    0U
@@ -193,6 +192,7 @@ extern "C" {
 #define I3C_XFER_SPEED_I3C_SDR0  I3C_XFER_SPEED_BOTH(I3C_SPEED_SDR0)
 #define I3C_XFER_SPEED_I2C_FM    I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_FM)
 #define I3C_XFER_SPEED_I2C_FMP   I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_FMP)
+#define I3C_XFER_SPEED_I2C_SS    I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_SS)
 
 /**
 \brief I3C Command
