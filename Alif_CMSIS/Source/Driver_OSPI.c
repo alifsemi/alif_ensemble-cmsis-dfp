@@ -27,6 +27,8 @@
 #include "sys_ctrl_ospi.h"
 #endif
 
+#include <string.h>
+
 #if !((RTE_OSPI0) || (RTE_OSPI1))
 #error "OSPI is not enabled in the RTE_Device.h"
 #endif
@@ -378,6 +380,9 @@ static int32_t ARM_OSPI_Uninitialize(OSPI_RESOURCES *OSPI)
     OSPI->transfer.rx_current_cnt    = 0;
 
     OSPI->cb_event                   = NULL;
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    OSPI->signal_delay.idx           = OSPI_DELAY_INVALID_IDX;
+#endif
     OSPI->state.initialized          = 0;
 
     return ARM_DRIVER_OK;
@@ -444,7 +449,20 @@ static int32_t ARM_OSPI_PowerControl(OSPI_RESOURCES *OSPI, ARM_POWER_STATE state
             ospi_set_rx_threshold(OSPI->regs, OSPI->rx_fifo_threshold);
             ospi_set_rx_sample_delay(OSPI->regs, OSPI->rx_sample_delay);
             ospi_set_ddr_drive_edge(OSPI->regs, OSPI->ddr_drive_edge);
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+            if (OSPI->signal_delay.idx == OSPI->drv_instance) {
+                aes_set_signal_delay(OSPI->aes_regs, &OSPI->signal_delay);
+            } else {
+                ospi_delay_cfg_t signal_delay = { 0 };
+                signal_delay.idx = OSPI->drv_instance;
+                signal_delay.rxds[0] = OSPI->rxds_delay;
+                signal_delay.rxds[1] = OSPI->rxds_delay;
+                aes_set_signal_delay(OSPI->aes_regs, &signal_delay);
+            }
+#else
             aes_set_rxds_delay(OSPI->aes_regs, OSPI->rxds_delay);
+#endif
+
             ospi_mask_interrupts(OSPI->regs);
 #if OSPI_DMA_ENABLE
             if (OSPI->dma_enable) {
@@ -754,7 +772,7 @@ static uint32_t ARM_OSPI_GetDataCount(OSPI_RESOURCES *OSPI)
 
 /**
  * @fn      int32_t OSPI_Set_Speed(OSPI_RESOURCES *OSPI, uint32_t arg).
- * @brief   Set OSPI bus speed for spi transfer.
+ * @brief   Set OSPI bus speed for spi transfer. Adjusts the signal delays accordingly.
  * @note    none.
  * @param   OSPI : Pointer to the OSPI resource structure.
  * @param   arg  : argument.
@@ -780,15 +798,27 @@ static int32_t OSPI_Set_Speed(OSPI_RESOURCES *OSPI, uint32_t arg)
             aes_set_baud2_delay(OSPI->aes_regs);
         }
 #elif SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-        {
-            aes_set_signal_delay(OSPI->aes_regs, OSPI->signal_delay);
-        }
 #else
         {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
 #endif
     }
+
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    // Configure OSPI signal delays if the values are calibrated for the chosen frequency
+    if (OSPI->signal_delay.idx == OSPI->drv_instance &&
+        OSPI->signal_delay.sclk_freq == arg) {
+        aes_set_signal_delay(OSPI->aes_regs, &OSPI->signal_delay);
+    } else {
+        // Set zero signal delays and default RXDS for non-calibrated frequncy (backwards compatibility)
+        ospi_delay_cfg_t signal_delay = { 0 };
+        signal_delay.idx = OSPI->drv_instance;
+        signal_delay.rxds[0] = OSPI->rxds_delay;
+        signal_delay.rxds[1] = OSPI->rxds_delay;
+        aes_set_signal_delay(OSPI->aes_regs, &signal_delay);
+    }
+#endif
 
     ospi_set_baud(OSPI->regs, baud);
 
@@ -932,6 +962,19 @@ static int32_t ARM_OSPI_Control(OSPI_RESOURCES *OSPI, uint32_t control, uint32_t
             break;
         }
 
+#if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
+    case ARM_OSPI_SET_SIGNAL_DELAY_CFG:
+        {
+            // Cache the calibrated signal delay configuration, set it when matching OSPI clock speed is chosen
+            ospi_delay_cfg_t *cfg = (ospi_delay_cfg_t *)arg;
+            if (cfg && cfg->idx == OSPI->drv_instance) {
+                memcpy(&OSPI->signal_delay, cfg, sizeof(ospi_delay_cfg_t));
+                return ARM_DRIVER_OK;
+            }
+            return ARM_DRIVER_ERROR_PARAMETER;
+        }
+#endif
+
     default:
         return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
@@ -1070,7 +1113,9 @@ OSPI_RESOURCES OSPI0_RES = {
     .rx_sample_delay = RTE_OSPI0_RX_SAMPLE_DELAY,
     .rxds_delay      = RTE_OSPI0_RXDS_DELAY,
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-    .signal_delay = RTE_OSPI0_SIGNAL_DELAY,
+    .signal_delay = {
+                        .idx = OSPI_DELAY_INVALID_IDX,
+                    },
 #endif
 };
 
@@ -1200,7 +1245,9 @@ OSPI_RESOURCES OSPI1_RES = {
     .rx_sample_delay = RTE_OSPI1_RX_SAMPLE_DELAY,
     .rxds_delay      = RTE_OSPI1_RXDS_DELAY,
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-    .signal_delay = RTE_OSPI1_SIGNAL_DELAY,
+    .signal_delay = {
+                        .idx = OSPI_DELAY_INVALID_IDX,
+                    },
 #endif
 };
 
