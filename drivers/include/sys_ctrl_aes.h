@@ -24,6 +24,8 @@
 
 #include <stdbool.h>
 #include "soc.h"
+#include "soc_features.h"
+#include "ospi_delay.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,55 +79,92 @@ static inline void aes_set_baud2_delay(AES_Type *aes)
 #define AES_SCLK_DELAY_POS      (0)
 #define AES_SCLK_N_DELAY_POS    (8)
 
-static inline void aes_set_rxds_delay(AES_Type *aes, uint8_t delay)
+static inline void aes_set_rxds_delay(AES_Type *aes, const uint8_t rxds_delay[2])
 {
-    aes->AES_RXDS_DELAY = ((delay << AES_SIGNAL_0_DELAY_POS) | (delay << AES_SIGNAL_1_DELAY_POS));
+    aes->AES_RXDS_DELAY = ((uint32_t)rxds_delay[0] << AES_SIGNAL_0_DELAY_POS) |
+                          ((uint32_t)rxds_delay[1] << AES_SIGNAL_1_DELAY_POS);
 }
 
-static inline void aes_set_signal_delay(AES_Type *aes, uint8_t delay)
+
+static inline void aes_set_rxd_delay(AES_Type *aes, const uint8_t delay_val[16])
 {
-    aes->AES_RXD_DELAY_0 = ((delay << AES_SIGNAL_0_DELAY_POS) | (delay << AES_SIGNAL_1_DELAY_POS) |
-                            (delay << AES_SIGNAL_2_DELAY_POS) | (delay << AES_SIGNAL_3_DELAY_POS));
-    aes->AES_RXD_DELAY_1 = ((delay << AES_SIGNAL_4_DELAY_POS) | (delay << AES_SIGNAL_5_DELAY_POS) |
-                            (delay << AES_SIGNAL_6_DELAY_POS) | (delay << AES_SIGNAL_7_DELAY_POS));
+    aes->AES_RXD_DELAY_0 =
+        ((uint32_t)delay_val[3] << AES_SIGNAL_3_DELAY_POS) | ((uint32_t)delay_val[2] << AES_SIGNAL_2_DELAY_POS) |
+        ((uint32_t)delay_val[1] << AES_SIGNAL_1_DELAY_POS) | ((uint32_t)delay_val[0] << AES_SIGNAL_0_DELAY_POS);
+    aes->AES_RXD_DELAY_1 =
+        ((uint32_t)delay_val[7] << AES_SIGNAL_7_DELAY_POS) | ((uint32_t)delay_val[6] << AES_SIGNAL_6_DELAY_POS) |
+        ((uint32_t)delay_val[5] << AES_SIGNAL_5_DELAY_POS) | ((uint32_t)delay_val[4] << AES_SIGNAL_4_DELAY_POS);
     aes->AES_RXD_DELAY_2 =
-        ((delay << AES_SIGNAL_8_DELAY_POS) | (delay << AES_SIGNAL_9_DELAY_POS) |
-         (delay << AES_SIGNAL_10_DELAY_POS) | (delay << AES_SIGNAL_11_DELAY_POS));
+        ((uint32_t)delay_val[11] << AES_SIGNAL_11_DELAY_POS) | ((uint32_t)delay_val[10] << AES_SIGNAL_10_DELAY_POS) |
+        ((uint32_t)delay_val[9] << AES_SIGNAL_9_DELAY_POS) | ((uint32_t)delay_val[8] << AES_SIGNAL_8_DELAY_POS);
     aes->AES_RXD_DELAY_3 =
-        ((delay << AES_SIGNAL_12_DELAY_POS) | (delay << AES_SIGNAL_13_DELAY_POS) |
-         (delay << AES_SIGNAL_14_DELAY_POS) | (delay << AES_SIGNAL_15_DELAY_POS));
+        ((uint32_t)delay_val[15] << AES_SIGNAL_15_DELAY_POS) | ((uint32_t)delay_val[14] << AES_SIGNAL_14_DELAY_POS) |
+        ((uint32_t)delay_val[13] << AES_SIGNAL_13_DELAY_POS) | ((uint32_t)delay_val[12] << AES_SIGNAL_12_DELAY_POS);
+}
 
-    aes->AES_TXD_DELAY_0 = ((delay << AES_SIGNAL_0_DELAY_POS) | (delay << AES_SIGNAL_1_DELAY_POS) |
-                            (delay << AES_SIGNAL_2_DELAY_POS) | (delay << AES_SIGNAL_3_DELAY_POS));
-    aes->AES_TXD_DELAY_1 = ((delay << AES_SIGNAL_4_DELAY_POS) | (delay << AES_SIGNAL_5_DELAY_POS) |
-                            (delay << AES_SIGNAL_6_DELAY_POS) | (delay << AES_SIGNAL_7_DELAY_POS));
+static inline void aes_set_txd_delay(AES_Type *aes, const uint8_t delay_val[16])
+{
+    aes->AES_TXD_DELAY_0 =
+        ((uint32_t)delay_val[3] << AES_SIGNAL_3_DELAY_POS) | ((uint32_t)delay_val[2] << AES_SIGNAL_2_DELAY_POS) |
+        ((uint32_t)delay_val[1] << AES_SIGNAL_1_DELAY_POS) | ((uint32_t)delay_val[0] << AES_SIGNAL_0_DELAY_POS);
+    aes->AES_TXD_DELAY_1 =
+        ((uint32_t)delay_val[7] << AES_SIGNAL_7_DELAY_POS) | ((uint32_t)delay_val[6] << AES_SIGNAL_6_DELAY_POS) |
+        ((uint32_t)delay_val[5] << AES_SIGNAL_5_DELAY_POS) | ((uint32_t)delay_val[4] << AES_SIGNAL_4_DELAY_POS);
     aes->AES_TXD_DELAY_2 =
-        ((delay << AES_SIGNAL_8_DELAY_POS) | (delay << AES_SIGNAL_9_DELAY_POS) |
-         (delay << AES_SIGNAL_10_DELAY_POS) | (delay << AES_SIGNAL_11_DELAY_POS));
+        ((uint32_t)delay_val[11] << AES_SIGNAL_11_DELAY_POS) | ((uint32_t)delay_val[10] << AES_SIGNAL_10_DELAY_POS) |
+        ((uint32_t)delay_val[9] << AES_SIGNAL_9_DELAY_POS) | ((uint32_t)delay_val[8] << AES_SIGNAL_8_DELAY_POS);
     aes->AES_TXD_DELAY_3 =
-        ((delay << AES_SIGNAL_12_DELAY_POS) | (delay << AES_SIGNAL_13_DELAY_POS) |
-         (delay << AES_SIGNAL_14_DELAY_POS) | (delay << AES_SIGNAL_15_DELAY_POS));
+        ((uint32_t)delay_val[15] << AES_SIGNAL_15_DELAY_POS) | ((uint32_t)delay_val[14] << AES_SIGNAL_14_DELAY_POS) |
+        ((uint32_t)delay_val[13] << AES_SIGNAL_13_DELAY_POS) | ((uint32_t)delay_val[12] << AES_SIGNAL_12_DELAY_POS);
+}
 
+static inline void aes_set_ssioen_delay(AES_Type *aes, const uint8_t delay_val[16])
+{
     aes->AES_SSI_OE_N_DELAY_0 =
-        ((delay << AES_SIGNAL_0_DELAY_POS) | (delay << AES_SIGNAL_1_DELAY_POS) |
-         (delay << AES_SIGNAL_2_DELAY_POS) | (delay << AES_SIGNAL_3_DELAY_POS));
+        ((uint32_t)delay_val[3] << AES_SIGNAL_3_DELAY_POS) | ((uint32_t)delay_val[2] << AES_SIGNAL_2_DELAY_POS) |
+        ((uint32_t)delay_val[1] << AES_SIGNAL_1_DELAY_POS) | ((uint32_t)delay_val[0] << AES_SIGNAL_0_DELAY_POS);
     aes->AES_SSI_OE_N_DELAY_1 =
-        ((delay << AES_SIGNAL_4_DELAY_POS) | (delay << AES_SIGNAL_5_DELAY_POS) |
-         (delay << AES_SIGNAL_6_DELAY_POS) | (delay << AES_SIGNAL_7_DELAY_POS));
+        ((uint32_t)delay_val[7] << AES_SIGNAL_7_DELAY_POS) | ((uint32_t)delay_val[6] << AES_SIGNAL_6_DELAY_POS) |
+        ((uint32_t)delay_val[5] << AES_SIGNAL_5_DELAY_POS) | ((uint32_t)delay_val[4] << AES_SIGNAL_4_DELAY_POS);
     aes->AES_SSI_OE_N_DELAY_2 =
-        ((delay << AES_SIGNAL_8_DELAY_POS) | (delay << AES_SIGNAL_9_DELAY_POS) |
-         (delay << AES_SIGNAL_10_DELAY_POS) | (delay << AES_SIGNAL_11_DELAY_POS));
+        ((uint32_t)delay_val[11] << AES_SIGNAL_11_DELAY_POS) | ((uint32_t)delay_val[10] << AES_SIGNAL_10_DELAY_POS) |
+        ((uint32_t)delay_val[9] << AES_SIGNAL_9_DELAY_POS) | ((uint32_t)delay_val[8] << AES_SIGNAL_8_DELAY_POS);
     aes->AES_SSI_OE_N_DELAY_3 =
-        ((delay << AES_SIGNAL_12_DELAY_POS) | (delay << AES_SIGNAL_13_DELAY_POS) |
-         (delay << AES_SIGNAL_14_DELAY_POS) | (delay << AES_SIGNAL_15_DELAY_POS));
+        ((uint32_t)delay_val[15] << AES_SIGNAL_15_DELAY_POS) | ((uint32_t)delay_val[14] << AES_SIGNAL_14_DELAY_POS) |
+        ((uint32_t)delay_val[13] << AES_SIGNAL_13_DELAY_POS) | ((uint32_t)delay_val[12] << AES_SIGNAL_12_DELAY_POS);
+}
 
-    aes->AES_SS_N_DELAY = ((delay << AES_SIGNAL_0_DELAY_POS) | (delay << AES_SIGNAL_1_DELAY_POS));
-
+static inline void aes_set_txddm_delay(AES_Type *aes, const uint8_t txddm_delay[2], const uint8_t dmoen_delay[2])
+{
     aes->AES_TXD_DM_DELAY =
-        ((delay << AES_TXD_DM_0_DELAY_POS) | (delay << AES_TXD_DM_1_DELAY_POS) |
-         (delay << AES_DM_OE_N_DELAY_0_POS) | (delay << AES_DM_OE_N_DELAY_1_POS));
+        ((uint32_t)dmoen_delay[1] << AES_DM_OE_N_DELAY_1_POS) |
+        ((uint32_t)dmoen_delay[0] << AES_DM_OE_N_DELAY_0_POS) |
+        ((uint32_t)txddm_delay[1] << AES_TXD_DM_1_DELAY_POS) |
+        ((uint32_t)txddm_delay[0] << AES_TXD_DM_0_DELAY_POS);
+}
 
-    aes->AES_SCLK_DELAY = ((delay << AES_SCLK_DELAY_POS) | (delay << AES_SCLK_N_DELAY_POS));
+static inline void aes_set_ssn_delay(AES_Type *aes, const uint8_t ssn_delay[2])
+{
+    aes->AES_SS_N_DELAY = ((ssn_delay[0] << AES_SIGNAL_0_DELAY_POS) | (ssn_delay[1] << AES_SIGNAL_1_DELAY_POS));
+}
+
+static inline void aes_set_sclk_delay(AES_Type *aes, uint8_t sclk_delay, uint8_t sclkn_delay)
+{
+    aes->AES_SCLK_DELAY =
+        ((uint32_t)sclk_delay << AES_SCLK_DELAY_POS) |
+        ((uint32_t)sclkn_delay << AES_SCLK_N_DELAY_POS);
+}
+
+/* Apply a full TXD + RXD delay configuration  */
+static inline void aes_set_signal_delay(AES_Type *aes, const ospi_delay_cfg_t *cfg)
+{
+    aes_set_txd_delay(aes, cfg->txd);
+    aes_set_rxd_delay(aes, cfg->rxd);
+    aes_set_ssioen_delay(aes, cfg->ssioen);
+    aes_set_rxds_delay(aes, cfg->rxds);
+    aes_set_txddm_delay(aes, cfg->txddm, cfg->dmoen);
+    aes_set_sclk_delay(aes, cfg->sclk, cfg->sclkn);
+    aes_set_ssn_delay(aes, cfg->ssn);
 }
 #else
 

@@ -541,7 +541,7 @@ void ospi_dma_transfer(OSPI_Type *ospi, ospi_transfer_t *transfer)
  * \param[in]   is_dual_octal OSPI transfer type is Dual Octal
  * \return      none
  */
-void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal)
+void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal, bool rxds_sig_en)
 {
     uint8_t trans_type;
     uint32_t val;
@@ -577,7 +577,7 @@ void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal
             | (0x1 << XIP_CTRL_INST_EN_OFFSET)
             | (0x0 << XIP_CTRL_CONT_XFER_EN_OFFSET)
             | (0x0 << XIP_CTRL_XIP_HYPERBUS_EN_OFFSET)
-            | (0x0 << XIP_CTRL_RXDS_SIG_EN_OFFSET)
+            | ((rxds_sig_en ? 1 : 0) << XIP_CTRL_RXDS_SIG_EN_OFFSET)
             | (0x0 << XIP_CTRL_XIP_MBL_OFFSET)
             | (0x0 << XIP_CTRL_XIP_PREFETCH_EN_OFFSET)
             | (0x1 << XIP_CTRL_RXDS_VL_EN_OFFSET);
@@ -591,7 +591,7 @@ void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal
             | (0x1 << XIP_WRITE_CTRL_WR_SPI_DDR_EN_OFFSET)
             | (0x1 << XIP_WRITE_CTRL_WR_INST_DDR_EN_OFFSET)
             | (0x0 << XIP_WRITE_CTRL_XIPWR_HYPERBUS_EN_OFFSET)
-            | (0x0 << XIP_WRITE_CTRL_XIPWR_RXDS_SIG_EN_OFFSET)
+            | ((rxds_sig_en ? 1 : 0) << XIP_WRITE_CTRL_XIPWR_RXDS_SIG_EN_OFFSET)
             | (0x1 << XIP_WRITE_CTRL_XIPWR_DM_EN_OFFSET)
 #if (SOC_FEAT_AES_OSPI_HAS_XIP_WRITE_HC_DFS)
             | (0x1 << XIP_WRITE_CTRL_XIPWR_DFS_HC_OFFSET)
@@ -611,7 +611,7 @@ void ospi_psram_xip_cfg(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal
   \param[in]   is_dual_octal OSPI transfer type is Dual Octal
   \return      none
 */
-void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal)
+void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_octal, bool rxds_sig_en)
 {
     uint8_t trans_type;
 
@@ -626,13 +626,13 @@ void ospi_hyperbus_xip_init(OSPI_Type *ospi, uint8_t wait_cycles, bool is_dual_o
     ospi->OSPI_SPI_CTRLR0 = (1 << SPI_CTRLR0_SPI_DM_EN_OFFSET);
 
     ospi->OSPI_XIP_CTRL =
-        (1 << XIP_CTRL_XIP_HYPERBUS_EN_OFFSET) | (1 << XIP_CTRL_RXDS_SIG_EN_OFFSET) |
+        (1 << XIP_CTRL_XIP_HYPERBUS_EN_OFFSET) | ((rxds_sig_en ? 1 : 0) << XIP_CTRL_RXDS_SIG_EN_OFFSET) |
         (wait_cycles << XIP_CTRL_WAIT_CYCLES_OFFSET) | (1 << XIP_CTRL_DFS_HC_OFFSET) |
         (trans_type << XIP_CTRL_TRANS_TYPE_OFFSET);
 
     ospi->OSPI_XIP_WRITE_CTRL = (1 << XIP_WRITE_CTRL_XIPWR_HYPERBUS_EN_OFFSET) |
                                 (1 << XIP_WRITE_CTRL_XIPWR_DM_EN_OFFSET) |
-                                (1 << XIP_WRITE_CTRL_XIPWR_RXDS_SIG_EN_OFFSET) |
+                                ((rxds_sig_en ? 1 : 0) << XIP_WRITE_CTRL_XIPWR_RXDS_SIG_EN_OFFSET) |
                                 (trans_type << XIP_WRITE_CTRL_WR_TRANS_TYPE_OFFSET)
 #if (SOC_FEAT_AES_OSPI_HAS_XIP_WRITE_HC_DFS)
                                 | (1 << XIP_WRITE_CTRL_XIPWR_DFS_HC_OFFSET)
