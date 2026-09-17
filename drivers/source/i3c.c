@@ -1013,12 +1013,20 @@ void i3c_slave_rx_blocking(I3C_Type *i3c, i3c_xfer_t *xfer)
 void i3c_send_xfer_cmd_blocking(I3C_Type *i3c, i3c_xfer_t *xfer)
 {
     uint32_t nresp = 0U;
+    uint32_t dbuf_len;
 
     while (!(i3c->I3C_PRESENT_STATE & I3C_PRESENT_STATE_MASTER_IDLE)) {
     }
 
     if (xfer->xfer_cmd.cmd_type == I3C_XFER_CCC_SET) {
         xfer->xfer_cmd.port_id = I3C_CCC_SET_TID;
+        /* Fetch for available tx slots and send data if
+         * available */
+        dbuf_len = i3c_get_empty_tx_buf_len(i3c);
+
+        if (dbuf_len) {
+            i3c_send(i3c, xfer, dbuf_len);
+        }
     } else if (xfer->xfer_cmd.cmd_type == I3C_XFER_CCC_GET) {
         xfer->xfer_cmd.port_id = I3C_CCC_GET_TID;
     } else if (xfer->xfer_cmd.cmd_type == I3C_XFER_TYPE_ADDR_ASSIGN) {

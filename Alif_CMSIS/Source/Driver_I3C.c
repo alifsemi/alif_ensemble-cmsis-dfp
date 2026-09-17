@@ -1203,6 +1203,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
         if (i3c->blocking_mode) {
+            i3c->xfer.tx_len          = 0U;
             /* Invoke xfer cmd blocking api */
             i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
             i3c->status.rx_busy       = 0U;
@@ -1244,6 +1245,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
             if (i3c->blocking_mode) {
+                i3c->xfer.rx_len          = 0U;
                 /* Invoke xfer cmd blocking api */
                 i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
                 i3c->status.tx_busy       = 0U;
@@ -1343,6 +1345,7 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
     if (i3c->blocking_mode) {
+        i3c->xfer.rx_len     = 0U;
         /* Invoke master send blocking api */
         i3c_master_tx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.tx_busy  = 0U;
@@ -1442,6 +1445,7 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
     if (i3c->blocking_mode) {
+        i3c->xfer.tx_len     = 0U;
         /* Invoke master receive blocking api */
         i3c_master_rx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.rx_busy  = 0U;
@@ -1534,6 +1538,7 @@ static int I3Cx_SlaveTransmit(I3C_RESOURCES *i3c, const uint8_t *data, uint16_t 
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
     if (i3c->blocking_mode) {
+        i3c->xfer.rx_len     = 0U;
         /* Invoke slave transmit blocking api */
         i3c_slave_tx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.tx_busy  = 0U;
@@ -1624,6 +1629,7 @@ static int I3Cx_SlaveReceive(I3C_RESOURCES *i3c, uint8_t *data, uint16_t len)
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
     if (i3c->blocking_mode) {
+        i3c->xfer.tx_len     = 0U;
         /* Invoke slave receive blocking api */
         i3c_slave_rx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.rx_busy  = 0U;
