@@ -96,6 +96,7 @@ typedef struct _ospi_psram_xip_config {
     /**< Use config parameters as passed or overwrite from build time RTE config */
     CONFIG_MODE config_mode;
 
+    bool rxds_sig_en;
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
     const ospi_delay_cfg_t *signal_delay;
 #endif

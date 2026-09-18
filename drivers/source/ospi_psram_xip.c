@@ -115,6 +115,10 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
         return -1;
     }
 
+    if (config->config_mode != CONFIG_MODE_USER_PARAMETERS) {
+        config->rxds_sig_en = config->ram_type == RAM_TYPE_HYPERRAM;
+    }
+
     if (config->instance == OSPI_INSTANCE_0) {
         ospi = (OSPI_Type *) OSPI0_BASE;
         aes  = (AES_Type *) AES0_BASE;
@@ -180,13 +184,13 @@ int ospi_psram_xip_init(ospi_psram_xip_config *config)
 
     if (config->ram_type == RAM_TYPE_HYPERRAM) {
         /* Initialize OSPI hyperbus xip configuration */
-        ospi_hyperbus_xip_init(ospi, config->wait_cycles, is_dual_octal);
+        ospi_hyperbus_xip_init(ospi, config->wait_cycles, is_dual_octal, config->rxds_sig_en);
     } else if (config->ram_type == RAM_TYPE_PSRAM) {
         /* Initialize OSPI psram xip configuration */
         if (config->wait_cycles == 0) {
             return -1;
         }
-        ospi_psram_xip_cfg(ospi, config->wait_cycles-1, is_dual_octal);
+        ospi_psram_xip_cfg(ospi, config->wait_cycles-1, is_dual_octal, config->rxds_sig_en);
     } else {
         return -1;
     }
