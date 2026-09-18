@@ -97,7 +97,7 @@ typedef struct _ospi_psram_xip_config {
     CONFIG_MODE config_mode;
 
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-    ospi_delay_cfg_t signal_delay;
+    const ospi_delay_cfg_t *signal_delay;
 #endif
 
 } ospi_psram_xip_config;
