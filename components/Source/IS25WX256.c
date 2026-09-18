@@ -58,6 +58,9 @@
 
 #define IO_MODE_ADDRESS      0x00000000U
 #define WAIT_CYCLE_ADDRESS   0x00000001U
+#define DRIVE_STRENGTH_ADDR  0x00000003U
+#define DRIVE_STRENGTH_VAL   0xFE // Drive strength value, FE = 35ohm
+
 #define OCTAL_DDR_WO_DQS     (0xC7U)
 #define OCTAL_DDR            (0xE7U)
 #define DEFAULT_WAIT_CYCLES  RTE_ISSI_FLASH_WAIT_CYCLES
@@ -288,6 +291,84 @@ static int32_t SetWriteEnable(OSPI_DFS dfs)
     return status;
 }
 
+/* Write Volatile Configuration Register
+  \fn          int32_t WriteVolConfig(uint32_t address, uint32_t value)
+  \brief       Write to the volatile configuration register of the flash device.
+  \param[in]   address : Address of the volatile configuration register
+  \param[in]   value   : Value to be written to the register
+  \return      \ref execution_status
+*/
+static int32_t WriteVolConfig(uint32_t address, uint32_t value)
+{
+    uint32_t cmd[5];
+
+    /* Prepare buffer with volatile register write command, address and value */
+    cmd[0] = CMD_WRITE_VOL_CONFIG;
+    cmd[1] = address;
+    cmd[2] = (value << 8) | value;
+
+    int32_t status = ptrOSPI->Control(ARM_OSPI_SET_FRAME_FORMAT, ARM_OSPI_FRF_OCTAL);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ptrOSPI->Control(ARM_OSPI_SET_DDR_MODE, ARM_OSPI_DDR_ENABLE);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = SetWriteEnable(OSPI_DFS_16_BIT);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ControlSlaveSelect(true);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status =
+        ptrOSPI->Control(ARM_OSPI_MODE_MASTER | ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
+                                ARM_OSPI_SS_MASTER_SW,
+                            OSPI_BUS_SPEED);
+    if (status != ARM_DRIVER_OK) {
+        ControlSlaveSelect(false);
+        issi_event_flag = 0;
+        return status;
+    }
+
+    status =
+        ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE,
+                            (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
+                                (0 << ARM_OSPI_WAIT_CYCLE_POS));
+    if (status != ARM_DRIVER_OK) {
+        ControlSlaveSelect(false);
+        issi_event_flag = 0;
+        return status;
+    }
+
+    status = ptrOSPI->Send(cmd, 3);
+    if (status != ARM_DRIVER_OK) {
+        ControlSlaveSelect(false);
+        issi_event_flag = 0;
+        return status;
+    }
+
+    while (!issi_event_flag) {
+        __WFE();
+    }
+
+    if (!(issi_event_flag & ARM_OSPI_EVENT_TRANSFER_COMPLETE)) {
+        ControlSlaveSelect(false);
+        issi_event_flag = 0;
+        return ARM_DRIVER_ERROR;
+    }
+
+    issi_event_flag = 0;
+    status = ControlSlaveSelect(false);
+    return status;
+}
+
 /**
   \fn          int32_t ARM_Flash_Initialize (ARM_Flash_SignalEvent_t cb_event)
   \brief       Initialize the Flash Interface.
@@ -432,65 +513,13 @@ static int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
                     return ARM_DRIVER_ERROR;
                 }
 
-                /* Prepare buffer with command and address to configure default wait cycles */
-                cmd[0] = CMD_WRITE_VOL_CONFIG;
-                cmd[1] = WAIT_CYCLE_ADDRESS;
-                cmd[2] = (DEFAULT_WAIT_CYCLES << 8) | DEFAULT_WAIT_CYCLES;
-
-                status = ptrOSPI->Control(ARM_OSPI_SET_FRAME_FORMAT, ARM_OSPI_FRF_OCTAL);
+                status = WriteVolConfig(WAIT_CYCLE_ADDRESS, DEFAULT_WAIT_CYCLES);
                 if (status != ARM_DRIVER_OK) {
                     return ARM_DRIVER_ERROR;
                 }
 
-                status = ptrOSPI->Control(ARM_OSPI_SET_DDR_MODE, ARM_OSPI_DDR_ENABLE);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = SetWriteEnable(OSPI_DFS_16_BIT);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = ControlSlaveSelect(true);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status =
-                    ptrOSPI->Control(ARM_OSPI_MODE_MASTER | ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
-                                         ARM_OSPI_SS_MASTER_SW,
-                                     OSPI_BUS_SPEED);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status =
-                    ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE,
-                                     (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
-                                         (0 << ARM_OSPI_WAIT_CYCLE_POS));
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = ptrOSPI->Send(cmd, 3);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                while (!issi_event_flag) {
-                    __WFE();
-                }
-
-                if (!(issi_event_flag & ARM_OSPI_EVENT_TRANSFER_COMPLETE)) {
-                    ControlSlaveSelect(false);
-                    issi_event_flag = 0;
-                    return ARM_DRIVER_ERROR;
-                }
-
-                issi_event_flag = 0;
-
-                status          = ControlSlaveSelect(false);
+                // Default is 50ohm --> raise to 35ohm needed for proper signal integrity when running at high speed
+                status = WriteVolConfig(DRIVE_STRENGTH_ADDR, DRIVE_STRENGTH_VAL);
                 if (status != ARM_DRIVER_OK) {
                     return ARM_DRIVER_ERROR;
                 }
