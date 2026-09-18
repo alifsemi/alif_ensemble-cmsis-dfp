@@ -16,7 +16,7 @@ extern "C" {
 
 #include "Driver_Common.h"
 
-#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 1) /* API version */
+#define ARM_I3C_API_VERSION     ARM_DRIVER_VERSION_MAJOR_MINOR(8, 3) /* API version */
 
 /****** I3C Control Codes *****/
 
@@ -45,17 +45,15 @@ extern "C" {
 #define I3C_MASTER_BUS_RESET                                                                       \
     (1UL << 13)  ///< Reset the bus; arg: ref "I3C Control arguments: For Bus Reset arguments"
 
-/* I3C Control Codes: Bus mode arguments */
-#define I3C_BUS_SLOW_MODE (0x00UL)  ///< Slow bus mode for pure i3c devices - For slave addressing
-#define I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS                                               \
-    (0x01UL)  ///< Mixed i3c + i2c device, Speed: Fast Mode Plus   1 MBPS
-#define I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS                                              \
-    (0x02UL)  ///< Mixed i3c + i2c device, Speed: Fast Mode      400 KBPS
-#define I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS                                              \
-    (0x03UL)  ///< Mixed i3c + i2c device, Speed: Standard Mode  100 KBPS
-#define I3C_BUS_MODE_MIXED_LIMITED (0x04UL)
-#define I3C_BUS_NORMAL_MODE                                                                        \
-    (0x05UL)  ///< Normal bus mode for pure i3c devices - For actual data comm
+/* I3C Control Codes: Bus mode arguments
+ * Topology (mixed) vs I3C SCL profile (SLOW/NORMAL) are separate.
+ * I2C Fm vs Fm+ is per target via AttachSlvDev xfer_speed, not bus mode.
+ */
+#define I3C_BUS_SLOW_MODE          (0x00UL)  ///< I3C OD/PP for DAA / addressing (~2 MHz)
+#define I3C_BUS_MODE_MIXED_FAST    (0x01UL)  ///< MIPI Mixed Fast: I2C present, program FM+FMP banks
+#define I3C_BUS_MODE_MIXED_LIMITED (0x02UL)  ///< MIPI Mixed Limited: I2C present, max SDR allowed
+#define I3C_BUS_MODE_I2C_SS        (0x03UL)  ///< I2C Standard Mode 100 kHz
+#define I3C_BUS_NORMAL_MODE        (0x04UL)  ///< I3C SDR0 PP + EXT_LCNT; leaves mixed I2C state
 
 /* I3C Control arguments: For Slave Nack retry count */
 #define I3C_SLAVE_NACK_RETRY_COUNT_Pos 8U
@@ -160,6 +158,42 @@ extern "C" {
 #define I3C_CCC_DEF_BYTE_TU           0x9F
 #define I3C_CCC_DEF_BYTE_ODR          0x8F
 
+/* Transfer speed (command SPEED[2:0]). Meaning depends on DAT type. */
+/* I3C (LEGACY_I2C_DEV = 0) */
+#define I3C_SPEED_SDR0          (0x0U)  ///< fSCL Max, typically 12.5 MHz
+#define I3C_SPEED_SDR1          (0x1U)  ///< 8 MHz
+#define I3C_SPEED_SDR2          (0x2U)  ///< 6 MHz
+#define I3C_SPEED_SDR3          (0x3U)  ///< 4 MHz
+#define I3C_SPEED_SDR4          (0x4U)  ///< 2 MHz
+#define I3C_SPEED_HDR_DDR       (0x6U)  ///< HDR-DDR
+#define I3C_SPEED_HDR_TS        (0x7U)  ///< HDR-TS
+/* I2C (LEGACY_I2C_DEV = 1) */
+#define I3C_SPEED_I2C_FM        (0x0U)  ///< 400 kHz (or 100 kHz if bus is I3C_BUS_MODE_I2C_SS)
+#define I3C_SPEED_I2C_FMP       (0x1U)  ///< 1 MHz
+#define I3C_SPEED_I2C_SS        I3C_SPEED_I2C_FM  ///< SPEED=0; FM bank holds 100 kHz in SS bus mode
+
+/* Packed xfer_speed: [3:0] write, [7:4] read */
+#define I3C_XFER_SPEED_WR_Pos    0U
+#define I3C_XFER_SPEED_WR_Msk    (0xFU << I3C_XFER_SPEED_WR_Pos)
+#define I3C_XFER_SPEED_RD_Pos    4U
+#define I3C_XFER_SPEED_RD_Msk    (0xFU << I3C_XFER_SPEED_RD_Pos)
+#define I3C_XFER_SPEED_WR(x) \
+    ((((uint32_t)(x)) << I3C_XFER_SPEED_WR_Pos) & I3C_XFER_SPEED_WR_Msk)
+#define I3C_XFER_SPEED_RD(x) \
+    ((((uint32_t)(x)) << I3C_XFER_SPEED_RD_Pos) & I3C_XFER_SPEED_RD_Msk)
+#define I3C_XFER_SPEED(wr, rd)   ((uint8_t)(I3C_XFER_SPEED_WR(wr) | I3C_XFER_SPEED_RD(rd)))
+#define I3C_XFER_SPEED_BOTH(s)   I3C_XFER_SPEED((s), (s))
+#define I3C_GET_XFER_SPEED_WR(s) \
+    ((uint8_t)(((s) & I3C_XFER_SPEED_WR_Msk) >> I3C_XFER_SPEED_WR_Pos))
+#define I3C_GET_XFER_SPEED_RD(s) \
+    ((uint8_t)(((s) & I3C_XFER_SPEED_RD_Msk) >> I3C_XFER_SPEED_RD_Pos))
+
+/* Common presets */
+#define I3C_XFER_SPEED_I3C_SDR0  I3C_XFER_SPEED_BOTH(I3C_SPEED_SDR0)
+#define I3C_XFER_SPEED_I2C_FM    I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_FM)
+#define I3C_XFER_SPEED_I2C_FMP   I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_FMP)
+#define I3C_XFER_SPEED_I2C_SS    I3C_XFER_SPEED_BOTH(I3C_SPEED_I2C_SS)
+
 /**
 \brief I3C Command
 */
@@ -181,7 +215,7 @@ typedef struct _ARM_I3C_STATUS {
     uint32_t mode           : 1;  ///< Mode: 0=Slave, 1=Master
     uint32_t ibi_slv_addr   : 8;  ///< Address of last IBI slave
     uint32_t last_error_code: 4;  ///< Last occurred error
-    uint32_t defslv_cnt: 8;  ///< Slave count from last DEFSLVS (Applicable for Sec masters only)
+    uint32_t defslv_cnt     : 8;  ///< Slave count from last DEFSLVS (Applicable for Sec masters only)
     uint32_t reserved       : 9;
 } ARM_I3C_STATUS;
 
@@ -317,10 +351,12 @@ typedef enum _ARM_I3C_DEVICE_TYPE {
   \return      \ref execution status
 
   \fn          int32_t AttachSlvDev (const ARM_I3C_DEVICE_TYPE dev_type,
-                                     const uint8_t addr)
+                                     const uint8_t addr,
+                                     const uint8_t xfer_speed)
   \brief       Attach i3c/i2c device to the i3c bus.
-  \param[in]   dev_type  Device type - i3c/i2c
-  \param[in]   addr      dynamic addr of i3c device/static addr of i2c device
+  \param[in]   dev_type    Device type - i3c/i2c
+  \param[in]   addr        dynamic addr of i3c device/static addr of i2c device
+  \param[in]   xfer_speed  Packed Tx/Rx speed, \ref I3C_XFER_SPEED
   \return      \ref execution_status
 
   \fn          int32_t Detachdev (uint8_t addr)
@@ -407,7 +443,7 @@ typedef struct _ARM_DRIVER_I3C {
     int32_t (*MasterAssignDA)(ARM_I3C_CMD *addr_cmd);  ///< Pointer to \ref MasterAssignDA    :
                                                        ///< Assign I3C Dynamic Address
     int32_t (*AttachSlvDev)(ARM_I3C_DEVICE_TYPE dev_type,
-                            const uint8_t addr);  ///< Pointer to \ref AttachSlvDev      : Attach
+                            const uint8_t addr, const uint8_t xfer_speed);  ///< Pointer to \ref AttachSlvDev      : Attach
                                                   ///< i3c/i2c slave device to the i3c bus.
     int32_t (*Detachdev)(uint8_t addr);  ///< Pointer to \ref Detachdev         : Detach already
                                          ///< attached i2c/i3c device from the i3c bus.
