@@ -51,10 +51,6 @@
 #include "pinconf.h"
 #include "board_config.h"
 
-#if !defined(RTSS_HE)
-#error "This Demo application works only on RTSS_HE"
-#endif
-
 // Set to 0: Use application-defined lpi2c0 pin configuration.
 // Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
