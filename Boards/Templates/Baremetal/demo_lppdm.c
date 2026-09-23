@@ -60,10 +60,6 @@
 #include "retarget_stdout.h"
 #endif /* RTE_CMSIS_Compiler_STDOUT */
 
-#if !defined(RTSS_HE)
-#error "This Demo application works only on RTSS_HE"
-#endif
-
 #include "app_utils.h"
 
 // Set to 0: Use application-defined LPPDM pin configuration.

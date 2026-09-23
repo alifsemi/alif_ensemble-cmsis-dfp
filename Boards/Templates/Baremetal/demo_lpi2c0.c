@@ -44,10 +44,6 @@
 #include "app_utils.h"
 #include "board_config.h"
 
-#if !defined(RTSS_HE)
-#error "This Demo application works only on RTSS_HE"
-#endif
-
 #if defined(RTE_CMSIS_Compiler_STDOUT)
 #include "retarget_init.h"
 #include "retarget_stdout.h"
