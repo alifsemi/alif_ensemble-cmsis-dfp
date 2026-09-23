@@ -1752,7 +1752,6 @@
 
 // <e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // <i> Configuration settings for Driver_LPI3C in component ::Drivers:LPI3C
-#if defined(RTSS_HE)
 #define RTE_LPI3C 1
 
 #if RTE_LPI3C
@@ -1791,7 +1790,6 @@
 // <i> Default: DISABLE
 #define RTE_LPI3C_SLAVE_ADAPTIVE_MODE_ENABLE 0
 
-#endif
 #endif
 // </e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // </h>
@@ -2350,7 +2348,6 @@
 
 // <e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // <i> Configuration settings for Driver_LPSPI in component ::Drivers:SPI
-#if defined(RTSS_HE)
 
 #define RTE_LPSPI 1
 
@@ -2501,7 +2498,6 @@
 // <i> Default: DISABLE
 #define RTE_LPSPI_BLOCKING_MODE_ENABLE 0
 #endif  // RTE_LPSPI
-#endif  // RTSS_HE
 
 // </e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // </h> SPI (Serial Peripheral Interface)
@@ -3206,7 +3202,6 @@
 
 // <e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // <i> Configuration settings for Driver_SAILP in component ::Drivers:SAI
-#if defined(RTSS_HE)
 
 #define RTE_LPI2S 1
 
@@ -3306,7 +3301,6 @@
 #define RTE_LPI2S_BLOCKING_MODE_ENABLE 0
 
 #endif  // RTE_LPI2S
-#endif  // defined(RTSS_HE)
 
 // </e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // </h> I2S (Integrated Interchip Sound)
@@ -3869,9 +3863,8 @@
 
 // <e> LPUART (Low-Power Universal asynchronous receiver transmitter) [Driver_USARTLP]
 // <i> Configuration settings for Driver_USARTLP in component ::Drivers:USART
-#if defined(RTSS_HE)
+
 #define RTE_LPUART 1
-#endif
 
 #if RTE_LPUART
 
@@ -9310,6 +9303,7 @@
 #define RTE_LPI2C0_BUS_SPEED    400000
 
 #endif
+#endif  // defined(RTSS_HE)
 // </e> LPI2C0(Low Power Inter-Integrated Circuit) [Driver_LPI2C0]
 
 // <e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
@@ -9365,7 +9359,6 @@
 
 #endif
 // </e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
-#endif  // defined(RTSS_HE)
 // </h> I2C (Inter Integrated Circuit)
 
 // <h> RANGE_SENSOR (Range Sensor)
@@ -10858,7 +10851,6 @@
 
 // </h> PDM (Pulse density modulation)
 
-#if defined(RTSS_HE)
 // <h> LPPDM(Low Power Pulse Density Modulation)
 // <e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
 // <i> Configuration settings for Driver_LPPDM in component ::Drivers:LPPDM
@@ -10898,7 +10890,6 @@
 #endif
 #endif
 // </e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
-#endif  // defined(RTSS_HE)
 // </h> LPPDM (Low Power Pulse density modulation)
 
 // <h> CANFD (Controller Area Network - Fast Mode)
