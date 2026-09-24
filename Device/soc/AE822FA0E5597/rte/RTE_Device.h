@@ -1887,6 +1887,7 @@
 // <i> Default: 0
 #define RTE_LPI3C_IRQ_PRI    0
 
+#if defined(RTSS_HE)
 // <o> LPI3C DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -1901,6 +1902,8 @@
 // <i> Default: 0
 #define RTE_LPI3C_DMA_IRQ_PRI 0
 #endif
+#endif
+
 // <o> LPI3C blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -2599,8 +2602,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPSPI. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPSPI_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPSPI_SELECT_DMA0 1
 #if RTE_LPSPI_SELECT_DMA0
 
 // <o> LPSPI DMA0 Group Selection
@@ -3410,8 +3413,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPI2S. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPI2S_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPI2S_SELECT_DMA0 1
 #endif
 
 // <o> LPI2S DMA IRQ priority <0-255>
@@ -9498,6 +9501,7 @@
 // <i> Default: DISABLE
 #define RTE_LPI2C1_BLOCKING_MODE_ENABLE 0
 
+#if defined(RTSS_HE)
 // <o> LPI2C1 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9517,6 +9521,7 @@
 // <i> Default: 256
 #define RTE_LPI2C1_DMA_SCRATCH_SIZE 256
 #endif
+#endif  // defined(RTSS_HE)
 
 #endif
 // </e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
@@ -11041,8 +11046,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPPDM. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPPDM_SELECT_DMA0      0
+// <i> Default: DMA0
+#define RTE_LPPDM_SELECT_DMA0      1
 
 // <o> PDM DMA IRQ priority <0-255>
 // <i> Defines PDM DMA Interrupt priority
