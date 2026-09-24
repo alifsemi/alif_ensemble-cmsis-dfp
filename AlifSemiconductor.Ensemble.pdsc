@@ -3621,7 +3621,7 @@
       </files>
     </component>
 
-    <component Cclass="CMSIS Driver" Cgroup="USART" Cversion="2.2.0" Capiversion="2.4.0" condition="Ensemble CMSIS_Driver">
+    <component Cclass="CMSIS Driver" Cgroup="USART" Cversion="2.2.1" Capiversion="2.4.0" condition="Ensemble CMSIS_Driver">
       <description>UART Driver for Alif Semiconductor SOC</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_USART               /* Driver UART  */
