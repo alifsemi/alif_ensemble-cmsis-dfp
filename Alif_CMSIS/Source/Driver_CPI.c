@@ -905,7 +905,7 @@ static CPI_CONFIG config = {
 };
 
 /* CPI Device Resource */
-static CPI_RESOURCES CPI_CTRL = {
+CPI_RESOURCES CPI_CTRL = {
     .regs               = (CPI_Type *) CPI_BASE,
     .irq_num            = CAM_IRQ_IRQn,
     .irq_priority       = RTE_CPI_IRQ_PRI,
