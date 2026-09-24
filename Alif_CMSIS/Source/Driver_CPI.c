@@ -759,6 +759,14 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI_RES,
             break;
         }
 
+#if SOC_FEAT_CPI_HAS_STREAM_ENABLE
+    case CPI_STREAM_MODE:
+        {
+            CPI_RES->stream_mode_enable = arg;
+            break;
+        }
+#endif
+
     default:
         {
 #if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
