@@ -90,11 +90,6 @@ typedef struct _OSPI_RESOURCES {
 #endif
 } OSPI_RESOURCES;
 
-static inline uint32_t getOSPICoreClock(void)
-{
-    return GetSystemAXIClock();
-}
-
 #ifdef __cplusplus
 }
 #endif

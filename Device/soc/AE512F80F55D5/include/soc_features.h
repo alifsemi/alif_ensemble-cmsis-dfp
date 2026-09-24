@@ -85,6 +85,7 @@
 #define SOC_FEAT_OSPI_HAS_XIP_SER                  (1)
 #define SOC_FEAT_OSPI_HAS_CLK_ENABLE               (0)
 #define SOC_FEAT_OSPI_ADDR_IN_SINGLE_FIFO_LOCATION (0)
+#define SOC_FEAT_OSPI_CLK_SELECT                   (0)
 #define SOC_FEAT_AES_BAUD2_DELAY_VAL               (0)
 #define SOC_FEAT_AES_OSPI_SIGNALS_DELAY            (0)
 #define SOC_FEAT_AES_OSPI_HAS_XIP_WRITE_HC_DFS     (0)
