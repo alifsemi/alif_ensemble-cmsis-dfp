@@ -34,6 +34,8 @@ extern "C" {
 #define OSPI_ENABLE                          1
 #define OSPI_DISABLE                         0
 
+#define OSPI_BAUDR_CALC_TOLERANCE_PERCENT    1U
+
 /* SPI Control Register 0 (CTRLR0) bit Definition, Macros, Offsets and Masks
  * these include DFS, FRF, SCPH, SCPOL, TMOD, etc
  */
@@ -701,6 +703,17 @@ void ospi_hyperbus_send(OSPI_Type *ospi, ospi_transfer_t *transfer);
  * \return      none
  */
 void ospi_hyperbus_receive(OSPI_Type *ospi, ospi_transfer_t *transfer);
+
+/**
+  \fn          uint32_t ospi_get_baudr(uint32_t bus_clock, uint32_t ospi_core_clock)
+  \brief       Calculates the OSPI BAUDR (divisor) for the given bus clock
+  \note        Takes into account the selected core clock frequency and allows a small
+               difference between the requested and achievable bus clock (1% by default).
+  \param[in]   bus_clock       Desired bus clock frequency
+  \param[in]   ospi_core_clock OSPI core clock frequency
+  \return      Calculated divisor or 0 if bus_clock is unsupported
+*/
+uint32_t ospi_get_baudr(uint32_t bus_clock, uint32_t ospi_core_clock);
 
 /**
   \fn          void ospi_irq_handler(OSPI_Type *ospi, ospi_transfer_t *transfer)

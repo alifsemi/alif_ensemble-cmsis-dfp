@@ -27,10 +27,10 @@
 
 #include "ospi.h"
 #include "soc.h"
-#include "sys_clocks.h"
 #include "sys_utils.h"
 
 #include "sys_ctrl_aes.h"
+#include "sys_ctrl_ospi.h"
 
 /**
   \fn          int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_config
@@ -46,24 +46,10 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
         return -1;
     }
 
-    baud = (GetSystemAXIClock() / config->bus_speed);
+    baud = ospi_get_baudr(config->bus_speed, ospi_get_core_clock());
 
     if (baud == 0) {
         return -1;
-    }
-
-    if (baud < 4) {
-#if SOC_FEAT_AES_BAUD2_DELAY_VAL
-        {
-            aes_set_baud2_delay(aes);
-        }
-#elif SOC_FEAT_AES_OSPI_SIGNALS_DELAY
-#else
-        {
-            ARG_UNUSED(aes);
-            return -1;
-        }
-#endif
     }
 
 #if SOC_FEAT_AES_OSPI_SIGNALS_DELAY
@@ -81,6 +67,18 @@ static int ospi_set_speed(OSPI_Type *ospi, AES_Type *aes, const ospi_psram_xip_c
         aes_set_signal_delay(aes, &signal_delay);
     }
 #else
+    if (baud < 4) {
+#if SOC_FEAT_AES_BAUD2_DELAY_VAL
+        {
+            aes_set_baud2_delay(aes);
+        }
+#else
+        {
+            return -1;
+        }
+#endif
+    }
+
     aes_set_rxds_delay(aes, config->rxds_delay);
 #endif
 

@@ -782,7 +782,7 @@ static int32_t OSPI_Set_Speed(OSPI_RESOURCES *OSPI, uint32_t arg)
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    baud = (getOSPICoreClock() / arg);
+    baud = ospi_get_baudr(arg, ospi_get_core_clock());
 
     if (baud == 0) {
         return ARM_DRIVER_ERROR_UNSUPPORTED;
@@ -872,7 +872,7 @@ static int32_t ARM_OSPI_Control(OSPI_RESOURCES *OSPI, uint32_t control, uint32_t
 
     case ARM_OSPI_GET_BUS_SPEED:
         {
-            clk = getOSPICoreClock();
+            clk = ospi_get_core_clock();
             return (int32_t) ospi_get_bus_speed(OSPI->regs, clk);
         }
 

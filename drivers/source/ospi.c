@@ -879,3 +879,41 @@ void ospi_irq_handler(OSPI_Type *ospi, ospi_transfer_t *transfer)
     (void) ospi->OSPI_RXUICR;
     (void) ospi->OSPI_ICR;
 }
+
+
+uint32_t ospi_get_baudr(uint32_t sclk, uint32_t ospi_core_clock)
+{
+    if (sclk == 0 || ospi_core_clock == 0) {
+        return 0;
+    }
+
+    /* Round to nearest integer divider */
+    uint32_t baudr = (uint32_t)(((uint64_t)ospi_core_clock + ((uint64_t)sclk / 2ULL)) / (uint64_t)sclk);
+
+    /* BAUDR sanity checks */
+    if (baudr < 2U || baudr > 0xFFFEU) {
+        return 0;
+    }
+
+    /* BAUDR must be even */
+    if (baudr & 1U) {
+        return 0;
+    }
+
+    /* Accept a small requested vs realized SCLK difference */
+    {
+        uint64_t req_mul = (uint64_t)sclk * baudr;
+        uint64_t err_num = (req_mul >= (uint64_t)ospi_core_clock)
+                               ? (req_mul - (uint64_t)ospi_core_clock)
+                               : ((uint64_t)ospi_core_clock - req_mul);
+        uint64_t tol_num = (req_mul * OSPI_BAUDR_CALC_TOLERANCE_PERCENT) / 100ULL;
+
+        /* |requested_sclk - achievable_sclk| <= requested_sclk * tol_pct / 100
+         * <=> |sclk*baudr - core_clk| <= (sclk*baudr)*tol_pct / 100 */
+        if (err_num > tol_num) {
+            return 0;
+        }
+    }
+
+    return baudr;
+}
