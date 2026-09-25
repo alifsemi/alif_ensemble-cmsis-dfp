@@ -21,6 +21,7 @@
 #include "board_config.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
+#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
 #include "Camera_Sensor.h"
 #include "Camera_Sensor_i2c.h"
 #include "Driver_IO.h"
@@ -2017,3 +2018,4 @@ static CAMERA_SENSOR_DEVICE arx3a0_camera_sensor = {
 CAMERA_SENSOR(arx3a0_camera_sensor)
 
 #endif /* RTE_ARX3A0_CAMERA_SENSOR_CSI_ENABLE */
+#endif /* RTE_Drivers_CAMERA_SENSOR_ARX3A0 */

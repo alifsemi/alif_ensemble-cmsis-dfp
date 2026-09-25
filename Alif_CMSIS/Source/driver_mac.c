@@ -18,6 +18,9 @@
  * @bug      None.
  * @Note     None
  ******************************************************************************/
+#include "RTE_Components.h"
+
+#if defined(RTE_Drivers_ETH_MAC)
 
 #include <string.h>
 #include "driver_mac.h"
@@ -1143,3 +1146,4 @@ ARM_DRIVER_ETH_MAC Driver_ETH_MAC0 = {
     ETH_MAC0_PHY_Read,
     ETH_MAC0_PHY_Write
 };
+#endif /* RTE_Drivers_ETH_MAC */

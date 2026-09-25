@@ -13,6 +13,7 @@
 #include "board_config.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
+#if defined(RTE_Drivers_CAMERA_SENSOR_OV5647)
 #include "Camera_Sensor.h"
 #include "Camera_Sensor_i2c.h"
 #include "Driver_IO.h"
@@ -427,3 +428,4 @@ static CAMERA_SENSOR_DEVICE OV5647_camera_sensor = {
 CAMERA_SENSOR(OV5647_camera_sensor)
 
 #endif /* RTE_OV5647_CAMERA_SENSOR_ENABLE */
+#endif /* RTE_Drivers_CAMERA_SENSOR_OV5647 */
