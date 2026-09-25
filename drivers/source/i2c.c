@@ -222,6 +222,11 @@ static void i2c_master_check_error(I2C_Type *i2c, i2c_transfer_info_t *transfer)
 
     status = i2c->I2C_RAW_INTR_STAT;
 
+    /* Master is holding the bus and Tx FIFO is empty */
+    if (status & I2C_IC_INTR_STAT_MASTER_ON_HOLD) {
+        transfer->evt_sts = I2C_XFER_EVENT_MASTER_ON_HOLD;
+    }
+
     /* during transmit set once TX_fifo is at max buffer_length and
      * processor sends another i2c cmd by writing to IC_DATA_CMD
      */
