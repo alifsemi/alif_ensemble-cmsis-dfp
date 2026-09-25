@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 2) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 4) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -724,8 +724,9 @@ static int I3cMasterGetAddrPos(I3C_RESOURCES *i3c, uint8_t addr)
 {
     uint32_t pos;
 
-    for (pos = 0; pos < i3c->slave_dat.maxdevs; pos++) {
-        if (addr == (i3c->slave_dat.addrs[pos] & (~I3C_TARGET_SLAVE_TYPE_I2C))) {
+    for (pos = 0; pos < i3c->targets.maxdevs; pos++) {
+        if (addr == (i3c->targets.profile[pos].addr &
+                    (~I3C_TARGET_SLAVE_TYPE_I2C))) {
             return pos;
         }
     }
@@ -746,12 +747,12 @@ static int I3cMasterGetFreePos(I3C_RESOURCES *i3c)
 {
     uint32_t i;
 
-    if (!(i3c->slave_dat.freepos & GENMASK(i3c->slave_dat.maxdevs - 1, 0))) {
+    if (!(i3c->targets.freepos & GENMASK(i3c->targets.maxdevs - 1, 0))) {
         return ARM_DRIVER_ERROR;
     }
 
-    for (i = 0; i < i3c->slave_dat.maxdevs; i++) {
-        if (i3c->slave_dat.freepos & (1 << i)) {
+    for (i = 0; i < i3c->targets.maxdevs; i++) {
+        if (i3c->targets.freepos & (1 << i)) {
             return i;
         }
     }
@@ -838,7 +839,7 @@ static int I3Cx_GetSlvsInfo(I3C_RESOURCES *i3c, void *data, const uint8_t value)
         /* Considering value as the count of slaves.
          * Returns error if the slave count is more than
          * max supported slaves */
-        if (value > i3c->slave_dat.maxdevs) {
+        if (value > i3c->targets.maxdevs) {
             return ARM_DRIVER_ERROR_PARAMETER;
         }
 
@@ -884,9 +885,10 @@ static int I3Cx_GetSlaveList(I3C_RESOURCES *i3c, uint8_t *addr_list, uint8_t *co
 
     (*count) = 0U;
     /* Fetches all valid slave addresses*/
-    for (pos = 0; pos < i3c->slave_dat.maxdevs; pos++) {
-        if (!(i3c->slave_dat.freepos & (1 << pos))) {
-            *addr_list = (i3c->slave_dat.addrs[pos] & (~I3C_TARGET_SLAVE_TYPE_I2C));
+    for (pos = 0; pos < i3c->targets.maxdevs; pos++) {
+        if (!(i3c->targets.freepos & (1 << pos))) {
+            *addr_list = (i3c->targets.profile[pos].addr &
+                          (~I3C_TARGET_SLAVE_TYPE_I2C));
             addr_list++;
             (*count)++;
         }
@@ -910,11 +912,15 @@ static void I3C_DetachSlaves(I3C_RESOURCES *i3c, uint8_t slv_cnt, uint32_t ccc_c
 
     if ((ccc_cmd == I3C_CCC_ENTDAA) || (ccc_cmd == I3C_CCC_SETDASA)) {
         /* Perform the following when ENTDAA or SETDASA failed */
-        for (pos = i3c->slave_dat.maxdevs; ((pos > 0) && (slv_cnt)); pos--) {
-            if (i3c->slave_dat.last_asgd_addr_pos & (1U << (pos - 1U))) {
+        for (pos = i3c->targets.maxdevs; ((pos > 0) && (slv_cnt)); pos--) {
+            if (i3c->targets.last_asgd_addr_pos & (1U << (pos - 1U))) {
                 /* free the index */
-                i3c->slave_dat.freepos           |= (BIT(pos - 1U));
-                i3c->slave_dat.addrs[(pos - 1U)]  = 0U;
+                i3c->targets.freepos           |= (BIT(pos - 1U));
+                i3c->targets.profile[(pos - 1U)].addr      = 0U;
+                i3c->targets.profile[(pos - 1U)].bcr       = 0U;
+                i3c->targets.profile[(pos - 1U)].speed_wr  = I3C_SPEED_SDR0;
+                i3c->targets.profile[(pos - 1U)].speed_rd  = I3C_SPEED_SDR0;
+                i3c->targets.profile[(pos - 1U)].disc_done = 0U;
                 /* clear the DAT index pos */
                 i3c_remove_slv_from_dat(i3c->regs, (pos - 1U));
 
@@ -924,34 +930,42 @@ static void I3C_DetachSlaves(I3C_RESOURCES *i3c, uint8_t slv_cnt, uint32_t ccc_c
     } else if (ccc_cmd == I3C_CCC_RSTDAA(false)) {
         /* Perform the following when Direct RSTDAA is successful */
         pos = I3cMasterGetAddrPos(i3c,
-                                  (i3c->slave_dat.addrs[i3c->xfer.xfer_cmd.addr_index] &
+              (i3c->targets.profile[i3c->xfer.xfer_cmd.addr_index].addr &
                                    (~I3C_TARGET_SLAVE_TYPE_I2C)));
         if (pos >= 0) {
-            i3c->slave_dat.freepos    |= (BIT(pos));
-            i3c->slave_dat.addrs[pos]  = 0U;
+            i3c->targets.freepos    |= (BIT(pos));
+            i3c->targets.profile[pos].addr      = 0U;
+            i3c->targets.profile[pos].speed_wr  = I3C_SPEED_SDR0;
+            i3c->targets.profile[pos].speed_rd  = I3C_SPEED_SDR0;
+            i3c->targets.profile[pos].bcr       = 0U;
+            i3c->targets.profile[pos].disc_done = 0U;
             i3c_remove_slv_from_dat(i3c->regs, pos);
         }
 
     } else if (ccc_cmd == I3C_CCC_RSTDAA(true)) {
         /* Perform the following when broadcast RSTDAA is successful */
-        for (pos = 0; pos < ((int8_t) i3c->slave_dat.maxdevs); pos++) {
+        for (pos = 0; pos < ((int8_t) i3c->targets.maxdevs); pos++) {
             /* Detaches only I3C slaves */
-            if ((!(i3c->slave_dat.freepos & (1U << pos))) &&
-                (!(i3c->slave_dat.addrs[pos] & I3C_TARGET_SLAVE_TYPE_I2C)))
+            if ((!(i3c->targets.freepos & (1U << pos))) &&
+                (!(i3c->targets.profile[pos].addr & I3C_TARGET_SLAVE_TYPE_I2C)))
             {
                 i3c_remove_slv_from_dat(i3c->regs, pos);
-                i3c->slave_dat.freepos    |= (BIT(pos));
-                i3c->slave_dat.addrs[pos]  = 0U;
+                i3c->targets.freepos    |= (BIT(pos));
+                i3c->targets.profile[pos].addr      = 0U;
+                i3c->targets.profile[pos].speed_wr  = I3C_SPEED_SDR0;
+                i3c->targets.profile[pos].speed_rd  = I3C_SPEED_SDR0;
+                i3c->targets.profile[pos].bcr       = 0U;
+                i3c->targets.profile[pos].disc_done = 0U;
             }
         }
     } else if (ccc_cmd == I3C_CCC_SETNEWDA) {
         /* Perform the following when Direct SETNEWDA is successful */
         pos = I3cMasterGetAddrPos(i3c,
-                                  (i3c->slave_dat.addrs[i3c->xfer.xfer_cmd.addr_index] &
+              (i3c->targets.profile[i3c->xfer.xfer_cmd.addr_index].addr &
                                    (~I3C_TARGET_SLAVE_TYPE_I2C)));
         if (pos >= 0) {
             /* Update the slave address with new one */
-            i3c->slave_dat.addrs[pos] = (*((uint8_t *) i3c->xfer.tx_buf) >> 1U);
+            i3c->targets.profile[pos].addr = (*((uint8_t *) i3c->xfer.tx_buf) >> 1U);
             i3c_update_slv_addr_in_dat(i3c->regs, pos, (*((uint8_t *) i3c->xfer.tx_buf) >> 1U));
         }
     }
@@ -979,6 +993,223 @@ static void I3C_AddDynamicAddrParity(uint8_t *dyn_addr)
      * bit of dynamic address */
     *dyn_addr |= ((~xor_value) << 7U);
 }
+
+/**
+  \fn           bool I3Cx_DiscSlotIsI3c(I3C_RESOURCES *i3c, uint8_t pos)
+  \brief        Checks whether a DAT slot is an occupied I3C target
+  \param[in]    i3c : Pointer to i3c resources structure
+  \param[in]    pos : DAT index
+  \return       true if the slot is a valid I3C target; false otherwise
+*/
+static bool I3Cx_DiscSlotIsI3c(I3C_RESOURCES *i3c, uint8_t pos)
+{
+    if (i3c->targets.freepos & (1U << pos)) {
+        return false;
+    }
+    if (i3c->targets.profile[pos].addr & I3C_TARGET_SLAVE_TYPE_I2C) {
+        return false;
+    }
+    return (i3c->targets.profile[pos].addr != 0U);
+}
+
+/**
+  \fn           void I3Cx_DiscFinishSlot(I3C_RESOURCES *i3c)
+  \brief        Marks GETBCR/GETMXDS done for the current DAT slot.
+                Clears that slot from last_asgd_addr_pos so a later
+                SETDASA/ENTDAA can still find the next pending slave
+                (scan always starts at slot 0).
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscFinishSlot(I3C_RESOURCES *i3c)
+{
+    uint8_t pos = i3c->disc.pos;
+
+    i3c->targets.profile[pos].disc_done = 1U;
+    i3c->targets.last_asgd_addr_pos    &= ~(1U << pos);
+    i3c->disc.step                      = I3C_DISC_GETBCR;
+}
+
+/**
+  \fn           int I3Cx_DiscFindPos(I3C_RESOURCES *i3c)
+  \brief        Finds the next DAT slot that still needs GETBCR/GETMXDS
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       DAT index, or -1 if none pending
+*/
+static int I3Cx_DiscFindPos(I3C_RESOURCES *i3c)
+{
+    uint8_t pos;
+
+    for (pos = 0U; pos < i3c->targets.maxdevs; pos++) {
+        if (!(i3c->targets.last_asgd_addr_pos & (1U << pos))) {
+            continue;
+        }
+        if (i3c->targets.profile[pos].disc_done) {
+            continue;
+        }
+        if (I3Cx_DiscSlotIsI3c(i3c, pos)) {
+            return (int) pos;
+        }
+    }
+    return -1;
+}
+
+/**
+  \fn           void I3Cx_DiscPrepareGet(I3C_RESOURCES *i3c,
+                                         uint8_t cmd_id,
+                                         uint16_t len)
+  \brief        Prepares xfer for a unicast CCC GET on disc.pos.
+                Does not dispatch; caller kicks IRQ or blocking send.
+  \param[in]    i3c    : Pointer to i3c resources structure
+  \param[in]    cmd_id : CCC command ID
+  \param[in]    len    : Expected response length in bytes
+  \return       None
+*/
+static void I3Cx_DiscPrepareGet(I3C_RESOURCES *i3c, uint8_t cmd_id, uint16_t len)
+{
+    memset(i3c->disc.rx, 0, sizeof(i3c->disc.rx));
+    i3c->xfer.error               = 0U;
+    i3c->xfer.status              = I3C_XFER_STATUS_NONE;
+    i3c->xfer.rx_buf              = i3c->disc.rx;
+    i3c->xfer.rx_len              = len;
+    i3c->xfer.rx_cur_cnt          = 0U;
+    i3c->xfer.xfer_cmd.cmd_type   = I3C_XFER_CCC_GET;
+    i3c->xfer.xfer_cmd.cmd_id     = cmd_id;
+    i3c->xfer.xfer_cmd.addr_index = i3c->disc.pos;
+    i3c->xfer.xfer_cmd.addr_depth = 1U;
+    i3c->xfer.xfer_cmd.def_byte   = 0U;
+    i3c->xfer.xfer_cmd.data_len   = len;
+    i3c->xfer.xfer_cmd.speed      = I3C_SPEED_SDR0;
+    i3c->status.rx_busy           = 1U;
+}
+
+/**
+  \fn           bool I3Cx_DiscNextGet(I3C_RESOURCES *i3c)
+  \brief        Selects the next discovery GET and prepares xfer.
+                GETMXDS stays on the current DAT slot (BCR[0]=1);
+                otherwise finds the next pending slot for GETBCR.
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       true if a GET is ready to dispatch;
+                false if the discovery chain is finished
+*/
+static bool I3Cx_DiscNextGet(I3C_RESOURCES *i3c)
+{
+    int pos;
+
+    /* GETMXDS stays on the DAT slot that just returned BCR[0]=1.
+     * Do not FindPos() here or we can leave that slave. */
+    if (i3c->disc.step == I3C_DISC_GETMXDS) {
+        I3Cx_DiscPrepareGet(i3c, I3C_CCC_GETMXDS, 2U);
+        return true;
+    }
+
+    pos = I3Cx_DiscFindPos(i3c);
+    if (pos < 0) {
+        i3c->disc.step = I3C_DISC_IDLE;
+        i3c->disc.pos  = 0U;
+        i3c->targets.last_asgd_addr_pos = 0U;
+        return false;
+    }
+    i3c->disc.pos  = (uint8_t) pos;
+    i3c->disc.step = I3C_DISC_GETBCR;
+    I3Cx_DiscPrepareGet(i3c, I3C_CCC_GETBCR, 1U);
+    return true;
+}
+
+/**
+  \fn           bool I3Cx_DiscKick(I3C_RESOURCES *i3c)
+  \brief        Dispatches the next discovery GET in interrupt mode
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       true if a CCC was queued (next IRQ continues);
+                false if the discovery chain is finished
+*/
+static bool I3Cx_DiscKick(I3C_RESOURCES *i3c)
+{
+    if (!I3Cx_DiscNextGet(i3c)) {
+        return false;
+    }
+    i3c_master_setup_cmd(i3c->regs, i3c->xfer);
+    return true;
+}
+
+/**
+  \fn           void I3Cx_DiscOnGetDone(I3C_RESOURCES *i3c)
+  \brief        Handles a successful discovery GET. Stores BCR; queues
+                GETMXDS only if BCR[0] is set, else SDR0 and finish slot.
+                On GETMXDS, stores maxwr/maxrd as command SPEED.
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscOnGetDone(I3C_RESOURCES *i3c)
+{
+    uint8_t pos = i3c->disc.pos;
+    if (i3c->disc.step == I3C_DISC_GETBCR) {
+        i3c->targets.profile[pos].bcr = i3c->disc.rx[0];
+        /* MIPI: GETMXDS only if BCR[0] Max Data Speed Limitation is set */
+        if (i3c->targets.profile[pos].bcr & I3C_BCR_MAX_DATA_SPEED_LIMIT) {
+            i3c->disc.step = I3C_DISC_GETMXDS;
+        } else {
+            i3c->targets.profile[pos].speed_wr = I3C_SPEED_SDR0;
+            i3c->targets.profile[pos].speed_rd = I3C_SPEED_SDR0;
+            I3Cx_DiscFinishSlot(i3c);
+        }
+        return;
+    }
+    if (i3c->disc.step == I3C_DISC_GETMXDS) {
+        /* maxwr / maxrd bits [2:0] map 1:1 to DW command SPEED */
+        i3c->targets.profile[pos].speed_wr =
+            (i3c->disc.rx[0] & I3C_GETMXDS_MAX_SDR_FSCL_Msk);
+        i3c->targets.profile[pos].speed_rd =
+            (i3c->disc.rx[1] & I3C_GETMXDS_MAX_SDR_FSCL_Msk);
+        I3Cx_DiscFinishSlot(i3c);
+    }
+}
+
+/**
+  \fn           void I3Cx_DiscOnError(I3C_RESOURCES *i3c)
+  \brief        Handles a discovery GET NACK/error: keep SDR0 for this
+                slave and finish the DAT slot so the chain can continue
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscOnError(I3C_RESOURCES *i3c)
+{
+    uint8_t pos = i3c->disc.pos;
+    /* Keep SDR0 for this slave and continue the chain */
+    i3c->targets.profile[pos].speed_wr = I3C_SPEED_SDR0;
+    i3c->targets.profile[pos].speed_rd = I3C_SPEED_SDR0;
+    I3Cx_DiscFinishSlot(i3c);
+}
+
+#if RTE_I3C_BLOCKING_MODE_ENABLE
+/**
+  \fn           void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+  \brief        Runs GETBCR/GETMXDS for every pending DAT slot in
+                blocking mode (same MIPI rules as the IRQ chain).
+  \param[in]    i3c : Pointer to i3c resources structure
+  \return       None
+*/
+static void I3Cx_DiscRunBlocking(I3C_RESOURCES *i3c)
+{
+    i3c->disc.pos  = 0U;
+    i3c->disc.step = I3C_DISC_GETBCR;
+
+    while (I3Cx_DiscNextGet(i3c)) {
+        i3c_send_xfer_cmd_blocking(i3c->regs, &i3c->xfer);
+        i3c->status.rx_busy = 0U;
+
+        if (i3c->xfer.status & I3C_XFER_STATUS_DONE) {
+            I3Cx_DiscOnGetDone(i3c);
+        } else {
+            /* GET NACK: SDR0 for this slot */
+            I3Cx_DiscOnError(i3c);
+            i3c_resume(i3c->regs);
+        }
+    }
+    i3c->xfer.rx_buf = NULL;
+    i3c->xfer.rx_len = 0U;
+}
+#endif
 
 /**
   \fn           ARM_DRIVER_VERSION I3C_GetVersion(void)
@@ -1127,8 +1358,8 @@ static ARM_I3C_DEVICE_INFO I3Cx_GetDeviceInfo(I3C_RESOURCES *i3c)
         /* Fetch master specific information */
         dev_info.max_read_len        = I3C_MAX_DATA_BUF_SIZE;
         dev_info.max_write_len       = I3C_MAX_DATA_BUF_SIZE;
-        dev_info.max_read_speed      = 0U;
-        dev_info.max_write_speed     = 0U;
+        dev_info.max_read_speed      = I3C_SPEED_SDR0;
+        dev_info.max_write_speed     = I3C_SPEED_SDR0;
         dev_info.max_read_turnaround = 0U;
         memset(&dev_info.prime_info.pid, 0, sizeof(ARM_I3C_SLV_PID));
     } else {
@@ -1186,7 +1417,8 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
     i3c->xfer.error  = 0U;
 
     if (ccc->rw) /* command read */ {
-        if (i3c->status.rx_busy) {
+        if ((i3c->status.rx_busy) ||
+            (i3c->disc.step != I3C_DISC_IDLE)) {
             return ARM_DRIVER_ERROR_BUSY;
         }
 
@@ -1199,6 +1431,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
         i3c->xfer.xfer_cmd.addr_depth = 1U;
         i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
         i3c->xfer.xfer_cmd.data_len   = ccc->len;
+        i3c->xfer.xfer_cmd.speed      = I3C_SPEED_SDR0;
         i3c->status.rx_busy           = 1;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
@@ -1228,7 +1461,8 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
             /* Return unsupported if other HDR-DDR speeds requested */
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         } else {
-            if (i3c->status.tx_busy) {
+            if ((i3c->status.tx_busy) ||
+                (i3c->disc.step != I3C_DISC_IDLE)) {
                 return ARM_DRIVER_ERROR_BUSY;
             }
             i3c->xfer.tx_buf              = ccc->data;
@@ -1240,6 +1474,7 @@ static int I3Cx_MasterSendCommand(I3C_RESOURCES *i3c, ARM_I3C_CMD *ccc)
             i3c->xfer.xfer_cmd.addr_depth = 1U;
             i3c->xfer.xfer_cmd.def_byte   = ccc->def_byte;
             i3c->xfer.xfer_cmd.data_len   = ccc->len;
+            i3c->xfer.xfer_cmd.speed      = I3C_SPEED_SDR0;
             i3c->status.tx_busy           = 1;
 
 #if RTE_I3C_BLOCKING_MODE_ENABLE
@@ -1314,7 +1549,8 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    if (i3c->status.tx_busy) {
+    if ((i3c->status.tx_busy) ||
+        (i3c->disc.step != I3C_DISC_IDLE)) {
         return ARM_DRIVER_ERROR_BUSY;
     }
 
@@ -1326,6 +1562,7 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
     i3c->status.tx_busy           = 1;
     i3c->xfer.error               = 0U;
     i3c->xfer.tx_len              = len;
+    i3c->xfer.xfer_cmd.speed      = i3c->targets.profile[index].speed_wr;
     i3c->xfer.xfer_cmd.addr_index = index;
     i3c->xfer.xfer_cmd.data_len   = len;
     i3c->xfer.xfer_cmd.cmd_type   = I3C_XFER_TYPE_TX_DATA;
@@ -1346,8 +1583,6 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
         /* Invoke master send blocking api */
         i3c_master_tx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.tx_busy  = 0U;
-        /* Sets the speed to SDR Maximum */
-        i3c->xfer.xfer_cmd.speed = I3C_SPEED_SDR0;
 
         if (!(i3c->xfer.status & I3C_XFER_STATUS_MST_TX_DONE)) {
             /* Resume the device if error occurs */
@@ -1412,7 +1647,8 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-    if (i3c->status.rx_busy) {
+    if ((i3c->status.rx_busy) ||
+        (i3c->disc.step != I3C_DISC_IDLE)) {
         return ARM_DRIVER_ERROR_BUSY;
     }
 
@@ -1426,6 +1662,7 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
     i3c->xfer.xfer_cmd.addr_index = index;
     i3c->xfer.xfer_cmd.data_len   = len;
     i3c->xfer.rx_len              = len;
+    i3c->xfer.xfer_cmd.speed      = i3c->targets.profile[index].speed_rd;
 
     i3c->xfer.xfer_cmd.cmd_type   = I3C_XFER_TYPE_RX_DATA;
 
@@ -1445,8 +1682,6 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
         /* Invoke master receive blocking api */
         i3c_master_rx_blocking(i3c->regs, &i3c->xfer);
         i3c->status.rx_busy  = 0U;
-        /* Sets the speed to SDR Maximum */
-        i3c->xfer.xfer_cmd.speed = I3C_SPEED_SDR0;
 
         if (!(i3c->xfer.status & I3C_XFER_STATUS_MST_RX_DONE)) {
             /* Resume the device if error occurs */
@@ -1681,7 +1916,8 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
         return ARM_DRIVER_ERROR;
     }
 
-    if (i3c->status.tx_busy) {
+    if (i3c->status.tx_busy || i3c->status.rx_busy ||
+       (i3c->disc.step != I3C_DISC_IDLE)) {
         return ARM_DRIVER_ERROR_BUSY;
     }
 
@@ -1691,7 +1927,7 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
             return ARM_DRIVER_ERROR_PARAMETER;
         }
 
-        else if (addr_cmd->len > i3c->slave_dat.maxdevs) {
+        else if (addr_cmd->len > i3c->targets.maxdevs) {
             return ARM_DRIVER_ERROR_UNSUPPORTED;
         }
 
@@ -1707,8 +1943,8 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
                 }
             } else {
                 /* reserve the index */
-                i3c->slave_dat.freepos            &= ~(BIT(pos));
-                i3c->slave_dat.last_asgd_addr_pos |= (BIT(pos));
+                i3c->targets.freepos            &= ~(BIT(pos));
+                i3c->targets.last_asgd_addr_pos |= (BIT(pos));
 
                 /* we start assigning addresses from 0x09 */
                 addr_cmd->addr                     = (pos + I3C_NEXT_SLAVE_ADDR_OFFSET);
@@ -1724,8 +1960,12 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
                         addr_cmd->addr++;
                     }
                 }
-                i3c->slave_dat.addrs[pos]  = addr_cmd->addr;
-                i3c->slave_dat.addrs[pos] &= (~I3C_TARGET_SLAVE_TYPE_I2C);
+                i3c->targets.profile[pos].addr      = addr_cmd->addr;
+                i3c->targets.profile[pos].addr     &= (~I3C_TARGET_SLAVE_TYPE_I2C);
+                i3c->targets.profile[pos].bcr       = 0U;
+                i3c->targets.profile[pos].speed_wr  = I3C_SPEED_SDR0;
+                i3c->targets.profile[pos].speed_rd  = I3C_SPEED_SDR0;
+                i3c->targets.profile[pos].disc_done = 0U;
 
                 I3C_AddDynamicAddrParity(&addr_cmd->addr);
 
@@ -1761,8 +2001,8 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
         }
 
         /* reserve the index */
-        i3c->slave_dat.freepos            &= ~(BIT(pos));
-        i3c->slave_dat.last_asgd_addr_pos |= (BIT(pos));
+        i3c->targets.freepos            &= ~(BIT(pos));
+        i3c->targets.last_asgd_addr_pos |= (BIT(pos));
 
         /* we start assigning addresses from 0x09 */
         dyn_addr                           = pos + I3C_NEXT_SLAVE_ADDR_OFFSET;
@@ -1778,8 +2018,12 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
                 dyn_addr++;
             }
         }
-        i3c->slave_dat.addrs[pos]  = dyn_addr;
-        i3c->slave_dat.addrs[pos] &= (~I3C_TARGET_SLAVE_TYPE_I2C);
+        i3c->targets.profile[pos].addr      = dyn_addr;
+        i3c->targets.profile[pos].addr     &= (~I3C_TARGET_SLAVE_TYPE_I2C);
+        i3c->targets.profile[pos].bcr       = 0U;
+        i3c->targets.profile[pos].speed_wr  = I3C_SPEED_SDR0;
+        i3c->targets.profile[pos].speed_rd  = I3C_SPEED_SDR0;
+        i3c->targets.profile[pos].disc_done = 0U;
 
         /* We have space in the dat,
          * program the dat in index pos */
@@ -1796,7 +2040,7 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
     i3c->xfer.xfer_cmd.cmd_type = I3C_XFER_TYPE_ADDR_ASSIGN;
     i3c->xfer.xfer_cmd.def_byte = addr_cmd->def_byte;
     i3c->xfer.xfer_cmd.data_len = 0U;
-
+    i3c->xfer.xfer_cmd.speed    = I3C_SPEED_SDR0;
 #if RTE_I3C_BLOCKING_MODE_ENABLE
     if (i3c->blocking_mode) {
         i3c->xfer.rx_len = 0U;
@@ -1806,11 +2050,13 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
             /* Error during address assignment,
              * so remove slave from Device address table */
             I3C_DetachSlaves(i3c, i3c->xfer.rx_len, i3c->xfer.xfer_cmd.cmd_id);
-            i3c->slave_dat.last_asgd_addr_pos = 0U;
+            i3c->targets.last_asgd_addr_pos = 0U;
 
             i3c_resume(i3c->regs);
             return ARM_DRIVER_ERROR;
         }
+        /* GETBCR/GETMXDS walk after ADDR_ASSIGN_DONE */
+        I3Cx_DiscRunBlocking(i3c);
     } else
 #endif
     {
@@ -1823,15 +2069,17 @@ static int I3Cx_MasterAssignDA(I3C_RESOURCES *i3c, ARM_I3C_CMD *addr_cmd)
 /**
   \fn           int I3Cx_AttachSlvDev(I3C_RESOURCES *i3c,
                                       const ARM_I3C_DEVICE_TYPE dev_type,
-                                      const uint8_t addr)
+                                      const uint8_t addr,
+                                      const uint8_t xfer_speed)
   \brief        Attach legacy i2c device to the i3c bus.
-  \param[in]    i3c      : Pointer to i3c resources structure
+  \param[in]    i3c         : Pointer to i3c resources structure
   \param[in]    dev_type : i2c/i3c device
   \param[in]    addr     : Static/Dynamic address of slave device
+  \param[in]    xfer_speed  : xfer speed of slave device
   \return       \ref execution_status
 */
 static int I3Cx_AttachSlvDev(I3C_RESOURCES *i3c, const ARM_I3C_DEVICE_TYPE dev_type,
-                             const uint8_t addr)
+                             const uint8_t addr, const uint8_t xfer_speed)
 {
     int32_t pos;
 
@@ -1866,24 +2114,28 @@ static int I3Cx_AttachSlvDev(I3C_RESOURCES *i3c, const ARM_I3C_DEVICE_TYPE dev_t
     }
 
     /* reserve the index */
-    i3c->slave_dat.freepos &= ~(BIT(pos));
+    i3c->targets.freepos &= ~(BIT(pos));
 
     if (dev_type == ARM_I3C_DEVICE_TYPE_I2C) {
         /* ok, we have space in the DAT, store the static address and
          * mark as i2c legacy device is present.
          */
-        i3c->slave_dat.addrs[pos] = (addr | I3C_TARGET_SLAVE_TYPE_I2C);
+        i3c->targets.profile[pos].addr = (addr | I3C_TARGET_SLAVE_TYPE_I2C);
 
         /* Program the DAT(device address table) in index pos. */
         i3c_add_slv_to_dat(i3c->regs, pos, 0, addr);
     } else {
         /* ok, we have space in the DAT, store the i3c address */
-        i3c->slave_dat.addrs[pos] = addr;
+        i3c->targets.profile[pos].addr = addr;
 
         /* Program the DAT(device address table) in index pos.
          * Store it as a dynamic address */
         i3c_add_slv_to_dat(i3c->regs, pos, addr, 0);
     }
+    i3c->targets.profile[pos].speed_wr  = I3C_GET_XFER_SPEED_WR(xfer_speed);
+    i3c->targets.profile[pos].speed_rd  = I3C_GET_XFER_SPEED_RD(xfer_speed);
+    /* Attach supplies SPEED; do not run GETBCR/GETMXDS for this slot */
+    i3c->targets.profile[pos].disc_done = 1U;
 
     return ARM_DRIVER_OK;
 }
@@ -1921,8 +2173,12 @@ static int I3Cx_Detachdev(I3C_RESOURCES *i3c, uint8_t addr)
     }
 
     /* free the index */
-    i3c->slave_dat.freepos    |= (BIT(pos));
-    i3c->slave_dat.addrs[pos]  = 0;
+    i3c->targets.freepos                 |= (BIT(pos));
+    i3c->targets.profile[pos].addr        = 0U;
+    i3c->targets.profile[pos].bcr         = 0U;
+    i3c->targets.profile[pos].speed_wr    = I3C_SPEED_SDR0;
+    i3c->targets.profile[pos].speed_rd    = I3C_SPEED_SDR0;
+    i3c->targets.profile[pos].disc_done   = 0U;
 
     /* clear the DAT index pos */
     i3c_remove_slv_from_dat(i3c->regs, pos);
@@ -1942,7 +2198,6 @@ static int I3Cx_Detachdev(I3C_RESOURCES *i3c, uint8_t addr)
 */
 static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
 {
-    I3C_I2C_SPEED_MODE i2c_speed_mode = 0;
     uint8_t            slv_addr       = 0U;
     int32_t            pos            = 0;
     uint8_t            retry_cnt      = 0U;
@@ -1986,52 +2241,37 @@ static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
     case I3C_MASTER_SET_BUS_MODE:
 
         switch (arg) {
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS:
-        case I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS:
-        case I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS:
+        case I3C_BUS_MODE_MIXED_FAST:
         case I3C_BUS_MODE_MIXED_LIMITED:
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FMP_1_MBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_FM_400_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_SS_100_KBPS;
-            }
-
-            if (arg == I3C_BUS_MODE_MIXED_LIMITED) {
-                i2c_speed_mode = I3C_I2C_SPEED_MODE_LIMITED;
-            }
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
+            /* Both I2C SCL banks; Fm vs Fm+ is AttachSlvDev SPEED */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_MIXED_FAST);
+            i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
+            break;
 
-            /* i2c clock configuration for selected Speed mode. */
-            i2c_clk_cfg(i3c->regs, i3c->core_clk, i2c_speed_mode);
+        case I3C_BUS_MODE_I2C_SS:
+            if (!(i3c->core_clk)) {
+                return ARM_DRIVER_ERROR;
+            }
+            /* FM bank = 100 kHz; Attach SPEED must be 0 (I3C_XFER_SPEED_I2C_SS) */
+            i2c_clk_cfg(i3c->regs, i3c->core_clk, I3C_I2C_SPEED_MODE_SS_100_KBPS);
+            break;
 
-            /* fall through */
         case I3C_BUS_SLOW_MODE:
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i3c clock configuration */
+            /* i3c slow bus clock configuration */
             i3c_slow_bus_clk_cfg(i3c->regs, i3c->core_clk);
             break;
 
         case I3C_BUS_NORMAL_MODE:
-
             if (!(i3c->core_clk)) {
                 return ARM_DRIVER_ERROR;
             }
-
-            /* i3c clock configuration */
+            /* i3c normal bus clock configuration */
             i3c_normal_bus_clk_cfg(i3c->regs, i3c->core_clk);
             break;
 
@@ -2223,6 +2463,8 @@ static int32_t I3Cx_Initialize(I3C_RESOURCES *i3c, ARM_I3C_SignalEvent_t cb_even
     i3c->xfer.xfer_cmd.speed = I3C_SPEED_SDR0;
     /* set the state as initialized. */
     i3c->state.initialized   = 1;
+    i3c->disc.step           = I3C_DISC_IDLE;
+    i3c->disc.pos            = 0U;
     return ARM_DRIVER_OK;
 }
 
@@ -2338,9 +2580,9 @@ static int32_t I3Cx_PowerControl(I3C_RESOURCES *i3c, ARM_POWER_STATE state)
             NVIC_EnableIRQ(i3c->irq);
         }
 
-        i3c->slave_dat.datp    = i3c_get_dat_addr(i3c->regs);
-        i3c->slave_dat.maxdevs = i3c_get_dat_depth(i3c->regs);
-        i3c->slave_dat.freepos = GENMASK(i3c->slave_dat.maxdevs - 1, 0);
+        i3c->targets.datp    = i3c_get_dat_addr(i3c->regs);
+        i3c->targets.maxdevs = i3c_get_dat_depth(i3c->regs);
+        i3c->targets.freepos = GENMASK(i3c->targets.maxdevs - 1, 0);
 
         /* Set the state as powered */
         i3c->state.enabled     = 0U;
@@ -2478,7 +2720,35 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
     /* mark event as Transfer done. */
     *event = ARM_I3C_EVENT_TRANSFER_DONE;
 
-    if ((xfer->status & I3C_XFER_STATUS_SLV_RX_DONE) ||
+    /* Discovery GET chain first: a CCC GET must not look like MasterReceive. */
+    if ((i3c->disc.step != I3C_DISC_IDLE) &&
+        ((xfer->status & I3C_XFER_STATUS_CCC_GET_DONE) ||
+         (xfer->status & I3C_XFER_STATUS_MST_RX_DONE))) {
+        i3c->status.rx_busy = 0U;
+        I3Cx_DiscOnGetDone(i3c);
+        if (I3Cx_DiscKick(i3c)) {
+            *event = 0U; /* more GET_xxx; swallow this completion */
+        } else {
+            *event = ARM_I3C_EVENT_TRANSFER_DONE;
+            i3c->xfer.rx_buf = NULL;
+            i3c->xfer.rx_len = 0U;
+        }
+        return;
+    } else if (xfer->status & I3C_XFER_STATUS_ADDR_ASSIGN_DONE) {
+        /* last_asgd_addr_pos is already ORed in MasterAssignDA for
+         * each DAT slot this DAA reserved. Do not rebuild it from
+         * addr_index+depth: ENTDAA slots may not be contiguous. */
+        i3c->status.tx_busy = 0U;
+        i3c->disc.pos       = 0U;
+        i3c->disc.step      = I3C_DISC_GETBCR;
+        if (I3Cx_DiscKick(i3c)) {
+            /* GET_xxx in progress: do not notify the app yet */
+            *event = 0U;
+        } else {
+            i3c->targets.last_asgd_addr_pos = 0U;
+        }
+        return;
+    } else if ((xfer->status & I3C_XFER_STATUS_SLV_RX_DONE) ||
         (xfer->status & I3C_XFER_STATUS_MST_RX_DONE)) {
 #if I3C_DMA_ENABLE
         if (i3c->dma_enable) {
@@ -2493,9 +2763,9 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
             i3c->xfer.rx_len        = 0U;
         }
     } else if (xfer->status & I3C_XFER_STATUS_CCC_GET_DONE) {
+        i3c->status.rx_busy = 0U;
         /* mark event as Rx Done */
         *event |= ARM_I3C_EVENT_RX_DONE;
-        i3c->status.rx_busy         = 0;
         i3c->xfer.rx_buf            = NULL;
         i3c->xfer.rx_len            = 0U;
 
@@ -2550,7 +2820,7 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
             i3c->state.is_master = 1U;
         } else {
             i3c->state.is_master = 0U;
-            memset(&i3c->slave_dat, 0, sizeof(I3C_SLAVE_DAT_TYPE));
+            memset(&i3c->targets, 0, sizeof(I3C_TARGET_TABLE));
         }
 
         /* Flushes all buffers and resumes */
@@ -2561,9 +2831,6 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
         i3c->status.rx_busy = 0;
         /* mark event as Bus owner updated */
         *event = ARM_I3C_EVENT_BUSOWNER_UPDATED;
-    } else if (xfer->status & I3C_XFER_STATUS_ADDR_ASSIGN_DONE) {
-        i3c->slave_dat.last_asgd_addr_pos = 0U;
-        i3c->status.tx_busy               = 0;
     } else if (xfer->status & I3C_XFER_STATUS_SLV_CCC_UPDATED) {
         /* mark event as Slave CCC updated */
         *event = ARM_I3C_EVENT_SLAVE_CCC_UPDATED;
@@ -2649,28 +2916,48 @@ static void I3Cx_HandleError(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *eve
     }
 #endif /* I3C_DMA_ENABLE */
 
-    /* mark event as Transfer Error. */
-    *event              = ARM_I3C_EVENT_TRANSFER_ERROR;
     i3c->status.rx_busy = 0;
     i3c->status.tx_busy = 0;
 
-    if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
-        /* Error during address assignment,
-         * so remove slave from Device address table */
-        I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
-        i3c->slave_dat.last_asgd_addr_pos = 0U;
-    }
-
-    if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
-        /* mark event as Transfer Error. */
-        *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
-    }
     /* error: Flushes all buffers, resumes i3c controller,
      *        clears error status and resumes
      */
     i3c_flush_all_buffers(i3c->regs);
     i3c_resume(i3c->regs);
     i3c_clear_xfer_error(i3c->regs);
+
+    if ((i3c->disc.step != I3C_DISC_IDLE) &&
+        (!(xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN))) {
+        if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
+            i3c->disc.step = I3C_DISC_IDLE;
+            i3c->disc.pos  = 0U;
+            i3c->targets.last_asgd_addr_pos = 0U;
+            *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
+            return;
+        }
+        I3Cx_DiscOnError(i3c);
+        if (I3Cx_DiscKick(i3c)) {
+            *event = 0U;
+        } else {
+            *event = ARM_I3C_EVENT_TRANSFER_DONE;
+        }
+        return;
+    }
+
+    /* mark event as Transfer Error. */
+    *event = ARM_I3C_EVENT_TRANSFER_ERROR;
+
+    if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
+        /* Error during address assignment,
+         * so remove slave from Device address table */
+        I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
+        i3c->targets.last_asgd_addr_pos = 0U;
+    }
+
+    if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
+        /* mark event as Transfer Error. */
+        *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
+    }
 }
 
 /**
@@ -2707,9 +2994,6 @@ static void I3Cx_IRQHandler(I3C_RESOURCES *i3c)
             i3c->cb_event(event);
         }
     }
-
-    /* Sets the speed to SDR Maximum */
-    i3c->xfer.xfer_cmd.speed = I3C_SPEED_SDR0;
 }
 
 /* I3C Driver Instance */
@@ -2799,10 +3083,12 @@ static int32_t I3C_GetTxCount(void)
 {
     return I3Cx_GetTxCount(&i3c);
 }
+
 static int32_t I3C_GetRxCount(void)
 {
     return I3Cx_GetRxCount(&i3c);
 }
+
 static ARM_I3C_DEVICE_INFO I3C_GetDeviceInfo(void)
 {
     return I3Cx_GetDeviceInfo(&i3c);
@@ -2858,9 +3144,10 @@ static int32_t I3C_MasterAssignDA(ARM_I3C_CMD *addr_cmd)
     return I3Cx_MasterAssignDA(&i3c, addr_cmd);
 }
 
-static int32_t I3C_AttachSlvdev(const ARM_I3C_DEVICE_TYPE dev_type, const uint8_t addr)
+static int32_t I3C_AttachSlvdev(const ARM_I3C_DEVICE_TYPE dev_type,
+                                const uint8_t addr, const uint8_t xfer_speed)
 {
-    return I3Cx_AttachSlvDev(&i3c, dev_type, addr);
+    return I3Cx_AttachSlvDev(&i3c, dev_type, addr, xfer_speed);
 }
 
 static int32_t I3C_Detachdev(uint8_t addr)
@@ -3057,9 +3344,10 @@ static int32_t LPI3C_MasterAssignDA(ARM_I3C_CMD *addr_cmd)
     return I3Cx_MasterAssignDA(&LPI3C_RES, addr_cmd);
 }
 
-static int32_t LPI3C_AttachSlvdev(const ARM_I3C_DEVICE_TYPE dev_type, const uint8_t addr)
+static int32_t LPI3C_AttachSlvdev(const ARM_I3C_DEVICE_TYPE dev_type,
+                                  const uint8_t addr, const uint8_t xfer_speed)
 {
-    return I3Cx_AttachSlvDev(&LPI3C_RES, dev_type, addr);
+    return I3Cx_AttachSlvDev(&LPI3C_RES, dev_type, addr, xfer_speed);
 }
 
 static int32_t LPI3C_Detachdev(uint8_t addr)

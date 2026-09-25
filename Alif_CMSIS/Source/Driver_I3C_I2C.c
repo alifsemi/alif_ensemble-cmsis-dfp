@@ -52,6 +52,9 @@ static const ARM_I2C_CAPABILITIES DriverCapabilities = {
     0  /* reserved */
 };
 
+/* Packed SPEED used at Attach; set by ARM_I2C_BUS_SPEED */
+static uint8_t i2c_xfer_speed = I3C_XFER_SPEED_I2C_FM;
+
 /**
  * @fn      void i3c_driver_callback (uint32_t event)
  * @brief   callback routine from the i3c driver mapped to i2c signal events
@@ -93,38 +96,31 @@ static ARM_I2C_CAPABILITIES ARM_I3C_I2C_GetCapabilities(void)
 
 /**
  * @fn      int32_t ConvertI2CBusSpeedToI3C (uint32_t i2c_bus_speed)
- * @brief   get i2c over i3c bus speed
+ * @brief   Map CMSIS I2C bus speed to I3C mixed-bus topology.
+ *          Fm vs Fm+ is stored in i2c_xfer_speed for AttachSlvDev.
  * @param   i2c_bus_speed    : i2c bus speed
  *          ARM_I2C_BUS_SPEED_STANDARD
  *          ARM_I2C_BUS_SPEED_FAST
  *          ARM_I2C_BUS_SPEED_FAST_PLUS
- * @retval  none
+ * @retval  I3C_MASTER_SET_BUS_MODE arg, or ARM_DRIVER_ERROR_UNSUPPORTED
  */
 static int32_t ConvertI2CBusSpeedToI3C(uint32_t i2c_bus_speed)
 {
-    int32_t speed = 0;
-
     switch (i2c_bus_speed) {
     case ARM_I2C_BUS_SPEED_STANDARD:
-        /* Standard Speed (100kHz) */
-        speed = I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS;
-        break;
+        i2c_xfer_speed = I3C_XFER_SPEED_I2C_SS;
+        return (int32_t) I3C_BUS_MODE_I2C_SS;
     case ARM_I2C_BUS_SPEED_FAST:
-        /* Fast Speed (400kHz) */
-        speed = I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS;
-        break;
+        i2c_xfer_speed = I3C_XFER_SPEED_I2C_FM;
+        return (int32_t) I3C_BUS_MODE_MIXED_FAST;
     case ARM_I2C_BUS_SPEED_FAST_PLUS:
-        /* Fast+ Speed (1MHz) */
-        speed = I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS;
-        break;
+        i2c_xfer_speed = I3C_XFER_SPEED_I2C_FMP;
+        return (int32_t) I3C_BUS_MODE_MIXED_FAST;
     case ARM_I2C_BUS_SPEED_HIGH:
-        /* Fast+ Speed (3.4MHz) */
         return ARM_DRIVER_ERROR_UNSUPPORTED;
-        break;
     default:
         return ARM_DRIVER_ERROR_UNSUPPORTED;
     }
-    return speed;
 }
 
 /**
@@ -192,7 +188,7 @@ static int32_t ARM_I3C_I2C_MasterTransmit(uint32_t addr, const uint8_t *data, ui
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret             = Driver_I3C.AttachSlvDev(dev_type, addr);
+    ret             = Driver_I3C.AttachSlvDev(dev_type, addr, i2c_xfer_speed);
     if (ret != ARM_DRIVER_OK) {
         return ret;
     }
@@ -231,7 +227,7 @@ static int32_t ARM_I3C_I2C_MasterReceive(uint32_t addr, uint8_t *data, uint32_t 
     /* I2C Master Mode*/
     i2c_status.mode = 1;
 
-    ret             = Driver_I3C.AttachSlvDev(dev_type, addr);
+    ret             = Driver_I3C.AttachSlvDev(dev_type, addr, i2c_xfer_speed);
     if (ret != ARM_DRIVER_OK) {
         return ret;
     }
