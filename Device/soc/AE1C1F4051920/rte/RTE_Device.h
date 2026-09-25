@@ -3675,6 +3675,13 @@
 // <i> Default: 10ms (Considered the input clock as 40MHz)
 #define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 400000
 
+// <o> I2C0 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C0
+// <i> Default: DISABLE
+#define RTE_I2C0_BLOCKING_MODE_ENABLE 0
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -3727,6 +3734,13 @@
 // <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 40MHz)
 #define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 400000
+
+// <o> I2C1 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C1
+// <i> Default: DISABLE
+#define RTE_I2C1_BLOCKING_MODE_ENABLE 0
 
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
@@ -4618,7 +4632,6 @@
 #define RTE_GPIO8_PIN7_DMA_GLITCH_FILTER_ENABLE 0
 #endif
 // </e> GPIO8
-
 // <e> GPIO9
 // <i> Configuration settings for Driver_GPIO9 in component ::Drivers:GPIO
 #define RTE_GPIO9 1
