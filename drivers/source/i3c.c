@@ -1592,7 +1592,9 @@ void i3c_master_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
         case I3C_MST_RX_TID:
         case I3C_CCC_GET_TID:
             if (xfer->rx_len) {
-                i3c_receive(i3c, xfer, (xfer->rx_len - xfer->rx_cur_cnt));
+                if (rx_len > xfer->rx_cur_cnt) {
+                    i3c_receive(i3c, xfer, (rx_len - xfer->rx_cur_cnt));
+                }
 
                 if (tid == I3C_MST_RX_TID && rx_len < xfer->rx_len) {
                     /* Slave asserted T=0 before delivering all requested bytes.
@@ -1787,7 +1789,9 @@ void i3c_slave_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
                      */
                     xfer->rx_cur_cnt = rx_len;
                 } else {
-                    i3c_receive(i3c, xfer, (xfer->rx_len - xfer->rx_cur_cnt));
+                    if (rx_len > xfer->rx_cur_cnt) {
+                        i3c_receive(i3c, xfer, (rx_len - xfer->rx_cur_cnt));
+                    }
 
                     if (xfer->rx_cur_cnt >= xfer->rx_len) {
                         i3c_disable_intr(i3c, I3C_INTR_STATUS_RX_THLD_STS);
