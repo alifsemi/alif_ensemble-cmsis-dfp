@@ -49,6 +49,7 @@ extern "C" {
  */
 #define CPI_ISP_CAMERA_SENSOR_GAIN     (0x09UL)
 
+#define CPI_SELECT_CAMERA_SENSOR (0x0AUL)  ///< Select camera sensor instance; arg: 0 or 1
 
 /****** CPI Events *****/
 #define ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED (1UL << 0)  ///< Camera Capture Stopped
