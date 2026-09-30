@@ -31,6 +31,7 @@ extern "C" {
 
 /* Project Includes */
 #include "Driver_CPI.h"
+#include "Camera_Sensor.h"
 
 #include "cpi.h"
 
@@ -104,12 +105,18 @@ typedef struct _CPI_RESOURCES {
     IRQn_Type             irq_num;            /**< CPI Interrupt Vector Number                    */
     CPI_ROW_ROUNDUP       row_roundup;        /**< CPI row roundup                                */
     CPI_MODE_SELECT       capture_mode;       /**< CPI capture mode                               */
+    uint32_t              irq_mask;           /**< CPI interrupt mask                             */
     CPI_CONFIG            *cnfg;              /**< CPI Configurations                             */
 #if SOC_FEAT_CPI_HAS_STREAM_ENABLE
     uint32_t              num_framebuffers;   /**< CPI number of active frame buffers             */
     bool                  stream_mode_enable; /**< Streaming mode configuration                   */
     bool                  stream_mode_active; /**< Streaming mode currently active                */
 #endif
+    CAMERA_SENSOR_DEVICE  *cam[2];            /**< Registered sensors: instance 0 and 1           */
+    uint8_t               num_sensors;        /**< Count of sensors present (1 or 2)              */
+    uint8_t               active_sensor;      /**< Currently selected sensor instance index       */
+    uint8_t               sensor_inited[2];   /**< ops->Init() done for the instance              */
+    CAMERA_SENSOR_DEVICE  *cam_sensor;        /**< Alias of cam[active_sensor]                    */
 } CPI_RESOURCES;
 
 #define DEFAULT_WRITE_WMARK 0x18

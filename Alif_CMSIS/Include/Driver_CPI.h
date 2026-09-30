@@ -50,6 +50,7 @@ extern "C" {
 #define CPI_ISP_CAMERA_SENSOR_GAIN     (0x09UL)
 
 #define CPI_STREAM_MODE                (0x0AUL) ///< CPI Stream Mode; arg: 0=disable, 1=enable
+#define CPI_SELECT_CAMERA_SENSOR       (0x0BUL)  ///< Select camera sensor instance; arg: 0 or 1
 
 /****** CPI Events *****/
 #define ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED (1UL << 0)  ///< Camera Capture Stopped

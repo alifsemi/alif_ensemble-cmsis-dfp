@@ -21,21 +21,26 @@
 #define DPHY_CSI2_H_
 
 #include <stdint.h>
+#include "Camera_Sensor.h"
 
 /**
-  \fn          int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
-  \brief       Initialize MIPI CSI2 DPHY Interface.
-  \param[in]   frequency to configure DPHY PLL.
-  \param[in]   n_lanes number of lanes.
-  \return      \ref execution_status
-  */
-int32_t CSI2_DPHY_Initialize(uint32_t frequency, uint8_t n_lanes);
+ * \fn          int32_t CSI2_DPHY_Initialize(DPHY_PORT port,
+ *                                           uint32_t frequency,
+ *                                           uint8_t n_lanes)
+ * \brief       Initialize MIPI CSI2 DPHY Interface.
+ * \param[in]   port      DPHY port to use:
+ *                        DPHY_PORT_CSI2_NATIVE or DPHY_PORT_DSI_AS_RX.
+ * \param[in]   frequency to configure DPHY PLL.
+ * \param[in]   n_lanes number of lanes.
+ * \return      \ref execution_status
+ */
+int32_t CSI2_DPHY_Initialize(DPHY_PORT port, uint32_t frequency, uint8_t n_lanes);
 
 /**
-  \fn          int32_t CSI2_DPHY_Uninitialize (void)
-  \brief       Uninitialize MIPI CSI2 DPHY Interface.
-  \return      \ref execution_status
-  */
+ * \fn          int32_t CSI2_DPHY_Uninitialize (void)
+ * \brief       Uninitialize MIPI CSI2 DPHY Interface.
+ * \return      \ref execution_status
+ */
 int32_t CSI2_DPHY_Uninitialize(void);
 
 #endif /* DPHY_CSI2_H_ */
