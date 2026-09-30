@@ -1,5 +1,4 @@
 /* Copyright (C) 2023 Alif Semiconductor - All Rights Reserved.
-#include <Driver_MIPI_CSI2.h>
  * Use, distribution and modification of this code is permitted under the
  * terms stated in the Alif Semiconductor Software License Agreement
  *
@@ -120,38 +119,23 @@ static const CSI_CPI_DATA_MODE_SETTINGS cpi_data_mode_settings[] = {
      24},
 };
 
-/* CSI, CPI config informations */
-static CPI_INFO cpi_info;
+/* CSI, CPI config informations (one slot per camera instance) */
+static CPI_INFO cpi_info[2];
 
 /**
-  \fn          ARM_DRIVER_VERSION MIPI_CSI2_GetVersion (void)
-  \brief       Get MIPI CSI2 driver version.
-  \return      \ref ARM_DRIVER_VERSION
-*/
-static ARM_DRIVER_VERSION MIPI_CSI2_GetVersion(void)
-{
-    return DriverVersion;
-}
-
-/**
-  \fn          ARM_MIPI_CSI2_CAPABILITIES MIPI_CSI2_GetCapabilities (void)
-  \brief       Get MIPI CSI2 driver capabilities
-  \return      \ref ARM_MIPI_DPHY_CAPABILITIES
-*/
-static ARM_MIPI_CSI2_CAPABILITIES MIPI_CSI2_GetCapabilities(void)
-{
-    return DriverCapabilities;
-}
-
-/**
-  \fn          int32_t CSI2_Initialize (ARM_MIPI_CSI2_SignalEvent_t cb_event,
-                                        CSI_RESOURCES *CSI2)
-  \brief       Initialize MIPI CSI2 Interface.
-  \param[in]   cb_event Pointer to ARM_MIPI_CSI2_SignalEvent_t
-  \param[in]   CSI2 Pointer to CSI resources
-  \return      \ref execution_status
-*/
-static int32_t CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event, CSI_RESOURCES *CSI2)
+ * \fn int32_t CSI2_Bind_Sensor(CSI_RESOURCES *CSI2, uint8_t idx)
+ * \brief Bind a MIPI camera sensor to the CSI2 host driver.
+ *
+ * Validates the sensor's CSI configuration, computes the pixel clock
+ * divider and (in camera timing mode) the IPI timing parameters,
+ * checks that the IPI FIFO is deep enough, fills in the CPI
+ * configuration, and records the sensor as the active one.
+ *
+ * \param CSI2 Pointer to CSI resources
+ * \param idx  Index of the sensor to bind.
+ * \return \ref execution_status
+ */
+static int32_t CSI2_Bind_Sensor(CSI_RESOURCES *CSI2, uint8_t idx)
 {
     int32_t               ret = ARM_DRIVER_OK;
     CAMERA_SENSOR_DEVICE *camera_sensor;
@@ -160,18 +144,9 @@ static int32_t CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event, CSI_RESOURC
     CSI_INFO             *csi_info;
     unsigned int          index;
     float                 pixclock;
+    CPI_INFO             *info;
 
-    if (CSI2->status.initialized == 1) {
-        /* Driver already initialized */
-        return ARM_DRIVER_OK;
-    }
-
-    if (!cb_event) {
-        return ARM_DRIVER_ERROR_PARAMETER;
-    }
-
-    camera_sensor = Get_Camera_Sensor();
-
+    camera_sensor = Camera_Sensor_Get(idx);
     if (!(camera_sensor && camera_sensor->csi_info)) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
@@ -181,6 +156,7 @@ static int32_t CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event, CSI_RESOURC
     }
 
     csi_info = camera_sensor->csi_info;
+    info     = &cpi_info[idx];
 
     /* Get Data type related informations */
     for (index = 0; index < ARRAY_SIZE(cpi_data_mode_settings) &&
@@ -313,22 +289,83 @@ static int32_t CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event, CSI_RESOURC
     }
 
     /* CPI config information */
-    cpi_info.vsync_wait      = CPI_WAIT_VSYNC_ENABLE;
-    cpi_info.vsync_mode      = CPI_CAPTURE_DATA_ENABLE_IF_HSYNC_HIGH;
-    cpi_info.pixelclk_pol    = CPI_SIG_POLARITY_INVERT_DISABLE;
-    cpi_info.hsync_pol       = CPI_SIG_POLARITY_INVERT_DISABLE;
-    cpi_info.vsync_pol       = CPI_SIG_POLARITY_INVERT_DISABLE;
-    cpi_info.data_mode       = cpi_data_mode_settings[index].cpi_data_mode;
-    cpi_info.data_endianness = CPI_DATA_ENDIANNESS_LSB_FIRST;
-    cpi_info.code10on8       = CPI_CODE10ON8_CODING_DISABLE;
-    cpi_info.data_mask       = CPI_DATA_MASK_BIT_16;
-    cpi_info.csi_mode        = cpi_data_mode_settings[index].cpi_color_mode;
+    info->vsync_wait      = CPI_WAIT_VSYNC_ENABLE;
+    info->vsync_mode      = CPI_CAPTURE_DATA_ENABLE_IF_HSYNC_HIGH;
+    info->pixelclk_pol    = CPI_SIG_POLARITY_INVERT_DISABLE;
+    info->hsync_pol       = CPI_SIG_POLARITY_INVERT_DISABLE;
+    info->vsync_pol       = CPI_SIG_POLARITY_INVERT_DISABLE;
+    info->data_mode       = cpi_data_mode_settings[index].cpi_data_mode;
+    info->data_endianness = CPI_DATA_ENDIANNESS_LSB_FIRST;
+    info->code10on8       = CPI_CODE10ON8_CODING_DISABLE;
+    info->data_mask       = CPI_DATA_MASK_BIT_16;
+    info->csi_mode        = cpi_data_mode_settings[index].cpi_color_mode;
 
-    /* Registering CPI Info related to CSI */
-    camera_sensor->cpi_info  = &cpi_info;
+    camera_sensor->cpi_info  = info;
+    CSI2->camera_sensor      = camera_sensor;
+    CSI2->active_sensor      = idx;
+
+    return ret;
+}
+
+/**
+  \fn          ARM_DRIVER_VERSION MIPI_CSI2_GetVersion (void)
+  \brief       Get MIPI CSI2 driver version.
+  \return      \ref ARM_DRIVER_VERSION
+*/
+static ARM_DRIVER_VERSION MIPI_CSI2_GetVersion(void)
+{
+    return DriverVersion;
+}
+
+/**
+  \fn          ARM_MIPI_CSI2_CAPABILITIES MIPI_CSI2_GetCapabilities (void)
+  \brief       Get MIPI CSI2 driver capabilities
+  \return      \ref ARM_MIPI_DPHY_CAPABILITIES
+*/
+static ARM_MIPI_CSI2_CAPABILITIES MIPI_CSI2_GetCapabilities(void)
+{
+    return DriverCapabilities;
+}
+
+/**
+  \fn          int32_t CSI2_Initialize (ARM_MIPI_CSI2_SignalEvent_t cb_event,
+                                        CSI_RESOURCES *CSI2)
+  \brief       Initialize MIPI CSI2 Interface.
+  \param[in]   cb_event Pointer to ARM_MIPI_CSI2_SignalEvent_t
+  \param[in]   CSI2 Pointer to CSI resources
+  \return      \ref execution_status
+*/
+static int32_t CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event, CSI_RESOURCES *CSI2)
+{
+    int32_t ret = ARM_DRIVER_OK;
+    uint8_t i;
+    uint8_t count;
+
+    if (CSI2->status.initialized == 1) {
+        /* Driver already initialized */
+        return ARM_DRIVER_OK;
+    }
+
+    if (!cb_event) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    count = Camera_Sensor_GetCount();
+    CSI2->num_sensors = count;
+
+    for (i = 0; i < count; i++) {
+        CAMERA_SENSOR_DEVICE *s = Camera_Sensor_Get(i);
+        if (!(s && s->csi_info) || (s->interface != CAMERA_SENSOR_INTERFACE_MIPI)) {
+            return ARM_DRIVER_ERROR_PARAMETER;
+        }
+    }
+
+    ret = CSI2_Bind_Sensor(CSI2, CSI2->active_sensor);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
 
     CSI2->cb_event           = cb_event;
-
     CSI2->status.initialized = 1;
 
     return ret;
@@ -373,9 +410,6 @@ static int32_t CSI2_Uninitialize(CSI_RESOURCES *CSI2)
 static int32_t CSI2_PowerControl(ARM_POWER_STATE state, CSI_RESOURCES *CSI2)
 {
     int32_t ret;
-    CAMERA_SENSOR_DEVICE *camera_sensor;
-
-    camera_sensor = Get_Camera_Sensor();
 
     if (CSI2->status.initialized == 0) {
         /* Driver is not initialized */
@@ -434,14 +468,13 @@ static int32_t CSI2_PowerControl(ARM_POWER_STATE state, CSI_RESOURCES *CSI2)
 
             set_csi_pixel_clk(RTE_CSI2_PIX_CLK_SEL, CSI2->csi_pixclk_div);
 
-            if (!(camera_sensor && camera_sensor->csi_info)) {
+            if (!(CSI2->camera_sensor && CSI2->camera_sensor->csi_info)) {
                 return ARM_DRIVER_ERROR_PARAMETER;
             }
-
-            csi_info = camera_sensor->csi_info;
+            csi_info = CSI2->camera_sensor->csi_info;
 
             /*DPHY initialization*/
-            ret = CSI2_DPHY_Initialize(csi_info->frequency, csi_info->n_lanes);
+            ret = CSI2_DPHY_Initialize(CSI2->camera_sensor->dphy_port, csi_info->frequency, csi_info->n_lanes);
             if (ret != ARM_DRIVER_OK) {
                 return ret;
             }
@@ -763,12 +796,66 @@ CSI_IPI_INFO CSI_IPI_CFG = {
 
 /* CSI resources */
 CSI_RESOURCES CSI2 = {
-    .regs         = (CSI_Type *) CSI_BASE,
-    .cb_event     = NULL,
-    .ipi_info     = &CSI_IPI_CFG,
-    .irq          = (IRQn_Type) CSI_IRQ_IRQn,
-    .irq_priority = RTE_MIPI_CSI2_IRQ_PRI,
+    .regs          = (CSI_Type *) CSI_BASE,
+    .cb_event      = NULL,
+    .ipi_info      = &CSI_IPI_CFG,
+    .irq           = (IRQn_Type) CSI_IRQ_IRQn,
+    .irq_priority  = RTE_MIPI_CSI2_IRQ_PRI,
+    .num_sensors   = 0,
+    .active_sensor = 0,
+    .camera_sensor = NULL,
 };
+
+/**
+ * \fn int32_t CSI2_Select_Sensor(uint8_t idx)
+ * \brief Select the active camera sensor for the CSI2 driver.
+ *
+ * Powers the interface down if needed, binds the sensor at @p idx,
+ * then restores the previous power state.
+ *
+ * \param idx Index of the sensor to activate.
+ * \return \ref execution_status
+ */
+int32_t CSI2_Select_Sensor(uint8_t idx)
+{
+    int32_t ret;
+    uint8_t was_powered;
+
+    if (CSI2.status.initialized == 0) {
+        return ARM_DRIVER_ERROR;
+    }
+
+    if (idx >= CSI2.num_sensors || Camera_Sensor_Get(idx) == NULL) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    if (idx == CSI2.active_sensor) {
+        return ARM_DRIVER_OK;
+    }
+
+    was_powered = CSI2.status.powered;
+
+    if (was_powered) {
+        ret = CSI2_PowerControl(ARM_POWER_OFF, &CSI2);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
+    }
+
+    ret = CSI2_Bind_Sensor(&CSI2, idx);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+
+    if (was_powered) {
+        ret = CSI2_PowerControl(ARM_POWER_FULL, &CSI2);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
+    }
+
+    return ARM_DRIVER_OK;
+}
 
 static int32_t MIPI_CSI2_Initialize(ARM_MIPI_CSI2_SignalEvent_t cb_event)
 {

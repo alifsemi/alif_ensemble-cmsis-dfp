@@ -34,11 +34,9 @@
 #include "sys_ctrl_dsi.h"
 #include "sys_utils.h"
 
-#define DPHY_BACKEND_RXDPHY    0
-#define DPHY_BACKEND_TXDPHY_RX 1
-
 /*DPHY initialize status global variables*/
-static volatile uint32_t csi2_init_status;
+static DPHY_INIT_STATUS csi2_init_status = DPHY_INIT_STATUS_UNINITIALIZED;
+static DPHY_PORT        csi2_active_port;
 
 /*hsfreqrange and osc_freq_target range*/
 extern const DPHY_FREQ_RANGE frequency_range[];
@@ -510,39 +508,47 @@ static int32_t DPHY_TX_RX_SlaveSetup(uint32_t clock_frequency, uint8_t n_lanes)
 }
 
 /**
- * \fn          int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
+ * \fn          int32_t CSI2_DPHY_Initialize(DPHY_PORT port, uint32_t frequency,
+                                             uint8_t n_lanes)
  * \brief       Initialize MIPI CSI2 DPHY Interface.
  * \param[in]   frequency to configure DPHY PLL.
  * \param[in]   n_lanes number of lanes.
  * \return      \ref execution_status
  */
-int32_t CSI2_DPHY_Initialize(uint32_t frequency, uint8_t n_lanes)
+int32_t CSI2_DPHY_Initialize(DPHY_PORT port, uint32_t frequency, uint8_t n_lanes)
 {
     int32_t ret = ARM_DRIVER_OK;
 
     if (csi2_init_status == DPHY_INIT_STATUS_INITIALIZED) {
-        return ARM_DRIVER_OK;
+        if (csi2_active_port == port) {
+            return ARM_DRIVER_OK;
+        }
+        return ARM_DRIVER_ERROR;
     }
 
-#if ((RTE_MIPI_CSI2_DPHY_BACKEND == DPHY_BACKEND_TXDPHY_RX) && SOC_FEAT_HAS_CAM2)
-    DPHY_TX_RX_PowerEnable();
+#if SOC_FEAT_HAS_CAM2
+    if (port == DPHY_PORT_DSI_AS_RX) {
+        DPHY_TX_RX_PowerEnable();
 
-    ret = DPHY_TX_RX_SlaveSetup(frequency, n_lanes);
-    if (ret != ARM_DRIVER_OK) {
-        disable_second_cam_port();
-        DPHY_TX_RX_PowerDisable();
-        return ret;
-    }
-#else
-    DPHY_PowerEnable();
-
-    ret = DPHY_SlaveSetup(frequency, n_lanes);
-    if (ret != ARM_DRIVER_OK) {
-        DPHY_PowerDisable();
-        return ret;
-    }
+        ret = DPHY_TX_RX_SlaveSetup(frequency, n_lanes);
+        if (ret != ARM_DRIVER_OK) {
+            disable_second_cam_port();
+            DPHY_TX_RX_PowerDisable();
+            return ret;
+        }
+    } else
 #endif
+    {
+        DPHY_PowerEnable();
 
+        ret = DPHY_SlaveSetup(frequency, n_lanes);
+        if (ret != ARM_DRIVER_OK) {
+            DPHY_PowerDisable();
+            return ret;
+        }
+    }
+
+    csi2_active_port = port;
     csi2_init_status = DPHY_INIT_STATUS_INITIALIZED;
 
     return ret;
@@ -559,16 +565,19 @@ int32_t CSI2_DPHY_Uninitialize(void)
         return ARM_DRIVER_OK;
     }
 
-#if ((RTE_MIPI_CSI2_DPHY_BACKEND == DPHY_BACKEND_TXDPHY_RX) && SOC_FEAT_HAS_CAM2)
-    disable_second_cam_port();
-    MIPI_DSI_DPHY_Rst(DISABLE);
-    MIPI_DSI_DPHY_Shutdown(DISABLE);
-    DPHY_TX_RX_PowerDisable();
-#else
-    MIPI_CSI2_DPHY_Rst(DISABLE);
-    MIPI_CSI2_DPHY_Shutdown(DISABLE);
-    DPHY_PowerDisable();
+#if SOC_FEAT_HAS_CAM2
+    if (csi2_active_port == DPHY_PORT_DSI_AS_RX) {
+        disable_second_cam_port();
+        MIPI_DSI_DPHY_Rst(DISABLE);
+        MIPI_DSI_DPHY_Shutdown(DISABLE);
+        DPHY_TX_RX_PowerDisable();
+    } else
 #endif
+    {
+        MIPI_CSI2_DPHY_Rst(DISABLE);
+        MIPI_CSI2_DPHY_Shutdown(DISABLE);
+        DPHY_PowerDisable();
+    }
 
     csi2_init_status = DPHY_INIT_STATUS_UNINITIALIZED;
 
