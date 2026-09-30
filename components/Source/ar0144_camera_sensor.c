@@ -750,15 +750,22 @@ static CAMERA_SENSOR_OPERATIONS ar0144_ops = {
 \brief AR0144 Camera Sensor Device Structure
 \ref CAMERA_SENSOR_DEVICE
 */
+#ifndef RTE_AR0144_CAMERA_SENSOR_DPHY_PORT
+#define RTE_AR0144_CAMERA_SENSOR_DPHY_PORT DPHY_PORT_CSI2_NATIVE
+#endif
 static CAMERA_SENSOR_DEVICE ar0144_camera_sensor = {
     .interface = CAMERA_SENSOR_INTERFACE_MIPI,
     .width     = RTE_AR0144_CAMERA_SENSOR_FRAME_WIDTH,
     .height    = RTE_AR0144_CAMERA_SENSOR_FRAME_HEIGHT,
     .csi_info  = &ar0144_csi_info,
+    .dphy_port = RTE_AR0144_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &ar0144_ops,
 };
 
 /* Registering CPI sensor */
-CAMERA_SENSOR(ar0144_camera_sensor)
+#ifndef RTE_AR0144_CAMERA_SENSOR_INSTANCE
+#define RTE_AR0144_CAMERA_SENSOR_INSTANCE 0
+#endif
+CAMERA_SENSOR(RTE_AR0144_CAMERA_SENSOR_INSTANCE, ar0144_camera_sensor)
 
 #endif /* RTE_AR0144_CAMERA_SENSOR_ENABLE */
