@@ -1828,11 +1828,15 @@ Contains:
 \ref CAMERA_SENSOR_DEVICE
 */
 #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE)
+#ifndef RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT
+#define RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT DPHY_PORT_CSI2_NATIVE
+#endif
 static CAMERA_SENSOR_DEVICE cpi_mt9m114_camera_sensor = {
     .interface = CAMERA_SENSOR_INTERFACE_MIPI,
     .width     = MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH,
     .height    = MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT,
     .csi_info  = &csi_mt9m114_config,
+    .dphy_port = RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &cpi_mt9m114_ops,
 };
 #endif
@@ -1876,7 +1880,10 @@ static int32_t mt9m114_CPI_Control(uint32_t control, uint32_t arg)
 }
 
 /* Registering CPI sensor */
-CAMERA_SENSOR(cpi_mt9m114_camera_sensor)
+#ifndef RTE_MT9M114_CAMERA_SENSOR_INSTANCE
+#define RTE_MT9M114_CAMERA_SENSOR_INSTANCE 0
+#endif
+CAMERA_SENSOR(RTE_MT9M114_CAMERA_SENSOR_INSTANCE, cpi_mt9m114_camera_sensor)
 #endif
 
 #if RTE_MT9M114_CAMERA_SENSOR_LPCPI_ENABLE
