@@ -1496,7 +1496,7 @@ ISP_RESOURCES ISP_RES = {
  */
 static int32_t ISP_Initialize(ARM_ISP_SignalEvent_t cb_event)
 {
-    sensor = Get_Camera_Sensor();
+    sensor = Camera_Sensor_Get(CAMERA_SENSOR_INSTANCE_0);
     return ISP_Init(cb_event, sensor, &ISP_RES);
 }
 
