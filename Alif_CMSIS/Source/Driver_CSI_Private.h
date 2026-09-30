@@ -34,6 +34,7 @@ extern "C" {
 #include "Driver_MIPI_CSI2.h"
 #include "csi.h"
 #include "cpi.h"
+#include "Camera_Sensor.h"
 
 /*Helper macro*/
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -92,16 +93,25 @@ typedef struct _CSI_CPI_DATA_MODE_SETTINGS {
 
 /** \brief CSI driver resources */
 typedef struct _CSI_RESOURCES {
-    CSI_Type                   *regs; /**< CSI Register Base Address                           */
-    ARM_MIPI_CSI2_SignalEvent_t cb_event; /**< CSI Application Event Callback */
-    CSI_DRIVER_STATE            status; /**< CSI Status                                          */
-    CSI_IPI_INFO *ipi_info;             /**< CSI IPI information                                 */
-    IRQn_Type     irq;                  /**< CSI Interrupt Vector Number                         */
-    uint8_t       irq_priority;         /**< CSI Interrupt Priority                              */
-    uint8_t       pixel_data_type;      /**< CSI IPI pixel data type                             */
-    uint8_t       csi_pixclk_div;       /**< CSI clock divisor                                   */
-    uint8_t       n_lanes;              /**< CSI number of lanes select                          */
-    uint8_t       vc_id;                /**< CSI virtual channel ID                              */
+    CSI_Type                    *regs;           /**< CSI Register Base Address                    */
+    ARM_MIPI_CSI2_SignalEvent_t cb_event;        /**< CSI Application Event Callback               */
+    CSI_DRIVER_STATE            status;          /**< CSI Status                                   */
+    CSI_IPI_INFO                *ipi_info;       /**< CSI IPI information                          */
+    IRQn_Type                   irq;             /**< CSI Interrupt Vector Number                  */
+    uint8_t                     irq_priority;    /**< CSI Interrupt Priority                       */
+    uint8_t                     pixel_data_type; /**< CSI IPI pixel data type                      */
+    uint8_t                     csi_pixclk_div;  /**< CSI clock divisor                            */
+    uint8_t                     n_lanes;         /**< CSI number of lanes select                   */
+    uint8_t                     vc_id;           /**< CSI virtual channel ID                       */
+    uint8_t                     num_sensors;     /**< Count of sensors present (1 or 2)            */
+    uint8_t                     active_sensor;   /**< Currently selected sensor instance index     */
+    CAMERA_SENSOR_DEVICE        *camera_sensor;  /**< resolved sensor for active_sensor            */
 } CSI_RESOURCES;
+
+int32_t CSI2_Select_Sensor(uint8_t idx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DRIVER_CSI_PRIVATE_H_ */

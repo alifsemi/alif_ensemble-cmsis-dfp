@@ -41,6 +41,7 @@
 
 #if (RTE_MIPI_CSI2)
 #include "Driver_MIPI_CSI2.h"
+#include "Driver_CSI_Private.h"
 extern ARM_DRIVER_MIPI_CSI2 Driver_MIPI_CSI2;
 
 /*
@@ -372,6 +373,11 @@ static int32_t CPI_StartCapture(CPI_RESOURCES *CPI_RES)
 
     /* Set Frame Buffer Start Address Register */
     cpi_set_framebuff_start_addr(CPI_RES->regs, CPI_RES->cnfg->framebuff_saddr);
+
+    /* Enable Interrupts */
+    if (CPI_RES->irq_mask != 0U) {
+        cpi_enable_interrupt(CPI_RES->regs, CPI_RES->irq_mask);
+    }
 
 #if SOC_FEAT_CPI_HAS_STREAM_ENABLE
     if (CPI_RES->stream_mode_active == true) {
@@ -740,7 +746,7 @@ static int32_t CPIx_Control(CPI_RESOURCES *CPI_RES,
                 (arg & ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN) ? CAM_INTR_OUTFIFO_OVERRUN : 0;
             irqs |= (arg & ARM_CPI_EVENT_ERR_HARDWARE) ? CAM_INTR_BRESP_ERR : 0;
 
-            cpi_enable_interrupt(CPI_RES->regs, irqs);
+            CPI_RES->irq_mask = irqs;
 
             break;
         }
@@ -873,9 +879,6 @@ static void CPIx_IRQHandler(CPI_RESOURCES *CPI_RES)
 /* CPI Driver Instance */
 #if (RTE_CPI)
 
-/* CPI sensor access structure */
-static CAMERA_SENSOR_DEVICE *cpi_sensor;
-
 /* CPI FIFO Water mark Configuration. */
 static CPI_FIFO_CONFIG fifo_config = {
     .read_watermark  = RTE_CPI_FIFO_READ_WATERMARK,
@@ -918,11 +921,17 @@ static CPI_RESOURCES CPI_CTRL = {
     .irq_priority       = RTE_CPI_IRQ_PRI,
     .drv_instance       = CPI_INSTANCE_CPI0,
     .row_roundup        = RTE_CPI_ROW_ROUNDUP,
+    .irq_mask           = 0,
     .cnfg               = &config,
 #if SOC_FEAT_CPI_HAS_STREAM_ENABLE
     .num_framebuffers   = RTE_CPI_NUM_ACTIVE_FRAMEBUFFERS,
     .stream_mode_enable = RTE_CPI_STREAMING_ENABLE,
 #endif
+    .cam                = { NULL, NULL },
+    .num_sensors        = 0,
+    .active_sensor      = 0,
+    .sensor_inited      = { 0, 0 },
+    .cam_sensor         = NULL,
 };
 
 #if (RTE_MIPI_CSI2)
@@ -952,44 +961,196 @@ void ARM_ISP_Event_Callback(uint32_t int_event)
 }
 #endif
 
+/*
+ * \fn        int32_t CPI_Fetch_Sensors(void)
+ * \brief     Bind registered camera sensors to this CPI instance.
+ *             this function will
+ *                 - get the sensor count from Camera_Sensor
+ *                 - store each Camera_Sensor_Get() pointer in CPI_CTRL.cam[]
+ *                 - select instance 0 as the active sensor
+ * \return    \ref execution_status
+ */
+static int32_t CPI_Fetch_Sensors(void)
+{
+    uint8_t i;
+    uint8_t count = Camera_Sensor_GetCount();
+
+    CPI_CTRL.num_sensors   = count;
+    CPI_CTRL.active_sensor = 0;
+    CPI_CTRL.cam_sensor    = NULL;
+    CPI_CTRL.sensor_inited[0] = 0;
+    CPI_CTRL.sensor_inited[1] = 0;
+
+    for (i = 0; i < count; i++) {
+        CPI_CTRL.cam[i] = Camera_Sensor_Get(i);
+        if (CPI_CTRL.cam[i] == NULL) {
+            return ARM_DRIVER_ERROR_PARAMETER;
+        }
+    }
+
+    CPI_CTRL.cam_sensor = CPI_CTRL.cam[0];
+    return ARM_DRIVER_OK;
+}
+
+/*
+ * \fn        int32_t CPI_Switch_Sensor(uint8_t idx)
+ * \brief     Select the active camera sensor instance.
+ *             this function will
+ *                 - reject the request if CPI is not initialized or capture is busy
+ *                 - switch the I2C C1/C2 mux to the requested instance
+ *                 - if powered, Init() the new sensor (shared reset/power GPIOs)
+ *                 - update CPI_CTRL active sensor
+ *                 - if CSI2 is enabled, rebind DPHY/IPI to that sensor
+ *                 - if already configured, re-run CPI and sensor configure
+ * \param[in] idx  Camera sensor instance (0 or 1)
+ * \return    \ref execution_status
+ */
+static int32_t CPI_Switch_Sensor(uint8_t idx)
+{
+    int32_t ret;
+
+    if (CPI_CTRL.status.initialized == 0) {
+        return ARM_DRIVER_ERROR;
+    }
+
+    if (idx >= CPI_CTRL.num_sensors || CPI_CTRL.cam[idx] == NULL) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    if (cpi_get_capture_status(CPI_CTRL.regs) != CPI_VIDEO_CAPTURE_STATUS_NOT_CAPTURING) {
+        return ARM_DRIVER_ERROR_BUSY;
+    }
+
+    if (idx == CPI_CTRL.active_sensor) {
+        return ARM_DRIVER_OK;
+    }
+
+    Camera_Sensor_I2C_Mux_Switch(idx);
+
+    /*
+     * Both sensors share reset/power GPIOs. Init of the newly selected
+     * sensor must run after the mux switch; it invalidates the other.
+     */
+    if (CPI_CTRL.status.powered) {
+        if (CPI_CTRL.cam[idx]->ops == NULL || CPI_CTRL.cam[idx]->ops->Init == NULL) {
+            return ARM_DRIVER_ERROR_PARAMETER;
+        }
+        ret = CPI_CTRL.cam[idx]->ops->Init();
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
+        CPI_CTRL.sensor_inited[0]   = 0;
+        CPI_CTRL.sensor_inited[1]   = 0;
+        CPI_CTRL.sensor_inited[idx] = 1;
+    }
+
+    CPI_CTRL.active_sensor = idx;
+    CPI_CTRL.cam_sensor    = CPI_CTRL.cam[idx];
+
+#if (RTE_MIPI_CSI2)
+    ret = CSI2_Select_Sensor(idx);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+#endif
+
+    if (CPI_CTRL.status.powered && CPI_CTRL.status.sensor_configured) {
+        ret = CPIx_Control(&CPI_CTRL, CPI_CTRL.cam_sensor, CPI_CONFIGURE, 0);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
+        ret = CPIx_Control(&CPI_CTRL, CPI_CTRL.cam_sensor, CPI_CAMERA_SENSOR_CONFIGURE, 0);
+        if (ret != ARM_DRIVER_OK) {
+            return ret;
+        }
+    }
+
+    return ARM_DRIVER_OK;
+}
+
 /* wrapper functions for CPI */
 static int32_t CPI_Initialize(ARM_CPI_SignalEvent_t cb_event)
 {
+    int32_t ret;
+
+    ret = CPI_Fetch_Sensors();
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+
+    ret = Camera_Sensor_I2C_Mux_Initialize();
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+
     return CPIx_Initialize(&CPI_CTRL, cb_event);
 }
 
 static int32_t CPI_Uninitialize(void)
 {
-    return CPIx_Uninitialize(&CPI_CTRL);
+    int32_t ret = CPIx_Uninitialize(&CPI_CTRL);
+
+    Camera_Sensor_I2C_Mux_Uninitialize();
+    CPI_CTRL.cam[0]           = NULL;
+    CPI_CTRL.cam[1]           = NULL;
+    CPI_CTRL.cam_sensor       = NULL;
+    CPI_CTRL.num_sensors      = 0;
+    CPI_CTRL.active_sensor    = 0;
+    CPI_CTRL.sensor_inited[0] = 0;
+    CPI_CTRL.sensor_inited[1] = 0;
+
+    return ret;
 }
 
 static int32_t CPI_PowerControl(ARM_POWER_STATE state)
 {
-    cpi_sensor = Get_Camera_Sensor();
-    if (cpi_sensor == NULL) {
+    int32_t ret;
+
+    if (CPI_CTRL.cam_sensor == NULL) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
-    return CPIx_PowerControl(&CPI_CTRL, cpi_sensor, state);
+
+    if (state == ARM_POWER_FULL) {
+        Camera_Sensor_I2C_Mux_Switch(CPI_CTRL.active_sensor);
+        CPI_CTRL.cam_sensor = CPI_CTRL.cam[CPI_CTRL.active_sensor];
+    }
+
+    ret = CPIx_PowerControl(&CPI_CTRL, CPI_CTRL.cam_sensor, state);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+
+    if (state == ARM_POWER_FULL) {
+        CPI_CTRL.sensor_inited[CPI_CTRL.active_sensor] = 1;
+    } else if (state == ARM_POWER_OFF) {
+        CPI_CTRL.sensor_inited[0] = 0;
+        CPI_CTRL.sensor_inited[1] = 0;
+    }
+
+    return ARM_DRIVER_OK;
 }
 
 static int32_t CPI_CaptureFrame(void *framebuffer_startaddr)
 {
-    return CPIx_Capture(&CPI_CTRL, cpi_sensor, framebuffer_startaddr, CPI_MODE_SELECT_SNAPSHOT);
+    return CPIx_Capture(&CPI_CTRL, CPI_CTRL.cam_sensor, framebuffer_startaddr, CPI_MODE_SELECT_SNAPSHOT);
 }
 
 static int32_t CPI_CaptureVideo(void *framebuffer_startaddr)
 {
-    return CPIx_Capture(&CPI_CTRL, cpi_sensor, framebuffer_startaddr, CPI_MODE_SELECT_VIDEO);
+    return CPIx_Capture(&CPI_CTRL, CPI_CTRL.cam_sensor, framebuffer_startaddr, CPI_MODE_SELECT_VIDEO);
 }
 
 static int32_t CPI_Stop(void)
 {
-    return CPIx_Stop(&CPI_CTRL, cpi_sensor);
+    return CPIx_Stop(&CPI_CTRL, CPI_CTRL.cam_sensor);
 }
 
 static int32_t CPI_Control(uint32_t control, uint32_t arg)
 {
-    return CPIx_Control(&CPI_CTRL, cpi_sensor, control, arg);
+    if (control == CPI_SELECT_CAMERA_SENSOR) {
+        return CPI_Switch_Sensor((uint8_t) arg);
+    }
+    return CPIx_Control(&CPI_CTRL, CPI_CTRL.cam_sensor, control, arg);
 }
 
 void CAM_IRQHandler(void)

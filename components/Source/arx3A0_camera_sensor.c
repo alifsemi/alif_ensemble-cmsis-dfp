@@ -2005,15 +2005,22 @@ static CAMERA_SENSOR_OPERATIONS arx3a0_ops = {
 \brief ARX3A0 Camera Sensor Device Structure
 \ref CAMERA_SENSOR_DEVICE
 */
+#ifndef RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT
+#define RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT DPHY_PORT_CSI2_NATIVE
+#endif
 static CAMERA_SENSOR_DEVICE arx3a0_camera_sensor = {
     .interface = CAMERA_SENSOR_INTERFACE_MIPI,
     .width     = RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH,
     .height    = RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT,
     .csi_info  = &arx3a0_csi_info,
+    .dphy_port = RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &arx3a0_ops,
 };
 
 /* Registering CPI sensor */
-CAMERA_SENSOR(arx3a0_camera_sensor)
+#ifndef RTE_ARX3A0_CAMERA_SENSOR_INSTANCE
+#define RTE_ARX3A0_CAMERA_SENSOR_INSTANCE 0
+#endif
+CAMERA_SENSOR(RTE_ARX3A0_CAMERA_SENSOR_INSTANCE, arx3a0_camera_sensor)
 
 #endif /* RTE_ARX3A0_CAMERA_SENSOR_CSI_ENABLE */
