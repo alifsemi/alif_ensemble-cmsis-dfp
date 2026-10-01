@@ -92,10 +92,11 @@ extern "C" {
 #define ARM_OSPI_MODE_INACTIVE (0x00UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Inactive
 #define ARM_OSPI_MODE_MASTER                                                                       \
     (0x01UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Master (Output on MOSI, Input on MISO); arg = Bus
-                                      ///< Speed in bps
+                                      ///< Speed in bps or ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED
 #define ARM_OSPI_MODE_SLAVE                                                                        \
     (0x02UL << ARM_OSPI_CONTROL_POS)  ///< OSPI Slave  (Output on MISO, Input on MOSI)
 
+#define ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED 0xFFFFFFFFU  ///< Keep the current bus speed
 /*----- OSPI Control Codes: Mode Parameters: Frame Format -----*/
 
 #define ARM_OSPI_FRAME_FORMAT_POS 8

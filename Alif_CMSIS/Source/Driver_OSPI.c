@@ -856,9 +856,12 @@ static int32_t ARM_OSPI_Control(OSPI_RESOURCES *OSPI, uint32_t control, uint32_t
         {
             ospi_mode_master(OSPI->regs);
 
-            ret = OSPI_Set_Speed(OSPI, arg);
-            if (ret != ARM_DRIVER_OK) {
-                return ret;
+            // Allow keeping the current bus speed.
+            if (arg != ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED) {
+                ret = OSPI_Set_Speed(OSPI, arg);
+                if (ret != ARM_DRIVER_OK) {
+                    return ret;
+                }
             }
 
             break;

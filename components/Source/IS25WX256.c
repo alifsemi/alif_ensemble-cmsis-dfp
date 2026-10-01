@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "Driver_Flash.h"
+#include "Driver_Flash_EX.h"
 #include "Driver_OSPI.h"
 #include "RTE_Device.h"
 #include "RTE_Components.h"
@@ -59,11 +60,20 @@
 #define IO_MODE_ADDRESS      0x00000000U
 #define WAIT_CYCLE_ADDRESS   0x00000001U
 #define DRIVE_STRENGTH_ADDR  0x00000003U
-#define DRIVE_STRENGTH_VAL   0xFE // Drive strength value, FE = 35ohm
+#define DRIVE_STRENGTH_35OHM 0xFE // Drive strength value, FE = 35ohm
+
+#define WRAP_MODE_ADDR       0x00000007U
+#define WRAP_MODE_CONTINUOUS   0xFF
+#define WRAP_MODE_64BYTE       0xFE
+#define WRAP_MODE_32BYTE       0xFD
+#define WRAP_MODE_16BYTE       0xFC
+
 
 #define OCTAL_DDR_WO_DQS     (0xC7U)
 #define OCTAL_DDR            (0xE7U)
 #define DEFAULT_WAIT_CYCLES  RTE_ISSI_FLASH_WAIT_CYCLES
+#define WAIT_CYCLES_MIN      (1)
+#define WAIT_CYCLES_MAX      (30)
 
 #define FLAG_STATUS_BUSY     0x80U
 #define FLAG_STATUS_ERROR    0x30U
@@ -100,6 +110,9 @@ static uint8_t ISSI_Flags;
 
 /* Flag to monitor OSPI events */
 static volatile uint32_t issi_event_flag;
+
+/* Currently programmed dummy-cycle count used for flash reads */
+static uint32_t current_wait_cycles = DEFAULT_WAIT_CYCLES;
 
 /* Driver Version */
 const ARM_DRIVER_VERSION DriverVersion          = {ARM_FLASH_API_VERSION, ARM_FLASH_DRV_VERSION};
@@ -180,8 +193,8 @@ static int32_t ReadStatusReg(uint8_t command, uint8_t *stat)
     uint32_t cmd[3];
 
     status = ptrOSPI->Control(ARM_OSPI_MODE_MASTER | ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
-                                  ARM_OSPI_SS_MASTER_SW,
-                              OSPI_BUS_SPEED);
+                              ARM_OSPI_SS_MASTER_SW,
+                              ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -240,7 +253,7 @@ static int32_t SetWriteEnable(OSPI_DFS dfs)
 
     status =
         ptrOSPI->Control(ARM_OSPI_MODE_MASTER | ARM_OSPI_DATA_BITS(dfs) | ARM_OSPI_SS_MASTER_SW,
-                         OSPI_BUS_SPEED);
+                         ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -329,8 +342,8 @@ static int32_t WriteVolConfig(uint32_t address, uint32_t value)
 
     status =
         ptrOSPI->Control(ARM_OSPI_MODE_MASTER | ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
-                                ARM_OSPI_SS_MASTER_SW,
-                            OSPI_BUS_SPEED);
+                         ARM_OSPI_SS_MASTER_SW,
+                         ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
     if (status != ARM_DRIVER_OK) {
         ControlSlaveSelect(false);
         issi_event_flag = 0;
@@ -513,13 +526,16 @@ static int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
                     return ARM_DRIVER_ERROR;
                 }
 
+                /* Reset tracked value so it reflects the post-reset state */
+                current_wait_cycles = DEFAULT_WAIT_CYCLES;
+
                 status = WriteVolConfig(WAIT_CYCLE_ADDRESS, DEFAULT_WAIT_CYCLES);
                 if (status != ARM_DRIVER_OK) {
                     return ARM_DRIVER_ERROR;
                 }
 
                 // Default is 50ohm --> raise to 35ohm needed for proper signal integrity when running at high speed
-                status = WriteVolConfig(DRIVE_STRENGTH_ADDR, DRIVE_STRENGTH_VAL);
+                status = WriteVolConfig(DRIVE_STRENGTH_ADDR, DRIVE_STRENGTH_35OHM);
                 if (status != ARM_DRIVER_OK) {
                     return ARM_DRIVER_ERROR;
                 }
@@ -569,7 +585,7 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
 
     status = ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE,
                               (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
-                                  (DEFAULT_WAIT_CYCLES << ARM_OSPI_WAIT_CYCLE_POS));
+                                  (current_wait_cycles << ARM_OSPI_WAIT_CYCLE_POS));
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -1040,4 +1056,52 @@ ARM_DRIVER_FLASH        ARM_Driver_Flash_(DRIVER_FLASH_NUM) = {
     GetStatus,
     GetInfo
 };
+
+/**
+  \fn          int32_t SetWaitCycles (uint32_t cycles)
+  \brief       Set the wait cycles for the flash memory.
+  \param[in]   cycles  Number of wait cycles to set.
+  \return      \ref execution_status
+*/
+static int32_t SetWaitCycles(uint32_t cycles)
+{
+    if (cycles < WAIT_CYCLES_MIN || cycles > WAIT_CYCLES_MAX) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    int32_t status = WriteVolConfig(WAIT_CYCLE_ADDRESS, cycles);
+    if (status == ARM_DRIVER_OK) {
+        current_wait_cycles = cycles;
+    }
+    return status;
+}
+
+/**
+ * @brief   Set the wrap mode for the flash memory.
+ * @param   mode  Wrap mode to set.
+ * @return  ARM_DRIVER_OK on success, error code otherwise.
+ *
+ */
+static int32_t SetWrapMode(ARM_FLASH_WRAP_MODE mode)
+{
+    switch (mode) {
+    case ARM_FLASH_WRAP_MODE_CONTINUOUS:
+        return WriteVolConfig(WRAP_MODE_ADDR, WRAP_MODE_CONTINUOUS);
+    case ARM_FLASH_WRAP_MODE_64BYTE:
+        return WriteVolConfig(WRAP_MODE_ADDR, WRAP_MODE_64BYTE);
+    case ARM_FLASH_WRAP_MODE_32BYTE:
+        return WriteVolConfig(WRAP_MODE_ADDR, WRAP_MODE_32BYTE);
+    case ARM_FLASH_WRAP_MODE_16BYTE:
+        return WriteVolConfig(WRAP_MODE_ADDR, WRAP_MODE_16BYTE);
+    default:
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+}
+
+extern ARM_DRIVER_FLASH_EX ARM_Driver_Flash_EX_(DRIVER_FLASH_NUM);
+ARM_DRIVER_FLASH_EX        ARM_Driver_Flash_EX_(DRIVER_FLASH_NUM) = {
+    SetWaitCycles,
+    SetWrapMode
+};
+
 #endif /* defined(RTE_Drivers_ISSI_FLASH) */
