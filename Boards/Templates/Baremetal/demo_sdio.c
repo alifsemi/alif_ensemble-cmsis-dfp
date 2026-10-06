@@ -41,7 +41,7 @@
 #include "board_config.h"
 #include "app_utils.h"
 
-// Set to 0: Use application-defined SDC A revision pin configuration.
+// Set to 0: Use application-defined SDC pin configuration.
 // Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
 
@@ -149,53 +149,53 @@ void BareMetalSDIOTest(void)
 
 #endif
     /*
-     * NOTE: The SDC A revision pins used in this test application are not configured
+     * NOTE: The SDC pins used in this test application are not configured
      * in the board support library. Therefore, pins are configured manually here.
      */
-    pinconf_set(PORT_(BOARD_SD_CMD_A_GPIO_PORT),
-                BOARD_SD_CMD_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_6,
+    pinconf_set(PORT_(BOARD_SD_CMD_GPIO_PORT),
+                BOARD_SD_CMD_GPIO_PIN,
+                BOARD_SD_CMD_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // cmd
-    pinconf_set(PORT_(BOARD_SD_CLK_A_GPIO_PORT),
-                BOARD_SD_CLK_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_6,
+    pinconf_set(PORT_(BOARD_SD_CLK_GPIO_PORT),
+                BOARD_SD_CLK_GPIO_PIN,
+                BOARD_SD_CLK_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // clk
-    pinconf_set(PORT_(BOARD_SD_D0_A_GPIO_PORT),
-                BOARD_SD_D0_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_7,
+    pinconf_set(PORT_(BOARD_SD_D0_GPIO_PORT),
+                BOARD_SD_D0_GPIO_PIN,
+                BOARD_SD_D0_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d0
 
 #if RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE
-    pinconf_set(PORT_(BOARD_SD_D1_A_GPIO_PORT),
-                BOARD_SD_D1_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_7,
+    pinconf_set(PORT_(BOARD_SD_D1_GPIO_PORT),
+                BOARD_SD_D1_GPIO_PIN,
+                BOARD_SD_D1_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d1
-    pinconf_set(PORT_(BOARD_SD_D2_A_GPIO_PORT),
-                BOARD_SD_D2_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_7,
+    pinconf_set(PORT_(BOARD_SD_D2_GPIO_PORT),
+                BOARD_SD_D2_GPIO_PIN,
+                BOARD_SD_D2_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d2
-    pinconf_set(PORT_(BOARD_SD_D3_A_GPIO_PORT),
-                BOARD_SD_D3_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_6,
+    pinconf_set(PORT_(BOARD_SD_D3_GPIO_PORT),
+                BOARD_SD_D3_GPIO_PIN,
+                BOARD_SD_D3_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d3
 #endif
 
 #if RTE_SDC_BUS_WIDTH == SDMMC_8_BIT_MODE
-    pinconf_set(PORT_(BOARD_SD_D4_A_GPIO_PORT),
-                BOARD_SD_D4_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_6,
+    pinconf_set(PORT_(BOARD_SD_D4_GPIO_PORT),
+                BOARD_SD_D4_GPIO_PIN,
+                BOARD_SD_D4_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d4
-    pinconf_set(PORT_(BOARD_SD_D5_A_GPIO_PORT),
-                BOARD_SD_D5_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_5,
+    pinconf_set(PORT_(BOARD_SD_D5_GPIO_PORT),
+                BOARD_SD_D5_GPIO_PIN,
+                BOARD_SD_D5_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d5
-    pinconf_set(PORT_(BOARD_SD_D6_A_GPIO_PORT),
-                BOARD_SD_D6_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_5,
+    pinconf_set(PORT_(BOARD_SD_D6_GPIO_PORT),
+                BOARD_SD_D6_GPIO_PIN,
+                BOARD_SD_D6_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d6
-    pinconf_set(PORT_(BOARD_SD_D7_A_GPIO_PORT),
-                BOARD_SD_D7_A_GPIO_PIN,
-                PINMUX_ALTERNATE_FUNCTION_5,
+    pinconf_set(PORT_(BOARD_SD_D7_GPIO_PORT),
+                BOARD_SD_D7_GPIO_PIN,
+                BOARD_SD_D7_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE);  // d7
 #endif
 #endif
