@@ -517,10 +517,10 @@
 
 // <o> "SD_CARD_DETECT" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>
 // GPIO5 <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <15=> LPGPIO
-#define BOARD_SD_CARD_DETECT_GPIO_PORT                  3
+#define BOARD_SD_CARD_DETECT_GPIO_PORT                  6
 // <o> "SD_CARD_DETECT" GPIO pin number <0=> PIN0 <1=> PIN1 <2=> PIN2 <3=> PIN3 <4=> PIN4 <5=> PIN5
 // <6=> PIN6 <7=> PIN7
-#define BOARD_SD_CARD_DETECT_GPIO_PIN                   3
+#define BOARD_SD_CARD_DETECT_GPIO_PIN                   5
 
 // <o> "SD_CMD_A" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=> GPIO5
 // <6=> GPIO6 <7=> GPIO7 <8=> GPIO8 <9=> GPIO9 <15=> LPGPIO
