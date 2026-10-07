@@ -1258,6 +1258,9 @@ void i2c_clk_cfg(I3C_Type *i3c, uint32_t core_clk, I3C_I2C_SPEED_MODE i2c_speed_
 */
 void i3c_master_init(I3C_Type *i3c)
 {
+    /* Disables controller */
+    i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
+
     i3c->I3C_QUEUE_THLD_CTRL &=
         ~(I3C_QUEUE_THLD_CTRL_IBI_STATUS_THLD_Msk | I3C_QUEUE_THLD_CTRL_RESP_BUF_THLD_Msk);
 

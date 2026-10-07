@@ -27,7 +27,7 @@
 #error "I3C is not enabled in the RTE_Device.h"
 #endif
 
-#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 2) /* driver version */
+#define ARM_I3C_DRV_VERSION ARM_DRIVER_VERSION_MAJOR_MINOR(8, 3) /* driver version */
 
 #if I3C_DMA_ENABLE
 /* DMA helper macros */
@@ -2045,7 +2045,9 @@ static int32_t I3Cx_Control(I3C_RESOURCES *i3c, uint32_t control, uint32_t arg)
         /* Initialize and Enable i3c Slave */
         slv_addr = arg;
 
+        /* Adaptive and HJ while disabled; i3c_slave_init enables once. */
         i3c_slave_setup_adaptive_mode(i3c->regs, i3c->adaptive_mode);
+        i3c_slave_enable_hot_join(i3c->regs, i3c->hj_en);
 
         i3c_slave_init(i3c->regs, slv_addr, i3c->core_clk);
 
@@ -2759,6 +2761,7 @@ static I3C_RESOURCES i3c = {
     .blocking_mode = true,
 #endif
     .adaptive_mode = RTE_I3C_SLAVE_ADAPTIVE_MODE_ENABLE,
+    .hj_en         = RTE_I3C_SLAVE_HOT_JOIN_ENABLE,
     .irq           = (IRQn_Type) I3C_IRQ_IRQn,
     .irq_priority  = RTE_I3C_IRQ_PRI,
     .instance      = I3C_INSTANCE_0,
@@ -2957,6 +2960,7 @@ static I3C_RESOURCES LPI3C_RES = {
     .blocking_mode = true,
 #endif
     .adaptive_mode = RTE_LPI3C_SLAVE_ADAPTIVE_MODE_ENABLE,
+    .hj_en         = RTE_LPI3C_SLAVE_HOT_JOIN_ENABLE,
     .irq           = (IRQn_Type) LPI3C_IRQ_IRQn,
     .irq_priority  = RTE_LPI3C_IRQ_PRI,
     .instance      = I3C_INSTANCE_LP_0,
