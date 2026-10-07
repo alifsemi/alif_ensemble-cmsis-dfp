@@ -530,6 +530,30 @@ typedef struct _i3c_xfer_t {
 } i3c_xfer_t;
 
 /**
+  \fn           static inline void i3c_disable(I3C_Type *i3c)
+  \brief        Disables the i3c controller
+  \param[in]    i3c     : Pointer to i3c register set structure
+  \return       none
+*/
+static inline void i3c_disable(I3C_Type *i3c)
+{
+    /* Disable i3c controller */
+    i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
+}
+
+/**
+  \fn           static inline void i3c_enable(I3C_Type *i3c)
+  \brief        Enables the i3c controller
+  \param[in]    i3c     : Pointer to i3c register set structure
+  \return       none
+*/
+static inline void i3c_enable(I3C_Type *i3c)
+{
+    /* Enable i3c controller */
+    i3c->I3C_DEVICE_CTRL |= I3C_DEVICE_CTRL_ENABLE;
+}
+
+/**
   \fn          static inline bool i3c_is_master(I3C_Type *i3c)
   \brief       Checks whether current instance is a master
   \param[in]   i3c   Pointer to i3c register map
@@ -1354,16 +1378,13 @@ static inline void i3c_master_setup_slv_intr_req_ctrl(I3C_Type *i3c, const bool 
 /**
   \fn           static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c,
   \                                                              const bool enable)
-  \brief        Controls I2C/I3c Adaptive mode for slave
+  \brief        Controls I2C/I3C adaptive mode for slave.
   \param[in]    i3c     : Pointer to i3c register set structure
   \param[in]    enable  : flag to enable/disable Adaptive mode
   \return       none
 */
 static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c, const bool enable)
 {
-    /* Enables I2C adaptive mode */
-    i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
-
     if (enable) {
         /* Enables I2C adaptive mode */
         i3c->I3C_DEVICE_CTRL |= I3C_DEVICE_CTRL_ADAPTIVE_I2C_I3C;
@@ -1371,9 +1392,25 @@ static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c, const bool enabl
         /* Disables I2C adaptive mode */
         i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ADAPTIVE_I2C_I3C;
     }
+}
 
-    /* Enables Hot-Join */
-    i3c->I3C_SLV_EVENT_STATUS |= I3C_SLV_EVENT_STATUS_HJ_EN;
+/**
+  \fn           static inline void i3c_slave_enable_hot_join(I3C_Type *i3c,
+  \                                                          const bool enable)
+  \brief        Enables/Disables the issue of Hot Join request.
+  \param[in]    i3c     : Pointer to i3c register set structure
+  \param[in]    enable  : flag to enable/disable Hot Join capability
+  \return       none
+*/
+static inline void i3c_slave_enable_hot_join(I3C_Type *i3c, const bool enable)
+{
+    if (enable) {
+        /* Enables Hot-Join */
+        i3c->I3C_SLV_EVENT_STATUS |= I3C_SLV_EVENT_STATUS_HJ_EN;
+    } else {
+        /* Disables Hot-Join */
+        i3c->I3C_SLV_EVENT_STATUS &= ~I3C_SLV_EVENT_STATUS_HJ_EN;
+    }
 }
 
 /**
@@ -1542,7 +1579,7 @@ void i3c_master_init(I3C_Type *i3c);
                  This function will :
                   - set slave static address
                   - set secondary master as slave mode
-                  - Enable i3c controller
+                Caller enables the controller after this returns.
   \param[in]    i3c       : Pointer to i3c register
                              set structure
   \param[in]    slv_addr  : Slave own Address
