@@ -20,6 +20,16 @@
 #include "RTE_Components.h"
 #include CMSIS_device_header
 
+#if (RTE_I2C0_BLOCKING_MODE_ENABLE || \
+     RTE_I2C1_BLOCKING_MODE_ENABLE || \
+     RTE_I2C2_BLOCKING_MODE_ENABLE || \
+     RTE_I2C3_BLOCKING_MODE_ENABLE || \
+	 RTE_LPI2C1_BLOCKING_MODE_ENABLE)
+#define RTE_I2C_BLOCKING_MODE_ENABLE 1
+#else
+#define RTE_I2C_BLOCKING_MODE_ENABLE 0
+#endif
+
 #if (RTE_I2C0_DMA_ENABLE || RTE_I2C1_DMA_ENABLE || RTE_I2C2_DMA_ENABLE || RTE_I2C3_DMA_ENABLE ||   \
      RTE_LPI2C1_DMA_ENABLE)
 #define I2C_DMA_ENABLE 1
@@ -72,6 +82,9 @@ typedef struct _I2C_RESOURCES {
     uint8_t               mode;         /* current working mode as master or slave */
     uint8_t wr_mode_info; /* Write-Read combined mode - Bit0 - On/Off, Bits7-4 - Tar reg addr size
                            */
+#if RTE_I2C_BLOCKING_MODE_ENABLE
+    bool blocking_mode; /* Blocking mode enable */
+#endif
 #if I2C_DMA_ENABLE
     const bool            dma_enable;       /* I2C dma enable                          */
     const uint32_t        dma_irq_priority; /* DMA IRQ priority number                 */
