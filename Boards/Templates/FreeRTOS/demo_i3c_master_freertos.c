@@ -282,7 +282,7 @@ void i3c_master_loopback_thread(void *pvParameters)
         goto error_poweroff;
     }
 
-    /* i3c Speed Mode Configuration: Bus mode slow  */
+    /* I3C OD/PP (~2 MHz) for DAA / addressing */
     ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_SLOW_MODE);
 
     /* Reject Hot-Join request */
@@ -385,7 +385,7 @@ void i3c_master_loopback_thread(void *pvParameters)
                 slave_addr, I3C_SLV_TAR);
     }
 
-    /* i3c Speed Mode Configuration: Normal I3C mode */
+    /* I3C SDR0 + EXT_LCNT for private data */
     ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_NORMAL_MODE);
 
     while (1) {

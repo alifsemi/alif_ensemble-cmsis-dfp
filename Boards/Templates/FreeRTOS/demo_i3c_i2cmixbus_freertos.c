@@ -28,7 +28,7 @@
  *                 GND
  *
  * @bug      : None.
- * @Note     : None.
+ * @Note     : Mixed Fast bus; I2C BMI speed is AttachSlvDev xfer_speed.
  ******************************************************************************/
 
 /* System Includes */
@@ -209,10 +209,11 @@ void I3C_callback(uint32_t event)
 
                This demo thread does:
                  - initialize i3c driver;
-                 - set i3c speed mode to Mixed bus i2c/i3c Fast Mode 400 Kbps;
+                 - set Mixed Fast bus (I2C FM+FMP banks + I3C SLOW for DAA);
                  - assign dynamic address and attach all i3c slave devices to i3c;
+                 - switch I3C SCL to NORMAL for I3C private data;
                  - send/receive i3c CCC (Common Command Codes) only for i3c slaves
-                 - attach all i2c slave devices to i3c;
+                 - attach I2C BMI with packed xfer_speed (Fm);
                  - continuously read from specific register address(chip-id)
                     for all the attached slaves;
                  - display result depending on whether
@@ -238,6 +239,8 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
 
 /* BMI323 Slave address(On-chip attached to Board) */
 #define I2C_BMI_ADDR                 0x69
+/* Packed I2C speed for BMI. Use I3C_XFER_SPEED_I2C_FMP for Fm+. */
+#define I2C_BMI_XFER_SPEED           I3C_XFER_SPEED_I2C_FM
 
 /* ICM-42670-P Accelerometer Slave chip-id register(WHO AM I) address and value
  *  as per datasheet
@@ -295,8 +298,8 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
     version = I3CDrv->GetVersion();
     printf("\r\n i3c version api:0x%X driver:0x%X \r\n", version.api, version.drv);
 
-    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)) ||
-        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(8U, 3U)) ||
+        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(8U, 3U)))
     {
         printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
         return;
@@ -330,12 +333,8 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
         goto error_poweroff;
     }
 
-    /*  i3c Speed Mode Configuration for i2c comm:
-     *  I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 Mbps
-     *  I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS : Fast Mode      400 Kbps
-     *  I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 Kbps
-     */
-    ret = I3CDrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS);
+    /* Mixed Fast: both I2C banks. Fm vs Fm+ is AttachSlvDev xfer_speed. */
+    ret = I3CDrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_MODE_MIXED_FAST);
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: I3C Control failed.\r\n");
         goto error_poweroff;
@@ -424,7 +423,7 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
 
     actual_events = 0;
 
-    /* i3c Speed Mode Configuration: I3C_BUS_NORMAL_MODE */
+    /* I3C SDR0 for private data; Mixed Fast I2C banks stay programmed */
     ret           = I3CDrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_NORMAL_MODE);
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: I3C Control failed.\r\n");
@@ -495,7 +494,7 @@ void mix_bus_i2c_i3c_Thread(void *pvParameters)
     /* Attach i2c BMI slave using static address */
     printf("\r\n >> i2c: Attaching i2c BMI slave addr:0x%" PRIx8 " to i3c...\r\n", slave_addr[1]);
 
-    ret = I3CDrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[1]);
+    ret = I3CDrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[1], I2C_BMI_XFER_SPEED);
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: I3C Attach I2C device failed.\r\n");
         goto error_poweroff;
