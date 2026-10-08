@@ -30,24 +30,47 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "RTE_Device.h"
 #include "cpi.h"
 #if defined(CSI)
 #include "csi.h"
 #endif
 
+/* Dual camera: board RTE enable plus SoC second-camera feature. */
+#if defined(RTE_SECOND_CAMERA_ENABLE) && (RTE_SECOND_CAMERA_ENABLE) && \
+    defined(SOC_FEAT_HAS_CAM2) && (SOC_FEAT_HAS_CAM2)
+#define CAMERA_DUAL_SENSOR_SUPPORT 1
+#else
+#define CAMERA_DUAL_SENSOR_SUPPORT 0
+#endif
+
+#define CAMERA_SENSOR_INSTANCE_0 0u
+#define CAMERA_SENSOR_INSTANCE_1 1u
+#define CAMERA_SENSOR_MAX_COUNT  (CAMERA_DUAL_SENSOR_SUPPORT ? 2u : 1u)
+
 /****** CAMERA_SENSOR used for registering camera sensor *****/
-#define CAMERA_SENSOR(sensor)                                                                      \
-    CAMERA_SENSOR_DEVICE * Get_Camera_Sensor(void)                                                 \
+#define CAMERA_SENSOR_(inst, sensor)                                                               \
+    CAMERA_SENSOR_DEVICE *Get_Camera_Sensor_##inst(void)                                           \
     {                                                                                              \
         return &sensor;                                                                            \
     }
 
+#define CAMERA_SENSOR(inst, sensor) CAMERA_SENSOR_(inst, sensor)
+
 /****** LPCAMERA_SENSOR used for registering low power camera sensor *****/
 #define LPCAMERA_SENSOR(sensor)                                                                    \
-    CAMERA_SENSOR_DEVICE * Get_LPCamera_Sensor(void)                                               \
+    CAMERA_SENSOR_DEVICE *Get_LPCamera_Sensor(void)                                                \
     {                                                                                              \
         return &sensor;                                                                            \
     }
+
+/**
+\brief MIPI DPHY used by CSI2 for the sensor
+*/
+typedef enum _DPHY_PORT {
+    DPHY_PORT_CSI2_NATIVE = 0, /* CSI2 RX DPHY */
+    DPHY_PORT_DSI_AS_RX   = 1, /* DSI DPHY in RX mode */
+} DPHY_PORT;
 
 /**
 \brief Camera Sensor interface
@@ -129,12 +152,19 @@ typedef struct _CAMERA_SENSOR_DEVICE {
     CPI_INFO                 *cpi_info;  /* CPI Camera Sensor device Information */
 #if defined(CSI)
     CSI_INFO                 *csi_info;  /* CSI Camera Sensor device Information */
+    DPHY_PORT                 dphy_port; /* MIPI DPHY port: CSI2 native / DSI-as-RX */
 #endif
     CAMERA_SENSOR_OPERATIONS *ops;       /* Camera Sensor device Operations */
 } CAMERA_SENSOR_DEVICE;
 
-/** Get CPI/LPCPI sensor information */
-CAMERA_SENSOR_DEVICE *Get_Camera_Sensor(void);
+CAMERA_SENSOR_DEVICE *Camera_Sensor_Get(uint8_t instance);
+uint8_t               Camera_Sensor_GetCount(void);
+
+/* I2C C1/C2 analog-switch GPIO. Called by Driver_CPI; not an application API. */
+void    Camera_Sensor_I2C_Mux_Switch(uint8_t instance);
+int32_t Camera_Sensor_I2C_Mux_Initialize(void);
+void    Camera_Sensor_I2C_Mux_Uninitialize(void);
+
 CAMERA_SENSOR_DEVICE *Get_LPCamera_Sensor(void);
 
 #ifdef __cplusplus

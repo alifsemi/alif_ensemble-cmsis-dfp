@@ -103,13 +103,13 @@
 // <o> CPI number of active framebuffers
 // <i> Defines CPI number of active framebuffers
 // <i> Default: 2
-#define RTE_CPI_NUM_ACTIVE_FRAMEBUFFERS                       2
+#define RTE_CPI_NUM_ACTIVE_FRAMEBUFFERS                       0
 
 // <o> Enable CPI streaming
 // <0=> Disable
 // <1=> Enable
 // <i> Default: 1
-#define RTE_CPI_STREAMING_ENABLE                              1
+#define RTE_CPI_STREAMING_ENABLE                              0
 
 // <e> MT9M114 [Driver_MT9M114]
 // <o> Enable/Disable MT9M114 camera sensor
@@ -474,6 +474,13 @@
 #endif
 // </e> JPEG (JPEG) [Driver_JPEG]
 
+// <e> Second camera enable
+//     0: selfie camera only (instance 0)
+//     1: dual camera (instances 0 and 1)
+// <i> Selects second camera if supported.
+// <i> Default: 0
+#define RTE_SECOND_CAMERA_ENABLE            0
+
 // <e> MIPI_CSI2 (mipi csi2) [Driver_MIPI_CSI2]
 // <i> Configuration settings for Driver_MIPI_CSI2 in component ::Drivers:MIPI_CSI2
 #define RTE_MIPI_CSI2 1
@@ -713,6 +720,21 @@
 // <i> Default: 1
 #define RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_ARX3A0_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select ARX3A0 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> ARX3A0 [Driver_ARX3A0]
 
@@ -781,6 +803,21 @@
 // <i> Default: 1
 #define RTE_AR0144_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_AR0144_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0144 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0144_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> AR0114 [Driver_AR0114]
 
@@ -847,6 +884,21 @@
 //     <4=>   I2C OVER I3C
 // <i> Default: 1
 #define RTE_AR0145_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_AR0145_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0145 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0145_CAMERA_SENSOR_DPHY_PORT               0
 
 #endif
 // </e> AR0145 [Driver_AR0145]
@@ -915,6 +967,21 @@
 //     <4=>   I2C OVER I3C
 // <i> Default: 1
 #define RTE_AR0246_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_AR0246_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0246 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0246_CAMERA_SENSOR_DPHY_PORT               0
 
 #endif
 // </e> AR0246 [Driver_AR0246]
@@ -1000,6 +1067,21 @@
 //     <4=>   I2C OVER I3C
 // <i> Default: 1
 #define RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_MT9M114_CAMERA_SENSOR_INSTANCE                     0
+
+// <o> Select MT9M114 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT                    0
 
 // <o> MT9M114 sensor frame width for ISP / CSI2 pipeline
 // <i> Width in pixels of the MT9M114 MIPI sensor frame
@@ -1098,6 +1180,21 @@
 // <i> Default: 1
 #define RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE     1
 
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_HM0360_CAMERA_SENSOR_INSTANCE         0
+
+// <o> Select HM0360 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: 0
+#define RTE_HM0360_CAMERA_SENSOR_DPHY_PORT        0
+
 #endif
 // </e> HM0360_MIPI [Driver_HM0360_MIPI]
 
@@ -1160,6 +1257,21 @@
 //     <I3C=> I2C OVER I3C
 // <i> Default: 1
 #define RTE_OV5647_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_OV5647_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select OV5647 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_OV5647_CAMERA_SENSOR_DPHY_PORT               0
 
 #endif
 // </e> OV5647_MIPI [Driver_OV5647_MIPI]
@@ -1247,6 +1359,21 @@
 //     <I3C=> I2C OVER I3C
 // <i> Default: 1
 #define RTE_OV5675_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> selfie camera
+//     <1=> standard camera
+// <i> Default: 0
+#define RTE_OV5675_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select OV5675 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_OV5675_CAMERA_SENSOR_DPHY_PORT               0
 
 // <o> Select camera sensor OV5675 CSI clock source division [Divisor] <2-511>
 // <i> Defines camera sensor OV5675 CSI clock source division
