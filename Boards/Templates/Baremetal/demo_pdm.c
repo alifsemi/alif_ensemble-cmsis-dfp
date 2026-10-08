@@ -145,15 +145,15 @@ void pdm_demo();
 static void PDM_fifo_callback(uint32_t event)
 {
     if (event & ARM_PDM_EVENT_ERROR) {
-        call_back_event = PDM_CALLBACK_ERROR_EVENT;
+        call_back_event |= PDM_CALLBACK_ERROR_EVENT;
     }
 
     if (event & ARM_PDM_EVENT_CAPTURE_COMPLETE) {
-        call_back_event = PDM_CALLBACK_WARNING_EVENT;
+        call_back_event |= PDM_CALLBACK_WARNING_EVENT;
     }
 
     if (event & ARM_PDM_EVENT_AUDIO_DETECTION) {
-        call_back_event = PDM_CALLBACK_AUDIO_DETECTION_EVENT;
+        call_back_event |= PDM_CALLBACK_AUDIO_DETECTION_EVENT;
     }
 }
 
@@ -440,22 +440,23 @@ void pdm_demo()
         goto error_capture;
     }
 
-    /* wait for the call back event */
-    while (call_back_event == 0) {
+     /* Wait until the one-shot Receive() buffer is full. Overflow and
+      * audio-detect may arrive earlier; they must not abort capture. */
+    while ((call_back_event & PDM_CALLBACK_WARNING_EVENT) == 0) {
     }
 
     /* PDM fifo alomost full warning event */
-    if (call_back_event == PDM_CALLBACK_WARNING_EVENT) {
+    if (call_back_event & PDM_CALLBACK_WARNING_EVENT) {
         printf("\n PDM warning event : Fifo almost full\n");
     }
 
     /* PDM channel audio detection event */
-    if (call_back_event == PDM_CALLBACK_AUDIO_DETECTION_EVENT) {
+    if (call_back_event & PDM_CALLBACK_AUDIO_DETECTION_EVENT) {
         printf("\n PDM audio detect event: data in the audio channel");
     }
 
     /* PDM fifo overflow error event */
-    if (call_back_event == PDM_CALLBACK_ERROR_EVENT) {
+    if (call_back_event & PDM_CALLBACK_ERROR_EVENT) {
         printf("\n PDM error event: Fifo overflow \n");
     }
 
