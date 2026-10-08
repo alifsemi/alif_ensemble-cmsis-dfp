@@ -1976,6 +1976,11 @@
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PINCONF"/>
       <!--<require Cclass="Device" Cgroup="Conf" Csub="RTE_Device"/>-->
     </condition>
+    <condition id="Ensemble Flash Driver">
+      <description>Requirement for OSPI Flash device drivers (shared Flash API extension)</description>
+      <require condition="Ensemble CMSIS_Driver"/>
+      <require Cclass="CMSIS Driver" Cgroup="Flash"/>
+    </condition>
     <condition id="Ensemble Camera Driver">
       <description>Requirement for CMSIS CAMERA Driver</description>
       <require condition="Ensemble"/>
@@ -2558,6 +2563,13 @@
         <file category="header" name="Alif_CMSIS/Source/Driver_LPI2C_Private.h"/>
         <file category="header" name="drivers/include/lpi2c.h"/>
         <file category="source" name="drivers/source/lpi2c.c"/>
+      </files>
+    </component>
+
+    <component Cclass="CMSIS Driver" Cgroup="Flash" Cversion="2.2.0" Capiversion="2.1.0" condition="Ensemble CMSIS_Driver">
+      <description>Flash Driver extensions for Alif Semiconductor SOC</description>
+      <files>
+        <file category="header" name="Alif_CMSIS/Include/Driver_Flash_EX.h"/>
       </files>
     </component>
 
@@ -3391,7 +3403,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="OSPI Flash ISSI" Cversion="2.2.0" condition="Ensemble CMSIS_Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="OSPI Flash ISSI" Cversion="2.2.0" condition="Ensemble Flash Driver">
       <description>External Peripherals Drivers</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_ISSI_FLASH
@@ -3402,7 +3414,7 @@
       </files>
     </component>
 
-    <component Cclass="BSP" Cgroup="External peripherals" Csub="OSPI Flash MX66UW1G" Cversion="2.2.0" condition="Ensemble CMSIS_Driver">
+    <component Cclass="BSP" Cgroup="External peripherals" Csub="OSPI Flash MX66UW1G" Cversion="2.2.0" condition="Ensemble Flash Driver">
       <description>External Peripherals Drivers</description>
       <RTE_Components_h>  <!-- the following content goes into file 'RTE_Components.h' -->
         #define RTE_Drivers_MX66UW1G_FLASH

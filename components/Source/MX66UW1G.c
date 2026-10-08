@@ -17,6 +17,8 @@
  * @brief    Source file for MX66UW1G flash.
  ******************************************************************************/
 #include "Driver_Flash.h"
+#include "Driver_Flash_EX.h"
+
 #include "Driver_OSPI.h"
 #include "RTE_Device.h"
 #include "RTE_Components.h"
@@ -88,6 +90,8 @@
 #define BURST_WRAP64                                            0x03U
 
 #define DEFAULT_WAIT_CYCLES                                     RTE_MX66UW1G_FLASH_WAIT_CYCLES
+#define WAIT_CYCLES_MIN      (6)
+#define WAIT_CYCLES_MAX      (20)
 
 #define FLAG_STATUS_WIP                                         0x01U
 #define FLAG_STATUS_WEL                                         0x02U
@@ -135,6 +139,9 @@ static uint8_t Flash_Flags;
 /* Flag to monitor OSPI events */
 static volatile uint32_t event_flag;
 
+/* Currently configured wait cycles */
+static uint32_t current_wait_cycles = DEFAULT_WAIT_CYCLES;
+
 /* Driver Version */
 const ARM_DRIVER_VERSION DriverVersion          = {ARM_FLASH_API_VERSION, ARM_FLASH_DRV_VERSION};
 
@@ -148,6 +155,10 @@ const ARM_FLASH_CAPABILITIES DriverCapabilities = {
     0U                                  /* reserved */
 #endif
 };
+
+// Declarations
+static int32_t SetWaitCycles(uint32_t cycles);
+static int32_t SetWrapMode(ARM_FLASH_WRAP_MODE mode);
 
 /**
  * @fn         void spi_callback_event(uint32_t event)
@@ -219,7 +230,7 @@ static int32_t MX66UW1G_Read(uint16_t command, uint32_t addr, uint16_t *data, si
     status = ptrOSPI->Control(ARM_OSPI_MODE_MASTER |
                     ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
                     control_flags,
-                    OSPI_BUS_SPEED);
+                    ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -423,7 +434,7 @@ static int32_t MX66UW1G_SetWriteEnable(void)
     status = ptrOSPI->Control(ARM_OSPI_MODE_MASTER |
              ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
              control_flags,
-             OSPI_BUS_SPEED);
+             ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -459,6 +470,70 @@ static int32_t MX66UW1G_SetWriteEnable(void)
             return ARM_DRIVER_ERROR;
         }
     }
+    return status;
+}
+
+
+/**
+ * @fn      int32_t MX66UW1G_Command(uint32_t cmd, uint32_t address, uint32_t value)
+ * @brief   Write command to the flash device
+ * @param[in]   cmd     : Command to use
+ * @param[in]   address : Address
+ * @param[in]   value   : Value to be written to the flash device
+ * @return      \ref execution_status
+ */
+static int32_t MX66UW1G_Command(uint32_t cmd, uint32_t address, uint32_t value)
+{
+    uint32_t cmd_buffer[3];
+    int32_t status = ptrOSPI->Control(ARM_OSPI_SET_INST_LENGTH | control_flags,
+                                ARM_OSPI_INST_LENGTH_16_BITS);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ptrOSPI->Control(ARM_OSPI_SET_FRAME_FORMAT | control_flags,
+                                ARM_OSPI_FRF_OCTAL);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ptrOSPI->Control(ARM_OSPI_SET_DDR_MODE | control_flags,
+                                ARM_OSPI_INST_DDR_ENABLE);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = MX66UW1G_SetWriteEnable();
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ptrOSPI->Control(ARM_OSPI_MODE_MASTER |
+                        ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
+                        control_flags,
+                        ARM_OSPI_MODE_ARG_KEEP_CURRENT_SPEED);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    /* Prepare buffer with volatile register write command, address and value */
+    cmd_buffer[0] = cmd;
+    cmd_buffer[1] = address;
+    cmd_buffer[2] = (value << 8) | value;
+
+    status = ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE | control_flags,
+                            (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
+                            (0 << ARM_OSPI_WAIT_CYCLE_POS));
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = ptrOSPI->Send(cmd_buffer, 3);
+    if (status != ARM_DRIVER_OK) {
+        return status;
+    }
+
+    status = wait_for_completion();
     return status;
 }
 
@@ -591,55 +666,11 @@ static int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
                     return status;
                 }
 
-                status = ptrOSPI->Control(ARM_OSPI_SET_INST_LENGTH | control_flags,
-                                          ARM_OSPI_INST_LENGTH_16_BITS);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
+                // Reset current wait cycles to default
+                current_wait_cycles = DEFAULT_WAIT_CYCLES;
 
-                status = ptrOSPI->Control(ARM_OSPI_SET_FRAME_FORMAT | control_flags,
-                                          ARM_OSPI_FRF_OCTAL);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = ptrOSPI->Control(ARM_OSPI_SET_DDR_MODE | control_flags,
-                                          ARM_OSPI_INST_DDR_ENABLE);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = MX66UW1G_SetWriteEnable();
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = ptrOSPI->Control(ARM_OSPI_MODE_MASTER |
-                                 ARM_OSPI_DATA_BITS(OSPI_DFS_16_BIT) |
-                                 control_flags,
-                                 OSPI_BUS_SPEED);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                /* Prepare buffer with command and address to configure default wait cycles */
-                cmd[0] = CMD_WRCR2;
-                cmd[1] = DUMMY_CYCLE_ADDRESS;
-                cmd[2] = (DUMMY_CYCLE(DEFAULT_WAIT_CYCLES) << 8) | DUMMY_CYCLE(DEFAULT_WAIT_CYCLES);
-
-                status = ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE | control_flags,
-                                        (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
-                                        (0 << ARM_OSPI_WAIT_CYCLE_POS));
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = ptrOSPI->Send(cmd, 3);
-                if (status != ARM_DRIVER_OK) {
-                    return ARM_DRIVER_ERROR;
-                }
-
-                status = wait_for_completion();
+                // Write wait cycles
+                status = SetWaitCycles(DEFAULT_WAIT_CYCLES);
                 if (status != ARM_DRIVER_OK) {
                     return status;
                 }
@@ -702,7 +733,7 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
 
     status = ptrOSPI->Control(ARM_OSPI_SET_ADDR_LENGTH_WAIT_CYCLE,
                              (ARM_OSPI_ADDR_LENGTH_32_BITS << ARM_OSPI_ADDR_LENGTH_POS) |
-                             (DEFAULT_WAIT_CYCLES << ARM_OSPI_WAIT_CYCLE_POS));
+                             (current_wait_cycles << ARM_OSPI_WAIT_CYCLE_POS));
     if (status != ARM_DRIVER_OK) {
         return ARM_DRIVER_ERROR;
     }
@@ -1072,6 +1103,48 @@ ARM_DRIVER_FLASH        ARM_Driver_Flash_(DRIVER_FLASH_NUM) = {
     EraseChip,
     GetStatus,
     GetInfo
+};
+
+static int32_t SetWaitCycles(uint32_t cycles)
+{
+    if (cycles < WAIT_CYCLES_MIN || cycles > WAIT_CYCLES_MAX || (cycles & 0x01)) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    int32_t status = MX66UW1G_Command(CMD_WRCR2, DUMMY_CYCLE_ADDRESS, DUMMY_CYCLE(cycles));
+    if (status == ARM_DRIVER_OK) {
+        current_wait_cycles = cycles;
+    }
+    return status;
+}
+
+static int32_t SetWrapMode(ARM_FLASH_WRAP_MODE mode)
+{
+    uint32_t wrap_mode = 0;
+    switch (mode) {
+    case ARM_FLASH_WRAP_MODE_CONTINUOUS:
+        wrap_mode = BURST_LINEAR;
+        break;
+    case ARM_FLASH_WRAP_MODE_64BYTE:
+        wrap_mode = BURST_WRAP64;
+        break;
+    case ARM_FLASH_WRAP_MODE_32BYTE:
+        wrap_mode = BURST_WRAP32;
+        break;
+    case ARM_FLASH_WRAP_MODE_16BYTE:
+        wrap_mode = BURST_WRAP16;
+        break;
+    default:
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+
+    return MX66UW1G_Command(CMD_SBL, 0, wrap_mode);
+}
+
+extern ARM_DRIVER_FLASH_EX ARM_Driver_Flash_EX_(DRIVER_FLASH_NUM);
+ARM_DRIVER_FLASH_EX        ARM_Driver_Flash_EX_(DRIVER_FLASH_NUM) = {
+    SetWaitCycles,
+    SetWrapMode
 };
 
 #endif /* defined(RTE_Drivers_MX66UW1G_FLASH) */
