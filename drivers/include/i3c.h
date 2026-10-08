@@ -1297,14 +1297,16 @@ static inline void i3c_master_setup_slv_intr_req_ctrl(I3C_Type *i3c, const bool 
 /**
   \fn           static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c,
   \                                                              const bool enable)
-  \brief        Controls I2C/I3c Adaptive mode for slave
+  \brief        Controls I2C/I3c Adaptive mode for slave.
+                Leaves the controller disabled; caller enables after the
+                rest of slave setup (typically i3c_slave_init).
   \param[in]    i3c     : Pointer to i3c register set structure
   \param[in]    enable  : flag to enable/disable Adaptive mode
   \return       none
 */
 static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c, const bool enable)
 {
-    /* Enables I2C adaptive mode */
+    /* Disables controller */
     i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
 
     if (enable) {
@@ -1314,9 +1316,30 @@ static inline void i3c_slave_setup_adaptive_mode(I3C_Type *i3c, const bool enabl
         /* Disables I2C adaptive mode */
         i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ADAPTIVE_I2C_I3C;
     }
+}
 
-    /* Enables Hot-Join */
-    i3c->I3C_SLV_EVENT_STATUS |= I3C_SLV_EVENT_STATUS_HJ_EN;
+/**
+  \fn           static inline void i3c_slave_enable_hot_join(I3C_Type *i3c,
+  \                                                          const bool enable)
+  \brief        Enables/Disables the issue of Hot Join request.
+                Leaves the controller disabled; caller enables after the
+                rest of slave setup (typically i3c_slave_init).
+  \param[in]    i3c     : Pointer to i3c register set structure
+  \param[in]    enable  : flag to enable/disable Hot Join capability
+  \return       none
+*/
+static inline void i3c_slave_enable_hot_join(I3C_Type *i3c, const bool enable)
+{
+    /* Disables controller */
+    i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
+
+    if (enable) {
+        /* Enables Hot-Join */
+        i3c->I3C_SLV_EVENT_STATUS |= I3C_SLV_EVENT_STATUS_HJ_EN;
+    } else {
+        /* Disables Hot-Join */
+        i3c->I3C_SLV_EVENT_STATUS &= ~I3C_SLV_EVENT_STATUS_HJ_EN;
+    }
 }
 
 /**
