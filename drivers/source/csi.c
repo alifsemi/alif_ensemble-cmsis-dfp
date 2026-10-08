@@ -16,6 +16,9 @@
  * @date     12-April-2023
  * @brief    Low level driver Specific source file.
  ******************************************************************************/
+#include "RTE_Components.h"
+
+#if defined(RTE_Drivers_MIPI_CSI2)
 
 #include "csi.h"
 
@@ -177,3 +180,4 @@ void csi_set_vertical_timing(CSI_Type *csi, uint16_t vsa_lines, uint16_t vbp_lin
     csi->CSI_IPI_VACTIVE_LINES &= ~CSI_IPI_VACTIVE_LINE_Msk;
     csi->CSI_IPI_VACTIVE_LINES  = vactive_lines;
 }
+#endif /* RTE_Drivers_MIPI_CSI2 */
