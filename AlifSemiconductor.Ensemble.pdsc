@@ -2418,14 +2418,14 @@
         <file category="source" name="Boards/Templates/Baremetal/demo_bmi323.c" attr="template" select="BMI323 Baremetal Demo"/>
 
         <!-- Baremetal Templates for HE Core -->
-        <file category="source" name="Boards/Templates/Baremetal/demo_lpi2c0.c" attr="template" select="LPI2C Baremetal Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/Baremetal/demo_lppdm.c" attr="template" select="LPPDM Baremetal Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/Baremetal/demo_lpspi.c" attr="template" select="LPSPI Baremetal Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/Baremetal/demo_lpuart.c" attr="template" select="LPUART Baremetal Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/FreeRTOS/demo_lppdm_freertos.c" attr="template" select="LPPDM FreeRTOS Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpspi_freertos.c" attr="template" select="LPSPI FreeRTOS Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpi2c0_freertos.c" attr="template" select="LPI2C FreeRTOS Demo" condition="M55_HE CMSIS-Core"/>
-        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpuart_freertos.c" attr="template" select="LPUART FreeRTOS Demo" condition="M55_HE CMSIS-Core"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_lpi2c0.c" attr="template" select="LPI2C Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_lppdm.c" attr="template" select="LPPDM Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_lpspi.c" attr="template" select="LPSPI Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_lpuart.c" attr="template" select="LPUART Baremetal Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_lppdm_freertos.c" attr="template" select="LPPDM FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpspi_freertos.c" attr="template" select="LPSPI FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpi2c0_freertos.c" attr="template" select="LPI2C FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_lpuart_freertos.c" attr="template" select="LPUART FreeRTOS Demo"/>
         <!--  FreeRTOS templates -->
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_freertos.c" attr="template" select="ADC FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_clickboard_freertos.c" attr="template" select="ADC Click Board FreeRTOS Demo"/>

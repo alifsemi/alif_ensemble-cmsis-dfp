@@ -375,7 +375,7 @@ static int32_t ARM_USART_PowerControl(ARM_POWER_STATE state, UART_RESOURCES *uar
          *  selected UART instance. */
         if (uart->instance == UART_INSTANCE_LP) /* LPUART */ {
             /* update peripheral clock frequency. */
-            uart->clk = GetSystemCoreClock();
+            uart->clk = GetSystemRTSSHEClock();
 
             /* enable LPUART clock. */
             enable_lpuart_clock();
