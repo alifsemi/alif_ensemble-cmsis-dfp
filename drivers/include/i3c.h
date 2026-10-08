@@ -526,6 +526,7 @@ typedef struct _i3c_xfer_t {
     volatile uint8_t         error;      /* error if any for this transfer             */
     volatile uint8_t         addr_len;   /* Dual usage: Address of slave or length     */
     volatile uint8_t         slv_rx_resp_pending; /* set by DMA cb after slave-RX success */
+    volatile uint16_t        slv_rx_done_len; /* armed len of the xfer DMA already completed */
 } i3c_xfer_t;
 
 /**
