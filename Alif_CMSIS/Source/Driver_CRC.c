@@ -544,12 +544,12 @@ static int32_t CRC_Control(uint32_t control, uint32_t arg, CRC_RESOURCES *CRC)
 
                 break;
 
-            case ARM_CRC_ALGORITHM_SEL_32_BIT_CUSTOM_POLY:
+	    case ARM_CRC_ALGORITHM_SEL_32_BIT_CRC32C:
 
-                /* To enable 32 bit poly custom CRC algorithm and size */
-                crc_enable_32bit_custom_poly(CRC->regs);
+		/* To enable hardware CRC32C algorithm and 32 bit size */
+		crc_enable_32bit_crc32c(CRC->regs);
 
-                break;
+		break;
             default:
                 ret = ARM_DRIVER_ERROR_UNSUPPORTED;
             }
