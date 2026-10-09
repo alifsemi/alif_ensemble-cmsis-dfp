@@ -39,7 +39,7 @@
 #include "board_config.h"
 #include "app_utils.h"
 
-// Set to 0: Use application-defined SDC A revision pin configuration.
+// Set to 0: Use application-defined SDC pin configuration.
 // Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
 
@@ -95,7 +95,7 @@ void SD_Baremetal_fatfs_test()
 
 #else
     /*
-     * NOTE: The SDC A revision pins used in this test application are not configured
+     * NOTE: The SDC pins used in this test application are not configured
      * in the board support library. Therefore, pins are configured manually here.
      */
 
@@ -112,29 +112,29 @@ void SD_Baremetal_fatfs_test()
                 (PADCTRL_DRIVER_DISABLED_PULL_UP | PADCTRL_READ_ENABLE));
 #endif
 
-    pinconf_set(PORT_(BOARD_SD_CMD_A_GPIO_PORT),
-                BOARD_SD_CMD_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_CMD_GPIO_PORT),
+                BOARD_SD_CMD_GPIO_PIN,
                 BOARD_SD_CMD_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // cmd
-    pinconf_set(PORT_(BOARD_SD_CLK_A_GPIO_PORT),
-                BOARD_SD_CLK_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_CLK_GPIO_PORT),
+                BOARD_SD_CLK_GPIO_PIN,
                 BOARD_SD_CLK_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // clk
-    pinconf_set(PORT_(BOARD_SD_D0_A_GPIO_PORT),
-                BOARD_SD_D0_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D0_GPIO_PORT),
+                BOARD_SD_D0_GPIO_PIN,
                 BOARD_SD_D0_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // d0
 #if RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE
-    pinconf_set(PORT_(BOARD_SD_D1_A_GPIO_PORT),
-                BOARD_SD_D1_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D1_GPIO_PORT),
+                BOARD_SD_D1_GPIO_PIN,
                 BOARD_SD_D1_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // d1
-    pinconf_set(PORT_(BOARD_SD_D2_A_GPIO_PORT),
-                BOARD_SD_D2_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D2_GPIO_PORT),
+                BOARD_SD_D2_GPIO_PIN,
                 BOARD_SD_D2_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // d2
-    pinconf_set(PORT_(BOARD_SD_D3_A_GPIO_PORT),
-                BOARD_SD_D3_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D3_GPIO_PORT),
+                BOARD_SD_D3_GPIO_PIN,
                 BOARD_SD_D3_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_12MA);  // d3
 #endif

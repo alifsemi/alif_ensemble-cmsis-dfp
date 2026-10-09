@@ -794,7 +794,7 @@ __NO_RETURN void app_main_thread(void *argument)
 
 #else
     /*
-     * NOTE: The SDC A revision pins used in this test application are not configured
+     * NOTE: The SDC pins used in this test application are not configured
      * in the board support library. Therefore, pins are configured manually here.
      */
 
@@ -805,47 +805,51 @@ __NO_RETURN void app_main_thread(void *argument)
     }
 #endif
 
-    pinconf_set(PORT_(BOARD_SD_CMD_A_GPIO_PORT),
-                BOARD_SD_CMD_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_CMD_GPIO_PORT),
+                BOARD_SD_CMD_GPIO_PIN,
                 BOARD_SD_CMD_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // cmd
-    pinconf_set(PORT_(BOARD_SD_CLK_A_GPIO_PORT),
-                BOARD_SD_CLK_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_CLK_GPIO_PORT),
+                BOARD_SD_CLK_GPIO_PIN,
                 BOARD_SD_CLK_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // clk
-    pinconf_set(PORT_(BOARD_SD_D0_A_GPIO_PORT),
-                BOARD_SD_D0_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D0_GPIO_PORT),
+                BOARD_SD_D0_GPIO_PIN,
                 BOARD_SD_D0_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d0
 
 #if (RTE_SDC_BUS_WIDTH == SDMMC_4_BIT_MODE) || (RTE_SDC_BUS_WIDTH == SDMMC_8_BIT_MODE)
-    pinconf_set(PORT_(BOARD_SD_D1_A_GPIO_PORT),
-                BOARD_SD_D1_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D1_GPIO_PORT),
+                BOARD_SD_D1_GPIO_PIN,
                 BOARD_SD_D1_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d1
-    pinconf_set(PORT_(BOARD_SD_D2_A_GPIO_PORT),
-                BOARD_SD_D2_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D2_GPIO_PORT),
+                BOARD_SD_D2_GPIO_PIN,
                 BOARD_SD_D2_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d2
-    pinconf_set(PORT_(BOARD_SD_D3_A_GPIO_PORT),
-                BOARD_SD_D3_A_GPIO_PIN,
+    pinconf_set(PORT_(BOARD_SD_D3_GPIO_PORT),
+                BOARD_SD_D3_GPIO_PIN,
                 BOARD_SD_D3_ALTERNATE_FUNCTION,
                 PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d3
 #endif
 
 #if RTE_SDC_BUS_WIDTH == SDMMC_8_BIT_MODE
-    pinconf_set(PORT_(BOARD_SD_D1_A_GPIO_PORT),
-                BOARD_SD_D1_A_GPIO_PIN,
-                BOARD_SD_D1_ALTERNATE_FUNCTION,
-                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d1
-    pinconf_set(PORT_(BOARD_SD_D2_A_GPIO_PORT),
-                BOARD_SD_D2_A_GPIO_PIN,
-                BOARD_SD_D2_ALTERNATE_FUNCTION,
-                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d2
-    pinconf_set(PORT_(BOARD_SD_D3_A_GPIO_PORT),
-                BOARD_SD_D3_A_GPIO_PIN,
-                BOARD_SD_D3_ALTERNATE_FUNCTION,
-                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d3
+    pinconf_set(PORT_(BOARD_SD_D4_GPIO_PORT),
+                BOARD_SD_D4_GPIO_PIN,
+                BOARD_SD_D4_ALTERNATE_FUNCTION,
+                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d4
+    pinconf_set(PORT_(BOARD_SD_D5_GPIO_PORT),
+                BOARD_SD_D5_GPIO_PIN,
+                BOARD_SD_D5_ALTERNATE_FUNCTION,
+                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d5
+    pinconf_set(PORT_(BOARD_SD_D6_GPIO_PORT),
+                BOARD_SD_D6_GPIO_PIN,
+                BOARD_SD_D6_ALTERNATE_FUNCTION,
+                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d6
+    pinconf_set(PORT_(BOARD_SD_D7_GPIO_PORT),
+                BOARD_SD_D7_GPIO_PIN,
+                BOARD_SD_D7_ALTERNATE_FUNCTION,
+                PADCTRL_READ_ENABLE | PADCTRL_OUTPUT_DRIVE_STRENGTH_8MA);  // d7
 #endif
 #endif
 
