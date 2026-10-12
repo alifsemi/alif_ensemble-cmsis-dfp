@@ -1,6 +1,6 @@
-/*---------------------------------------------------------------------------
- * Copyright (c) 2025 Arm Limited (or its affiliates).
- * All rights reserved.
+/*
+ * Copyright 2026 Arm Limited and/or its affiliates.
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the License); you may
@@ -14,15 +14,16 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *---------------------------------------------------------------------------*/
-
-#include "RTE_Components.h"
-#include CMSIS_device_header
-
-#ifdef RTE_CMSIS_RTOS2
+ */
 
 #include "ethosu_driver.h"
 #include "cmsis_os2.h"
+
+/* Maximum number of Ethos-U instances.                        */
+/* Used as maximum semaphore count in ethosu_semaphore_create. */
+#ifndef ETHOSU_MAX_INSTANCES
+#define ETHOSU_MAX_INSTANCES 2
+#endif
 
 /**
   \brief Create a mutex object.
@@ -92,7 +93,7 @@ void *ethosu_semaphore_create(void)
 {
     osSemaphoreId_t sem_id;
 
-    sem_id = osSemaphoreNew(1, 0, NULL);
+    sem_id = osSemaphoreNew(ETHOSU_MAX_INSTANCES, 0, NULL);
     return (void *) sem_id;
 }
 
@@ -146,5 +147,3 @@ int ethosu_semaphore_give(void *sem)
     }
     return rval;
 }
-
-#endif /* RTE_CMSIS_RTOS2 */

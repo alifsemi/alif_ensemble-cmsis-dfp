@@ -1,12 +1,5 @@
-/******************************************************************************
- * @file     vio_DevKit-E8.c
- * @brief    Virtual I/O implementation for Alif Semiconductor Ensemble DevKit-E8
- * @version  V1.0.0
- * @date     11. November 2025
- ******************************************************************************/
 /*
- * Copyright (c) 2025 Arm Limited (or its affiliates).
- * All rights reserved.
+ * Copyright 2025-2026 Arm Limited and/or its affiliates.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,27 +16,22 @@
  * limitations under the License.
  */
 
-/*! \page vio_DevKit-E8 Physical I/O Mapping
+/* vio_DevKit-E8 Physical I/O Mapping
 
 The table below lists the physical I/O mapping of this CMSIS-Driver VIO implementation.
 
-Virtual Resource  | Variable       | Physical Resource on Ensemble DevKit-E8        |
-:-----------------|:---------------|:-----------------------------------------------|
-vioBUTTON0        | vioSignalIn.0  | Joystick Select Button                         |
-vioJOYup          | vioSignalIn.2  | Joystick Up                                    |
-vioJOYdown        | vioSignalIn.3  | Joystick Down                                  |
-vioJOYleft        | vioSignalIn.4  | Joystick Left                                  |
-vioJOYright       | vioSignalIn.5  | Joystick Right                                 |
-vioJOYselect      | vioSignalIn.6  | Joystick Select Button                         |
-vioLED0           | vioSignalOut.0 | RGB LED Red                                    |
-vioLED1           | vioSignalOut.1 | RGB LED Green                                  |
-vioLED2           | vioSignalOut.2 | RGB LED Blue                                   |
+Virtual Resource | Variable       | Physical Resource on Ensemble DevKit-E8 |
+:----------------|:---------------|:----------------------------------------|
+vioBUTTON0       | vioSignalIn.0  | Joystick Select Button                  |
+vioJOYup         | vioSignalIn.2  | Joystick Up                             |
+vioJOYdown       | vioSignalIn.3  | Joystick Down                           |
+vioJOYleft       | vioSignalIn.4  | Joystick Left                           |
+vioJOYright      | vioSignalIn.5  | Joystick Right                          |
+vioJOYselect     | vioSignalIn.6  | Joystick Select Button                  |
+vioLED0          | vioSignalOut.0 | RGB LED Red                             |
+vioLED1          | vioSignalOut.1 | RGB LED Green                           |
+vioLED2          | vioSignalOut.2 | RGB LED Blue                            |
 */
-
-/* History:
- *  Version 1.0.0
- *    Initial release
- */
 
 #include <string.h>
 #include "cmsis_vio.h"
