@@ -1753,8 +1753,7 @@
       <feature type="Accelerometer" n="1" name="3-axis Digital Accelerometer in BMI323"/>
       <feature type="Gyro" n="1" name="3-axis Digital Gyroscope in BMI323"/>
       <feature type="TempSens" n="1" name="16-bit Digital Temperature Sensor in BMI323"/>
-      <feature type="SensOther" n="2" name="I2S Digital MICs"/>
-      <feature type="SensOther" n="2" name="PDM Digital MICs"/>
+      <feature type="SensOther" n="4" name="PDM Digital MICs"/>
       <feature type="SensOther" n="1" name="CH201 Ultrasonic Range Sensor"/>
       <feature type="LED" n="1" name="Multicolor LEDs"/>
       <feature type="Camera" n="1" name="2-Lane MIPI CSI Connector for OnSemi MT9M114 1.26MP 1/6-inch Image Sensor"/>
