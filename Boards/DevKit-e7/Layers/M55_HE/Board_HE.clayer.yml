@@ -1,6 +1,6 @@
 layer:
   type: Board
-  description: DevKit-E7 board setup using M55_HE
+  description: DevKit-E7 board setup using M55_HE and Ethos-U55
   for-board: Alif Semiconductor::DevKit-E7
   for-device: Alif Semiconductor::AE722F80F55D5LS:M55_HE
   device: :M55_HE
@@ -34,27 +34,13 @@ layer:
   # List of #define statements passed via the command line to the build tool.
   define:
     - CMSIS_target_header: \"DevKit-E7.h\"
-    - ETHOSU55
-    - NPU_QCONFIG: 1
-    - NPU_REGIONCFG_0: 1
-    - NPU_REGIONCFG_1: 0
-    - NPU_REGIONCFG_2: 1
-    - AXI_LIMIT0_MEM_TYPE: 3
-    - AXI_LIMIT1_MEM_TYPE: 3
-    - AXI_LIMIT2_MEM_TYPE: 3
-    - AXI_LIMIT3_MEM_TYPE: 3
 
   # List the packs used in the layer.
   packs:
-    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
+    - pack: AlifSemiconductor::Ensemble@^2.2.1-0
     - pack: ARM::CMSIS@^6.2.0
+    - pack: ARM::CMSIS-Ethos-U@^1.0.0
     - pack: ARM::CMSIS-Compiler@^2.1.0
-    - pack: ARM::CMSIS-Driver@^2.8.0
-    - pack: ARM::ethos-u-core-driver@^1.26.2
-
-  # List of include paths passed via the command line to the build tool.
-  add-path:
-    - ./ConductorTool
 
   # List miscellaneous options passed via the command line to the build tool.
   misc:
@@ -87,12 +73,15 @@ layer:
 
     - component: Device:Startup
     - component: BSP:Board Config
+    - component: BSP:DevKit Config&DevKit-e7
 
     - component: Device:SOC Peripherals:DMA
     - component: Device:SOC Peripherals:PINCONF
     - component: Device:SOC Peripherals:MHU
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
+      define:
+        - ETHOSU_MACS: 128
 
     - component: Services:Retarget IO:STDERR
     - component: Services:Retarget IO:STDIN
@@ -111,5 +100,5 @@ layer:
 
     - group: Ethos Interface
       files:
-        - file: ./ethosu_cb_dcache.c
-        - file: ./ethosu_cb_os_rtos2.c
+        - file: ./ethosu_dcache.c
+        - file: ./ethosu_os_rtos2.c
