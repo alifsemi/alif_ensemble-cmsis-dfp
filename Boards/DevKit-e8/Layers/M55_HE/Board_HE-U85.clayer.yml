@@ -36,15 +36,13 @@ layer:
   # List of #define statements passed via the command line to the build tool.
   define:
     - CMSIS_target_header: \"DevKit-E8.h\"
-    - ETHOSU85
 
   # List the packs used in the layer.
   packs:
-    - pack: AlifSemiconductor::Ensemble@^2.2.0-0
+    - pack: AlifSemiconductor::Ensemble@^2.2.1-0
     - pack: ARM::CMSIS@^6.2.0
+    - pack: ARM::CMSIS-Ethos-U@^1.0.0
     - pack: ARM::CMSIS-Compiler@^2.1.0
-    - pack: ARM::CMSIS-Driver@^2.10.0
-    - pack: ARM::ethos-u-core-driver@^1.26.2
 
   # List miscellaneous options passed via the command line to the build tool.
   misc:
@@ -96,6 +94,8 @@ layer:
     - component: Device:SOC Peripherals:PINCONF
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U85
+      define:
+        - ETHOSU_MACS: 256
 
     - component: Services:Retarget IO:STDERR
     - component: Services:Retarget IO:STDIN
@@ -107,14 +107,14 @@ layer:
   groups:
     - group: Board
       files:
-        - file: ./main.c
-        - file: ./main.h
-        - file: ./DevKit-E8.h
-        - file: ./ethos_setup.c
-        - file: ./retarget_stdio.c
-        - file: ./ext_init.c
+        - file: main.c
+        - file: main.h
+        - file: DevKit-E8.h
+        - file: ethos_setup.c
+        - file: retarget_stdio.c
+        - file: ext_init.c
 
     - group: Ethos Interface
       files:
-        - file: ./ethosu_cb_dcache.c
-        - file: ./ethosu_cb_os_rtos2.c
+        - file: ethosu_dcache.c
+        - file: ethosu_os_rtos2.c

@@ -78,21 +78,19 @@ SECTIONS
   .copy.table : ALIGN(4)
   {
     __copy_table_start__ = .;
-    LONG ( LOADADDR(.tdata.at_dtcm) )
-    LONG ( ADDR(.tdata.at_dtcm) )
-    LONG ( SIZEOF(.tdata.at_dtcm)/4 )
-
     LONG ( LOADADDR(.data.at_dtcm) )
     LONG ( ADDR(.data.at_dtcm) )
     LONG ( SIZEOF(.data.at_dtcm)/4 )
+
+    LONG ( LOADADDR(.nonsecure0_region_load) )
+    LONG ( ADDR(.nonsecure0_region_load) )
+    LONG ( SIZEOF(.nonsecure0_region_load)/4 )
     __copy_table_end__ = .;
   } > ITCM
 
   .zero.table : ALIGN(4)
   {
     __zero_table_start__ = .;
-    LONG (ADDR(.tbss))
-    LONG (SIZEOF(.tbss)/4)
     LONG (ADDR(.bss))
     LONG (SIZEOF(.bss)/4)
 #if __HAS_BULK_SRAM
@@ -102,13 +100,20 @@ SECTIONS
     __zero_table_end__ = .;
   } > ITCM
 
-  .code.at_itcm : ALIGN(8)
+  /* Caution: .got, .tdata and .tbss sections come under
+   * RELRO section. So keep it adjacent one after another.
+   */
+  .got : ALIGN(4)
   {
-    *(.text*)
+    *(.got)
+    *(.got*)
+    *(.data.rel.ro)
+    *(.data.rel.ro*)
+    *(.got.plt)
   } > ITCM
 
   /* Thread Local Storage (.tdata) */
-  .tdata.at_dtcm : ALIGN(8)
+  .tdata.at_itcm : ALIGN(8)
   {
     /* TLS base = beginning of TLS block */
     __tls_base = .;
@@ -117,7 +122,7 @@ SECTIONS
     /* Initialized TLS variables */
     *(.tdata .tdata.* .gnu.linkonce.td.*)
     __tdata_end = .;
-  } > DTCM AT > ITCM
+  } > ITCM
 
   /* Thread-Local Uninitialized Data (.tbss) */
   .tbss (NOLOAD) : ALIGN(8)
@@ -126,7 +131,12 @@ SECTIONS
     /* TLS commons here */
     *(.tcommon)
     __tbss_end = .;
-  } > DTCM
+  } > ITCM
+
+  .code.at_itcm : ALIGN(8)
+  {
+    *(.text*)
+  } > ITCM
 
   .data.at_dtcm : ALIGN(8)
   {
@@ -151,8 +161,11 @@ SECTIONS
   {
     *(.bss.lcd_crop_and_interpolate_buf)  /* LCD crop and intrepolate image processing buffer. */
     *(.bss.lcd_frame_buf)                 /* LCD frame Buffer. */
+    *(.bss.lcd_frame_buf1)                /* LCD frame Buffer 1 (double buffering). */
+    *(.bss.lcd_frame_buf2)                /* LCD frame Buffer 2 (double buffering). */
     *(.bss.camera_frame_buf)              /* Camer Frame Buffer */
     *(.bss.camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
+    *(.data.audio_samples)               /* Audio sample data */
   } > SRAM0
 #endif
 
@@ -167,10 +180,14 @@ SECTIONS
     __bss_end__ = .;
   } > DTCM
 
-  .nonsecure0_region (NOLOAD) :
+  .nonsecure0_region_load :
   {
     . = ALIGN(TGU_BLOCK_SIZE);
     __ns_region_0_start = .;
+    *usbd_config*(.rodata*)
+  } > DTCM AT > ITCM
+  .nonsecure0_region_noload (NOLOAD) :
+  {
     * (eth_buf)
     * (usb_dma_buf)
     * (sd_dma_buf)

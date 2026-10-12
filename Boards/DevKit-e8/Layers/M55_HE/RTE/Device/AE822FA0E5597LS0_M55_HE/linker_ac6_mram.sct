@@ -48,6 +48,7 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
    *mpu*.o (+RO)
    *sau_tcm_ns_setup*.o (+RO)
 
+   * (ethos_model)                        ; Ethos-U command stream/constants (Shared_Sram)
    .ANY (+RO)
    .ANY (+XO)
   }
@@ -69,6 +70,8 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
     * (.driver.usbd0)
 #if __HAS_BULK_SRAM == 0
     * (.bss.lcd_frame_buf)
+    * (.bss.lcd_frame_buf1)                ; LCD frame Buffer 1 (double buffering).
+    * (.bss.lcd_frame_buf2)                ; LCD frame Buffer 2 (double buffering).
     * (.bss.camera_frame_buf)
     * (.bss.camera_frame_bayer_to_rgb_buf)
 #endif
@@ -99,16 +102,22 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
   RW_SRAM APP_SRAM_BASE APP_SRAM_SIZE  {  ; Update sections as needed
    * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and interpolate image processing buffer.
    * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.
+   * (.bss.lcd_frame_buf1)                ; LCD frame Buffer 1 (double buffering).
+   * (.bss.lcd_frame_buf2)                ; LCD frame Buffer 2 (double buffering).
    * (.bss.camera_frame_buf)              ; Camera Frame Buffer
    * (.bss.camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion.
    * (.bss.*)
+   * (ethos_arena)                        ; Ethos-U writable area (Shared_Sram)
   }
 #else
   RW_SRAM0 APP_SRAM0_BASE APP_SRAM0_SIZE  {  ; Update sections as needed
    * (.bss.lcd_crop_and_interpolate_buf)  ; LCD crop and interpolate image processing buffer.
    * (.bss.lcd_frame_buf)                 ; LCD frame Buffer.
+   * (.bss.lcd_frame_buf1)                ; LCD frame Buffer 1 (double buffering).
+   * (.bss.lcd_frame_buf2)                ; LCD frame Buffer 2 (double buffering).
    * (.bss.camera_frame_buf)              ; Camera Frame Buffer
    * (.bss.camera_frame_bayer_to_rgb_buf) ; (Optional) Camera Frame Buffer for Bayer to RGB Conversion
+   * (.data.audio_samples)                ; Audio sample data
    * (.bss.*)
   }
 
@@ -121,6 +130,7 @@ LR_ROM __ROM_BASE NOCOMPRESS __ROM_SIZE  {    ; load region size_region
 
   RW_SRAM1 APP_SRAM1_BASE APP_SRAM1_SIZE  {  ; Update sections as needed
 
+   * (ethos_arena)                        ; Ethos-U writable area (Shared_Sram)
   }
 #endif
 #endif
