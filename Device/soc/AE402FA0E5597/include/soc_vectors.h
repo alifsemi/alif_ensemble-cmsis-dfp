@@ -389,7 +389,13 @@
 #define IRQ472_Handler UTIMER_IRQ95Handler
 
 #if defined(RTSS_HP)
+#define IRQ359_Handler LPUART_IRQHandler
+#define IRQ473_Handler LPI3C_IRQHandler
+#define IRQ474_Handler LPI2C1_IRQHandler
+#define IRQ475_Handler LPI2S_IRQHandler
 #define IRQ476_Handler GPIO16_IRQHandler
 #define IRQ477_Handler GPIO17_IRQHandler
+#define IRQ478_Handler LPSPI_IRQHandler
+#define IRQ479_Handler LPPDM_IRQHandler
 #endif
 #endif /* SOC_VECTORS_H */

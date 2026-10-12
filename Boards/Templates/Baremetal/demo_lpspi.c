@@ -37,10 +37,6 @@
 // board_lpspi_pins_config()). Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
 
-#if !defined(RTSS_HE)
-#error "This Demo application works only on RTSS_HE"
-#endif
-
 /* Use below macro to specify transfer type
  * 1 - Uses SPI Transfer function
  * 0 - Uses SPI Send & Receive function
