@@ -25,6 +25,7 @@
 #include "RTE_Device.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
+#if defined(RTE_Drivers_MIPI_CSI2)
 
 /* CSI includes */
 #include "Driver_MIPI_CSI2.h"
@@ -35,8 +36,6 @@
 #include "Camera_Sensor.h"
 #include "sys_utils.h"
 #include "sys_clocks.h"
-
-#if defined(RTE_Drivers_MIPI_CSI2)
 
 #if !(RTE_MIPI_CSI2)
 #error "MIPI CSI2 is not enabled in the RTE_Device.h"
