@@ -62,6 +62,7 @@
 #include "isp_param.h"
 
 extern void VSI_ISP_IrqProcessFrameEnd(ISP_PORT IspPort);
+extern int VSI_MPI_ISP_MiIrqProcess(ISP_DEV IspDev, vsi_u32_t miMis);
 
 extern ISP_AWB_FUNC_S vsiAwbAlgo;
 
@@ -94,6 +95,11 @@ static const ARM_ISP_CAPABILITIES DriverCapabilities = {
 static int log_level(void)
 {
     return LIB_LOG_LEVEL;
+}
+
+static int isp_buf_count(void)
+{
+    return RTE_ISP_BUFFER_COUNT;
 }
 
 /* Cached sensor values for AE - written in ISR context, read in thread context.
@@ -241,6 +247,8 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
 
     /* Pass a print function instead of NULL to enable ISP log output. */
     VsiLogLevelSet(&log_level, NULL);
+    /* Pass RTE_ISP_BUFFER_COUNT as the runtime buffer count. */
+    VsiVbBufCountSet(&isp_buf_count);
 
     /* Init ISP system. */
     ret           = VSI_MPI_ISP_Init(isp->isp_dev_id);
@@ -1619,6 +1627,8 @@ void ISP_MI_ISRHandler(ISP_RESOURCES *isp)
     }
 
     if (reg & ISP_MI_INTR_MP_FRAME_END) {
+        /* Retire pShdBuf onto doneList before notifying the app. */
+        (void)VSI_MPI_ISP_MiIrqProcess(isp->isp_dev_id, reg);
         event |= ARM_ISP_MI_EVENT_MP_FRAME_END_DETECTED;
     }
 
