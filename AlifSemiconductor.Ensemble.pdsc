@@ -2237,6 +2237,7 @@
       <description>Requirement for AppKit-E7-AIML VIO Driver</description>
       <require condition="AppKit-E7-AIML"/>
       <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
+      <require Cclass="BSP" Cgroup="AppKit Config" Cvariant="AppKit-E7-AIML"/>
     </condition>
 
     <condition id="AppKit vStream AudioIn">
