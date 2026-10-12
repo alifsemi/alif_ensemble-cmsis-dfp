@@ -167,29 +167,29 @@
 
 /*On chip RAM Regions */
 #define SRAM0_BASE                0x02000000
-#define SRAM0_SIZE                0x00400000    /* 4M */
+#define SRAM0_SIZE                0x00400000		/* 4M */
 #define SRAM1_BASE                0x08000000
-#define SRAM1_SIZE                0x00280000    /* 2.5M */
+#define SRAM1_SIZE                0x00280000		/* 2.5M */
 #define SRAM2_BASE                0x50000000
-#define SRAM2_SIZE                0x00040000    /* 256K */
+#define SRAM2_SIZE                0x00040000		/* 256K */
 #define SRAM3_BASE                0x50800000
-#define SRAM3_SIZE                0x00100000    /* 1M */
+#define SRAM3_SIZE                0x00100000		/* 1M */
 #define SRAM4_BASE                0x58000000
-#define SRAM4_SIZE                0x00040000    /* 256K */
+#define SRAM4_SIZE                0x00040000		/* 256K */
 #define SRAM5_BASE                0x58800000
-#define SRAM5_SIZE                0x00040000    /* 256K */
+#define SRAM5_SIZE                0x00040000		/* 256K */
 #define SRAM6_A_BASE              0x62000000
-#define SRAM6_A_SIZE              0x00100000    /* 1M */
+#define SRAM6_A_SIZE              0x00100000		/* 1M */
 #define SRAM6_B_BASE              0x62400000
-#define SRAM6_B_SIZE              0x00100000    /* 1M */
+#define SRAM6_B_SIZE              0x00100000		/* 1M */
 #define SRAM7_BASE                0x63000000
-#define SRAM7_SIZE                0x00080000    /* 512K */
+#define SRAM7_SIZE                0x00080000		/* 512K */
 #define SRAM8_BASE                0x63200000
-#define SRAM8_SIZE                0x00200000    /* 2M */
+#define SRAM8_SIZE                0x00200000		/* 2M */
 #define SRAM9_A_BASE              0x60000000
-#define SRAM9_A_SIZE              0x00040000    /* 256K */
+#define SRAM9_A_SIZE              0x00040000		/* 256K */
 #define SRAM9_B_BASE              0x60040000
-#define SRAM9_B_SIZE              0x00080000    /* 512K */
+#define SRAM9_B_SIZE              0x00080000		/* 512K */
 
 /* Backwards compatibility */
 #define SRAM6_BASE                SRAM6_A_BASE
@@ -199,7 +199,7 @@
 
 /* On Chip NVM */
 #define MRAM_BASE                 0x80000000
-#define MRAM_SIZE                 0x00580000    /* 5.5M */
+#define MRAM_SIZE                 0x00580000		/* 5.5M */
 
 /* OSPI XIP regions */
 #define OSPI0_XIP_BASE            0xA0000000

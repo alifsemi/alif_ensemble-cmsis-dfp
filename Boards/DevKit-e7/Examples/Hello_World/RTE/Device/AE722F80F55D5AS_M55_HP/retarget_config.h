@@ -41,7 +41,7 @@ extern "C"
 //     <7=>   UART7
 //     <LP=>  LPUART
 // <i> Default: 4
-#define PRINTF_UART_CONSOLE                 0
+#define PRINTF_UART_CONSOLE                 4
 
 // <o> UART Baudrate
 // <i> Select UART Baudrate
