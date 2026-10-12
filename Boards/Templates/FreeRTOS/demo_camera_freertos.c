@@ -9,12 +9,12 @@
  */
 
 /*******************************************************************************
- * @file     : demo_camera_arx3a0_freertos.c
+ * @file     : demo_camera_freertos.c
  * @author   : Chandra Bhushan Singh
  * @email    : chandrabhushan.singh@alifsemi.com
  * @version  : V1.0.0
  * @date     : 07-Sept-2023
- * @brief    : TestApp to verify ARX3A0 Camera Sensor with
+ * @brief    : TestApp to verify selected Camera Sensor with
  *             FREERTOS as an Operating System.
  * @bug      : None.
  * @Note     : None.
@@ -45,13 +45,6 @@
 #include "task.h"
 #include "app_utils.h"
 
-#include "Driver_IO.h"
-
-
-// set to 0: enable selfie camera (cam1)
-// set to 1: enable standard camera (cam2)
-#define STANDARD_CAM_EN                0
-
 // Set to 0: Use application-defined arx3A0 pin configuration.
 // Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
@@ -59,13 +52,6 @@
 /* Camera  Driver instance 0 */
 extern ARM_DRIVER_CPI  Driver_CPI;
 static ARM_DRIVER_CPI *CAMERAdrv = &Driver_CPI;
-
-#if STANDARD_CAM_EN
-/* Switch Camera target. */
-extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-static ARM_DRIVER_GPIO *GPIO_Driver_SWITCH_CAM =
-        &ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-#endif
 
 /*Define for FreeRTOS*/
 #define STACK_SIZE                    1024
@@ -128,10 +114,6 @@ void vApplicationIdleHook(void)
  * Note: Sensors output RAW10, but CPI interface default is IPI-16 RAW8.
  *       CPI color mode can be changed via RTE configuration if needed.
  */
-
-
-
-
 #if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
   #define SELECTED_CAMERA_SENSOR     "ARX3A0"
   #define FRAME_WIDTH                RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
@@ -315,6 +297,19 @@ int32_t camera_pinmux(void)
         return ret;
     }
 
+#if defined(BOARD_CAMERA_I2C_MUX_GPIO_PORT) && \
+    defined(BOARD_CAMERA_I2C_MUX_GPIO_PIN) && \
+    defined(BOARD_CAMERA_I2C_MUX_ALTERNATE_FUNCTION)
+    ret = pinconf_set(PORT_(BOARD_CAMERA_I2C_MUX_GPIO_PORT),
+                      BOARD_CAMERA_I2C_MUX_GPIO_PIN,
+                      BOARD_CAMERA_I2C_MUX_ALTERNATE_FUNCTION,
+                      0);
+    if (ret != ARM_DRIVER_OK) {
+        printf("\r\n Error: Camera I2C mux Pin-Mux failed.\r\n");
+        return ret;
+    }
+#endif
+
     return 0;
 }
 #endif
@@ -464,38 +459,6 @@ void camera_demo_thread_entry(void *pvParameters)
         goto error_disable_hfosc_clk;
     }
 
-#if STANDARD_CAM_EN
-    ret = GPIO_Driver_SWITCH_CAM->Initialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, NULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Initialize failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_disable_hfosc_clk;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_FULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO PowerControl failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_uninitialize_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetDirection(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                               GPIO_PIN_DIRECTION_OUTPUT);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetDirection failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetValue(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                           GPIO_PIN_OUTPUT_STATE_HIGH);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetValue failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-#endif
-
     version = CAMERAdrv->GetVersion();
     printf("\r\n Camera driver version api:0x%" PRIx16 " driver:0x%" PRIx16 " \r\n", version.api,
         version.drv);
@@ -595,12 +558,13 @@ void camera_demo_thread_entry(void *pvParameters)
     printf("\n  Use below commands in Commands tab: update user directory name \r\n");
 
 
-    printf("Ulink: ~/%s_%dx%d.bin 0x%" PRIX32 " 0x%" PRIX32 "\n",
+    printf("Ulink:\n");
+    printf("dump binary memory /home/user/camera_dump/%s_%dx%d.bin 0x%08" PRIX32 " 0x%08" PRIX32 "\n",
            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
            (uint32_t) framebuffer_pool,
            (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
-    printf("T32:\n   data.save.binary ~/cam_image0_%s_%dx%d.bin 0x%" PRIx32
-            "--0x%" PRIX32 " \r\n",
+    printf("T32:\n");
+    printf("data.save.binary ~/%s_%dx%d.bin 0x%08" PRIX32 "--0x%08" PRIX32 "\n",
            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
            (uint32_t) framebuffer_pool,
            (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
@@ -626,22 +590,6 @@ error_uninitialize_camera:
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: CAMERA Uninitialize failed.\r\n");
     }
-
-#if STANDARD_CAM_EN
-error_poweroff_gpio:
-    /* Power off GPIO peripheral */
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_OFF);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Power OFF failed.\r\n");
-    }
-
-error_uninitialize_gpio:
-    /* Un-initialize GPIO driver */
-    ret = GPIO_Driver_SWITCH_CAM->Uninitialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Uninitialize failed.\r\n");
-    }
-#endif
 
 error_disable_hfosc_clk:
     error_code =
