@@ -38,6 +38,8 @@
 extern ARM_DRIVER_ETH_MAC Driver_ETH_MAC0;        /* Ethernet         */
 extern ARM_DRIVER_USART   Driver_USART4;          /* PRG USB          */
 extern ARM_DRIVER_USBD    Driver_USBD0;           /* USB Device       */
+extern vStreamDriver_t    Driver_vStreamAudioIn;  /* Audio In Stream  */
+extern vStreamDriver_t    Driver_vStreamAudioOut; /* Audio Out Stream */
 extern vStreamDriver_t    Driver_vStreamVideoIn;  /* Video In Stream  */
 extern vStreamDriver_t    Driver_vStreamVideoOut; /* Video Out Stream */
 

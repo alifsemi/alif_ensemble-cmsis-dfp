@@ -510,21 +510,28 @@ const struct pinconf board_pinconf[] = {
      PINMUX_ALTERNATE_FUNCTION_0,
      PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP | PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
-    /* P8_3 on pin C14. Functions: [0]: >>>GPIO8_3<<<, [1]: I2S2_SCLK_A, [2]: SPI1_MISO_B, [3]:
+    /* P8_2: I2S2_SDO_A to WM8904 DACDAT (AppKit-E8 schematic 220-00320 Rev C). */
+    /* Selected: I2S2_SDO_A for "WM8904 Audio Output" */
+    {PORT_8,
+     PIN_2,
+     PINMUX_ALTERNATE_FUNCTION_1,
+     PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+
+    /* P8_3 on pin C14. Functions: [0]: GPIO8_3, [1]: >>>I2S2_SCLK_A<<<, [2]: SPI1_MISO_B, [3]:
        FAULT3_B, [4]: LPCAM_D3_A, [5]: SD_D3_C, [6]: CDC_D3_A, [7]: CAM_D3_B */
-    /* Selected: GPIO8_3 for "CLICKBOARD_RST" */
+    /* Selected: I2S2_SCLK_A for "WM8904 Audio Output" */
     {PORT_8,
      PIN_3,
-     PINMUX_ALTERNATE_FUNCTION_0,
-     PADCTRL_DRIVER_DISABLED_PULL_UP | PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+     PINMUX_ALTERNATE_FUNCTION_1,
+     PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
-    /* P8_4 on pin G12. Functions: [0]: >>>GPIO8_4<<<, [1]: I2S2_WS_A, [2]: SPI1_MOSI_B, [3]:
+    /* P8_4 on pin G12. Functions: [0]: GPIO8_4, [1]: >>>I2S2_WS_A<<<, [2]: SPI1_MOSI_B, [3]:
        QEC0_X_B, [4]: LPCAM_D4_A, [5]: SD_D4_C, [6]: CDC_D4_A, [7]: CAM_D4_B */
-    /* Selected: GPIO8_4 for "ICM_IMU_IRQ" */
+    /* Selected: I2S2_WS_A for "WM8904 Audio Output" */
     {PORT_8,
      PIN_4,
-     PINMUX_ALTERNATE_FUNCTION_0,
-     PADCTRL_READ_ENABLE | PADCTRL_DRIVER_DISABLED_PULL_UP | PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
+     PINMUX_ALTERNATE_FUNCTION_1,
+     PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA},
 
     /* P8_5 on pin G16. Functions: [0]: GPIO8_5, [1]: >>>HSPI0_RXDS1<<<, [2]: SPI1_SCLK_B, [3]:
        QEC0_Y_B, [4]: LPCAM_D5_A, [5]: SD_D5_C, [6]: CDC_D5_A, [7]: CAM_D5_B */
