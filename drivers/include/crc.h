@@ -40,6 +40,7 @@ extern "C" {
 #define CRC_INIT_BIT                 (1 << 0)   /* To select the init value            */
 #define CRC_ALGORITHM_CHECK          (3 << 1)   /* To check for the CRC algorithm      */
 #define CRC_STANDARD_POLY            0x04C11DB7 /* Standard polynomial for 32 bit CRC  */
+#define CRC_32C_POLY                 0x1EDC6F41 /* Castagnoli polynomial for CRC32C     */
 
 #define CRC_ALGO_SEL                 (0xF << 3) /* To clear algorithm select   */
 #define CRC_ALGO_SIZE                (0X3 << 1) /* To clear the algorithm size */
@@ -157,18 +158,30 @@ static inline void crc_enable_32bit(CRC_Type *crc)
 }
 
 /**
- @fn           crc_enable_32bit_custom_poly(CRC_Type *crc )
- @brief        Enable 32 bit CRC customize polynomial algorithm and size.
+ @fn           crc_enable_32bit_crc32c(CRC_Type *crc)
+ @brief        Enable hardware CRC32C algorithm and 32 bit size.
  @param[in]    crc    : Pointer to the CRC register map
  @return       none
  */
-static inline void crc_enable_32bit_custom_poly(CRC_Type *crc)
+static inline void crc_enable_32bit_crc32c(CRC_Type *crc)
 {
-    /* To enable 32 bit poly custom CRC */
+    /* To enable hardware CRC32C algorithm (algorithm select = 5) */
     crc->CRC_CONTROL |= CRC_32C;
 
     /* To enable 32 bit algorithm size */
     crc->CRC_CONTROL |= CRC_ALGO_32_BIT_SIZE;
+}
+
+/**
+ @fn           crc_enable_32bit_custom_poly(CRC_Type *crc )
+ @brief        Enable 32 bit CRC customize polynomial algorithm and size.
+ @param[in]    crc    : Pointer to the CRC register map
+ @return       none
+ @note         Deprecated: use crc_enable_32bit_crc32c() for hardware CRC32C mode.
+ */
+static inline void crc_enable_32bit_custom_poly(CRC_Type *crc)
+{
+    crc_enable_32bit_crc32c(crc);
 }
 
 /**
