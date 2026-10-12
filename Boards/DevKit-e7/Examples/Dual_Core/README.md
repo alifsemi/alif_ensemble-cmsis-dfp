@@ -28,7 +28,6 @@ In VS Code use the menu command **Terminal - Run Tasks** and execute:
 
 - "Alif: Install M55_HE and M55_HP debug stubs (dual core configuration)"
 
-> Note: For Windows ensure that the Terminal default is `Git Bash` or `PowerShell`.
 
 ## Operation
 
