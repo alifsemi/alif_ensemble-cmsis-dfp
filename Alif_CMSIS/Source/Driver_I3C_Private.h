@@ -38,6 +38,27 @@ extern "C" {
 
 #define I3C_TARGET_SLAVE_TYPE_I2C (1U << 7U) /* Represents slave type */
 
+#define I3C_BCR_MAX_DATA_SPEED_LIMIT  (1U << 0)
+#define I3C_GETMXDS_MAX_SDR_FSCL_Msk  (0x7U)
+
+/**
+\brief I3C target discovery stage
+*/
+typedef enum _I3C_DISC_STEP {
+    I3C_DISC_IDLE = 0,
+    I3C_DISC_GETBCR,
+    I3C_DISC_GETMXDS
+} I3C_DISC_STEP;
+
+/**
+\brief I3C target discovery type
+*/
+typedef struct _I3C_DISC_TYPE {
+    I3C_DISC_STEP step;
+    uint8_t       pos;
+    uint8_t       rx[8];
+} I3C_DISC_TYPE;
+
 /**
 \brief I3C Driver states.
 */
@@ -50,15 +71,26 @@ typedef volatile struct _I3C_DRIVER_STATE {
 } I3C_DRIVER_STATE;
 
 /**
+\brief I3C Target's profile
+*/
+typedef struct _I3C_TARGET_PROFILE {
+    uint8_t addr;      /* DA (I3C) or SA (I2C); bit7 = I3C_TARGET_SLAVE_TYPE_I2C */
+    uint8_t bcr;       /* BCR */
+    uint8_t speed_wr;  /* SPEED for Tx */
+    uint8_t speed_rd;  /* SPEED for Rx */
+    uint8_t disc_done; /* 1: GETBCR/GETMXDS finished for this DAT slot */
+} I3C_TARGET_PROFILE;
+
+/**
 \brief I3C Slave Device Address info
 */
-typedef struct _I3C_SLAVE_DAT_TYPE {
-    uint32_t datp;                /* DAT (Device Address Table) offset                  */
-    uint32_t maxdevs;             /* maximum number of slaves supported                 */
-    uint8_t  addrs[I3C_MAX_DEVS]; /* Assigned dynamic(i3c) or static address(i2c slave) */
-    uint32_t freepos;             /* bitmask of used addresses                          */
-    uint32_t last_asgd_addr_pos;  /* Last assigned slave address positions              */
-} I3C_SLAVE_DAT_TYPE;
+typedef struct _I3C_TARGET_TABLE {
+    uint32_t           datp;                        /* DAT (Device Address Table) offset     */
+    uint32_t           maxdevs;                     /* maximum number of slaves supported    */
+    I3C_TARGET_PROFILE profile[I3C_MAX_DEVS];       /* Array of target profile               */
+    uint32_t           freepos;                     /* bitmask of used addresses             */
+    uint32_t           last_asgd_addr_pos;          /* Last assigned slave address positions */
+} I3C_TARGET_TABLE;
 
 #if I3C_DMA_ENABLE
 typedef struct _I3C_DMA_HW_CONFIG {
@@ -71,15 +103,16 @@ typedef struct _I3C_DMA_HW_CONFIG {
 \brief I3C Device Resources
 */
 typedef struct _I3C_RESOURCES {
-    I3C_Type             *regs;      /* Pointer to i3c regs                                */
-    ARM_I3C_SignalEvent_t cb_event;  /* Pointer to call back function                      */
-    uint32_t              core_clk;  /* i3c core clock frequency                           */
-    I3C_SLAVE_DAT_TYPE    slave_dat; /* i3c slave devices address local information        */
-    i3c_xfer_t            xfer;      /* i3c transfer structure                             */
-    ARM_I3C_STATUS        status;    /* i3c driver status                                  */
-    I3C_DRIVER_STATE      state;     /* I3C driver state                                   */
+    I3C_Type              *regs;        /* Pointer to i3c regs                                */
+    ARM_I3C_SignalEvent_t cb_event;     /* Pointer to call back function                      */
+    uint32_t              core_clk;     /* i3c core clock frequency                           */
+    I3C_TARGET_TABLE      targets;      /* i3c target's basic info                            */
+    I3C_DISC_TYPE         disc;
+    i3c_xfer_t            xfer;         /* i3c transfer structure                             */
+    ARM_I3C_STATUS        status;       /* i3c driver status                                  */
+    I3C_DRIVER_STATE      state;        /* I3C driver state                                   */
 #if RTE_I3C_BLOCKING_MODE_ENABLE
-    bool blocking_mode; /* I3C blocking mode transfer enable                  */
+    bool blocking_mode;                 /* I3C blocking mode transfer enable                  */
 #endif
     bool               adaptive_mode; /* I3C slave I2C/I3C adaptive mode                    */
     IRQn_Type          irq;           /* i3c interrupt number                               */

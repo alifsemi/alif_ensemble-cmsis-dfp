@@ -28,7 +28,7 @@
  *             P0_5 (SCL)
  *
  * @bug      : None.
- * @Note     : None.
+ * @Note     : I3C_BUS_MODE_I2C_SS; Attach SPEED is I3C_XFER_SPEED_I2C_SS.
  ******************************************************************************/
 
 /* System Includes */
@@ -151,8 +151,8 @@ void I3C_callback(uint32_t event)
 
                This demo thread does:
                  - initialize i3c driver;
-                 - set i2c speed mode to Standard mode 100 KBPS;
-                 - attach all i2c slave devices to i3c;
+                 - set I3C_BUS_MODE_I2C_SS (FM bank = 100 kHz);
+                 - attach I2C slaves with I3C_XFER_SPEED_I2C_SS;
                  - continuously read from register address 0x0000(chip-id)
                     for all the attached slaves;
                  - display result depending on whether
@@ -172,6 +172,8 @@ void i2c_using_i3c_demo_thread(void *pvParameters)
 /* Dummy Slave */
 #define DUMMY_SLAVE1        0x50
 #define DUMMY_SLAVE2        0x55
+/* Packed SPEED: must be 0 while bus is I3C_BUS_MODE_I2C_SS */
+#define I2C_SLV_XFER_SPEED  I3C_XFER_SPEED_I2C_SS
 
     int32_t  i                      = 0;
     int32_t  ret                    = 0;
@@ -195,8 +197,8 @@ void i2c_using_i3c_demo_thread(void *pvParameters)
     version = I3Cdrv->GetVersion();
     printf("\r\n i3c version api:0x%" PRIx16 " driver:0x%" PRIx16 "\r\n", version.api, version.drv);
 
-    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)) ||
-        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(8U, 3U)) ||
+        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(8U, 3U)))
     {
         printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
         return;
@@ -230,12 +232,8 @@ void i2c_using_i3c_demo_thread(void *pvParameters)
         goto error_uninitialize;
     }
 
-    /* i2c Speed Mode Configuration:
-     *  I3C_BUS_MODE_MIXED_FAST_I2C_FMP_SPEED_1_MBPS  : Fast Mode Plus   1 MBPS
-     *  I3C_BUS_MODE_MIXED_FAST_I2C_FM_SPEED_400_KBPS : Fast Mode      400 KBPS
-     *  I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS : Standard Mode  100 KBPS
-     */
-    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_MODE_MIXED_SLOW_I2C_SS_SPEED_100_KBPS);
+    /* 100 kHz I2C (FM bank). Attach SPEED must be I3C_XFER_SPEED_I2C_SS. */
+    ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_MODE_I2C_SS);
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: I3C Control failed.\r\n");
         goto error_poweroff;
@@ -268,7 +266,7 @@ void i2c_using_i3c_demo_thread(void *pvParameters)
         printf("\r\n  >> i=%" PRId32 " attaching i2c slave addr:0x%" PRIX8 " to i3c...\r\n",
                 i, slave_addr[i]);
 
-        ret = I3Cdrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[i]);
+        ret = I3Cdrv->AttachSlvDev(ARM_I3C_DEVICE_TYPE_I2C, slave_addr[i], I2C_SLV_XFER_SPEED);
         if (ret != ARM_DRIVER_OK) {
             printf("\r\n Error: I3C Attach I2C device failed.\r\n");
             goto error_poweroff;
