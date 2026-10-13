@@ -944,17 +944,73 @@ static inline void i3c_resume(I3C_Type *i3c)
 }
 
 /**
-  \fn           static inline void i3c_flush_all_buffers(I3C_Type *i3c)
-  \brief        Flushes all the buffers (Queues and Fifos)
-  \param[in]    i3c     : Pointer to i3c register set structure
-  \return       none
-*/
+ * \fn           static inline void i3c_flush_tx_fifo(I3C_Type *i3c)
+ * \brief        Flushes the Tx FIFO
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
+static inline void i3c_flush_tx_fifo(I3C_Type *i3c)
+{
+    i3c->I3C_RESET_CTRL |= I3C_RESET_CTRL_TX_FIFO_RST;
+}
+
+/**
+ * \fn           static inline void i3c_flush_rx_fifo(I3C_Type *i3c)
+ * \brief        Flushes the Rx FIFO
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
+static inline void i3c_flush_rx_fifo(I3C_Type *i3c)
+{
+    i3c->I3C_RESET_CTRL |= I3C_RESET_CTRL_RX_FIFO_RST;
+}
+
+/**
+ * \fn           static inline void i3c_flush_cmd_queue(I3C_Type *i3c)
+ * \brief        Flushes the command queue
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
+static inline void i3c_flush_cmd_queue(I3C_Type *i3c)
+{
+    i3c->I3C_RESET_CTRL |= I3C_RESET_CTRL_CMD_QUEUE_RST;
+}
+
+/**
+ * \fn           static inline void i3c_flush_resp_queue(I3C_Type *i3c)
+ * \brief        Flushes the response queue
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
+static inline void i3c_flush_resp_queue(I3C_Type *i3c)
+{
+    i3c->I3C_RESET_CTRL |= I3C_RESET_CTRL_RESP_QUEUE_RST;
+}
+
+/**
+ * \fn           static inline void i3c_flush_ibi_queue(I3C_Type *i3c)
+ * \brief        Flushes the IBI queue
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
+static inline void i3c_flush_ibi_queue(I3C_Type *i3c)
+{
+    i3c->I3C_RESET_CTRL |= I3C_RESET_CTRL_IBI_QUEUE_RST;
+}
+
+/**
+ * \fn           static inline void i3c_flush_all_buffers(I3C_Type *i3c)
+ * \brief        Flushes all the buffers (Queues and Fifos)
+ * \param[in]    i3c     : Pointer to i3c register set structure
+ * \return       none
+ */
 static inline void i3c_flush_all_buffers(I3C_Type *i3c)
 {
-    /* Flushes all data and command buffers */
-    i3c->I3C_RESET_CTRL |=
-        (I3C_RESET_CTRL_IBI_QUEUE_RST | I3C_RESET_CTRL_RX_FIFO_RST | I3C_RESET_CTRL_TX_FIFO_RST |
-         I3C_RESET_CTRL_RESP_QUEUE_RST | I3C_RESET_CTRL_CMD_QUEUE_RST);
+    i3c_flush_ibi_queue(i3c);
+    i3c_flush_rx_fifo(i3c);
+    i3c_flush_tx_fifo(i3c);
+    i3c_flush_resp_queue(i3c);
+    i3c_flush_cmd_queue(i3c);
 }
 
 /**
