@@ -1859,9 +1859,7 @@ static int32_t ARX3A0_Init(void)
     }
 
     /*Adding delay to finish streaming*/
-    for (uint32_t count = 0; count < 5; count++) {
-        ARX3A0_DELAY_uSEC(100000);
-    }
+    ARX3A0_DELAY_uSEC(50000);
 
     /* Force re-reading of the registers */
     max_integration_time = current_integration_time = 0;
