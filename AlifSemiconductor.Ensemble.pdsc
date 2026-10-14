@@ -3410,14 +3410,14 @@
         <!-- AE822FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE822FA0E5597/include/" condition="SoC AE822FA0E5597"/>
         <file category="header" name="Device/soc/AE822FA0E5597/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE822FA0E5597"/>
-        <file category="header" name="Device/soc/AE822FA0E5597/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE822FA0E5597"/>
+        <file category="header" name="Device/soc/AE822FA0E5597/rte/RTE_Device.h"         version="2.6.1"  attr="config" condition="SoC AE822FA0E5597"/>
         <file category="include" name="Device/soc/AE822FA0E5597/include/rtss_hp/" condition="SoC AE822FA0E5597 M55_HP"/>
         <file category="include" name="Device/soc/AE822FA0E5597/include/rtss_he/" condition="SoC AE822FA0E5597 M55_HE"/>
 
         <!-- AE402FA0E5597 specific files -->
         <file category="include" name="Device/soc/AE402FA0E5597/include/" condition="SoC AE402FA0E5597"/>
         <file category="header" name="Device/soc/AE402FA0E5597/config/app_mem_regions.h" version="3.0.0"  attr="config" condition="SoC AE402FA0E5597"/>
-        <file category="header" name="Device/soc/AE402FA0E5597/rte/RTE_Device.h"         version="2.6.0"  attr="config" condition="SoC AE402FA0E5597"/>
+        <file category="header" name="Device/soc/AE402FA0E5597/rte/RTE_Device.h"         version="2.6.1"  attr="config" condition="SoC AE402FA0E5597"/>
         <file category="include" name="Device/soc/AE402FA0E5597/include/rtss_hp/" condition="SoC AE402FA0E5597 M55_HP"/>
         <file category="include" name="Device/soc/AE402FA0E5597/include/rtss_he/" condition="SoC AE402FA0E5597 M55_HE"/>
 
@@ -3546,7 +3546,8 @@
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_clickboard_freertos.c" attr="template" select="ADC Click Board FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_exttrigger_freertos.c" attr="template" select="ADC External Trigger FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_adc_potentiometer_freertos.c" attr="template" select="ADC Potentiometer FreeRTOS Demo" condition="Ensemble_NonE1C"/>
-        <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_arx3a0_freertos.c" attr="template" select="ARX3A0 Camera Sensor FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_camera_freertos.c" attr="template" select="Serial Camera Sensor FreeRTOS Demo"/>
+        <file category="source" name="Boards/Templates/FreeRTOS/demo_dual_camera_freertos.c" attr="template" select="Dual Camera Sensor FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/FreeRTOS/demo_mipi_interface_video_freertos.c" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
         <file category="source" name="Boards/Templates/alif_logo/alif_logo.c" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
         <file category="header" name="Boards/Templates/alif_logo/alif_logo.h" attr="template" select="MIPI Interface Video FreeRTOS Demo"/>
@@ -3998,6 +3999,7 @@
       <files>
         <file category="source" name="Alif_CMSIS/Source/Driver_CPI.c"/>
         <file category="header" name="Alif_CMSIS/Source/Driver_CPI_Private.h"/>
+        <file category="source" name="Alif_CMSIS/Source/Camera_Sensor.c"/>
         <file category="source" name="Alif_CMSIS/Source/Camera_Sensor_i2c.c"/>
         <file category="header" name="Alif_CMSIS/Include/Driver_CPI.h"/>
         <file category="header" name="Alif_CMSIS/Source/Camera_Sensor_i2c.h"/>
