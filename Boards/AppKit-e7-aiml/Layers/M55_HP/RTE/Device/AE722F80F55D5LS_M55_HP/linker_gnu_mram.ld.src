@@ -50,6 +50,7 @@ MEMORY
   SRAM1 (rwx) : ORIGIN = APP_SRAM1_BASE, LENGTH = APP_SRAM1_SIZE
   #endif
   MRAM  (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE
+  MRAM_USER  (rw)  : ORIGIN = APP_MRAM_USER_BASE, LENGTH = APP_MRAM_USER_SIZE
 }
 
 ENTRY(Reset_Handler)
@@ -118,6 +119,19 @@ SECTIONS
     . = ALIGN(16);
   } > ITCM AT > MRAM
 
+  /* Caution: .got, .tdata and .tbss sections come under
+   * RELRO section. So keep it adjacent one after another.
+   */
+  .got : ALIGN(8)
+  {
+    *(.got)
+    *(.got*)
+    *(.data.rel.ro)
+    *(.data.rel.ro*)
+    *(.got.plt)
+    . = ALIGN(16);
+  } > MRAM
+
   /* Thread Local Storage sections */
   .tdata.at_dtcm : ALIGN(16)
   {
@@ -161,12 +175,28 @@ SECTIONS
   } > DTCM AT > MRAM
 
 #if __HAS_BULK_SRAM
+  /* Shared_Sram: model and command stream execute directly from MRAM. */
+  .ethos_model.at_mram : ALIGN(16)
+  {
+    *(ethos_model)
+    . = ALIGN(16);
+  } > MRAM
+
+  /* Shared_Sram: writable arena in SRAM1. */
+  .ethos_arena.at_sram1 (NOLOAD) : ALIGN(16)
+  {
+    *(ethos_arena)
+  } > SRAM1
+
   .bss.at_sram0 (NOLOAD) : ALIGN(8)
   {
     *(.bss.lcd_crop_and_interpolate_buf)  /* LCD crop and intrepolate image processing buffer. */
     *(.bss.lcd_frame_buf)                 /* LCD frame Buffer. */
+    *(.bss.lcd_frame_buf1)                /* LCD frame Buffer 1 (double buffering). */
+    *(.bss.lcd_frame_buf2)                /* LCD frame Buffer 2 (double buffering). */
     *(.bss.camera_frame_buf)              /* Camer Frame Buffer */
     *(.bss.camera_frame_bayer_to_rgb_buf) /* (Optional) Camera Frame Buffer for Bayer to RGB Conversion. */
+    *(.data.audio_samples)               /* Audio sample data */
   } > SRAM0
 #endif
 
@@ -266,6 +296,15 @@ SECTIONS
     KEEP(*(.eh_frame*))
     . = ALIGN(16);
   } > MRAM
+
+  .mram_user (NOLOAD) : ALIGN(16)
+  {
+    __mram_user_start__ = .;
+    *(.mram_user)
+    *(.mram_user*)
+    . = ALIGN(16);
+    __mram_user_end__ = .;
+  } > MRAM_USER
 
   /* Check if data + heap + stack exceeds RAM limit */
   ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")

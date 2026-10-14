@@ -3,9 +3,10 @@
 The `Alif Semiconductor Ensemble Device Family Pack` contains Device and Board support for:
 
 - [Alif Semiconductor Ensemble E1C/E1/E3/E5/E7/E8](https://alifsemi.com/products/ensemble/) AI/ML microcontroller series with up to two Arm Cortex-M55 processors and two Arm Ethos-U55/U85 microNPUs.
-- [Alif Semiconductor Ensemble E8 DevKit](https://alifsemi.com/support/kits/) single-board computer with access to all signals and pins for power/performance profiling.
-- [Alif Semiconductor Ensemble E7 DevKit - D1](https://alifsemi.com/support/kits/) single-board computer with access to all signals and pins for power/performance profiling.
-- [Alif Semiconductor Ensemble E7 AI/ML AppKit - D1](https://alifsemi.com/support/kits/) single-board computer with camera/image, motion, and sound sensors, and a display.
+- [Alif Semiconductor Ensemble E8 DevKit](https://alifsemi.com/support/kits/ensemble-e8devkit/) single-board computer with access to all signals and pins for power/performance profiling.
+- [Alif Semiconductor Ensemble E8 AI/ML AppKit](https://alifsemi.com/support/kits/ensemble-e8appkit/) single-board computer with camera/image, motion, and sound sensors, and a display.
+- [Alif Semiconductor Ensemble E7 DevKit - D1](https://alifsemi.com/support/kits/ensemble-e7devkit/) single-board computer with access to all signals and pins for power/performance profiling.
+- [Alif Semiconductor Ensemble E7 AI/ML AppKit - D1](https://alifsemi.com/support/kits/ensemble-e7appkit/) single-board computer with camera/image, motion, and sound sensors, and a display.
 
 This Pack contains:
 
@@ -31,6 +32,7 @@ The following packs are required for this DFP:
 
 ```yml
     - pack: ARM::CMSIS@^6.2.0               # Arm CMSIS pack 6.2.0 or higher
+    - pack: ARM::CMSIS-Ethos-U@^1.0.0       # Arm CMSIS Ethos-U pack 1.0.0 or higher (Ethos-U driver API)
     - pack: ARM::CMSIS-Compiler@2.1.0       # Arm Compiler pack 2.1.0 or higher (for STDIN/OUT)
 ```
 
@@ -38,15 +40,19 @@ The following packs are required for this DFP:
 
 The E8 DevKit Board Support (BSP) part provides the following examples and layers:
 
-Example                 | Tool           | Description
-:-----------------------|:---------------|:--------------------------
-Blinky_HP               | CMSIS-Toolbox  | Blinky example configured for M55 High Performance code
-Blinky_HE               | CMSIS-Toolbox  | Blinky example configured for M55 High Efficiency code
+Example                   | Tool          | Description
+:-------------------------|:--------------|:--------------------------
+Blinky_HP                 | CMSIS-Toolbox | Blinky example configured for M55 High Performance code
+Blinky_HE                 | CMSIS-Toolbox | Blinky example configured for M55 High Efficiency code
+DualCore_HE_HP            | CMSIS-Toolbox | Dual Core example running on M55 High Efficiency and High Performance cores
+Hello_World_HE            | CMSIS-Toolbox | Hello World example running on M55 High Efficiency core
 
-Layer Type: Board       | Tool           | Description
-:-----------------------|:---------------|:--------------------------
-`Board_HP.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Performance core
-`Board_HE.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Efficiency core
+Layer Type: Board         | Tool          | Description
+:-------------------------|:--------------|:--------------------------
+`Board_HP.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U55
+`Board_HE.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U55
+`Board_HP-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U85
+`Board_HE-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U85
 
 The Board layers enable device-agnostic [Reference Applications](https://www.keil.arm.com/refapps/) and implement these API interfaces:
 
@@ -87,6 +93,29 @@ Provided API Interface    | Description
  CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
  CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
  STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
+
+## E8 AppKit (BSP)
+
+The E8 AI/ML AppKit Board Support (BSP) part provides board layers:
+
+Layer Type: Board         | Tool          | Description
+:-------------------------|:--------------|:--------------------------
+`Board_HP.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U55
+`Board_HE.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U55
+`Board_HP-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U85
+`Board_HE-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U85
+
+The Board layers enable device-agnostic [Reference Applications](https://open-cmsis-pack.github.io/cmsis-toolbox/ReferenceApplications/) and implement these API interfaces:
+
+Provided API Interface    | Description
+:-------------------------|:------------------------------------------------------------------------------
+ CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
+ CMSIS_USART              | CMSIS-Driver USART4 connected to PRG USB connector
+ CMSIS_USB_Device         | CMSIS-Driver USB connected to MCU USB connector
+ CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
+ CMSIS_VSTREAM_VIDEO_IN   | CMSIS-Driver for Video input stream via MIPI Camera
+ CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
+ STDIN, STDOUT, STDERR    | Standard I/O connected to USART4 COM port
 
 ## E7 AppKit (BSP)
 
@@ -157,8 +186,9 @@ Kit        | Command
 :----------|:-------------------------
 E7 AppKit  | `tools-config -p "E7 (AE722F80F55D5LS) - 5.5 MRAM / 13.5 SRAM" -r B4`
 E7 DevKit  | `tools-config -p "E7 (AE722F80F55D5LS) - 5.5 MRAM / 13.5 SRAM" -r B4`
-E1C DevKit | `tools-config -p “E1C (AE1C1F4051920PH) - 1.86 MRAM / 2.0 SRAM” -r A7`
-B1 DevKit  | `tools-config -p “B1 (AB1C1F4M51820PH) - 1.8 MRAM / 2.0 SRAM” -r A0`
+E1C DevKit | `tools-config -p "E1C (AE1C1F4051920PH) - 1.86 MRAM / 2.0 SRAM" -r A7`
+B1 DevKit  | `tools-config -p "B1 (AB1C1F4M51820PH) - 1.8 MRAM / 2.0 SRAM" -r A0`
+E8 AppKit  | `tools-config -p "E8 (AE822FA0E5597BS0) - 5.5 MRAM / 9.75 SRAM" -r A1`
 E8 DevKit  | `tools-config -p "E8 (AE822FA0E5597LS0) - 5.5 MRAM / 9.75 SRAM" -r A1`
 
 ### Tasks for VS Code
@@ -178,12 +208,10 @@ To run these _tasks_:
 
     ```json
     {
-    "alif.setools.root": "C:\\Alif\\SETOOLS",     // SETOOLS installation path on your PC
-    :
+    "alif.setools.root": "C:\\Alif\\SETOOLS"     // SETOOLS installation path on your PC
     ```
 
 2. Use **Terminal - Run Task** from the VS Code menu to execute the SETOOLS configuration _task_.
-   On Windows, ensure that the default terminal is `Git Bash` or `PowerShell`.
 
 Example output:
 

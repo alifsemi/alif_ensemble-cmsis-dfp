@@ -1753,8 +1753,7 @@
       <feature type="Accelerometer" n="1" name="3-axis Digital Accelerometer in BMI323"/>
       <feature type="Gyro" n="1" name="3-axis Digital Gyroscope in BMI323"/>
       <feature type="TempSens" n="1" name="16-bit Digital Temperature Sensor in BMI323"/>
-      <feature type="SensOther" n="2" name="I2S Digital MICs"/>
-      <feature type="SensOther" n="2" name="PDM Digital MICs"/>
+      <feature type="SensOther" n="4" name="PDM Digital MICs"/>
       <feature type="SensOther" n="1" name="CH201 Ultrasonic Range Sensor"/>
       <feature type="LED" n="1" name="Multicolor LEDs"/>
       <feature type="Camera" n="1" name="2-Lane MIPI CSI Connector for OnSemi MT9M114 1.26MP 1/6-inch Image Sensor"/>
@@ -2237,6 +2236,7 @@
       <description>Requirement for AppKit-E7-AIML VIO Driver</description>
       <require condition="AppKit-E7-AIML"/>
       <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
+      <require Cclass="BSP" Cgroup="AppKit Config" Cvariant="AppKit-E7-AIML"/>
     </condition>
 
     <condition id="AppKit vStream AudioIn">
@@ -2254,6 +2254,30 @@
     <condition id="AppKit vStream VideoOut">
       <description>Requirement for AppKit-E7-AIML vStream VideoOut Driver</description>
       <require condition="AppKit-E7-AIML"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC"/>
+    </condition>
+
+    <condition id="AppKit-E8">
+      <description>Alif Semiconductor Ensemble AppKit-E8-AIML Board</description>
+      <require Bvendor="Alif Semiconductor" Bname="AppKit-E8-AIML"/>
+    </condition>
+
+    <condition id="AppKit-E8 VIO Driver">
+      <description>Requirement for AppKit-E8-AIML VIO Driver</description>
+      <require condition="AppKit-E8"/>
+      <require condition="AppKit-E8-AIML"/>
+      <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
+    </condition>
+
+    <condition id="AppKit-E8 vStream VideoIn">
+      <description>Requirement for AppKit-E8-AIML vStream VideoIn Driver</description>
+      <require condition="AppKit-E8-AIML"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CPI"/>
+    </condition>
+
+    <condition id="AppKit-E8 vStream VideoOut">
+      <description>Requirement for AppKit-E8-AIML vStream VideoOut Driver</description>
+      <require condition="AppKit-E8-AIML"/>
       <require Cclass="Device" Cgroup="SOC Peripherals" Csub="CDC"/>
     </condition>
 
@@ -2594,6 +2618,17 @@
       </files>
     </component>
 
+    <component Cclass="CMSIS Driver" Cgroup="VIO" Csub="Board" Cvariant="AppKit-E8-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit-E8 VIO Driver">
+      <description>Virtual I/O implementation for Ensemble AppKit AK-E8-AIML</description>
+      <RTE_Components_h>
+        #define RTE_VIO_BOARD
+        #define RTE_VIO_APPKIT_E8_AIML
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Boards/AppKit-e8/Drivers/vio_AppKit-E8-AIML.c"/>
+      </files>
+    </component>
+
     <component Cclass="CMSIS Driver" Cgroup="VIO" Csub="Board" Cvariant="DevKit-E7" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit VIO Driver">
       <description>Virtual I/O implementation for Ensemble DevKit DK-E7</description>
       <RTE_Components_h>
@@ -2660,6 +2695,17 @@
       </files>
     </component>
 
+    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoIn" Cvariant="AppKit-E8-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit-E8 vStream VideoIn">
+      <description>Video Input vStream implementation for Ensemble AppKit AK-E8-AIML</description>
+      <RTE_Components_h>
+        #define RTE_VSTREAM_VIDEOIN
+        #define RTE_VSTREAM_VIDEOIN_APPKIT_E8_AIML
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Boards/AppKit-e8/Drivers/vstream_video_in.c"/>
+      </files>
+    </component>
+
     <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoIn" Cvariant="DevKit-E8" Cversion="1.0.0" Capiversion="1.0.0" condition="DevKit-E8 vStream VideoIn">
       <description>Video Input vStream implementation for Ensemble DevKit DK-E8</description>
       <RTE_Components_h>
@@ -2679,6 +2725,17 @@
       </RTE_Components_h>
       <files>
         <file category="source" name="Boards/AppKit-e7-aiml/Drivers/vstream_video_out.c"/>
+      </files>
+    </component>
+
+    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="VideoOut" Cvariant="AppKit-E8-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit-E8 vStream VideoOut">
+      <description>Video Output vStream implementation for Ensemble AppKit AK-E8-AIML</description>
+      <RTE_Components_h>
+        #define RTE_VSTREAM_VIDEOOUT
+        #define RTE_VSTREAM_VIDEOOUT_APPKIT_E8_AIML
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Boards/AppKit-e8/Drivers/vstream_video_out.c"/>
       </files>
     </component>
 
@@ -3619,15 +3676,18 @@
 
 
   <csolution>
-    <template name="Alif CMSIS" path="Alif_CMSIS/Template/CMSIS" file="MyProject.csolution.yml" condition="Ensemble">
+    <template name="Alif CMSIS" path="Boards/Templates/CMSIS" file="MyProject.csolution.yml" condition="Ensemble">
       <description>Create a bare-metal application for Alif Ensemble device</description>
     </template>
-    <template name="Alif Zephyr" path="Alif_CMSIS/Template/Zephyr" file="Zephyr.csolution.yml" condition="Ensemble">
+    <template name="Alif Zephyr" path="Boards/Templates/Zephyr" file="Zephyr.csolution.yml" condition="Ensemble">
       <description>Create a Zephyr application (using West) for Alif Ensemble device</description>
     </template>
 
     <clayer type="Board" path="Boards/AppKit-e7-aiml/Layers/M55_HE" file="Board_HE.clayer.yml" copy-to="Board/AppKit-E7_M55_HE" condition="AppKit-E7-AIML"/>
     <clayer type="Board" path="Boards/AppKit-e7-aiml/Layers/M55_HP" file="Board_HP.clayer.yml" copy-to="Board/AppKit-E7_M55_HP" condition="AppKit-E7-AIML"/>
+
+    <clayer type="Board" path="Boards/AppKit-e8/Layers/M55_HE"      file="Board_HE.clayer.yml" copy-to="Board/AppKit-E8_M55_HE" condition="AppKit-E8"/>
+    <clayer type="Board" path="Boards/AppKit-e8/Layers/M55_HP"      file="Board_HP.clayer.yml" copy-to="Board/AppKit-E8_M55_HP" condition="AppKit-E8"/>
 
     <clayer type="Board" path="Boards/DevKit-e7/Layers/M55_HE"      file="Board_HE.clayer.yml" copy-to="Board/DevKit-E7_M55_HE" condition="DevKit-E7"/>
     <clayer type="Board" path="Boards/DevKit-e7/Layers/M55_HP"      file="Board_HP.clayer.yml" copy-to="Board/DevKit-E7_M55_HP" condition="DevKit-E7"/>

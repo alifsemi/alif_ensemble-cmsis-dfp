@@ -30,7 +30,6 @@ In VS Code use the menu command **Terminal - Run Tasks** and execute:
 
 > Note:
 >
-> - For Windows ensure that the Terminal default is `Git Bash` or `PowerShell`.
 > - Configure SW4 to position SE (Secure UART) to enable SETOOLS communication with the device.
 
 ## Operation

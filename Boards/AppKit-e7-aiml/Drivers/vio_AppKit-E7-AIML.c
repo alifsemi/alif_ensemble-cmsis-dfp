@@ -1,12 +1,5 @@
-/******************************************************************************
- * @file     vio_AppKit-E7-AIML.c
- * @brief    Virtual I/O implementation for Alif Semiconductor Ensemble AppKit-E7-AIML
- * @version  V1.0.0
- * @date     11. April 2025
- ******************************************************************************/
 /*
- * Copyright (c) 2025 Arm Limited (or its affiliates).
- * All rights reserved.
+ * Copyright 2025-2026 Arm Limited and/or its affiliates.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,27 +16,22 @@
  * limitations under the License.
  */
 
-/*! \page vio_AppKit Physical I/O Mapping
+/* vio_AppKit-E7-AIML Physical I/O Mapping
 
 The table below lists the physical I/O mapping of this CMSIS-Driver VIO implementation.
 
-Virtual Resource  | Variable       | Physical Resource on Ensemble AppKit-E7-AIML   |
-:-----------------|:---------------|:-----------------------------------------------|
-vioBUTTON0        | vioSignalIn.0  | Joystick Select Button                         |
-vioJOYup          | vioSignalIn.2  | Joystick Up                                    |
-vioJOYdown        | vioSignalIn.3  | Joystick Down                                  |
-vioJOYleft        | vioSignalIn.4  | Joystick Left                                  |
-vioJOYright       | vioSignalIn.5  | Joystick Right                                 |
-vioJOYselect      | vioSignalIn.6  | Joystick Select Button                         |
-vioLED0           | vioSignalOut.0 | RGB LED Red                                    |
-vioLED1           | vioSignalOut.1 | RGB LED Green                                  |
-vioLED2           | vioSignalOut.2 | RGB LED Blue                                   |
+Virtual Resource | Variable       | Physical Resource on Ensemble AppKit-E7-AIML |
+:----------------|:---------------|:---------------------------------------------|
+vioBUTTON0       | vioSignalIn.0  | Joystick Select Button                       |
+vioJOYup         | vioSignalIn.2  | Joystick Up                                  |
+vioJOYdown       | vioSignalIn.3  | Joystick Down                                |
+vioJOYleft       | vioSignalIn.4  | Joystick Left                                |
+vioJOYright      | vioSignalIn.5  | Joystick Right                               |
+vioJOYselect     | vioSignalIn.6  | Joystick Select Button                       |
+vioLED0          | vioSignalOut.0 | RGB LED Red                                  |
+vioLED1          | vioSignalOut.1 | RGB LED Green                                |
+vioLED2          | vioSignalOut.2 | RGB LED Blue                                 |
 */
-
-/* History:
- *  Version 1.0.0
- *    Initial release
- */
 
 #include <string.h>
 #include "cmsis_vio.h"
@@ -55,34 +43,7 @@ vioLED2           | vioSignalOut.2 | RGB LED Blue                               
 #include "Driver_GPIO.h"
 #include "Driver_GPIO_Private.h"
 
-/* Definitions from board_defs.h                                                          */
-/* Ideally board_defs.h would be included here and pack component would provide the file. */
-// #include "board_defs.h"
-
-#define BOARD_LEDRGB0_R_GPIO_PORT     12
-#define BOARD_LEDRGB0_R_GPIO_PIN      3
-
-#define BOARD_LEDRGB0_G_GPIO_PORT     7
-#define BOARD_LEDRGB0_G_GPIO_PIN      4
-
-#define BOARD_LEDRGB0_B_GPIO_PORT     12
-#define BOARD_LEDRGB0_B_GPIO_PIN      0
-
-#define BOARD_JOY_SW_A_GPIO_PORT      15
-#define BOARD_JOY_SW_A_GPIO_PIN       0
-
-#define BOARD_JOY_SW_B_GPIO_PORT      15
-#define BOARD_JOY_SW_B_GPIO_PIN       1
-
-#define BOARD_JOY_SW_C_GPIO_PORT      15
-#define BOARD_JOY_SW_C_GPIO_PIN       2
-
-#define BOARD_JOY_SW_D_GPIO_PORT      15
-#define BOARD_JOY_SW_D_GPIO_PIN       3
-
-#define BOARD_JOY_SW_CENTER_GPIO_PORT 15
-#define BOARD_JOY_SW_CENTER_GPIO_PIN  4
-
+#include "board_defs.h"
 #endif
 
 // VIO input, output definitions
