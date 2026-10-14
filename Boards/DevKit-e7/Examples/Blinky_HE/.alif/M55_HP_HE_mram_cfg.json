@@ -6,7 +6,7 @@
         "signed": true
     },
     "A32_STUB": {
-        "disabled": false,
+        "disabled": true,
         "binary": "a32_stub_0.bin",
         "version" : "1.0.0",
         "signed": true,
