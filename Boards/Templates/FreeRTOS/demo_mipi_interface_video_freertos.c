@@ -46,6 +46,7 @@
 #include "aipl_error.h"
 #include "aipl_crop.h"
 #include "aipl_demosaic.h"
+#include "alif_logo.h"
 
 /*RTOS Includes */
 #include "FreeRTOS.h"
@@ -341,6 +342,49 @@ void Display_callback(uint32_t event)
     }
 }
 
+/* Alif logo overlay (software CLUT lookup for RGB888) */
+#define ALIF_LOGO_X        100U
+#define ALIF_LOGO_Y        600U
+
+static void draw_alif_logo(uint32_t x_pos, uint32_t y_pos)
+{
+    const aipl_image_t *logo = get_alif_logo();
+    const uint8_t      *src  = (const uint8_t *)logo->data;
+    const uint8_t      *lut  = get_alif_lut();
+    uint8_t            *dst  = lcd_framebuffer_pool;
+
+    for (uint32_t y = 0; y < logo->height; y++) {
+        uint32_t dst_y = y_pos + y;
+
+        if (dst_y >= LCD_FRAME_HEIGHT) {
+            break;
+        }
+
+        for (uint32_t x = 0; x < logo->width; x++) {
+            uint32_t dst_x = x_pos + x;
+
+            if (dst_x >= LCD_FRAME_WIDTH) {
+                break;
+            }
+
+            uint8_t idx = src[y * logo->pitch + x];
+            const uint8_t *entry = &lut[idx * 4U];
+
+            /* Skip fully transparent CLUT entries */
+            if (entry[3] == 0U) {
+                continue;
+            }
+
+            /* ARGB8888 CLUT is little-endian B,G,R,A in memory */
+            uint8_t *pixel = &dst[(dst_y * LCD_FRAME_WIDTH + dst_x) * 3U];
+
+            pixel[0] = entry[2];   /* R */
+            pixel[1] = entry[1];   /* G */
+            pixel[2] = entry[0];   /* B */
+        }
+    }
+}
+
 /**
  * \fn          int32_t i2c_pinmux(void)
  * \brief       i2c hardware pin initialization:
@@ -599,6 +643,9 @@ void video_demo_thread_entry(void *pvParameters)
         goto error_poweroff_camera;
     }
 
+    /*Fill the LCD framebuffer with white.*/
+    memset(lcd_framebuffer_pool, 0xFF, LCD_FRAMEBUFFER_POOL_SIZE);
+
     /* Configure Camera */
     ret = CAMERAdrv->Control(CPI_CONFIGURE, 0);
     if (ret != ARM_DRIVER_OK) {
@@ -706,6 +753,8 @@ void video_demo_thread_entry(void *pvParameters)
             printf("\r\n Error: CAMERA AIPL crop failed.\r\n");
             goto error_poweroff_camera;
         }
+
+        draw_alif_logo(ALIF_LOGO_X, ALIF_LOGO_Y);
     }
 
 error_poweroff_camera:
