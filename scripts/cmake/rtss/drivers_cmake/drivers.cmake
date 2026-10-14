@@ -220,6 +220,7 @@ target_sources(${DRIVER_LIB} PRIVATE
     $<$<BOOL:${ENABLE_CPI}>:${ALIF_ENSEMBLE_DRIVERS_SRC_DIR}/cpi.c>
     $<$<BOOL:${ENABLE_CPI}>:${ALIF_CMSIS_DRIVER_SRC_DIR}/Driver_CPI.c>
     $<$<BOOL:${ENABLE_CPI}>:${ALIF_CMSIS_DRIVER_SRC_DIR}/Camera_Sensor_i2c.c>
+    $<$<BOOL:${ENABLE_CPI}>:${ALIF_CMSIS_DRIVER_SRC_DIR}/Camera_Sensor.c>
 
     #GPIO Driver
     $<$<BOOL:${ENABLE_GPIO}>:${ALIF_CMSIS_DRIVER_SRC_DIR}/Driver_GPIO.c>
