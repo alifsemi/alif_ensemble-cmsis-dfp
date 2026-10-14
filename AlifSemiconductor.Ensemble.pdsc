@@ -3676,10 +3676,10 @@
 
 
   <csolution>
-    <template name="Alif CMSIS" path="Alif_CMSIS/Template/CMSIS" file="MyProject.csolution.yml" condition="Ensemble">
+    <template name="Alif CMSIS" path="Boards/Templates/CMSIS" file="MyProject.csolution.yml" condition="Ensemble">
       <description>Create a bare-metal application for Alif Ensemble device</description>
     </template>
-    <template name="Alif Zephyr" path="Alif_CMSIS/Template/Zephyr" file="Zephyr.csolution.yml" condition="Ensemble">
+    <template name="Alif Zephyr" path="Boards/Templates/Zephyr" file="Zephyr.csolution.yml" condition="Ensemble">
       <description>Create a Zephyr application (using West) for Alif Ensemble device</description>
     </template>
 
