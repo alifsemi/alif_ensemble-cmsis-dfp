@@ -626,6 +626,11 @@ static bool i3c_build_rx_mcode(I3C_RESOURCES *i3c, void *dst,
         }
     }
 
+    /* Release the last I3C DMA request */
+    if (!dma_construct_flushperiph(periph, &op_buf)) {
+        return false;
+    }
+
     if (!dma_construct_wmb(&op_buf)) {
         return false;
     }
@@ -1451,17 +1456,16 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
     i3c->xfer.xfer_cmd.addr_index = index;
     i3c->xfer.xfer_cmd.data_len   = len;
     i3c->xfer.rx_len              = len;
-
+    i3c->xfer.rx_buf              = data;
     i3c->xfer.xfer_cmd.cmd_type   = I3C_XFER_TYPE_RX_DATA;
 
 #if (I3C_DMA_ENABLE)
     if (i3c->dma_enable) {
-        i3c->xfer.rx_buf     = NULL;
+        /* Armed length: MST_RX then reads no further FIFO bytes. */
         i3c->xfer.rx_cur_cnt = len;
     } else
 #endif
     {
-        i3c->xfer.rx_buf     = data;
         i3c->xfer.rx_cur_cnt = 0U;
     }
 
@@ -2444,11 +2448,23 @@ static void I3Cx_DMACallback(uint32_t event, int8_t peri_num, I3C_RESOURCES *i3c
             if (i3c->status.rx_busy) {
                 /* RX: master coordinates DMA cb with RESP_READY IRQ */
                 if (i3c->state.is_master) {
+
+                    /* 1..3 byte RX is held in the DMA scratch word. */
+                    if (i3c->xfer.rx_len < 4) {
+                        while (i3c->xfer.rx_len) {
+                              ((uint8_t *)(i3c->xfer.rx_buf))[i3c->xfer.rx_len--] =
+                                      i3c->dma_rx_scratch[i3c->xfer.rx_len];
+                        }
+                        ((uint8_t *)(i3c->xfer.rx_buf))[i3c->xfer.rx_len] =
+                                    i3c->dma_rx_scratch[i3c->xfer.rx_len];
+                    }
+
+                    /* Clear so the MST_RX response does not read the FIFO. */
+                    i3c->xfer.rx_len     = 0U;
                     /* Master RX two-signal. */
                     if (i3c->xfer.status & I3C_XFER_STATUS_MST_RX_DONE) {
                         i3c->xfer.status = I3C_XFER_STATUS_NONE;
                         i3c->status.rx_busy  = 0U;
-                        i3c->xfer.rx_len     = 0U;
                         NVIC_EnableIRQ(i3c->irq);
                         i3c->cb_event(ARM_I3C_EVENT_TRANSFER_DONE | ARM_I3C_EVENT_RX_DONE);
                     } else {
