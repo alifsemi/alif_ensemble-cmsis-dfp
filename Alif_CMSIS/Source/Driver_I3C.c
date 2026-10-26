@@ -626,6 +626,11 @@ static bool i3c_build_rx_mcode(I3C_RESOURCES *i3c, void *dst,
         }
     }
 
+    /* Release the last I3C DMA request */
+    if (!dma_construct_flushperiph(periph, &op_buf)) {
+        return false;
+    }
+
     if (!dma_construct_wmb(&op_buf)) {
         return false;
     }
@@ -1452,17 +1457,16 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
     i3c->xfer.xfer_cmd.addr_index = index;
     i3c->xfer.xfer_cmd.data_len   = len;
     i3c->xfer.rx_len              = len;
-
+    i3c->xfer.rx_buf              = data;
     i3c->xfer.xfer_cmd.cmd_type   = I3C_XFER_TYPE_RX_DATA;
 
 #if (I3C_DMA_ENABLE)
     if (i3c->dma_enable) {
-        i3c->xfer.rx_buf     = NULL;
+        /* Armed length: MST_RX then reads no further FIFO bytes. */
         i3c->xfer.rx_cur_cnt = len;
     } else
 #endif
     {
-        i3c->xfer.rx_buf     = data;
         i3c->xfer.rx_cur_cnt = 0U;
     }
 
@@ -2447,6 +2451,17 @@ static void I3Cx_DMACallback(uint32_t event, int8_t peri_num, I3C_RESOURCES *i3c
             if (i3c->status.rx_busy) {
                 /* RX: master coordinates DMA cb with RESP_READY IRQ */
                 if (i3c->state.is_master) {
+
+                    /* 1..3 byte RX is held in the DMA scratch word. */
+                    if (i3c->xfer.rx_len < 4) {
+                        uint16_t loc_rx_len = i3c->xfer.rx_len;
+                        while (loc_rx_len) {
+                            loc_rx_len--;
+                            ((uint8_t *)(i3c->xfer.rx_buf))[loc_rx_len] =
+                                          i3c->dma_rx_scratch[loc_rx_len];
+                        }
+                    }
+
                     /* Master RX two-signal. */
                     if (i3c->xfer.status & I3C_XFER_STATUS_MST_RX_DONE) {
                         i3c->xfer.status = I3C_XFER_STATUS_NONE;
