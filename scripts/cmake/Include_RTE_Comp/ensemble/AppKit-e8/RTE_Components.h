@@ -41,7 +41,7 @@
 /* AlifSemiconductor::Device.SOC Peripherals.DAC */
 //#define RTE_Drivers_DAC                     1 /* Driver ADC                               */
 /* AlifSemiconductor::SD Driver */
-//#define RTE_Drivers_SD                      1 /* Driver SD                                */
+#define RTE_Drivers_SD                      1 /* Driver SD                                */
 /* AlifSemiconductor::Device.SOC Peripherals.OSPI Controller */
 #define RTE_Drivers_OSPI                    1 /* Driver OSPI                              */
 /* AlifSemiconductor::BSP.OSPI PSRAM XIP     */
