@@ -173,7 +173,7 @@ int32_t DPHY_External_Loopback_Test(uint32_t frequency, uint32_t loopback_test_r
     }
 
     /* Configuring Slave*/
-    ret = CSI2_DPHY_Initialize(frequency, 2);
+    ret = CSI2_DPHY_Initialize(DPHY_PORT_CSI2_NATIVE, frequency, 2);
     if (ret != ARM_DRIVER_OK) {
         goto error_dsi_uinit;
     }
