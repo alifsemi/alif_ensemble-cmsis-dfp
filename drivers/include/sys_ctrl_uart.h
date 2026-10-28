@@ -16,7 +16,7 @@
 
 static inline void enable_lpuart_clock(void)
 {
-    AON->RTSS_HE_LPUART_CKEN = (1 << 0);
+    AON->RTSS_HE_LPUART_CKEN |= (1 << 0);
 }
 
 static inline void disable_lpuart_clock(void)
