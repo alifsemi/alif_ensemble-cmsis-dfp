@@ -1570,6 +1570,15 @@
 // <i> Default: DISABLE
 #define RTE_I3C_SLAVE_ADAPTIVE_MODE_ENABLE 0
 
+// <o> I3C Slave Hot-Join Enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Controls whether the I3C slave issues a Hot-Join request.
+// <i> Hot-Join lets a slave attach to a bus that is already running
+// <i> and obtain a dynamic address from the controller.
+// <i> Default: DISABLE
+#define RTE_I3C_SLAVE_HOT_JOIN_ENABLE      0
+
 #endif
 // </e> I3C (Improved Inter-Integrated Circuit) [Driver_I3C]
 

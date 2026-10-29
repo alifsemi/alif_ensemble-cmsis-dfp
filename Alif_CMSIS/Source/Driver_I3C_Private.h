@@ -82,6 +82,7 @@ typedef struct _I3C_RESOURCES {
     bool blocking_mode; /* I3C blocking mode transfer enable                  */
 #endif
     bool               adaptive_mode; /* I3C slave I2C/I3C adaptive mode                    */
+    bool               hj_en;         /* I3C slave Hot-Join request enable                  */
     IRQn_Type          irq;           /* i3c interrupt number                               */
     uint32_t           irq_priority;  /* i3c interrupt priority                             */
     const I3C_INSTANCE instance;      /* I3C Instance number                                */
