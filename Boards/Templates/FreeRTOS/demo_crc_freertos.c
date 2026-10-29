@@ -96,6 +96,7 @@ TaskHandle_t crc_xHandle;
 #define CRC_8_BIT                  1
 #define CRC_16_BIT                 0
 #define CRC_32_BIT                 0
+#define CRC_32C_BIT                0
 #define CRC_CUSTOM_32_BIT          0
 
 /* Select the type of input */
@@ -117,6 +118,7 @@ uint8_t input_value[] = {"Hello"};
 uint32_t seed_value_8_bit   = (0x00000000); /* Seed value for 8 bit */
 uint32_t seed_value_16_bit  = (0x00000000); /* Seed value for 16 bit */
 uint32_t seed_value_32_bit  = (0xFFFFFFFF); /* Seed value for 32 bit */
+uint32_t seed_value_crc32c  = (0xFFFFFFFF); /* Seed value for hardware CRC32C */
 uint32_t seed_value_32C_bit = (0xFFFFFFFF); /* Seed value for 32 bit custom polynomial */
 
 uint32_t polynomial         = 0x2CEEA6C8; /* polynomial value for 32 bit custom polynomial */
@@ -289,6 +291,47 @@ void crc_demo_Thread_entry(void *pvParameters)
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: CRC 32 bit data sending failed\n");
         goto error_send;
+    }
+
+/* For hardware CRC32C */
+#elif CRC_32C_BIT
+
+    /* Disable all control bits before configuring */
+    ret = CRCdrv->Control(ARM_CRC_CONTROL_MASK, DISABLE);
+    if (ret != ARM_DRIVER_OK) {
+	printf("\r\n Error: CRC Control mask for CRC32C failed\n");
+	goto error_poweroff;
+    }
+
+    /* To Enable the Reflect, Invert, Bit swap and Byte swap of CRC control register */
+    ret = CRCdrv->Control(ARM_CRC_ENABLE_BIT_SWAP | ARM_CRC_ENABLE_BYTE_SWAP |
+			      ARM_CRC_ENABLE_INVERT_OUTPUT | ARM_CRC_ENABLE_REFLECT_OUTPUT,
+			  ENABLE);
+    if (ret != ARM_DRIVER_OK) {
+	printf("\r\n Error: CRC Control for CRC32C failed\n");
+	goto error_poweroff;
+    }
+
+    /* Select hardware CRC32C algorithm */
+    ret = CRCdrv->Control(ARM_CRC_ALGORITHM_SEL, ARM_CRC_ALGORITHM_SEL_32_BIT_CRC32C);
+    if (ret != ARM_DRIVER_OK) {
+	printf("\r\n Error: CRC Control Algorithm for CRC32C failed\n");
+	goto error_poweroff;
+    }
+
+    /* Adding CRC32C seed value to the seed register */
+    ret = CRCdrv->Seed(seed_value_crc32c);
+    if (ret != ARM_DRIVER_OK) {
+	printf("\r\n Error: CRC Seed value for CRC32C failed\n");
+	goto error_uninitialize;
+    }
+
+    /*sending user input */
+    ret = CRCdrv->Compute(input_value, len, &crc_output);
+    printf("32 bit CRC32C output value: %" PRIx32 "\n", crc_output);
+    if (ret != ARM_DRIVER_OK) {
+	printf("\r\n Error: CRC32C data sending failed\n");
+	goto error_send;
     }
 
 /* For 32 bit Custom polynomial */
