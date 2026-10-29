@@ -1386,7 +1386,8 @@ static int I3Cx_MasterTransmit(I3C_RESOURCES *i3c, uint8_t addr, const uint8_t *
         if (i3c->dma_enable) {
             ret = I3C_DMA_Start_TX(i3c, data, len);
             if (ret) {
-                i3c_flush_all_buffers(i3c->regs);
+                /* Flush the Tx FIFO */
+                i3c_flush_tx_fifo(i3c->regs);
                 i3c->xfer.xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
                 i3c->xfer.xfer_cmd.data_len = 0;
                 i3c->xfer.tx_cur_cnt        = 0;
@@ -1486,7 +1487,8 @@ static int I3Cx_MasterReceive(I3C_RESOURCES *i3c, uint8_t addr, uint8_t *data, u
         if (i3c->dma_enable) {
             ret = I3C_DMA_Start_RX(i3c, data, len);
             if (ret) {
-                i3c_flush_all_buffers(i3c->regs);
+                /* Flush the Rx FIFO */
+                i3c_flush_rx_fifo(i3c->regs);
                 i3c->xfer.xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
                 i3c->xfer.xfer_cmd.data_len = 0;
                 i3c->xfer.rx_cur_cnt        = 0;
@@ -1577,7 +1579,8 @@ static int I3Cx_SlaveTransmit(I3C_RESOURCES *i3c, const uint8_t *data, uint16_t 
         if (i3c->dma_enable) {
             ret = I3C_DMA_Start_TX(i3c, data, len);
             if (ret) {
-                i3c_flush_all_buffers(i3c->regs);
+                /* Flush the Tx FIFO */
+                i3c_flush_tx_fifo(i3c->regs);
                 i3c->xfer.xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
                 i3c->xfer.xfer_cmd.data_len = 0;
                 i3c->xfer.tx_cur_cnt        = 0;
@@ -2480,17 +2483,27 @@ static void I3Cx_DMACallback(uint32_t event, int8_t peri_num, I3C_RESOURCES *i3c
             }
         }
     }
-    /* Abort Occurred */
+    /* Abort Occurred.
+     * A manager fault calls this once per channel, so both arms can
+     * notify. A channel fault drops only its own side.
+     */
     if (event & ARM_DMA_EVENT_ABORT) {
-        if ((i3c->status.rx_busy) ||
-            (i3c->status.tx_busy)) {
+        bool drop_tx = (IS_I3C_DMA_TX_REQ(peri_num) && i3c->status.tx_busy);
+        bool drop_rx = (IS_I3C_DMA_RX_REQ(peri_num) && i3c->status.rx_busy);
+
+        if (drop_rx) {
             I3C_DMA_LatchRxCount(i3c);
-            i3c_flush_all_buffers(i3c->regs);
+            i3c->status.rx_busy = 0U;
+            i3c_flush_rx_fifo(i3c->regs);
+        }
+        if (drop_tx) {
+            i3c->status.tx_busy = 0U;
+            i3c_flush_tx_fifo(i3c->regs);
+        }
+        if (drop_tx || drop_rx) {
             i3c_resume(i3c->regs);
             i3c_clear_xfer_error(i3c->regs);
             i3c->xfer.status = I3C_XFER_STATUS_NONE;
-            i3c->status.tx_busy = 0;
-            i3c->status.rx_busy = 0;
             i3c->cb_event(ARM_I3C_EVENT_TRANSFER_ERROR);
         }
     }
@@ -2684,27 +2697,52 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
 */
 static void I3Cx_HandleError(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *event)
 {
+    bool err_tx = (xfer->status & I3C_XFER_STATUS_ERROR_TX) != 0U;
+    bool err_rx = (xfer->status & I3C_XFER_STATUS_ERROR_RX) != 0U;
+
+    /* Abort and any error that names neither direction affect both. */
+    if ((xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) || (!err_tx && !err_rx)) {
+        err_tx = true;
+        err_rx = true;
+        /* Flush all buffers when both directions are affected */
+        i3c_flush_all_buffers(i3c->regs);
+    } else {
+        if (err_tx) {
+            i3c_flush_tx_fifo(i3c->regs);
+        }
+        if (err_rx) {
+            i3c_flush_rx_fifo(i3c->regs);
+        }
+    }
+
 #if I3C_DMA_ENABLE
     if (i3c->dma_enable) {
-        /* Latch RX progress while the channel is still programmed.
-         * Drop busy before Stop so the sync ABORT callback does not
-         * overwrite the latch with a post-Stop zero, or emit a
-         * duplicate TRANSFER_ERROR. Stop both channels on any error —
-         * XFER_ABORT sets neither ERROR_TX nor ERROR_RX, leaving
-         * channels stalled on an already-flushed FIFO.
+        /* Clear busy before Stop so the sync ABORT callback ignores
+         * this channel. Latch RX only when RX is being dropped; a
+         * TX-only error must not overwrite the armed RX count.
          */
-        I3C_DMA_LatchRxCount(i3c);
-        i3c->status.rx_busy = 0;
-        i3c->status.tx_busy = 0;
-        I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
-        I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
-    }
+        if (err_rx) {
+            I3C_DMA_LatchRxCount(i3c);
+            i3c->status.rx_busy = 0U;
+            I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+        }
+        if (err_tx) {
+            i3c->status.tx_busy = 0U;
+            I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+        }
+    } else
 #endif /* I3C_DMA_ENABLE */
+    {
+        if (err_rx) {
+            i3c->status.rx_busy = 0U;
+        }
+        if (err_tx) {
+            i3c->status.tx_busy = 0U;
+        }
+    }
 
     /* mark event as Transfer Error. */
-    *event              = ARM_I3C_EVENT_TRANSFER_ERROR;
-    i3c->status.rx_busy = 0;
-    i3c->status.tx_busy = 0;
+    *event = ARM_I3C_EVENT_TRANSFER_ERROR;
 
     if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
         /* Error during address assignment,
@@ -2717,10 +2755,7 @@ static void I3Cx_HandleError(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *eve
         /* mark event as Transfer Error. */
         *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
     }
-    /* error: Flushes all buffers, resumes i3c controller,
-     *        clears error status and resumes
-     */
-    i3c_flush_all_buffers(i3c->regs);
+
     i3c_resume(i3c->regs);
     i3c_clear_xfer_error(i3c->regs);
 }
