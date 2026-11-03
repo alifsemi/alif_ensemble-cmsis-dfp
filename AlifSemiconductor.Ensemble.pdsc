@@ -2437,6 +2437,7 @@
         <file category="source" name="Boards/Templates/Baremetal/FatFS/ffsystem.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/Templates/Baremetal/FatFS/ffunicode.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_sd_fatfs.c" attr="template" select="SDMMC FATFS Baremetal demo"/>
+        <file category="source" name="Boards/Templates/Baremetal/demo_spi_eeprom.c" attr="template" select="SPI EEPROM Read Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_spi_loopback.c" attr="template" select="SPI Baremetal Demo"/>
         <file category="source" name="Boards/Templates/Baremetal/demo_tsens.c" attr="template" select="TSENS Baremetal Demo"/>
         <file category="header" name="Boards/Templates/Common/Include/temperature.h" attr="template" select="TSENS Baremetal Demo" />

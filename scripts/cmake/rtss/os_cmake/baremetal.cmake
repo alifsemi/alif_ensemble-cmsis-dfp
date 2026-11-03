@@ -118,6 +118,7 @@ else()
     list(APPEND     RM_TEST_APPS_LIST   "demo_lppdm")
 endif()
 
+COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_spi_eeprom.c          ENABLE_SPI         TEST_APP_SRCS   "test-apps")
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_spi_loopback.c        ENABLE_SPI         TEST_APP_SRCS   "test-apps")
 COND_FILE_ADD(${BARE_METAL_APP_DIR}/demo_spi_microwire.c       ENABLE_SPI         TEST_APP_SRCS   "test-apps")
 
