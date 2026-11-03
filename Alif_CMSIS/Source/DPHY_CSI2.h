@@ -21,6 +21,7 @@
 #define DPHY_CSI2_H_
 
 #include <stdint.h>
+#include "Camera_Sensor.h"
 
 /**
   \fn          int32_t CSI2_DPHY_Initialize (uint32_t frequency, uint8_t n_lanes)
@@ -29,7 +30,7 @@
   \param[in]   n_lanes number of lanes.
   \return      \ref execution_status
   */
-int32_t CSI2_DPHY_Initialize(uint32_t frequency, uint8_t n_lanes);
+int32_t CSI2_DPHY_Initialize(DPHY_PORT port, uint32_t frequency, uint8_t n_lanes);
 
 /**
   \fn          int32_t CSI2_DPHY_Uninitialize (void)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2023 Alif Semiconductor - All Rights Reserved.
+/* Copyright (C) 2026 Alif Semiconductor - All Rights Reserved.
  * Use, distribution and modification of this code is permitted under the
  * terms stated in the Alif Semiconductor Software License Agreement
  *
@@ -9,24 +9,26 @@
  */
 
 /*******************************************************************************
- * @file     : demo_camera_arx3a0_freertos.c
+ * @file     : demo_dual_camera_freertos.c
  * @author   : Chandra Bhushan Singh
  * @email    : chandrabhushan.singh@alifsemi.com
  * @version  : V1.0.0
- * @date     : 07-Sept-2023
- * @brief    : TestApp to verify ARX3A0 Camera Sensor with
- *             FREERTOS as an Operating System.
+ * @date     : 12-October-2026
+ * @brief    : TestApp to verify dual camera capture (ARX3A0 and OV5675)
+ *             with FREERTOS as an Operating System.
  * @bug      : None.
  * @Note     : None.
  ******************************************************************************/
 
 //* System Includes */
 #include <stdio.h>
+#include <string.h>
 #include <inttypes.h>
 
 /* Cpi Driver */
 #include "Driver_CPI.h"
 #include "RTE_Components.h"
+#include "RTE_Device.h"
 #if defined(RTE_CMSIS_Compiler_STDOUT)
 #include "retarget_init.h"
 #include "retarget_stdout.h"
@@ -35,6 +37,12 @@
 #include "board_config.h"
 /* PINMUX Driver */
 #include "pinconf.h"
+#include "cache.h"
+
+/* AIPL includes */
+#include "aipl_error.h"
+#include "aipl_crop.h"
+#include "aipl_demosaic.h"
 
 /* SE Services */
 #include "se_services_port.h"
@@ -45,13 +53,6 @@
 #include "task.h"
 #include "app_utils.h"
 
-#include "Driver_IO.h"
-
-
-// set to 0: enable selfie camera (cam1)
-// set to 1: enable standard camera (cam2)
-#define STANDARD_CAM_EN                0
-
 // Set to 0: Use application-defined arx3A0 pin configuration.
 // Set to 1: Use Conductor-generated pin configuration (from pins.h).
 #define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
@@ -59,13 +60,6 @@
 /* Camera  Driver instance 0 */
 extern ARM_DRIVER_CPI  Driver_CPI;
 static ARM_DRIVER_CPI *CAMERAdrv = &Driver_CPI;
-
-#if STANDARD_CAM_EN
-/* Switch Camera target. */
-extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-static ARM_DRIVER_GPIO *GPIO_Driver_SWITCH_CAM =
-        &ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-#endif
 
 /*Define for FreeRTOS*/
 #define STACK_SIZE                    1024
@@ -115,80 +109,37 @@ void vApplicationIdleHook(void)
 
 /*****************Only for FreeRTOS use *************************/
 
-/* Camera Sensor Selection
- * Supports: ARX3A0, MT9M114, OV5675
- *
- * Selection is driven by the RTE components enabled in RTE_Components.h.
- * Enable the corresponding CAMERA_SENSOR driver in the RTE configuration.
- *
- *   - RTE_Drivers_CAMERA_SENSOR_ARX3A0  (560x560,  IPI-16 RAW8)
- *   - RTE_Drivers_CAMERA_SENSOR_MT9M114 (1280x720, IPI-16 RAW8)
- *   - RTE_Drivers_CAMERA_SENSOR_OV5675  (1296x972, IPI-16 RAW8)
- *
- * Note: Sensors output RAW10, but CPI interface default is IPI-16 RAW8.
- *       CPI color mode can be changed via RTE configuration if needed.
+/* Dual camera,
+ *   instance 0 : ARX3A0  resolution from RTE
+ *   instance 1 : OV5675  resolution from RTE
  */
+#define FRAME_WIDTH_0         RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
+#define FRAME_HEIGHT_0        RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT
+#define FRAME_WIDTH_1         RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH
+#define FRAME_HEIGHT_1        RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT
 
+#define FRAME_SIZE_0          ((FRAME_WIDTH_0) * (FRAME_HEIGHT_0))
+#define FRAME_SIZE_1          ((FRAME_WIDTH_1) * (FRAME_HEIGHT_1))
+#define FRAMEBUFFER_POOL_SIZE ((FRAME_SIZE_0 > FRAME_SIZE_1) ? FRAME_SIZE_0 : FRAME_SIZE_1)
 
-
-
-#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
-  #define SELECTED_CAMERA_SENSOR     "ARX3A0"
-  #define FRAME_WIDTH                RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
-  #define FRAME_HEIGHT               RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT
-  #define BYTES_PER_PIXEL 1
-
-#elif defined(RTE_Drivers_CAMERA_SENSOR_MT9M114)
-  #define SELECTED_CAMERA_SENSOR     "MT9M114"
-  #define FRAME_WIDTH                 RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH
-  #define FRAME_HEIGHT                RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT
-
-  /* MT9M114 image configuration 0 and 1 uses IPI-16 RAW8 format.
-   * RAW8 requires 1 byte per pixel for the framebuffer.
-   */
-  #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 0 ||  \
-       RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 1)
-     #define BYTES_PER_PIXEL 1
-  #elif(RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG >= 2 &&  \
-        RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG <= 5)
-     #define BYTES_PER_PIXEL 2
-  #else
-     #error "Unsupported RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG"
-  #endif
-
-#elif defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
-  #define SELECTED_CAMERA_SENSOR     "OV5675"
-  #define FRAME_WIDTH                RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH
-  #define FRAME_HEIGHT               RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT
-  #define BYTES_PER_PIXEL 1
-
-#else
-  #error  "Enable one RTE_Drivers_CAMERA_SENSOR_* definition"
-#endif
-
-
-/* Camera Sensor configurations
- * Resolution and IPI format based on selected sensor:
- *   - ARX3A0  : 560x560,  IPI-16 RAW8
- *   - MT9M114 : 1280x720, IPI-16 RAW8
- *   - OV5675  : 1296x972, IPI-16 RAW8
+/* Shared Bayer capture buffer. Sized for the larger of the two frames.
  */
+uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE]
+    __attribute__((section(".bss.camera_frame_buf"), aligned(8)));
 
-/* Allocate Camera frame buffer memory using memory pool section in
- *  Linker script (sct scatter) file.
- */
+/* AIPL aipl_demosaic_rgb888 writes packed RGB888: width x height x 3. */
+#define RGB_BYTES_PER_PIXEL    3U
+#define RGB888_BUFFER_SIZE(w, h)                                                                   \
+    ((uint32_t) (w) * (uint32_t) (h) * RGB_BYTES_PER_PIXEL)
 
-/* pool size for Camera frame buffer:
- *  which will be frame width x frame height x bytes per pixel
- */
-#define FRAMEBUFFER_POOL_SIZE ((FRAME_WIDTH) * (FRAME_HEIGHT) * (BYTES_PER_PIXEL))
+#define RGB888_BUFFER_SIZE_0   RGB888_BUFFER_SIZE(FRAME_WIDTH_0, FRAME_HEIGHT_0)
+#define RGB888_BUFFER_SIZE_1   RGB888_BUFFER_SIZE(FRAME_WIDTH_1, FRAME_HEIGHT_1)
 
-/* pool area for Camera frame buffer.
- *  Allocated in the "camera_frame_buf" section.
- */
-uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE] __attribute__((section(".bss.camera_frame_buf")));
-
-
+/* Per-sensor RGB888 pools. */
+uint8_t bayer_to_rgb_buffer_0[RGB888_BUFFER_SIZE_0]
+    __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf"), aligned(8)));
+uint8_t bayer_to_rgb_buffer_1[RGB888_BUFFER_SIZE_1]
+    __attribute__((section(".bss.camera_frame_bayer_to_rgb_buf"), aligned(8)));
 
 /* Camera callback events */
 typedef enum {
@@ -241,6 +192,17 @@ void camera_callback(uint32_t event)
 
     if (event & ARM_CPI_EVENT_ERR_HARDWARE) {
         /* Transfer Error: Received Hardware error, Wake-up Thread. */
+        xResult = xTaskNotifyFromISR(camera_xHandle,
+                                     CAM_CB_EVENT_ERROR,
+                                     eSetBits,
+                                     &xHigherPriorityTaskWoken);
+        if (xResult == pdTRUE) {
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    }
+
+    if (event & ARM_CPI_EVENT_MIPI_CSI2_ERROR) {
+        /* CSI PHY/packet error. Without this, capture just times out. */
         xResult = xTaskNotifyFromISR(camera_xHandle,
                                      CAM_CB_EVENT_ERROR,
                                      eSetBits,
@@ -315,6 +277,15 @@ int32_t camera_pinmux(void)
         return ret;
     }
 
+    ret = pinconf_set(PORT_(BOARD_CAMERA_I2C_MUX_GPIO_PORT),
+                      BOARD_CAMERA_I2C_MUX_GPIO_PIN,
+                      BOARD_CAMERA_I2C_MUX_ALTERNATE_FUNCTION,
+                      0);
+    if (ret != ARM_DRIVER_OK) {
+        printf("\r\n Error: Camera I2C mux Pin-Mux failed.\r\n");
+        return ret;
+    }
+
     return 0;
 }
 #endif
@@ -352,22 +323,21 @@ int32_t hardware_init(void)
 }
 #endif
 
-
-
 /**
   \fn          void camera_demo_thread_entry(void *pvParameters)
-  \brief       TestApp to verify ARX3A0 Camera Sensor with
+  \brief       TestApp to verify dual camera capture with
                FREERTOS as an Operating System.
                This demo thread does:
                     - initialize i3c and Camera hardware pins
                       using PinMux Driver;
                     - initialize DPHY Tx.
                     - initialize Camera driver
-                    - capture one frame
+                    - capture one frame from each camera instance
                     - captured data will be stored in to allocated
                       frame buffer address
                     - stop Camera capture
-                    - dump captured  image data from memory address
+                    - demosaic RAW8 to RGB888 with aipl_demosaic_rgb888
+                    - dump captured image data from memory address
                       using any debugger
                     - display image
   @param       pvParameters.
@@ -383,19 +353,28 @@ void camera_demo_thread_entry(void *pvParameters)
     ARM_DRIVER_VERSION version;
     ARG_UNUSED(pvParameters);
 
-    printf("\r\n \t\t >>> %s Camera Sensor demo with FreeRTOS is starting up!!! <<< \r\n",
-           SELECTED_CAMERA_SENSOR);
-    printf("\r\n \t\t Resolution: %dx%d \r\n", FRAME_WIDTH, FRAME_HEIGHT);
+    printf("\r\n \t\t >>> Dual Camera Sensor demo with FreeRTOS is starting up!!! <<< \r\n");
+    printf("\r\n \t\t instance 0 ARX3A0: %" PRIu32 "x%" PRIu32 " \r\n",
+           (uint32_t) FRAME_WIDTH_0,
+           (uint32_t) FRAME_HEIGHT_0);
+    printf("\r\n \t\t instance 1 OV5675: %" PRIu32 "x%" PRIu32 " \r\n",
+           (uint32_t) FRAME_WIDTH_1,
+           (uint32_t) FRAME_HEIGHT_1);
 
     /* Allocated memory address for
-     *   - Camera frame buffer
+     *   - Camera frame buffer and
+     *   - Camera frame buffers for Bayer to RGB Conversion
      */
-
     printf("\n \t frame buffer        pool size: 0x%0X  pool addr: 0x%08" PRIx32 " \r\n ",
            FRAMEBUFFER_POOL_SIZE,
            (uint32_t) framebuffer_pool);
 
-
+    printf("\n \t bayer_to_rgb inst0 pool size: 0x%0X  pool addr: 0x%08" PRIX32 " \r\n ",
+           RGB888_BUFFER_SIZE_0,
+           (uint32_t) bayer_to_rgb_buffer_0);
+    printf("\n \t bayer_to_rgb inst1 pool size: 0x%0X  pool addr: 0x%08" PRIX32 " \r\n ",
+           RGB888_BUFFER_SIZE_1,
+           (uint32_t) bayer_to_rgb_buffer_1);
 
 #if USE_CONDUCTOR_TOOL_PINS_CONFIG
     /* pin mux and configuration for all device IOs requested from pins.h */
@@ -407,7 +386,7 @@ void camera_demo_thread_entry(void *pvParameters)
 #else
     /*
      * NOTE: The I2C and  Camera pins used in this test application are not configured
-     * in the board support library.Therefore, it is being configured manually here.
+     * in the board support library. Therefore, it is being configured manually here.
      */
     ret = hardware_init();
     if (ret != 0) {
@@ -464,38 +443,6 @@ void camera_demo_thread_entry(void *pvParameters)
         goto error_disable_hfosc_clk;
     }
 
-#if STANDARD_CAM_EN
-    ret = GPIO_Driver_SWITCH_CAM->Initialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, NULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Initialize failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_disable_hfosc_clk;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_FULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO PowerControl failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_uninitialize_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetDirection(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                               GPIO_PIN_DIRECTION_OUTPUT);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetDirection failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetValue(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                           GPIO_PIN_OUTPUT_STATE_HIGH);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetValue failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-#endif
-
     version = CAMERAdrv->GetVersion();
     printf("\r\n Camera driver version api:0x%" PRIx16 " driver:0x%" PRIx16 " \r\n", version.api,
         version.drv);
@@ -530,88 +477,109 @@ void camera_demo_thread_entry(void *pvParameters)
     /*Control configuration for camera events */
     ret = CAMERAdrv->Control(CPI_EVENTS_CONFIGURE,
                              ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED |
-                                 ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
-                                 ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN |
-                                 ARM_CPI_EVENT_ERR_HARDWARE);
+                             ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
+                             ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN |
+                             ARM_CPI_EVENT_ERR_HARDWARE);
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: CAMERA SENSOR Event Configuration failed.\r\n");
         goto error_poweroff_camera;
     }
 
-    printf("\r\n Let's Start Capturing Camera Frame...\r\n");
-    ret = CAMERAdrv->CaptureFrame(framebuffer_pool);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: CAMERA Capture Frame failed.\r\n");
-        goto error_poweroff_camera;
+    uint32_t current_camera = 0;
+
+    while (1) {
+        uint32_t frame_width  = (current_camera == 0U) ? FRAME_WIDTH_0 : FRAME_WIDTH_1;
+        uint32_t frame_height = (current_camera == 0U) ? FRAME_HEIGHT_0 : FRAME_HEIGHT_1;
+        uint32_t frame_bytes = frame_width * frame_height;
+        uint8_t *rgb_buf     = (current_camera == 0U) ? bayer_to_rgb_buffer_0
+                                                      : bayer_to_rgb_buffer_1;
+        uint32_t rgb_bytes   = (current_camera == 0U) ? RGB888_BUFFER_SIZE_0 : RGB888_BUFFER_SIZE_1;
+
+        printf("\r\n Let's Start Capturing Camera Frame (instance %" PRIu32 ", %" PRIu32 "x%" PRIu32
+               ")...\r\n",
+               current_camera,
+               frame_width,
+               frame_height);
+        memset(framebuffer_pool, 0x00, frame_bytes);
+
+        ret = CAMERAdrv->Control(CPI_SELECT_CAMERA_SENSOR, current_camera);
+        if (ret != ARM_DRIVER_OK) {
+            printf("\r\n Error: CAMERA select instance %" PRIu32 " failed.\r\n", current_camera);
+            goto error_poweroff_camera;
+        }
+
+        ret = CAMERAdrv->CaptureFrame(framebuffer_pool);
+        if (ret != ARM_DRIVER_OK) {
+            printf("\r\n Error: CAMERA Capture Frame failed.\r\n");
+            goto error_poweroff_camera;
+        }
+
+        /* wait till any event success/error comes in isr callback.
+         * 5 second timeout, same as the ThreadX demo.
+         */
+        if (xTaskNotifyWait(0,
+                            CAM_CB_EVENT_CAPTURE_STOPPED | CAM_CB_EVENT_ERROR,
+                            &actual_events,
+                            pdMS_TO_TICKS(5000)) != pdTRUE) {
+            printf("Error: CAMERA xTaskNotifyWait failed.\n");
+            goto error_poweroff_camera;
+        }
+
+        if (!(actual_events & CAM_CB_EVENT_CAPTURE_STOPPED) &&
+            (actual_events & CAM_CB_EVENT_ERROR)) {
+            /* Error: Camera Capture Frame failed. */
+            printf("\r\n \t\t >> Error: CAMERA Capture Frame failed. \r\n");
+            goto error_poweroff_camera;
+        }
+
+        /* Okay, we have received Success: Camera Capture Frame stop detected.
+         * now stop Camera Capture.
+         */
+        ret = CAMERAdrv->Stop();
+        if (ret != ARM_DRIVER_OK) {
+            printf("\r\n Error: CAMERA stop Capture failed.\r\n");
+            goto error_poweroff_camera;
+        }
+
+        ret = aipl_demosaic_rgb888(framebuffer_pool,
+                                   rgb_buf,
+                                   frame_width,
+                                   frame_width,
+                                   frame_height,
+                                   AIPL_BAYER_GBRG);
+        if (ret != 0) {
+            printf("\r\n Error: CAMERA image conversion failed.\r\n");
+            goto error_poweroff_camera;
+        }
+
+        printf("\n AIPL RGB888 image memory address is :");
+        printf("\n \t starting_addr: 0x%" PRIX32 " \r\n \t ending_addr  : 0x%" PRIX32 "\n",
+               (uint32_t) rgb_buf,
+               (uint32_t) (rgb_buf + rgb_bytes - 1));
+
+        printf("\n To dump memory using ARM DS with Ulink Pro Debugger or Trace32 :");
+        printf("\n  Use below commands in Commands tab: update user directory name \r\n");
+
+        printf("Ulink:\n   dump binary memory /home/user/camera_dump/cam_image%" PRIu32
+               "_rgb888.bin 0x%" PRIX32 " 0x%" PRIX32 " \r\n",
+               current_camera,
+               (uint32_t) rgb_buf,
+               (uint32_t) (rgb_buf + rgb_bytes - 1));
+        printf("T32:\n   data.save.binary /home/user/camera_dump/cam_image%" PRIu32
+               "_rgb888.bin 0x%" PRIX32 "--0x%" PRIX32 " \r\n",
+               current_camera,
+               (uint32_t) rgb_buf,
+               (uint32_t) (rgb_buf + rgb_bytes - 1));
+
+        printf("\n  This command will dump memory from staring address to ending address \r");
+        printf("\n  and store it in to given path with filename.\r\n\r\n");
+
+        printf("\r\n\r\n XXX Camera demo thread is halting here! XXX...\r\n");
+        printf("\r\n Now User can dump captured/converted image data from memory address using any "
+               "debugger!!!\r\n");
+
+        current_camera = (current_camera == 0U) ? 1U : 0U;
     }
-
-    /* wait till any event to comes in isr callback */
-    xTaskNotifyWait(0,
-                    CAM_CB_EVENT_CAPTURE_STOPPED | CAM_CB_EVENT_ERROR,
-                    &actual_events,
-                    portMAX_DELAY);
-
-    if (!(actual_events & CAM_CB_EVENT_CAPTURE_STOPPED) && (actual_events & CAM_CB_EVENT_ERROR)) {
-        /* Error: Camera Capture Frame failed. */
-        printf("\r\n \t\t >> Error: CAMERA Capture Frame failed. \r\n");
-        goto error_poweroff_camera;
-    }
-
-    /* Okay, we have received Success: Camera Capture Frame stop detected.
-     * now stop Camera Capture.
-     */
-    ret = CAMERAdrv->Stop();
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: CAMERA stop Capture failed.\r\n");
-        goto error_poweroff_camera;
-    }
-
-
-
-    /* How to dump captured/converted image data from memory address?
-     *  1)To dump memory using ARM DS(Development Studio) and Ulink Pro Debugger
-     *
-     *  Use below command in "Commands" tab:
-     *   dump binary memory path_with_filename.fileformat starting_address ending_address
-     *
-     *   example:(update user directory name)
-     *    dump binary memory ~/cam_image0_560p.bin 0x8000000 0x804C8FF
-     *
-     *
-     *  2)To dump memory using Trace32
-     *  Use below command in "Commands" tab:
-     *   data.save.binary path_with_filename.fileformat starting_address--ending_address
-     *
-     *   example:(update user directory name)
-     *    data.save.binary ~/cam_image0_%s_%dx%d.bin 0x8000000--0x804C8FF
-     *
-     *
-     *   This commands will dump memory from staring address to ending address
-     *   and store it in to given path with filename.
-     *
-     *
-     */
-    printf("\n To dump memory using ARM DS with Ulink Pro Debugger or Trace32 :");
-    printf("\n  Use below commands in Commands tab: update user directory name \r\n");
-
-
-    printf("Ulink: ~/%s_%dx%d.bin 0x%" PRIX32 " 0x%" PRIX32 "\n",
-           SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uint32_t) framebuffer_pool,
-           (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
-    printf("T32:\n   data.save.binary ~/cam_image0_%s_%dx%d.bin 0x%" PRIx32
-            "--0x%" PRIX32 " \r\n",
-           SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uint32_t) framebuffer_pool,
-           (uint32_t) (framebuffer_pool + FRAMEBUFFER_POOL_SIZE - 1));
-
-
-    printf("\n  This command will dump memory from staring address to ending address \r");
-    printf("\n  and store it in to given path with filename.\r\n\r\n");
-
-    printf("\r\n\r\n XXX Camera demo thread is halting here! XXX...\r\n");
-    printf("\r\n Now User can dump captured/converted image data from memory address using any "
-           "debugger!!!\r\n");
 
 error_poweroff_camera:
     /* Power off CAMERA peripheral */
@@ -626,22 +594,6 @@ error_uninitialize_camera:
     if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: CAMERA Uninitialize failed.\r\n");
     }
-
-#if STANDARD_CAM_EN
-error_poweroff_gpio:
-    /* Power off GPIO peripheral */
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_OFF);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Power OFF failed.\r\n");
-    }
-
-error_uninitialize_gpio:
-    /* Un-initialize GPIO driver */
-    ret = GPIO_Driver_SWITCH_CAM->Uninitialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Uninitialize failed.\r\n");
-    }
-#endif
 
 error_disable_hfosc_clk:
     error_code =
@@ -685,7 +637,7 @@ int main(void)
     /* Create application main thread */
     BaseType_t xReturned = xTaskCreate(camera_demo_thread_entry,
                                        "camera_demo_thread_entry",
-                                       216,
+                                       STACK_SIZE,
                                        0,
                                        configMAX_PRIORITIES - 1,
                                        &camera_xHandle);
