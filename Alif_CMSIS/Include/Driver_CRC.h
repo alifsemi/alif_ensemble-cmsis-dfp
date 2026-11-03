@@ -51,7 +51,9 @@ extern "C" {
     (0x03UL)                                  /* To select CRC_16_CCITT algorithm give value as 3 */
 #define ARM_CRC_ALGORITHM_SEL_32_BIT (0x04UL) /* To select CRC_32 algorithm give value as 4 */
 #define ARM_CRC_ALGORITHM_SEL_32_BIT_CUSTOM_POLY                                                   \
-    (0x05UL) /* To select CRC_32C algorithm give value as 5 */
+    (0x05UL) /* Legacy 32-bit custom polynomial. Also sets CRC_CUSTOM_POLY */
+#define ARM_CRC_ALGORITHM_SEL_32_BIT_CRC32C                                                        \
+    (0x06UL) /* To select hardware CRC_32C algorithm            */
 
 /* Function documentation */
 /**
