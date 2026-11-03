@@ -677,6 +677,15 @@ void spi_receive(SPI_Type *spi, spi_transfer_t *transfer);
 void spi_transfer(SPI_Type *spi);
 
 /**
+  \fn          int32_t spi_eeprom_read_blocking(SPI_Type *spi, spi_transfer_t *transfer)
+  \brief       Execute a blocking SPI EEPROM read described by the transfer structure.
+  \param[in]   spi       Pointer to the SPI register map
+  \param[in]   transfer  Pointer to the SPI transfer structure
+  \return      0 on completion, -1 for invalid parameters or configuration, -2 for transfer error
+*/
+int32_t spi_eeprom_read_blocking(SPI_Type *spi, spi_transfer_t *transfer);
+
+/**
   \fn          void spi_send_blocking(SPI_Type *spi, spi_transfer_t *transfer)
   \brief       Execute a blocking SPI send described by the transfer structure.
   \param[in]   spi       Pointer to the SPI register map

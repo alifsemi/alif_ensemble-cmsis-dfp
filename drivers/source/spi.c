@@ -309,6 +309,129 @@ void spi_transfer(SPI_Type *spi)
 }
 
 /**
+  \fn          int32_t spi_eeprom_read_blocking(SPI_Type *spi, spi_transfer_t *transfer)
+  \brief       Execute a blocking SPI EEPROM read described by the transfer structure.
+  \param[in]   spi       Pointer to the SPI register map
+  \param[in]   transfer  Pointer to transfer structure
+  \return      0 on completion, -1 for invalid parameters or configuration, -2 for transfer error
+*/
+int32_t spi_eeprom_read_blocking(SPI_Type *spi, spi_transfer_t *transfer)
+{
+    uint32_t val, slave, frame_bytes, tx_data, rx_data;
+    uint32_t index, byte_index, event, rx_count;
+    uint8_t  *rx_buff;
+
+    if ((spi == NULL) || (transfer == NULL)) {
+        return -1;
+    }
+
+    if (!transfer->is_master || (transfer->tx_buff == NULL) ||
+        (transfer->rx_buff == NULL) || (transfer->tx_total_cnt == 0U) ||
+        (transfer->tx_total_cnt > SPI_TX_FIFO_DEPTH) ||
+        (transfer->rx_total_cnt == 0U) || (transfer->rx_total_cnt > 65536U) ||
+        (transfer->frame_size < SPI_DATA_FRAME_SIZE_MIN) ||
+        (transfer->frame_size > SPI_DATA_FRAME_SIZE_MAX) || spi_busy(spi)) {
+        return -1;
+    }
+
+    slave = spi->SPI_SER;
+
+    /* Check that exactly one hardware slave select is configured */
+    if ((slave == 0U) || ((slave & SPI_SLAVE_SELECT_PIN_MASK) != 0U) ||
+        ((slave & (slave - 1U)) != 0U)) {
+        return -1;
+    }
+
+    val = spi->SPI_CTRLR0;
+
+    /* Check for standard Motorola SPI frame format */
+    if ((val & (SPI_CTRLR0_FRF_MASK | (3UL << SPI_CTRLR0_SPI_FRF))) != 0U) {
+        return -1;
+    }
+    val &= ~(SPI_CTRLR0_TMOD_MASK | SPI_CTRLR0_DFS_MASK | SPI_CTRLR0_SSTE_MASK);
+    /* Enable EEPROM read mode (TMOD = 3) */
+    val |= SPI_CTRLR0_TMOD_EEPROM_READ_ONLY | (transfer->frame_size - 1U);
+
+    spi_disable(spi);
+    spi->SPI_IMR     = 0U;
+    spi->SPI_DMACR   = 0U;
+    spi->SPI_SER     = 0U;
+    spi->SPI_CTRLR0  = val;
+    spi->SPI_CTRLR1  = transfer->rx_total_cnt - 1U;
+    spi->SPI_TXFTLR &= ~SPI_TXFTLR_TXFTHR_MASK;
+    /* Set the Rx threshold to detect every received frame */
+    spi->SPI_RXFTLR = 0U;
+    (void) spi->SPI_ICR;
+
+    transfer->mode           = SPI_TMOD_EEPROM_READ;
+    transfer->tx_current_cnt = 0U;
+    transfer->rx_current_cnt = 0U;
+    transfer->status         = SPI_TRANSFER_STATUS_NONE;
+
+    if (transfer->frame_size > 16) {
+        frame_bytes = 4U;
+    } else if (transfer->frame_size > 8) {
+        frame_bytes = 2U;
+    } else {
+        frame_bytes = 1U;
+    }
+
+    spi_enable(spi);
+
+    /* Load the complete command before enabling the slave select */
+    for (index = 0; index < transfer->tx_total_cnt; index++) {
+        tx_data = 0U;
+        for (byte_index = 0; byte_index < frame_bytes; byte_index++) {
+            tx_data |= (uint32_t) transfer->tx_buff[byte_index] << (8U * byte_index);
+        }
+        spi->SPI_DR[0] = tx_data;
+        transfer->tx_buff = transfer->tx_buff + frame_bytes;
+        transfer->tx_current_cnt++;
+    }
+
+    /* Select the slave without disabling SPI and clearing the command FIFO */
+    spi->SPI_SER = slave;
+    rx_buff      = (uint8_t *) transfer->rx_buff;
+
+    while (transfer->rx_current_cnt < transfer->rx_total_cnt) {
+        event = spi->SPI_RISR;
+        if (event & (SPI_RX_FIFO_OVER_FLOW_EVENT | SPI_TX_FIFO_OVER_FLOW_EVENT)) {
+            transfer->status = SPI_TRANSFER_STATUS_OVERFLOW;
+        } else if (event & SPI_MULTI_MASTER_CONTENTION_EVENT) {
+            transfer->status = SPI_TRANSFER_STATUS_MASTER_CONTENTION;
+        } else if (event & SPI_RX_FIFO_UNDER_FLOW_EVENT) {
+            transfer->status = SPI_TRANSFER_STATUS_RX_UNDERFLOW;
+        }
+
+        if (transfer->status != SPI_TRANSFER_STATUS_NONE) {
+            (void) spi->SPI_ICR;
+            spi_disable(spi);
+            return -2;
+        }
+
+        if (event & SPI_RX_FIFO_FULL_EVENT) {
+            rx_count = spi->SPI_RXFLR;
+            if (rx_count > (transfer->rx_total_cnt - transfer->rx_current_cnt)) {
+                rx_count = transfer->rx_total_cnt - transfer->rx_current_cnt;
+            }
+            for (index = 0; index < rx_count; index++) {
+                rx_data = spi->SPI_DR[0];
+                for (byte_index = 0; byte_index < frame_bytes; byte_index++) {
+                    *rx_buff++ = (uint8_t) (rx_data >> (8U * byte_index));
+                }
+                transfer->rx_current_cnt++;
+            }
+            transfer->rx_buff = rx_buff;
+        }
+    }
+
+    while (spi_busy(spi)) {
+    }
+    transfer->status = SPI_TRANSFER_STATUS_COMPLETE;
+    return 0;
+}
+
+/**
   \fn          void spi_send_blocking(SPI_Type *spi, spi_transfer_t *transfer)
   \brief       Execute a blocking SPI send described by the transfer structure.
   \param[in]   spi       Pointer to the SPI register map
