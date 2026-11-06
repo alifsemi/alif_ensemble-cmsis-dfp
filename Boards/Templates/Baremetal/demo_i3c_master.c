@@ -187,8 +187,8 @@ void i3c_master_loopback_demo(void)
            version.api,
            version.drv);
 
-    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)) ||
-        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(7U, 0U)))
+    if ((version.api < ARM_DRIVER_VERSION_MAJOR_MINOR(9U, 1U)) ||
+        (version.drv < ARM_DRIVER_VERSION_MAJOR_MINOR(9U, 2U)))
     {
         printf("\r\n Error: >>>Old driver<<< Please use new one \r\n");
         return;
@@ -227,7 +227,7 @@ void i3c_master_loopback_demo(void)
         goto error_poweroff;
     }
 
-    /* i3c Speed Mode Configuration: Bus mode slow  */
+    /* I3C OD/PP (~2 MHz) for DAA / addressing */
     ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_SLOW_MODE);
 
     /* Reject Hot-Join request */
@@ -342,7 +342,7 @@ void i3c_master_loopback_demo(void)
                I3C_SLV_TAR);
     }
 
-    /* i3c Speed Mode Configuration: Normal I3C mode */
+    /* I3C SDR0 + EXT_LCNT for private data */
     ret = I3Cdrv->Control(I3C_MASTER_SET_BUS_MODE, I3C_BUS_NORMAL_MODE);
 
     while (1) {
