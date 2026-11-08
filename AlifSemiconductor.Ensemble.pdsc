@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<package xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.7.50" xs:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Open-CMSIS-Pack/Open-CMSIS-Pack-Spec/v1.7.50/schema/PACK.xsd">
+<package xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.7.62" xs:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Open-CMSIS-Pack/Open-CMSIS-Pack-Spec/v1.7.62/schema/PACK.xsd">
   <vendor>AlifSemiconductor</vendor>
   <name>Ensemble</name>
   <description overview="docs/Overview.md">Alif Semiconductor Ensemble Device Family Pack</description>
@@ -245,10 +245,551 @@
         <!-- <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/> --> <!-- disabling till SDF file is added -->
         <debugconfig dormant="true"/>
         <!-- Debug sequences -->
-        <sequences>
+        <debugvars>
+          // Below settings currently combine static and dynamic parts.
+          // Funnel
+          __var FUNNEL_0_ADDRESS    = 0x00100000;
+          __var FUNNEL_0_AP         = 0x00000000;
+          __var FUNNEL_0_INPUT_MASK = 0x00000006;     // Mask of trace inputs connected to funnel, enable all ITM inputs by default.
+          // Replicator
+          __var REPLICATOR_0_ADDRESS    = 0x00110000;
+          __var REPLICATOR_0_AP         = 0x00000000;
+          __var REPLICATOR_0_ID_FILTER0 = 0x000000FF; // Default: all pass to output 0
+          __var REPLICATOR_0_ID_FILTER1 = 0x00000000; // Default: none passed to output 1
+          // ETR
+          __var ETR_0_ADDRESS           = 0x00140000;
+          __var ETR_0_AP                = 0x00000000;
+          __var ETR_0_SYNCCNT           = 0xA;
+          __var ETR_0_TRIGGER_COUNT     = 0x0;
+          __var ETR_0_BUFFER_ADDRESS    = 0x00000000;
+          __var ETR_0_BUFFER_ADDRESS_HI = 0x00000000;
+          __var ETR_0_BUFFER_SIZE       = 0x00000000; // In 32-bit words
+          __var ETR_0_AXI_CTL           = 0x00000000; // [19:16]: RCACHE encoding
+                                                      // [11:8]: WrBurstLen
+                                                      // [5:2]: WCACHE encoding
+                                                      // [1]: Secure Access
+                                                      // [0]: Privileged Access
+          __var ETR_0_AXI_CTL1          = 0x00020000; // [27:16]: tlbXlateSlots
+                                                      // [7:6]: stashMode
+                                                      // [4:0]: tlbLimit
+          // CATU defaults to pass-through. Translation tables must be supplied externally if needed.
+          __var CATU_0_ADDRESS             = 0x00150000;
+          __var CATU_0_AP                  = 0x00000000;
+          __var CATU_0_MODE                = 0x00000000;              // [0]: 1- Translate, 0 - Pass-through
+          __var CATU_0_SCATTERLIST_ADDR    = 0x00000000;              // Lookup table in RAM for translation
+          __var CATU_0_SCATTERLIST_ADDR_HI = 0x00000000;
+          __var CATU_0_INPUT_ADDR          = ETR_0_BUFFER_ADDRESS;    // Virtual base address
+          __var CATU_0_INPUT_ADDR_HI       = ETR_0_BUFFER_ADDRESS_HI;
+          __var CATU_0_AXI_CTRL = (((ETR_0_AXI_CTL &gt;&gt; 16) &amp; 0xF) &lt;&lt; 4) | (ETR_0_AXI_CTL &amp; 0x3); // [7:4]: ARCACHE, [1:0]: ARPROT (Secure|Privileged)
+          __var CATU_0_IRQEN               = 0x00000000;              // [0]: Enable/Disable IRQ 
+        </debugvars>
+        <sequences traceSetup="full">
           <sequence name="DisableWarmResetHandshake">
           </sequence>
+          <sequence name="TraceStart">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific setup here, including migrated legacy setup when applicable. -->
+            <!-- Clocks are supplied by the application or existing target setup, per the selected scope. -->
+            <control if="bufferTrace">
+              <block>
+                // Validate the application-selected buffer before any trace hardware writes.
+                Sequence("E8_ValidateTraceConfiguration");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceStart_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="TraceCapture">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+
+              // Flush the active trace route before preparing any components for the next capture.
+              Sequence("DoTraceFlush");
+            </block>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific capture work here, including migrated legacy setup when applicable. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceCapture_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="DoTraceFlush">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceFlush_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="TraceFlush">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("DoTraceFlush");
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceRead_Buffer");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific post-flush work here, including migrated legacy setup when applicable. -->
+            <!-- CATU remains enabled through ETR RRD read-back; stop it only after the debugger's final TraceFlush. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+          </sequence>
+          <sequence name="TraceStop">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceStop_Buffer");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific shutdown work here, including migrated legacy setup when applicable. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+          </sequence>
+          <sequence name="DoTraceStart_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_FUNNEL_0_Configure");
+              Sequence("CS_REPLICATOR_0_Configure");
+              Sequence("CS_CATU_0_Configure");
+              Sequence("CS_ETR_0_Configure_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceCapture_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_CATU_0_Capture");
+              Sequence("CS_ETR_0_Capture_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceFlush_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_ETR_0_Flush");
+              Sequence("CS_CATU_0_Flush");
+            </block>
+            <!-- Actual component flush calls only. Do not read a trace buffer here. -->
+          </sequence>
+          <sequence name="DoTraceRead_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_ETR_0_Read_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceStop_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_CATU_0_Stop");
+            </block>
+          </sequence>
+          <sequence name="E8_ValidateTraceConfiguration">
+            <control if="ETR_0_BUFFER_SIZE == 0">
+              <block>
+                Message(2, "Set ETR_0_BUFFER_ADDRESS[_HI] and ETR_0_BUFFER_SIZE (32-bit words) to application-reserved trace memory before enabling trace.");
+              </block>
+            </control>
+            <control if="(ETR_0_BUFFER_ADDRESS &amp; 0x3) != 0">
+              <block>
+                Message(2, "ETR buffer address must be aligned to a 32-bit word.");
+              </block>
+            </control>
+            <control if="CATU_0_MODE &gt; 1">
+              <block>
+                Message(2, "CATU_0_MODE must be 0 (pass-through) or 1 (translation with application-provided tables).");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="CS_FUNNEL_0_Configure">
+            <block>
+              __var swoTrace    = __traceout &amp; 0x1;
+              __var syncTrace   = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+
+              // Helper variables
+              __var savedAP    = __apid;
+              __var funnelMask = 0x00000000;
+              __var value      = 0x00000000;
+              __var applyFunnelMask = 1;     // Always apply by default, adjust if for example funnel inputs need to be turned off for SWO trace
+            </block>
+            <control if="applyFunnelMask">
+              <block>
+                funnelMask = FUNNEL_0_INPUT_MASK;
+              </block>
+            </control>
+            <block>
+              __apid = FUNNEL_0_AP;                        // Set AP
+
+              value = ReadAccessAP(FUNNEL_0_ADDRESS + 0x000);
+              value &amp;= ~0xFF;                                         // Clear existing funnel input enables, keep hold time
+              value |= funnelMask;                                        // Keep hold time as is for now, could be made configurable if needed
+            </block>
+            <block>
+              WriteAccessAP(FUNNEL_0_ADDRESS + 0x000, value);  // Configure CoreSight Trace Funnel to enable selected trace sources
+
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_REPLICATOR_0_Configure">
+            <block>
+              // Helper variables
+              __var savedAP    = __apid;
+
+              __apid = REPLICATOR_0_AP; // Set AP
+
+              WriteAccessAP(REPLICATOR_0_ADDRESS + 0x000, REPLICATOR_0_ID_FILTER0);
+              WriteAccessAP(REPLICATOR_0_ADDRESS + 0x004, REPLICATOR_0_ID_FILTER1);
+
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Configure_CircularBuffer">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var ffcrValue = 0x00000000;
+              __var etrStatus = 0x00000000;
+
+              __apid = ETR_0_AP;                                                           // Set AP
+
+              // Configure ETR for circular-buffer trace capture.
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000000);                                // Disable ETR before configuring
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for TMCReady" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <block>
+              // Configure
+              WriteAccessAP(ETR_0_ADDRESS + 0x028, 0x00000000);               // Set Circular Buffer mode
+              WriteAccessAP(ETR_0_ADDRESS + 0x034, 0x00000000);               // Watermark: Set threshold vacancy to 0 to use full buffer
+              ffcrValue  = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue |= 0x00000003;                                        // FFCR: Enable Formatter and Trigger Insertion
+              ffcrValue |= 0x00000400;                                        // FFCR: Insert trigger marker on flush completion (TrigFl)
+              ffcrValue |= 0x00001020;                                        // Flush and Stop Formatter on Trigger (FOnTrig + StopFl)
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              WriteAccessAP(ETR_0_ADDRESS + 0x01C, ETR_0_TRIGGER_COUNT);      // TRG: Number of words to capture after trigger
+              WriteAccessAP(ETR_0_ADDRESS + 0x308, ETR_0_SYNCCNT);            // Set PSCR
+              WriteAccessAP(ETR_0_ADDRESS + 0x018, ETR_0_BUFFER_ADDRESS);     // Init RwP
+              WriteAccessAP(ETR_0_ADDRESS + 0x014, ETR_0_BUFFER_ADDRESS);     // Init RRP
+              WriteAccessAP(ETR_0_ADDRESS + 0x11C, ETR_0_BUFFER_ADDRESS_HI);  // Init DBAHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x118, ETR_0_BUFFER_ADDRESS);     // Init DBALO
+              WriteAccessAP(ETR_0_ADDRESS + 0x004, ETR_0_BUFFER_SIZE);        // Init RSZ
+              WriteAccessAP(ETR_0_ADDRESS + 0x110, ETR_0_AXI_CTL);            // Init AXICTL
+              WriteAccessAP(ETR_0_ADDRESS + 0xED0, ETR_0_AXI_CTL1);           // Init AXICTL1
+              WriteAccessAP(ETR_0_ADDRESS + 0x03C, ETR_0_BUFFER_ADDRESS_HI);  // Init RWPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x038, ETR_0_BUFFER_ADDRESS_HI);  // Init RRPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x00C, 0x00000020);               // STS: Clear sticky MemErr (write 1) and Full (write 0)
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000001);                                // Enable ETR
+            </block>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Capture_CircularBuffer">
+            <block>
+              // Helper variables
+              __var ffcrValue = 0x00000000;
+              __var savedAP = __apid;
+
+              __apid = ETR_0_AP;                                              // Set AP
+              ffcrValue  = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue |= 0x00000003;                                        // FFCR: Enable Formatter and Trigger Insertion
+              ffcrValue |= 0x00000400;                                        // FFCR: Insert trigger marker on flush completion (TrigFl)
+              ffcrValue |= 0x00001020;                                        // Flush and Stop Formatter on Trigger (FOnTrig + StopFl)
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              WriteAccessAP(ETR_0_ADDRESS + 0x01C, ETR_0_TRIGGER_COUNT);      // TRG: Number of words to capture after trigger
+              WriteAccessAP(ETR_0_ADDRESS + 0x308, ETR_0_SYNCCNT);            // Set PSCR
+              WriteAccessAP(ETR_0_ADDRESS + 0x018, ETR_0_BUFFER_ADDRESS);     // Init RwP
+              WriteAccessAP(ETR_0_ADDRESS + 0x014, ETR_0_BUFFER_ADDRESS);     // Init RRP
+              WriteAccessAP(ETR_0_ADDRESS + 0x11C, ETR_0_BUFFER_ADDRESS_HI);  // Init DBAHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x118, ETR_0_BUFFER_ADDRESS);     // Init DBALO
+              WriteAccessAP(ETR_0_ADDRESS + 0x004, ETR_0_BUFFER_SIZE);        // Init RSZ
+              WriteAccessAP(ETR_0_ADDRESS + 0x110, ETR_0_AXI_CTL);            // Init AXICTL
+              WriteAccessAP(ETR_0_ADDRESS + 0xED0, ETR_0_AXI_CTL1);           // Init AXICTL1
+              WriteAccessAP(ETR_0_ADDRESS + 0x03C, ETR_0_BUFFER_ADDRESS_HI);  // Init RWPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x038, ETR_0_BUFFER_ADDRESS_HI);  // Init RRPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x00C, 0x00000020);               // STS: Clear sticky MemErr (write 1) and Full (write 0)
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000001);                                // Enable ETR
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Flush">
+            <block>
+              // Helper variables
+              __var savedAP     = __apid;
+              __var ffcrValue   = 0x00000000;
+              __var etrStatus   = 0x00000000;
+
+              __apid = ETR_0_AP;  // Set AP
+            </block>
+            <block>
+              // Flush the ETR formatter and stop capture.
+              ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue &amp;= ~(0x00001460);    // Clear FOnTrig, StopFl, FOnMan and TrigFl; do not insert a trigger packet on manual flush
+              ffcrValue |= 0x00001000;           // Stop after the manual flush completes
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              ffcrValue |= 0x00000040;           // Trigger manual flush
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+            </block>
+            <block>
+              ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+            </block>
+            <control while="(ffcrValue &amp; 0x40) != 0" info="Wait for ETR manual flush to complete" timeout="100">
+              <block>
+                ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              </block>
+            </control>
+            <block>
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for ETR to become ready" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <block>
+              // Disable ETR after flush until next run/step
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000000);
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for TMCReady" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <control if="(etrStatus &amp; 0x20) != 0">
+              <block>
+                Message(1, "Warning: ETR memory error detected (STS.MemErr = 1)");
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Read_CircularBuffer">
+            <block>
+              // Helper variables
+              __var savedAP       = __apid;
+              __var etrStatus     = 0x00000000;
+              __var bufferSize    = 0x00000000;
+              __var readPointer   = 0x0000000000000000;
+              __var writePointer  = 0x0000000000000000;
+              __var bytesToRead   = 0x00000000;
+              __var bytesStreamed = 0x00000000;
+
+              __apid = ETR_0_AP; // Set AP
+
+              // ETR RSZ is expressed in 32-bit words. RRP and RWP identify the valid capture range.
+              bufferSize   = ReadAccessAP(ETR_0_ADDRESS + 0x004) * 4;
+              etrStatus    = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014) | (ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 32);
+              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018) | (ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 32);
+            </block>
+            <control if="bufferSize != 0">
+              <control if="(etrStatus &amp; 0x00000001) != 0">
+                <block>
+                // STS.Full indicates that the circular buffer contains a complete capture.
+                bytesToRead = bufferSize;
+                // RWP identifies the oldest retained trace after the buffer wraps.
+                WriteAccessAP(ETR_0_ADDRESS + 0x014, ReadAccessAP(ETR_0_ADDRESS + 0x018)); // Rebase RRP for chronological output
+                WriteAccessAP(ETR_0_ADDRESS + 0x038, ReadAccessAP(ETR_0_ADDRESS + 0x03C)); // Rebase RRPHI for chronological output
+                </block>
+              </control>
+              <control if="(etrStatus &amp; 0x00000001) == 0">
+                <block>
+                  bytesToRead = writePointer - readPointer;
+                </block>
+              </control>
+              <control if="bytesToRead != 0">
+                <block>
+                // Read through RRD, which advances RRP through the ETR trace memory.
+                BufferRead(0, 0, ETR_0_ADDRESS + 0x010, bytesToRead, (32 | 0x200));
+                // Stream to single unnamed trace buffer in system by default, insert name if multiple
+                // named buffers specified in PDSC. Decide which xxx_Read_Buffer sequence to call based
+                // on TraceBufferSelected().
+                bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "", 1, 0);
+                </block>
+              </control>
+              <control if="bytesToRead == 0">
+                <block>
+                  Message(1, "ETR trace buffer is empty");
+                </block>
+              </control>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Configure" info="Scatterlist expected to be programmed separately, too complex">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP;                                                              // Set AP
+
+              // Disable CATU before configuration
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              // Configure
+              WriteAccessAP(CATU_0_ADDRESS + 0x004, CATU_0_MODE);                 // Set MODE
+              WriteAccessAP(CATU_0_ADDRESS + 0x008, CATU_0_AXI_CTRL);             // Set AXICTRL
+              WriteAccessAP(CATU_0_ADDRESS + 0x00C, CATU_0_IRQEN);                // Set IRQEN
+              WriteAccessAP(CATU_0_ADDRESS + 0x020, CATU_0_SCATTERLIST_ADDR);     // Set SLADDRLO
+              WriteAccessAP(CATU_0_ADDRESS + 0x024, CATU_0_SCATTERLIST_ADDR_HI);  // Set SLADDRHI
+              WriteAccessAP(CATU_0_ADDRESS + 0x028, CATU_0_INPUT_ADDR);           // Set INADDRLO
+              WriteAccessAP(CATU_0_ADDRESS + 0x02C, CATU_0_INPUT_ADDR_HI);        // Set INADDRHI
+
+              // Enable CATU after configuration
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Capture" info="Restart address translation unit">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // Keep initial values and re-enable CATU before next capture.
+              // In Translate mode, error bits clear only on a disabled-to-enabled transition.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Flush" info="Drain outstanding memory transactions and re-enable CATU">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // ETR must have completed its flush before CATU is disabled.
+              // Disable CATU to drain outstanding memory transactions.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              // Keep the memory path available for ETR.RRD readback and the next capture.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Stop" info="Drain outstanding memory transactions and leave CATU disabled">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // ETR must have completed its flush and any requested readback before CATU is disabled.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
         </sequences>
+        <trace>
+          <tracebuffer />
+        </trace>
         <!-- On-chip NVM Region -->
         <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
         <!-- On-Chip RAM Regions 9.75MB -->
@@ -625,7 +1166,45 @@
         <!-- DebugConfig for E7 -->
         <debugconfig sdf="Debug/SDF/E7/Ensemble E7.sdf" dormant="true"/>
         <!-- Debug sequences -->
-        <sequences>
+        <debugvars>
+          // Below settings currently combine static and dynamic parts.
+          // Funnel
+          __var FUNNEL_0_ADDRESS    = 0x00100000;
+          __var FUNNEL_0_AP         = 0x00000000;
+          __var FUNNEL_0_INPUT_MASK = 0x00000006;     // Mask of trace inputs connected to funnel, enable all ITM inputs by default.
+          // Replicator
+          __var REPLICATOR_0_ADDRESS    = 0x00110000;
+          __var REPLICATOR_0_AP         = 0x00000000;
+          __var REPLICATOR_0_ID_FILTER0 = 0x000000FF; // Default: all pass to output 0
+          __var REPLICATOR_0_ID_FILTER1 = 0x00000000; // Default: none passed to output 1
+          // ETR
+          __var ETR_0_ADDRESS           = 0x00140000;
+          __var ETR_0_AP                = 0x00000000;
+          __var ETR_0_SYNCCNT           = 0xA;
+          __var ETR_0_TRIGGER_COUNT     = 0x0;
+          __var ETR_0_BUFFER_ADDRESS    = 0x00000000;
+          __var ETR_0_BUFFER_ADDRESS_HI = 0x00000000;
+          __var ETR_0_BUFFER_SIZE       = 0x00000000; // In 32-bit words
+          __var ETR_0_AXI_CTL           = 0x00000000; // [19:16]: RCACHE encoding
+                                                      // [11:8]: WrBurstLen
+                                                      // [5:2]: WCACHE encoding
+                                                      // [1]: Secure Access
+                                                      // [0]: Privileged Access
+          __var ETR_0_AXI_CTL1          = 0x00020000; // [27:16]: tlbXlateSlots
+                                                      // [7:6]: stashMode
+                                                      // [4:0]: tlbLimit
+          // CATU defaults to pass-through. Translation tables must be supplied externally if needed.
+          __var CATU_0_ADDRESS             = 0x00150000;
+          __var CATU_0_AP                  = 0x00000000;
+          __var CATU_0_MODE                = 0x00000000;              // [0]: 1- Translate, 0 - Pass-through
+          __var CATU_0_SCATTERLIST_ADDR    = 0x00000000;              // Lookup table in RAM for translation
+          __var CATU_0_SCATTERLIST_ADDR_HI = 0x00000000;
+          __var CATU_0_INPUT_ADDR          = ETR_0_BUFFER_ADDRESS;    // Virtual base address
+          __var CATU_0_INPUT_ADDR_HI       = ETR_0_BUFFER_ADDRESS_HI;
+          __var CATU_0_AXI_CTRL = (((ETR_0_AXI_CTL &gt;&gt; 16) &amp; 0xF) &lt;&lt; 4) | (ETR_0_AXI_CTL &amp; 0x3); // [7:4]: ARCACHE, [1:0]: ARPROT (Secure|Privileged)
+          __var CATU_0_IRQEN               = 0x00000000;              // [0]: Enable/Disable IRQ
+        </debugvars>
+        <sequences traceSetup="full">
           <sequence name="DisableWarmResetHandshake" Pname="M55_HP">
             <block>
               Write32(0x1A600024, 0);
@@ -636,7 +1215,510 @@
               Write32(0x1A601024, 0);
             </block>
           </sequence>
+          <sequence name="TraceStart">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific setup here, including migrated legacy setup when applicable. -->
+            <!-- Clocks are supplied by the application or existing target setup, per the selected scope. -->
+            <control if="bufferTrace">
+              <block>
+                // Validate the application-selected buffer before any trace hardware writes.
+                Sequence("E7_ValidateTraceConfiguration");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceStart_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="TraceCapture">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+
+              // Flush the active trace route before preparing any components for the next capture.
+              Sequence("DoTraceFlush");
+            </block>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific capture work here, including migrated legacy setup when applicable. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceCapture_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="DoTraceFlush">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceFlush_Buffer");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="TraceFlush">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("DoTraceFlush");
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceRead_Buffer");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific post-flush work here, including migrated legacy setup when applicable. -->
+            <!-- CATU remains enabled through ETR RRD read-back; stop it only after the debugger's final TraceFlush. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+          </sequence>
+          <sequence name="TraceStop">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <control if="bufferTrace">
+              <block>
+                Sequence("DoTraceStop_Buffer");
+              </block>
+            </control>
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE BEGIN -->
+            <!-- Add verified device-specific shutdown work here, including migrated legacy setup when applicable. -->
+            <!-- CMSIS-PACK-TRACE: ADD-DEVICE-SPECIFIC-HERE END -->
+          </sequence>
+          <sequence name="DoTraceStart_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_FUNNEL_0_Configure");
+              Sequence("CS_REPLICATOR_0_Configure");
+              Sequence("CS_CATU_0_Configure");
+              Sequence("CS_ETR_0_Configure_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceCapture_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_CATU_0_Capture");
+              Sequence("CS_ETR_0_Capture_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceFlush_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_ETR_0_Flush");
+              Sequence("CS_CATU_0_Flush");
+            </block>
+            <!-- Actual component flush calls only. Do not read a trace buffer here. -->
+          </sequence>
+          <sequence name="DoTraceRead_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_ETR_0_Read_CircularBuffer");
+            </block>
+          </sequence>
+          <sequence name="DoTraceStop_Buffer">
+            <block>
+              __var swoTrace = __traceout &amp; 0x1;
+              __var syncTrace = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+            </block>
+            <block>
+              Sequence("CS_CATU_0_Stop");
+            </block>
+          </sequence>
+          <sequence name="E7_ValidateTraceConfiguration">
+            <control if="ETR_0_BUFFER_SIZE == 0">
+              <block>
+                Message(2, "Set ETR_0_BUFFER_ADDRESS[_HI] and ETR_0_BUFFER_SIZE (32-bit words) to application-reserved trace memory before enabling trace.");
+              </block>
+            </control>
+            <control if="(ETR_0_BUFFER_ADDRESS &amp; 0x3) != 0">
+              <block>
+                Message(2, "ETR buffer address must be aligned to a 32-bit word.");
+              </block>
+            </control>
+            <control if="CATU_0_MODE &gt; 1">
+              <block>
+                Message(2, "CATU_0_MODE must be 0 (pass-through) or 1 (translation with application-provided tables).");
+              </block>
+            </control>
+          </sequence>
+          <sequence name="CS_FUNNEL_0_Configure">
+            <block>
+              __var swoTrace    = __traceout &amp; 0x1;
+              __var syncTrace   = __traceout &amp; 0x2;
+              __var bufferTrace = __traceout &amp; 0x4;
+
+              // Helper variables
+              __var savedAP    = __apid;
+              __var funnelMask = 0x00000000;
+              __var value      = 0x00000000;
+              __var applyFunnelMask = 1;     // Always apply by default, adjust if for example funnel inputs need to be turned off for SWO trace
+            </block>
+            <control if="applyFunnelMask">
+              <block>
+                funnelMask = FUNNEL_0_INPUT_MASK;
+              </block>
+            </control>
+            <block>
+              __apid = FUNNEL_0_AP;                        // Set AP
+
+              value = ReadAccessAP(FUNNEL_0_ADDRESS + 0x000);
+              value &amp;= ~0xFF;                                         // Clear existing funnel input enables, keep hold time
+              value |= funnelMask;                                        // Keep hold time as is for now, could be made configurable if needed
+            </block>
+            <block>
+              WriteAccessAP(FUNNEL_0_ADDRESS + 0x000, value);  // Configure CoreSight Trace Funnel to enable selected trace sources
+
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_REPLICATOR_0_Configure">
+            <block>
+              // Helper variables
+              __var savedAP    = __apid;
+
+              __apid = REPLICATOR_0_AP; // Set AP
+
+              WriteAccessAP(REPLICATOR_0_ADDRESS + 0x000, REPLICATOR_0_ID_FILTER0);
+              WriteAccessAP(REPLICATOR_0_ADDRESS + 0x004, REPLICATOR_0_ID_FILTER1);
+
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Configure_CircularBuffer">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var ffcrValue = 0x00000000;
+              __var etrStatus = 0x00000000;
+
+              __apid = ETR_0_AP;                                                           // Set AP
+
+              // Configure ETR for circular-buffer trace capture.
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000000);                                // Disable ETR before configuring
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for TMCReady" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <block>
+              // Configure
+              WriteAccessAP(ETR_0_ADDRESS + 0x028, 0x00000000);               // Set Circular Buffer mode
+              WriteAccessAP(ETR_0_ADDRESS + 0x034, 0x00000000);               // Watermark: Set threshold vacancy to 0 to use full buffer
+              ffcrValue  = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue |= 0x00000003;                                        // FFCR: Enable Formatter and Trigger Insertion
+              ffcrValue |= 0x00000400;                                        // FFCR: Insert trigger marker on flush completion (TrigFl)
+              ffcrValue |= 0x00001020;                                        // Flush and Stop Formatter on Trigger (FOnTrig + StopFl)
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              WriteAccessAP(ETR_0_ADDRESS + 0x01C, ETR_0_TRIGGER_COUNT);      // TRG: Number of words to capture after trigger
+              WriteAccessAP(ETR_0_ADDRESS + 0x308, ETR_0_SYNCCNT);            // Set PSCR
+              WriteAccessAP(ETR_0_ADDRESS + 0x018, ETR_0_BUFFER_ADDRESS);     // Init RwP
+              WriteAccessAP(ETR_0_ADDRESS + 0x014, ETR_0_BUFFER_ADDRESS);     // Init RRP
+              WriteAccessAP(ETR_0_ADDRESS + 0x11C, ETR_0_BUFFER_ADDRESS_HI);  // Init DBAHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x118, ETR_0_BUFFER_ADDRESS);     // Init DBALO
+              WriteAccessAP(ETR_0_ADDRESS + 0x004, ETR_0_BUFFER_SIZE);        // Init RSZ
+              WriteAccessAP(ETR_0_ADDRESS + 0x110, ETR_0_AXI_CTL);            // Init AXICTL
+              WriteAccessAP(ETR_0_ADDRESS + 0xED0, ETR_0_AXI_CTL1);           // Init AXICTL1
+              WriteAccessAP(ETR_0_ADDRESS + 0x03C, ETR_0_BUFFER_ADDRESS_HI);  // Init RWPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x038, ETR_0_BUFFER_ADDRESS_HI);  // Init RRPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x00C, 0x00000020);               // STS: Clear sticky MemErr (write 1) and Full (write 0)
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000001);                                // Enable ETR
+            </block>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Capture_CircularBuffer">
+            <block>
+              // Helper variables
+              __var ffcrValue = 0x00000000;
+              __var savedAP = __apid;
+
+              __apid = ETR_0_AP;                                              // Set AP
+              ffcrValue  = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue |= 0x00000003;                                        // FFCR: Enable Formatter and Trigger Insertion
+              ffcrValue |= 0x00000400;                                        // FFCR: Insert trigger marker on flush completion (TrigFl)
+              ffcrValue |= 0x00001020;                                        // Flush and Stop Formatter on Trigger (FOnTrig + StopFl)
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              WriteAccessAP(ETR_0_ADDRESS + 0x01C, ETR_0_TRIGGER_COUNT);      // TRG: Number of words to capture after trigger
+              WriteAccessAP(ETR_0_ADDRESS + 0x308, ETR_0_SYNCCNT);            // Set PSCR
+              WriteAccessAP(ETR_0_ADDRESS + 0x018, ETR_0_BUFFER_ADDRESS);     // Init RwP
+              WriteAccessAP(ETR_0_ADDRESS + 0x014, ETR_0_BUFFER_ADDRESS);     // Init RRP
+              WriteAccessAP(ETR_0_ADDRESS + 0x11C, ETR_0_BUFFER_ADDRESS_HI);  // Init DBAHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x118, ETR_0_BUFFER_ADDRESS);     // Init DBALO
+              WriteAccessAP(ETR_0_ADDRESS + 0x004, ETR_0_BUFFER_SIZE);        // Init RSZ
+              WriteAccessAP(ETR_0_ADDRESS + 0x110, ETR_0_AXI_CTL);            // Init AXICTL
+              WriteAccessAP(ETR_0_ADDRESS + 0xED0, ETR_0_AXI_CTL1);           // Init AXICTL1
+              WriteAccessAP(ETR_0_ADDRESS + 0x03C, ETR_0_BUFFER_ADDRESS_HI);  // Init RWPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x038, ETR_0_BUFFER_ADDRESS_HI);  // Init RRPHI
+              WriteAccessAP(ETR_0_ADDRESS + 0x00C, 0x00000020);               // STS: Clear sticky MemErr (write 1) and Full (write 0)
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000001);                                // Enable ETR
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Flush">
+            <block>
+              // Helper variables
+              __var savedAP     = __apid;
+              __var ffcrValue   = 0x00000000;
+              __var etrStatus   = 0x00000000;
+
+              __apid = ETR_0_AP;  // Set AP
+            </block>
+            <block>
+              // Flush the ETR formatter and stop capture.
+              ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              ffcrValue &amp;= ~(0x00001460);    // Clear FOnTrig, StopFl, FOnMan and TrigFl; do not insert a trigger packet on manual flush
+              ffcrValue |= 0x00001000;           // Stop after the manual flush completes
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+              ffcrValue |= 0x00000040;           // Trigger manual flush
+              WriteAccessAP(ETR_0_ADDRESS + 0x304, ffcrValue);
+            </block>
+            <block>
+              ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+            </block>
+            <control while="(ffcrValue &amp; 0x40) != 0" info="Wait for ETR manual flush to complete" timeout="100">
+              <block>
+                ffcrValue = ReadAccessAP(ETR_0_ADDRESS + 0x304);
+              </block>
+            </control>
+            <block>
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for ETR to become ready" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <block>
+              // Disable ETR after flush until next run/step
+              WriteAccessAP(ETR_0_ADDRESS + 0x020, 0x00000000);
+              etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+            </block>
+            <control while="(etrStatus &amp; 0x4) == 0" info="Wait for TMCReady" timeout="100">
+              <block>
+                etrStatus = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              </block>
+            </control>
+            <control if="(etrStatus &amp; 0x20) != 0">
+              <block>
+                Message(1, "Warning: ETR memory error detected (STS.MemErr = 1)");
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_ETR_0_Read_CircularBuffer">
+            <block>
+              // Helper variables
+              __var savedAP       = __apid;
+              __var etrStatus     = 0x00000000;
+              __var bufferSize    = 0x00000000;
+              __var readPointer   = 0x0000000000000000;
+              __var writePointer  = 0x0000000000000000;
+              __var bytesToRead   = 0x00000000;
+              __var bytesStreamed = 0x00000000;
+
+              __apid = ETR_0_AP; // Set AP
+
+              // ETR RSZ is expressed in 32-bit words. RRP and RWP identify the valid capture range.
+              bufferSize   = ReadAccessAP(ETR_0_ADDRESS + 0x004) * 4;
+              etrStatus    = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
+              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014) | (ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 32);
+              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018) | (ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 32);
+            </block>
+            <control if="bufferSize != 0">
+              <control if="(etrStatus &amp; 0x00000001) != 0">
+                <block>
+                  // STS.Full indicates that the circular buffer contains a complete capture.
+                  bytesToRead = bufferSize;
+                  // RWP identifies the oldest retained trace after the buffer wraps.
+                  WriteAccessAP(ETR_0_ADDRESS + 0x014, ReadAccessAP(ETR_0_ADDRESS + 0x018)); // Rebase RRP for chronological output
+                  WriteAccessAP(ETR_0_ADDRESS + 0x038, ReadAccessAP(ETR_0_ADDRESS + 0x03C)); // Rebase RRPHI for chronological output
+                </block>
+              </control>
+              <control if="(etrStatus &amp; 0x00000001) == 0">
+                <block>
+                  bytesToRead = writePointer - readPointer;
+                </block>
+              </control>
+              <control if="bytesToRead != 0">
+                <block>
+                  // Read through RRD, which advances RRP through the ETR trace memory.
+                  BufferRead(0, 0, ETR_0_ADDRESS + 0x010, bytesToRead, (32 | 0x200));
+                  // Stream to single unnamed trace buffer in system by default, insert name if multiple
+                  // named buffers specified in PDSC. Decide which xxx_Read_Buffer sequence to call based
+                  // on TraceBufferSelected().
+                  bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "", 1, 0);
+                </block>
+              </control>
+              <control if="bytesToRead == 0">
+                <block>
+                  Message(1, "ETR trace buffer is empty");
+                </block>
+              </control>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Configure" info="Scatterlist expected to be programmed separately, too complex">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP;                                                              // Set AP
+
+              // Disable CATU before configuration
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              // Configure
+              WriteAccessAP(CATU_0_ADDRESS + 0x004, CATU_0_MODE);                 // Set MODE
+              WriteAccessAP(CATU_0_ADDRESS + 0x008, CATU_0_AXI_CTRL);             // Set AXICTRL
+              WriteAccessAP(CATU_0_ADDRESS + 0x00C, CATU_0_IRQEN);                // Set IRQEN
+              WriteAccessAP(CATU_0_ADDRESS + 0x020, CATU_0_SCATTERLIST_ADDR);     // Set SLADDRLO
+              WriteAccessAP(CATU_0_ADDRESS + 0x024, CATU_0_SCATTERLIST_ADDR_HI);  // Set SLADDRHI
+              WriteAccessAP(CATU_0_ADDRESS + 0x028, CATU_0_INPUT_ADDR);           // Set INADDRLO
+              WriteAccessAP(CATU_0_ADDRESS + 0x02C, CATU_0_INPUT_ADDR_HI);        // Set INADDRHI
+
+              // Enable CATU after configuration
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Capture" info="Restart address translation unit">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // Keep initial values and re-enable CATU before next capture.
+              // In Translate mode, error bits clear only on a disabled-to-enabled transition.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Flush" info="Drain outstanding memory transactions and re-enable CATU">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // ETR must have completed its flush before CATU is disabled.
+              // Disable CATU to drain outstanding memory transactions.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              // Keep the memory path available for ETR.RRD readback and the next capture.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000001);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) != 0" info="Wait for READY cleared" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
+          <sequence name="CS_CATU_0_Stop" info="Drain outstanding memory transactions and leave CATU disabled">
+            <block>
+              // Helper variables
+              __var savedAP = __apid;
+              __var status = 0x00000000;
+
+              __apid = CATU_0_AP; // Set AP
+
+              // ETR must have completed its flush and any requested readback before CATU is disabled.
+              WriteAccessAP(CATU_0_ADDRESS + 0x000, 0x00000000);
+              status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+            </block>
+            <control while="(status &amp; 0x0100) == 0" info="Wait for READY" timeout="100">
+              <block>
+                status = ReadAccessAP(CATU_0_ADDRESS + 0x100);
+              </block>
+            </control>
+            <block>
+              __apid = savedAP;
+            </block>
+          </sequence>
         </sequences>
+        <trace>
+          <tracebuffer />
+        </trace>
         <!-- On-chip NVM Region -->
         <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
         <!-- On-Chip RAM Regions 13.5MB-->
@@ -2949,10 +4031,10 @@
       </RTE_Components_h>
       <files>
         <file category="include" name="libs/jpeg/inc/"/>
-		<file category="header" name="Alif_CMSIS/Include/Driver_JPEG.h"/>
-		<file category="header" name="Alif_CMSIS/Source/Driver_JPEG_Private.h"/>
-		<file category="header" name="drivers/include/jpeg_hantro_vc9000e.h"/>
-		<file category="source" name="drivers/source/jpeg_hantro_vc9000e.c"/>
+        <file category="header" name="Alif_CMSIS/Include/Driver_JPEG.h"/>
+        <file category="header" name="Alif_CMSIS/Source/Driver_JPEG_Private.h"/>
+        <file category="header" name="drivers/include/jpeg_hantro_vc9000e.h"/>
+        <file category="source" name="drivers/source/jpeg_hantro_vc9000e.c"/>
         <file category="source" name="Alif_CMSIS/Source/Driver_JPEG.c"/>
         <file category="library" name="libs/jpeg/libjpeg_hantro_sw_armclang.a" />
       </files>
