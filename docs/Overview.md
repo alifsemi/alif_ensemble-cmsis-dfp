@@ -1,4 +1,4 @@
-# Pack Content
+# Alif Semiconductor Ensemble Device Family Pack
 
 The `Alif Semiconductor Ensemble Device Family Pack` contains Device and Board support for:
 
@@ -14,9 +14,59 @@ This Pack contains:
 - Flash algorithms for the on-chip Flash memory.
 - Debug configuration information and SVD files for peripheral awareness.
 - SoC peripheral interfaces and CMSIS-Driver for CAN, GPIO, I2C, SAI, SPI, and USART.
-- Templates and example projects for uVision IDE and CMSIS-Toolbox (VS Code).
+- Templates and example projects for uVision IDE and CMSIS-Toolbox (Keil Studio for VS Code).
+- Board layers for running device-independent [CMSIS Reference Applications](https://open-cmsis-pack.github.io/cmsis-toolbox/ReferenceApplications/) on supported Alif Semiconductor boards.
 
-## Device Support (DFP)
+Many ready-to-use applications are available on 
+[github.com/Arm-Examples](https://github.com/Arm-Examples), including AI/ML
+workloads that take advantage of the Arm Ethos-U support in Alif Ensemble devices.
+
+## Getting Started
+
+### Create a New Application
+
+For starting new applications in VS Code, select one of these templates with
+the CMSIS View menu command **Create a Solution**:
+
+- **Alif CMSIS**: A bare-metal application for an Alif Ensemble device.
+- **Alif Zephyr**: A Zephyr application using West for an Alif Ensemble device.
+
+### Use a CMSIS Reference Application
+
+The board layers in the Alif Semiconductor Ensemble Device Family Pack support
+device-independent [CMSIS Reference Applications](https://open-cmsis-pack.github.io/cmsis-toolbox/ReferenceApplications/).
+
+After creating an application with the Reference Application workflow, copy
+the following directories from `Boards/Templates/CMSIS` in the Alif
+Semiconductor Ensemble Device Family Pack to the root of the generated
+solution:
+
+```text
+.alif/
+.vscode.d/
+```
+
+The `.alif` directory contains the M55 MRAM debug stubs and SETOOLS
+configuration files. The `.vscode.d` directory provides the VS Code tasks
+that generate and program the Application Table of Contents (ATOC).
+
+These are hidden directories; ensure that they are included when copying the
+files. After adding them, execute **Refresh** in CMSIS View. Restarting VS Code
+is not required.
+
+### Prepare, Build, and Debug
+
+Before starting the first debug session, configure the target device and run
+the appropriate Alif SETOOLS task as described in [SETOOLS Setup](#setools-setup).
+The ATOC task is required for the first application load and after changing
+the processor configuration. It does not need to be repeated for every build.
+
+After programming the ATOC, build the application in CMSIS View and use the
+configured debug adapter to load and debug it.
+
+## Supported Hardware
+
+### Device Support (DFP)
 
 The device is configured using the [Alif Semiconductor Conductor Tool](https://alifsemi.com/whitepaper/alif-semiconductors-conductor-tool/).
 The device's [secure enclave](https://alifsemi.com/understanding-the-ensemble-difference-built-in-secure-enclave-provides-strong-cyber-protection-to-edge-ai-devices/)
@@ -24,9 +74,9 @@ is configured using the [Alif Secure Toolkit (SETOOLS)](https://swrm.alifsemi.co
 which generates and downloads an Application Table of Contents (ATOC) for the device.
 
 > _**NOTE**_<br>
-> Before downloading examples, you must program the ATOC to the device. [Usage](#usage) below contains more information.
+> Before downloading examples, you must program the ATOC to the device. [SETOOLS Setup](#setools-setup) below contains more information.
 
-### Related packs
+#### Related packs
 
 The following packs are required for this DFP:
 
@@ -36,65 +86,7 @@ The following packs are required for this DFP:
     - pack: ARM::CMSIS-Compiler@2.1.0       # Arm Compiler pack 2.1.0 or higher (for STDIN/OUT)
 ```
 
-## E8 DevKit (BSP)
-
-The E8 DevKit Board Support (BSP) part provides the following examples and layers:
-
-Example                   | Tool          | Description
-:-------------------------|:--------------|:--------------------------
-Blinky_HP                 | CMSIS-Toolbox | Blinky example configured for M55 High Performance code
-Blinky_HE                 | CMSIS-Toolbox | Blinky example configured for M55 High Efficiency code
-DualCore_HE_HP            | CMSIS-Toolbox | Dual Core example running on M55 High Efficiency and High Performance cores
-Hello_World_HE            | CMSIS-Toolbox | Hello World example running on M55 High Efficiency core
-
-Layer Type: Board         | Tool          | Description
-:-------------------------|:--------------|:--------------------------
-`Board_HP.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U55
-`Board_HE.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U55
-`Board_HP-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U85
-`Board_HE-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U85
-
-The Board layers enable device-agnostic [Reference Applications](https://www.keil.arm.com/refapps/) and implement these API interfaces:
-
-Provided API Interface    | Description
-:-------------------------|:------------------------------------------------------------------------------
- CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
- CMSIS_USB_Device         | CMSIS-Driver USB connected to MCU USB connector
- CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
- CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
- CMSIS_VSTREAM_VIDEO_IN   | CMSIS-Driver for Video input stream via MIPI Camera
- CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
- STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
-
-## E7 DevKit (BSP)
-
-The E7 DevKit Board Support (BSP) part provides the following examples and layers:
-
-Example                  | Tool           | Description
-:------------------------|:---------------|:--------------------------
-Blinky_M55_HE            | uVision IDE    | Blinky example running on M55 High Efficiency core
-Blinky_M55_HE_TCM        | uVision IDE    | Blinky example running on M55 High Efficiency core from TCM
-Blinky_HP                | CMSIS-Toolbox  | Blinky example configured for M55 High Performance code
-Blinky_HE                | CMSIS-Toolbox  | Blinky example configured for M55 High Efficiency code
-DualCore_HE_HP           | CMSIS-Toolbox  | Dual Core example running on M55 High Efficiency and High Performance core
-HelloWorld_M55_HP        | uVision IDE    | Hello World example running on M55 High Performance core
-
-Layer Type: Board       | Tool           | Description
-:-----------------------|:---------------|:--------------------------
-`Board_HP.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Performance core
-`Board_HE.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Efficiency core
-
-The Board layers enable device-agnostic [Reference Applications](https://www.keil.arm.com/refapps/) and implement these API interfaces:
-
-Provided API Interface    | Description
-:-------------------------|:------------------------------------------------------------------------------
- CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
- CMSIS_USB_Device         | CMSIS-Driver USB connected to SoC USB connector
- CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
- CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
- STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
-
-## E8 AppKit (BSP)
+### E8 AppKit (BSP)
 
 The E8 AI/ML AppKit Board Support (BSP) part provides board layers:
 
@@ -117,7 +109,7 @@ Provided API Interface    | Description
  CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
  STDIN, STDOUT, STDERR    | Standard I/O connected to USART4 COM port
 
-## E7 AppKit (BSP)
+### E7 AppKit (BSP)
 
 The E7 AppKit BSP part provides the following:
 
@@ -143,20 +135,69 @@ Provided API Interface    | Description
  CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
  STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
 
-## CMSIS Solution Templates
+### E8 DevKit (BSP)
 
-For starting new applications in VS Code, select these templates when using the CMSIS View menu command *Create a Solution*:
+The E8 DevKit Board Support (BSP) part provides the following examples and layers:
 
-- Alif CMSIS: A bare-metal application for an Alif Ensemble device.
-- Alif Zephyr: A Zephyr application (using West) for an Alif Ensemble device.
+Example                   | Tool          | Description
+:-------------------------|:--------------|:--------------------------
+Blinky_HP                 | CMSIS-Toolbox | Blinky example configured for M55 High Performance code
+Blinky_HE                 | CMSIS-Toolbox | Blinky example configured for M55 High Efficiency code
+DualCore_HE_HP            | CMSIS-Toolbox | Dual Core example running on M55 High Efficiency and High Performance cores
+Hello_World_HE            | CMSIS-Toolbox | Hello World example running on M55 High Efficiency core
 
-## Usage
+Layer Type: Board         | Tool          | Description
+:-------------------------|:--------------|:--------------------------
+`Board_HP.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U55
+`Board_HE.clayer.yml`     | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U55
+`Board_HP-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Performance core with Ethos-U85
+`Board_HE-U85.clayer.yml` | CMSIS-Toolbox | Board layer for M55 High Efficiency core with Ethos-U85
+
+The Board layers enable device-agnostic [Reference Applications](https://open-cmsis-pack.github.io/cmsis-toolbox/ReferenceApplications/) and implement these API interfaces:
+
+Provided API Interface    | Description
+:-------------------------|:------------------------------------------------------------------------------
+ CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
+ CMSIS_USB_Device         | CMSIS-Driver USB connected to MCU USB connector
+ CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
+ CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
+ CMSIS_VSTREAM_VIDEO_IN   | CMSIS-Driver for Video input stream via MIPI Camera
+ CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
+ STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
+
+### E7 DevKit (BSP)
+
+The E7 DevKit Board Support (BSP) part provides the following examples and layers:
+
+Example                  | Tool           | Description
+:------------------------|:---------------|:--------------------------
+Blinky_M55_HE            | uVision IDE    | Blinky example running on M55 High Efficiency core
+Blinky_M55_HE_TCM        | uVision IDE    | Blinky example running on M55 High Efficiency core from TCM
+Blinky_HP                | CMSIS-Toolbox  | Blinky example configured for M55 High Performance code
+Blinky_HE                | CMSIS-Toolbox  | Blinky example configured for M55 High Efficiency code
+DualCore_HE_HP           | CMSIS-Toolbox  | Dual Core example running on M55 High Efficiency and High Performance core
+HelloWorld_M55_HP        | uVision IDE    | Hello World example running on M55 High Performance core
+
+Layer Type: Board       | Tool           | Description
+:-----------------------|:---------------|:--------------------------
+`Board_HP.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Performance core
+`Board_HE.clayer.yml`   | CMSIS-Toolbox  | Board layer for M55 High Efficiency core
+
+The Board layers enable device-agnostic [Reference Applications](https://open-cmsis-pack.github.io/cmsis-toolbox/ReferenceApplications/) and implement these API interfaces:
+
+Provided API Interface    | Description
+:-------------------------|:------------------------------------------------------------------------------
+ CMSIS_ETH                | CMSIS-Driver Ethernet connected to RJ45 connector
+ CMSIS_USB_Device         | CMSIS-Driver USB connected to SoC USB connector
+ CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
+ CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via I2S Microphones
+ STDIN, STDOUT, STDERR    | Standard I/O connected to USART COM port
+
+## SETOOLS Setup
 
 The host PC runs [SETOOLS](https://swrm.alifsemi.com/Content/3.4%20SETOOLS.htm?TocPath=Secure%20Enclave%20Subsystem%7C_____4)
 (Alif Security Toolkit) that connects to the Alif Semiconductor development board via onboard UART-to-USB interface adapter (PRG_USB).
 The IDE and debugger connect to development board via debug probes (J-Link, CMSIS DAP, ULINKpro).
-
-### SETOOLS
 
 SETOOLS is mandatory for generating and flashing the processor Application Table of Contents (ATOC). The first time you load
 an image or change the processor setup, an ATOC image containing debug stubs must be generated and flashed onto the device prior
@@ -165,7 +206,7 @@ flashed, and debugged without reprogramming the ATOC.
 
 > Download SETOOLS from Alif Semiconductor [Software & Tools](https://alifsemi.com/support/software-tools/ensemble/) page (requires registration).
 
-#### Configure Target Device
+### Configure Target Device
 
 Latest SETOOLS require target device configuration before the ATOC can be programmed to the device.
 See Section 4 of the latest [Alif Security Toolkit Quick Start Guide](https://alifsemi.com/download/AQSG0002) for details on
