@@ -415,12 +415,11 @@
 //    <31=> YUV420P (YUV420 planar)
 //    <32=> YUYV (YUV422 packed)
 //    <37=> YUV400 (Grayscale)
-//    <38=> RGB888 (RGB interleaved)
 //    <39=> RGB888P (RGB planar)
 //    <40=> RAW420SP (RAW420 semi-planar)
 //    <41=> RAW422SP (RAW422 semi-planar)
 // <i> Defines ISP output pixel format for memory dump
-// <i> Default: RGB888
+// <i> Default: YUYV
 #define RTE_ISP_OUTPUT_FORMAT 32
 
 // <o> ISP Scaler Output Width
