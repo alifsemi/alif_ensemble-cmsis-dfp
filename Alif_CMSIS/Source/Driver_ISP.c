@@ -326,21 +326,11 @@ static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *ca
     isp_port_config.inFormRect.width   = isp->isp_port_attr->inFormRect.width;
     isp_port_config.inFormRect.height  = isp->isp_port_attr->inFormRect.height;
 
-    /* Compute centered square crop from runtime sensor dimensions.
-     * RECT_S field naming is swapped in the libisp:
-     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
-     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
-     */
-    vsi_u32_t sensor_width = (vsi_u32_t)cam_sensor->width;
-    vsi_u32_t sensor_height = (vsi_u32_t)cam_sensor->height;
-    vsi_u32_t side = sensor_width < sensor_height ? sensor_width : sensor_height;
-    vsi_u32_t v_off = sensor_height > side ? (sensor_height - side) / 2U : 0U;
-    vsi_u32_t h_off = sensor_width > side ? (sensor_width - side) / 2U : 0U;
-
-    isp->isp_port_attr->outFormRect.top    = h_off;  /* libisp: horizontal offset */
-    isp->isp_port_attr->outFormRect.left   = v_off;  /* libisp: vertical offset */
-    isp->isp_port_attr->outFormRect.width  = side;
-    isp->isp_port_attr->outFormRect.height = side;
+    /* Default crop is the full sensor frame. Use ISP_CONTROL_SET_CROP for a custom crop. */
+    isp->isp_port_attr->outFormRect.top    = 0;
+    isp->isp_port_attr->outFormRect.left   = 0;
+    isp->isp_port_attr->outFormRect.width  = (vsi_u32_t)cam_sensor->width;
+    isp->isp_port_attr->outFormRect.height = (vsi_u32_t)cam_sensor->height;
 
     isp_port_config.outFormRect.top    = isp->isp_port_attr->outFormRect.top;
     isp_port_config.outFormRect.left   = isp->isp_port_attr->outFormRect.left;
