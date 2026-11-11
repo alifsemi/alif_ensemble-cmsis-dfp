@@ -2893,6 +2893,49 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
 #if I3C_DMA_ENABLE
         if (i3c->dma_enable) {
             *event = 0;
+            /* DMA TX: IRQ is authoritative.
+             * Master RX: two-signal — RESP_READY (MST_RX_DONE) and DMA
+             *   COMPLETE (DMA_RX_DONE) both fire; whichever runs second
+             *   delivers the callback. The first DMA-RX block above has
+             *   already cleared *event; restore it when this path delivers.
+             * Slave RX: DMA cb is authoritative on full-length. STOP-short /
+             *   abort never completes DMA (WFP-hung); SLV_RX_DONE is the
+             *   only signal. Compare pre-clear snapshots: short → stop DMA
+             *   and deliver; else trailing RESP after DMA cb → suppress.
+             */
+            if (xfer->status & I3C_XFER_STATUS_MST_RX_DONE) {
+                uint32_t primask = __get_PRIMASK();
+
+                __disable_irq();
+                if (xfer->status & I3C_XFER_STATUS_DMA_RX_DONE) {
+                    i3c->status.rx_busy  = 0U;
+                    i3c->xfer.rx_len     = 0U;
+                    *event = ARM_I3C_EVENT_TRANSFER_DONE | ARM_I3C_EVENT_RX_DONE;
+                    __set_PRIMASK(primask);
+                } else {
+                    /* DMA still running — suppress; DMA cb will deliver */
+                    *event = 0;
+                    __set_PRIMASK(primask);
+                }
+            } else if (xfer->status & I3C_XFER_STATUS_SLV_RX_DONE) {
+                if (rx_cur_snap < rx_len_snap) {
+                    /* STOP-short / abort: DMA cb will never fire.
+                     * Drop rx_busy before Kill so a sync DMA ABORT cb
+                     * does not promote this success into TRANSFER_ERROR.
+                     */
+                    i3c->status.rx_busy = 0U;
+                    I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+                    i3c->xfer.rx_len    = 0U;
+                    *event = ARM_I3C_EVENT_TRANSFER_DONE | ARM_I3C_EVENT_RX_DONE;
+                } else {
+                    /* Full-length RESP: DMA still running (RESP first) or
+                     * DMA cb already delivered (trailing). Suppress. Leave
+                     * SLV_RX_DONE set so a later DMA cb does not mark
+                     * slv_rx_resp_pending for a RESP that is already gone.
+                     */
+                    *event = 0;
+                }
+            }
         } else
 #endif
         {
@@ -2987,60 +3030,12 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
         /* mark event as read request received */
         *event = ARM_I3C_EVENT_READ_REQUEST_RCVD;
     }
-
-#if I3C_DMA_ENABLE
-    if (i3c->dma_enable) {
-        /* DMA TX: IRQ is authoritative.
-         * Master RX: two-signal — RESP_READY (MST_RX_DONE) and DMA
-         *   COMPLETE (DMA_RX_DONE) both fire; whichever runs second
-         *   delivers the callback. The first DMA-RX block above has
-         *   already cleared *event; restore it when this path delivers.
-         * Slave RX: DMA cb is authoritative on full-length. STOP-short /
-         *   abort never completes DMA (WFP-hung); SLV_RX_DONE is the
-         *   only signal. Compare pre-clear snapshots: short → stop DMA
-         *   and deliver; else trailing RESP after DMA cb → suppress.
-         */
-        if (xfer->status & I3C_XFER_STATUS_MST_RX_DONE) {
-            uint32_t primask = __get_PRIMASK();
-
-            __disable_irq();
-            if (xfer->status & I3C_XFER_STATUS_DMA_RX_DONE) {
-                i3c->status.rx_busy  = 0U;
-                i3c->xfer.rx_len     = 0U;
-                *event = ARM_I3C_EVENT_TRANSFER_DONE | ARM_I3C_EVENT_RX_DONE;
-                __set_PRIMASK(primask);
-            } else {
-                /* DMA still running — suppress; DMA cb will deliver */
-                *event = 0;
-                __set_PRIMASK(primask);
-            }
-        } else if (xfer->status & I3C_XFER_STATUS_SLV_RX_DONE) {
-            if (rx_cur_snap < rx_len_snap) {
-                /* STOP-short / abort: DMA cb will never fire.
-                 * Drop rx_busy before Kill so a sync DMA ABORT cb
-                 * does not promote this success into TRANSFER_ERROR.
-                 */
-                i3c->status.rx_busy = 0U;
-                I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
-                i3c->xfer.rx_len    = 0U;
-                *event = ARM_I3C_EVENT_TRANSFER_DONE | ARM_I3C_EVENT_RX_DONE;
-            } else {
-                /* Full-length RESP: DMA still running (RESP first) or
-                 * DMA cb already delivered (trailing). Suppress. Leave
-                 * SLV_RX_DONE set so a later DMA cb does not mark
-                 * slv_rx_resp_pending for a RESP that is already gone.
-                 */
-                *event = 0;
-            }
-        }
-    }
-#endif /* I3C_DMA_ENABLE */
 }
 
 /**
   \fn           static void I3Cx_HandleError(I3C_RESOURCES *i3c,
-  \                                         i3c_xfer_t *xfer,
-  \                                         uint32_t *event)
+  \                                          i3c_xfer_t *xfer,
+  \                                          uint32_t *event)
   \brief        Handles error case of interrupts
   \param[in]    i3c      : Pointer to i3c resources structure
   \param[in]    xfer     : Pointer to i3c transfer structure
@@ -3052,88 +3047,116 @@ static void I3Cx_HandleError(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *eve
     bool err_tx = (xfer->status & I3C_XFER_STATUS_ERROR_TX) != 0U;
     bool err_rx = (xfer->status & I3C_XFER_STATUS_ERROR_RX) != 0U;
 
-    /* Abort and any error that names neither direction affect both. */
-    if ((xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) || (!err_tx && !err_rx)) {
-        err_tx = true;
-        err_rx = true;
-        /* Flush all buffers when both directions are affected */
-        i3c_flush_all_buffers(i3c->regs);
-    } else {
-        if (err_tx) {
-            i3c_flush_tx_fifo(i3c->regs);
-        }
-        if (err_rx) {
-            i3c_flush_rx_fifo(i3c->regs);
-        }
-    }
-
-#if I3C_DMA_ENABLE
-    if (i3c->dma_enable) {
-        /* Clear busy before Stop so the sync ABORT callback ignores
-         * this channel. Latch RX only when RX is being dropped; a
-         * TX-only error must not overwrite the armed RX count.
-         */
-        if (err_rx) {
-            I3C_DMA_LatchRxCount(i3c);
-            i3c->status.rx_busy = 0U;
-            I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
-        }
-        if (err_tx) {
-            i3c->status.tx_busy = 0U;
-            I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
-        }
-    } else
-#endif /* I3C_DMA_ENABLE */
-    {
-        if (err_rx) {
-            i3c->status.rx_busy = 0U;
-        }
-        if (err_tx) {
-            i3c->status.tx_busy = 0U;
-        }
-    }
-
-    i3c_resume(i3c->regs);
-    i3c_clear_xfer_error(i3c->regs);
-
-    if ((i3c->disc.step != I3C_DISC_IDLE) &&
-        (!(xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN))) {
-        if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
-            i3c->disc.step = I3C_DISC_IDLE;
-            i3c->disc.pos  = 0U;
-            i3c->targets.last_asgd_addr_pos = 0U;
-            i3c->xfer.rx_buf = NULL;
-            i3c->xfer.rx_len = 0U;
-            *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
-            return;
-        }
-        I3Cx_DiscOnError(i3c);
-        if (I3Cx_DiscKick(i3c)) {
-            *event = 0U;
-        } else {
-            i3c->xfer.rx_buf = NULL;
-            i3c->xfer.rx_len = 0U;
-            *event = ARM_I3C_EVENT_TRANSFER_DONE;
-        }
-        return;
-    }
-
     /* mark event as Transfer Error. */
     *event = ARM_I3C_EVENT_TRANSFER_ERROR;
-
-    if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
-        /* Free the slots that were not assigned. Their addr is cleared,
-         * so the later discovery walk skips them. Assigned slots keep
-         * their last_asgd_addr_pos bit.
-         */
-        I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
-        i3c->disc.pos  = 0U;
-        i3c->disc.step = I3C_DISC_GETBCR;
-    }
 
     if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
         /* mark event as Transfer Error. */
         *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
+    }
+
+    if (!i3c->state.is_master) {
+    /* Handle slave errors */
+#if I3C_DMA_ENABLE
+        if (i3c->dma_enable) {
+            I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+            if (err_rx) {
+                I3C_DMA_LatchRxCount(i3c);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+            }
+        }
+#endif
+        i3c->status.tx_busy = 0U;
+        if (err_rx) {
+            i3c->status.rx_busy = 0U;
+        }
+        i3c_flush_all_buffers(i3c->regs);
+        /* Resumes i3c controller, clears error status and resumes */
+        i3c_resume(i3c->regs);
+        i3c_clear_xfer_error(i3c->regs);
+
+        if (i3c->status.rx_busy) {
+#if I3C_DMA_ENABLE
+            if (!i3c->dma_enable)
+#endif
+            {
+                i3c_enable_intr(i3c->regs, I3C_INTR_STATUS_EN_RX_THLD_STS_EN);
+            }
+        }
+    } else {
+        /* Handle master errors */
+        if ((xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) || (!err_tx && !err_rx)) {
+            /* Abort and any error that names neither direction affect both. */
+#if I3C_DMA_ENABLE
+            if (i3c->dma_enable) {
+                /* Latch while rx_busy is set. */
+                I3C_DMA_LatchRxCount(i3c);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+            }
+#endif
+            /* DMA stop has returned. Clear both busy flags. */
+            i3c->status.rx_busy = 0U;
+            i3c->status.tx_busy = 0U;
+            /* Flush all buffers when both directions are affected */
+            i3c_flush_all_buffers(i3c->regs);
+        } else {
+            if (err_tx) {
+#if I3C_DMA_ENABLE
+                if (i3c->dma_enable) {
+                    I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+                }
+#endif
+                i3c->status.tx_busy = 0U;
+                i3c_flush_tx_fifo(i3c->regs);
+            }
+
+            if (err_rx) {
+#if I3C_DMA_ENABLE
+                if (i3c->dma_enable) {
+                    /* Latch while rx_busy is set. */
+                    I3C_DMA_LatchRxCount(i3c);
+                    I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+                }
+#endif
+                i3c->status.rx_busy = 0U;
+                i3c_flush_rx_fifo(i3c->regs);
+            }
+        }
+
+        /* Resumes i3c controller, clears error status and resumes */
+        i3c_resume(i3c->regs);
+        i3c_clear_xfer_error(i3c->regs);
+
+        if ((i3c->disc.step != I3C_DISC_IDLE) &&
+            (!(xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN))) {
+            if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
+                i3c->disc.step = I3C_DISC_IDLE;
+                i3c->disc.pos  = 0U;
+                i3c->targets.last_asgd_addr_pos = 0U;
+                i3c->xfer.rx_buf = NULL;
+                i3c->xfer.rx_len = 0U;
+                *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
+                return;
+            }
+            I3Cx_DiscOnError(i3c);
+            if (I3Cx_DiscKick(i3c)) {
+                *event = 0U;
+            } else {
+                i3c->xfer.rx_buf = NULL;
+                i3c->xfer.rx_len = 0U;
+                *event = ARM_I3C_EVENT_TRANSFER_DONE;
+            }
+            return;
+        }
+
+        if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
+            /* Error during address assignment,
+             * so remove slave from Device address table */
+            I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
+            i3c->disc.pos  = 0U;
+            i3c->disc.step = I3C_DISC_GETBCR;
+        }
     }
 }
 
