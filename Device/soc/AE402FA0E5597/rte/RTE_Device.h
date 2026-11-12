@@ -1267,8 +1267,8 @@
 
 // <o> select OV5675 override CPI color mode
 // <i> defines select OV5675 override CPI color mode.
-// <i> default: 1
-#define RTE_OV5675_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE 1
+// <i> default: 0
+#define RTE_OV5675_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE 0
 
 // <o> select OV5675 CPI color mode
 // <i> defines select OV5675 CPI color mode.
