@@ -1712,7 +1712,6 @@
 
 // <e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // <i> Configuration settings for Driver_LPI3C in component ::Drivers:LPI3C
-#if defined(RTSS_HE)
 #define RTE_LPI3C 1
 
 #if RTE_LPI3C
@@ -1721,6 +1720,8 @@
 // <i> Defines LPI3C  Interrupt priority
 // <i> Default: 0
 #define RTE_LPI3C_IRQ_PRI    0
+
+#if defined(RTSS_HE)
 
 // <o> LPI3C DMA ENABLE
 //    <0=> DISABLE
@@ -1736,6 +1737,8 @@
 // <i> Default: 0
 #define RTE_LPI3C_DMA_IRQ_PRI 0
 #endif
+#endif
+
 // <o> LPI3C blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -1751,7 +1754,6 @@
 // <i> Default: DISABLE
 #define RTE_LPI3C_SLAVE_ADAPTIVE_MODE_ENABLE 0
 
-#endif
 #endif
 // </e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // </h>
@@ -2310,7 +2312,6 @@
 
 // <e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // <i> Configuration settings for Driver_LPSPI in component ::Drivers:SPI
-#if defined(RTSS_HE)
 
 #define RTE_LPSPI 1
 
@@ -2436,8 +2437,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPSPI. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPSPI_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPSPI_SELECT_DMA0 1
 #if RTE_LPSPI_SELECT_DMA0
 
 // <o> LPSPI DMA0 Group Selection
@@ -2461,7 +2462,6 @@
 // <i> Default: DISABLE
 #define RTE_LPSPI_BLOCKING_MODE_ENABLE 0
 #endif  // RTE_LPSPI
-#endif  // RTSS_HE
 
 // </e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // </h> SPI (Serial Peripheral Interface)
@@ -3166,7 +3166,6 @@
 
 // <e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // <i> Configuration settings for Driver_SAILP in component ::Drivers:SAI
-#if defined(RTSS_HE)
 
 #define RTE_LPI2S 1
 
@@ -3249,8 +3248,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPI2S. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPI2S_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPI2S_SELECT_DMA0 1
 #endif
 
 // <o> LPI2S DMA IRQ priority <0-255>
@@ -3266,7 +3265,6 @@
 #define RTE_LPI2S_BLOCKING_MODE_ENABLE 0
 
 #endif  // RTE_LPI2S
-#endif  // defined(RTSS_HE)
 
 // </e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // </h> I2S (Integrated Interchip Sound)
@@ -3829,9 +3827,8 @@
 
 // <e> LPUART (Low-Power Universal asynchronous receiver transmitter) [Driver_USARTLP]
 // <i> Configuration settings for Driver_USARTLP in component ::Drivers:USART
-#if defined(RTSS_HE)
+
 #define RTE_LPUART 1
-#endif
 
 #if RTE_LPUART
 
@@ -9270,6 +9267,7 @@
 #define RTE_LPI2C0_BUS_SPEED    400000
 
 #endif
+#endif  // defined(RTSS_HE)
 // </e> LPI2C0(Low Power Inter-Integrated Circuit) [Driver_LPI2C0]
 
 // <e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
@@ -9303,6 +9301,7 @@
 // <i> Default: 10ms (Considered the input clock as 160MHz)
 #define RTE_LPI2C1_SDA_STUCK_LOW_TIMEOUT 1600000
 
+#if defined(RTSS_HE)
 // <o> LPI2C1 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9322,10 +9321,10 @@
 // <i> Default: 256
 #define RTE_LPI2C1_DMA_SCRATCH_SIZE 256
 #endif
+#endif  // defined(RTSS_HE)
 
 #endif
 // </e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
-#endif  // defined(RTSS_HE)
 // </h> I2C (Inter Integrated Circuit)
 
 // <h> RANGE_SENSOR (Range Sensor)
@@ -10809,7 +10808,6 @@
 
 // </h> PDM (Pulse density modulation)
 
-#if defined(RTSS_HE)
 // <h> LPPDM(Low Power Pulse Density Modulation)
 // <e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
 // <i> Configuration settings for Driver_LPPDM in component ::Drivers:LPPDM
@@ -10839,8 +10837,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPPDM. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPPDM_SELECT_DMA0      0
+// <i> Default: DMA0
+#define RTE_LPPDM_SELECT_DMA0      1
 
 // <o> PDM DMA IRQ priority <0-255>
 // <i> Defines PDM DMA Interrupt priority
@@ -10849,7 +10847,6 @@
 #endif
 #endif
 // </e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
-#endif  // defined(RTSS_HE)
 // </h> LPPDM (Low Power Pulse density modulation)
 
 // <h> CANFD (Controller Area Network - Fast Mode)

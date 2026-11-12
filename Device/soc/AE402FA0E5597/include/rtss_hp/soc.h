@@ -459,6 +459,7 @@ typedef enum {
     LPUTIMER_IRQ5_IRQn          = 356, /*!< 356  LPUTIMER interrupt */
     LPUTIMER_IRQ6_IRQn          = 357, /*!< 357  LPUTIMER interrupt */
     LPUTIMER_IRQ7_IRQn          = 358, /*!< 358  LPUTIMER interrupt */
+    LPUART_IRQ_IRQn             = 359, /*!< 359  LPUART interrupt request */
     ISP_IRQ_IRQn                = 367, /*!< 367  ISP interrupt */
     ISP_MI_IRQ_IRQn             = 368, /*!< 368  ISP MI interrupt */
     QEC0_CMPA_IRQ_IRQn          = 369, /*!< 369  Channel 12 interrupt request at driver A */
@@ -565,8 +566,13 @@ typedef enum {
     UTIMER_IRQ93_IRQn           = 470, /*!< 470  Channel 11, interrupt request 93 */
     UTIMER_IRQ94_IRQn           = 471, /*!< 471  Channel 11, interrupt request 94 */
     UTIMER_IRQ95_IRQn           = 472, /*!< 472  Channel 11, interrupt request 95 */
+    LPI3C_IRQ_IRQn              = 473, /*!< 473  LPI3C interrupt request */
+    LPI2C1_IRQ_IRQn             = 474, /*!< 474  LPI2C1 interrupt request */
+    LPI2S_IRQ_IRQn              = 475, /*!< 475  LPI2S interrupt request */
     GPIO16_IRQ0_IRQn            = 476, /*!< 476  GPIO16 Interrupt */
-    GPIO17_IRQ0_IRQn            = 477  /*!< 477  GPIO17 Interrupt  */
+    GPIO17_IRQ0_IRQn            = 477, /*!< 477  GPIO17 Interrupt  */
+    LPSPI_IRQ_IRQn              = 478, /*!< 478  LPSPI interrupt request */
+    LPPDM_IRQ_IRQn              = 479  /*!< 479  LPPDM interrupt request */
 } IRQn_Type;
 
 /* ========================================  Start of section using anonymous unions
