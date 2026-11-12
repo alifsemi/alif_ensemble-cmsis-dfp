@@ -40,14 +40,14 @@
 //     <1=> enable
 // <i> Defines CPI AXI port
 // <i> Default: AXI port enable
-#define RTE_CPI_AXI_PORT                                      1
+#define RTE_CPI_AXI_PORT                                      0
 
 // <o> Select CPI ISP port
 //     <0=> disable
 //     <1=> enable
 // <i> Defines CPI ISP port
 // <i> Default: ISP port disable
-#define RTE_CPI_ISP_PORT                                      0
+#define RTE_CPI_ISP_PORT                                      1
 
 // <o> CPI Row roundup
 //     <0=> disable
@@ -102,13 +102,13 @@
 
 // <o> CPI number of active framebuffers
 // <i> Defines CPI number of active framebuffers
-// <i> Default: 2
+// <i> Default: 0
 #define RTE_CPI_NUM_ACTIVE_FRAMEBUFFERS                       0
 
 // <o> Enable CPI streaming
 // <0=> Disable
 // <1=> Enable
-// <i> Default: 1
+// <i> Default: 0
 #define RTE_CPI_STREAMING_ENABLE                              0
 
 // <e> MT9M114 [Driver_MT9M114]
@@ -366,7 +366,7 @@
 
 // <e> ISP (ISP) [Driver_ISP]
 // <i> Configuration settings for Driver_ISP in component ::Drivers:ISP
-#define RTE_ISP 0
+#define RTE_ISP 1
 #if RTE_ISP
 
 // <o> ISP IRQ priority <0-255>
@@ -415,12 +415,11 @@
 //    <31=> YUV420P (YUV420 planar)
 //    <32=> YUYV (YUV422 packed)
 //    <37=> YUV400 (Grayscale)
-//    <38=> RGB888 (RGB interleaved)
 //    <39=> RGB888P (RGB planar)
 //    <40=> RAW420SP (RAW420 semi-planar)
 //    <41=> RAW422SP (RAW422 semi-planar)
 // <i> Defines ISP output pixel format for memory dump
-// <i> Default: RGB888
+// <i> Default: YUYV
 #define RTE_ISP_OUTPUT_FORMAT 32
 
 // <o> ISP Scaler Output Width
@@ -473,6 +472,13 @@
 
 #endif
 // </e> JPEG (JPEG) [Driver_JPEG]
+
+// <o> Second camera enable
+//     <0=> Selfie/Standard camera only (instance 0)
+//     <1=> Dual camera (instances 0 and 1)
+// <i> Selects second camera if supported.
+// <i> Default: 0
+#define RTE_SECOND_CAMERA_ENABLE            0
 
 // <e> MIPI_CSI2 (mipi csi2) [Driver_MIPI_CSI2]
 // <i> Configuration settings for Driver_MIPI_CSI2 in component ::Drivers:MIPI_CSI2
@@ -713,6 +719,21 @@
 // <i> Default: 1
 #define RTE_ARX3A0_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_ARX3A0_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select ARX3A0 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> ARX3A0 [Driver_ARX3A0]
 
@@ -781,6 +802,21 @@
 // <i> Default: 1
 #define RTE_AR0144_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_AR0144_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0144 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0144_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> AR0114 [Driver_AR0114]
 
@@ -847,6 +883,21 @@
 //     <4=>   I2C OVER I3C
 // <i> Default: 1
 #define RTE_AR0145_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_AR0145_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0145 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0145_CAMERA_SENSOR_DPHY_PORT               0
 
 #endif
 // </e> AR0145 [Driver_AR0145]
@@ -916,6 +967,21 @@
 // <i> Default: 1
 #define RTE_AR0246_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_AR0246_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select AR0246 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_AR0246_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> AR0246 [Driver_AR0246]
 
@@ -943,7 +1009,7 @@
 //     <4=>   320x240_RGB565
 //     <5=>   320x320_RGB565
 // <i> Default: 1
-#define RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG            3
+#define RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG            1
 
 // <i> MT9M114 MIPI frame width and height(derived from IMAGE_CONFIG)
 // <i> defines MT9M114 MIPI frame  width & height
@@ -1000,6 +1066,21 @@
 //     <4=>   I2C OVER I3C
 // <i> Default: 1
 #define RTE_MT9M114_CAMERA_SENSOR_MIPI_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_MT9M114_CAMERA_SENSOR_INSTANCE                     0
+
+// <o> Select MT9M114 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT                    0
 
 // <o> MT9M114 sensor frame width for ISP / CSI2 pipeline
 // <i> Width in pixels of the MT9M114 MIPI sensor frame
@@ -1098,6 +1179,21 @@
 // <i> Default: 1
 #define RTE_HM0360_CAMERA_SENSOR_I2C_INSTANCE     1
 
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_HM0360_CAMERA_SENSOR_INSTANCE         0
+
+// <o> Select HM0360 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: 0
+#define RTE_HM0360_CAMERA_SENSOR_DPHY_PORT        0
+
 #endif
 // </e> HM0360_MIPI [Driver_HM0360_MIPI]
 
@@ -1161,6 +1257,21 @@
 // <i> Default: 1
 #define RTE_OV5647_CAMERA_SENSOR_I2C_INSTANCE            1
 
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_OV5647_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select OV5647 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_OV5647_CAMERA_SENSOR_DPHY_PORT               0
+
 #endif
 // </e> OV5647_MIPI [Driver_OV5647_MIPI]
 
@@ -1196,8 +1307,8 @@
 
 // <o> select OV5675 override CPI color mode
 // <i> defines select OV5675 override CPI color mode.
-// <i> default: 1
-#define RTE_OV5675_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE 1
+// <i> default: 0
+#define RTE_OV5675_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE 0
 
 // <o> select OV5675 CPI color mode
 // <i> defines select OV5675 CPI color mode.
@@ -1210,7 +1321,7 @@
 //     <2=>   1280x720_RAW10
 //     <3=>   640x480_RAW10
 // <i> Default: 0
-#define RTE_OV5675_CAMERA_SENSOR_IMAGE_CONFIG            2
+#define RTE_OV5675_CAMERA_SENSOR_IMAGE_CONFIG            0
 
 // <i> OV5675 frame height (derived from IMAGE_CONFIG)
 // <i> defines OV5675 frame height.
@@ -1247,6 +1358,21 @@
 //     <I3C=> I2C OVER I3C
 // <i> Default: 1
 #define RTE_OV5675_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> Camera sensor instance
+//     <0=> instance 0
+//     <1=> instance 1
+// <i> Default: 0
+#define RTE_OV5675_CAMERA_SENSOR_INSTANCE                0
+
+// <o> Select OV5675 MIPI DPHY port
+//     <0=> DPHY_PORT_CSI2_NATIVE
+//     <1=> DPHY_PORT_DSI_AS_RX
+// <i> Physical MIPI DPHY this sensor uses.
+// <i> DPHY_PORT_CSI2_NATIVE: CSI2 RX DPHY
+// <i> DPHY_PORT_DSI_AS_RX:   DSI DPHY in RX mode
+// <i> Default: DPHY_PORT_CSI2_NATIVE
+#define RTE_OV5675_CAMERA_SENSOR_DPHY_PORT               0
 
 // <o> Select camera sensor OV5675 CSI clock source division [Divisor] <2-511>
 // <i> Defines camera sensor OV5675 CSI clock source division
@@ -1747,12 +1873,20 @@
 // <i> Default: DISABLE
 #define RTE_I3C_SLAVE_ADAPTIVE_MODE_ENABLE 0
 
+// <o> I3C Slave Hot-Join Enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Controls whether the I3C slave issues a Hot-Join request.
+// <i> Hot-Join lets a slave attach to a bus that is already running
+// <i> and obtain a dynamic address from the controller.
+// <i> Default: DISABLE
+#define RTE_I3C_SLAVE_HOT_JOIN_ENABLE      0
+
 #endif
 // </e> I3C (Improved Inter-Integrated Circuit) [Driver_I3C]
 
 // <e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // <i> Configuration settings for Driver_LPI3C in component ::Drivers:LPI3C
-#if defined(RTSS_HE)
 #define RTE_LPI3C 1
 
 #if RTE_LPI3C
@@ -1762,6 +1896,7 @@
 // <i> Default: 0
 #define RTE_LPI3C_IRQ_PRI    0
 
+#if defined(RTSS_HE)
 // <o> LPI3C DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -1776,12 +1911,23 @@
 // <i> Default: 0
 #define RTE_LPI3C_DMA_IRQ_PRI 0
 #endif
+#endif
+
 // <o> LPI3C blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
 // <i> Defines Blocking mode support for LPI3C
 // <i> Default: DISABLE
 #define RTE_LPI3C_BLOCKING_MODE_ENABLE       0
+
+// <o> LPI3C Slave Hot-Join Enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Controls whether the LPI3C slave issues a Hot-Join request.
+// <i> Hot-Join lets a slave attach to a bus that is already running
+// <i> and obtain a dynamic address from the controller.
+// <i> Default: DISABLE
+#define RTE_LPI3C_SLAVE_HOT_JOIN_ENABLE      0
 
 // <o> LPI3C Slave I2C/I3C Adaptive mode Enable
 //    <0=> DISABLE
@@ -1791,7 +1937,6 @@
 // <i> Default: DISABLE
 #define RTE_LPI3C_SLAVE_ADAPTIVE_MODE_ENABLE 0
 
-#endif
 #endif
 // </e> LPI3C (Low Power Improved Inter-Integrated Circuit) [Driver_LPI3C]
 // </h>
@@ -2350,7 +2495,6 @@
 
 // <e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // <i> Configuration settings for Driver_LPSPI in component ::Drivers:SPI
-#if defined(RTSS_HE)
 
 #define RTE_LPSPI 1
 
@@ -2476,8 +2620,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPSPI. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPSPI_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPSPI_SELECT_DMA0 1
 #if RTE_LPSPI_SELECT_DMA0
 
 // <o> LPSPI DMA0 Group Selection
@@ -2501,7 +2645,6 @@
 // <i> Default: DISABLE
 #define RTE_LPSPI_BLOCKING_MODE_ENABLE 0
 #endif  // RTE_LPSPI
-#endif  // RTSS_HE
 
 // </e> LPSPI (Low Power Serial Peripheral Interface) [Driver_LPSPI]
 // </h> SPI (Serial Peripheral Interface)
@@ -3206,7 +3349,6 @@
 
 // <e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // <i> Configuration settings for Driver_SAILP in component ::Drivers:SAI
-#if defined(RTSS_HE)
 
 #define RTE_LPI2S 1
 
@@ -3289,8 +3431,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPI2S. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPI2S_SELECT_DMA0 0
+// <i> Default: DMA0
+#define RTE_LPI2S_SELECT_DMA0 1
 #endif
 
 // <o> LPI2S DMA IRQ priority <0-255>
@@ -3306,7 +3448,6 @@
 #define RTE_LPI2S_BLOCKING_MODE_ENABLE 0
 
 #endif  // RTE_LPI2S
-#endif  // defined(RTSS_HE)
 
 // </e> LPI2S (Low Power Integrated Interchip Sound) [Driver_SAILP]
 // </h> I2S (Integrated Interchip Sound)
@@ -3869,9 +4010,8 @@
 
 // <e> LPUART (Low-Power Universal asynchronous receiver transmitter) [Driver_USARTLP]
 // <i> Configuration settings for Driver_USARTLP in component ::Drivers:USART
-#if defined(RTSS_HE)
+
 #define RTE_LPUART 1
-#endif
 
 #if RTE_LPUART
 
@@ -9110,6 +9250,13 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C0 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C0
+// <i> Default: DISABLE
+#define RTE_I2C0_BLOCKING_MODE_ENABLE 0
+
 // <o> I2C0 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9163,6 +9310,13 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C1 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C1
+// <i> Default: DISABLE
+#define RTE_I2C1_BLOCKING_MODE_ENABLE 0
+
 // <o> I2C1 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9215,6 +9369,13 @@
 // <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C2_SDA_STUCK_LOW_TIMEOUT 1000000
+
+// <o> I2C2 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C2
+// <i> Default: DISABLE
+#define RTE_I2C2_BLOCKING_MODE_ENABLE 0
 
 // <o> I2C2 DMA ENABLE
 //    <0=> DISABLE
@@ -9270,6 +9431,13 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C3_SDA_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C3 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for I2C3
+// <i> Default: DISABLE
+#define RTE_I2C3_BLOCKING_MODE_ENABLE 0
+
 // <o> I2C3 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9310,6 +9478,7 @@
 #define RTE_LPI2C0_BUS_SPEED    400000
 
 #endif
+#endif  // defined(RTSS_HE)
 // </e> LPI2C0(Low Power Inter-Integrated Circuit) [Driver_LPI2C0]
 
 // <e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
@@ -9343,6 +9512,14 @@
 // <i> Default: 10ms (Considered the input clock as 160MHz)
 #define RTE_LPI2C1_SDA_STUCK_LOW_TIMEOUT 1600000
 
+// <o> LPI2C1 blocking mode enable
+//    <0=> DISABLE
+//    <1=> ENABLE
+// <i> Defines Blocking mode support for LPI2C1
+// <i> Default: DISABLE
+#define RTE_LPI2C1_BLOCKING_MODE_ENABLE 0
+
+#if defined(RTSS_HE)
 // <o> LPI2C1 DMA ENABLE
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -9362,10 +9539,10 @@
 // <i> Default: 256
 #define RTE_LPI2C1_DMA_SCRATCH_SIZE 256
 #endif
+#endif  // defined(RTSS_HE)
 
 #endif
 // </e> LPI2C (Low Power Inter Integrated Circuit) [Driver_LPI2C1]
-#endif  // defined(RTSS_HE)
 // </h> I2C (Inter Integrated Circuit)
 
 // <h> RANGE_SENSOR (Range Sensor)
@@ -10858,7 +11035,6 @@
 
 // </h> PDM (Pulse density modulation)
 
-#if defined(RTSS_HE)
 // <h> LPPDM(Low Power Pulse Density Modulation)
 // <e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
 // <i> Configuration settings for Driver_LPPDM in component ::Drivers:LPPDM
@@ -10888,8 +11064,8 @@
 //    <0=> DMA2
 //    <1=> DMA0
 // <i> Defines Select DMA0 for LPPDM. By default DMA2 will be considered
-// <i> Default: DMA2
-#define RTE_LPPDM_SELECT_DMA0      0
+// <i> Default: DMA0
+#define RTE_LPPDM_SELECT_DMA0      1
 
 // <o> PDM DMA IRQ priority <0-255>
 // <i> Defines PDM DMA Interrupt priority
@@ -10898,7 +11074,6 @@
 #endif
 #endif
 // </e> LPPDM (Low Power Pulse density modulation) [Driver_LPPDM]
-#endif  // defined(RTSS_HE)
 // </h> LPPDM (Low Power Pulse density modulation)
 
 // <h> CANFD (Controller Area Network - Fast Mode)

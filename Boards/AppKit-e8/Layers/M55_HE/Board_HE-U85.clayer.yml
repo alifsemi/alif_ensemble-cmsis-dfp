@@ -40,6 +40,9 @@ layer:
   # List miscellaneous options passed via the command line to the build tool.
   misc:
     - for-compiler: AC6
+      C-CPP:
+        # Match the prebuilt Alif ISP library's enum ABI.
+        - -fshort-enums
       Link:
         - '--diag_suppress 6312,6329'
 
@@ -54,8 +57,8 @@ layer:
     - component: BSP:External peripherals:Ethernet PHY
     - component: BSP:External peripherals:ILI9806E LCD panel
       define:
-      - BOARD_LCD_BL_LED_GPIO_PORT: BOARD_LCD_BACKLIGHT_GPIO_PORT
-      - BOARD_LCD_BL_LED_GPIO_PIN: BOARD_LCD_BACKLIGHT_GPIO_PIN
+        - BOARD_LCD_BL_LED_GPIO_PORT: BOARD_LCD_BACKLIGHT_GPIO_PORT
+        - BOARD_LCD_BL_LED_GPIO_PIN: BOARD_LCD_BACKLIGHT_GPIO_PIN
 
     - component: CMSIS:CORE
 
@@ -81,6 +84,7 @@ layer:
     - component: Device:SOC Peripherals:CPI
     - component: Device:SOC Peripherals:DMA
     - component: Device:SOC Peripherals:GPIO
+    - component: Device:SOC Peripherals:ISP
     - component: Device:SOC Peripherals:MHU
     - component: Device:SOC Peripherals:MIPI CSI2
     - component: Device:SOC Peripherals:MIPI DSI

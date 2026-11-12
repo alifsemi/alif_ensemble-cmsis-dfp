@@ -35,7 +35,7 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 ### CMSIS-Driver Virtual I/O mapping
 
 | CMSIS-Driver VIO | Board component
-|:-----------------|:----------------------------
+|:-----------------|:----------------------
 |vioBUTTON0        | Joystick Select Button
 |vioJOYup          | Joystick Up
 |vioJOYdown        | Joystick Down
@@ -49,9 +49,9 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 ### CMSIS-Driver vStream configuration
 
 | Driver                 | Stream Format Description
-|:-----------------------|:----------------------------------------------------
-| Driver_vStreamVideoIn  | RAW10 Bayer GRBG video, resolution 1280 x 720 (W x H)
-| Driver_vStreamVideoOut | RGB888 video,           resolution  480 x 800 (W x H)
+|:-----------------------|:------------------------------------------
+| Driver_vStreamVideoIn  | YUYV video,   resolution 480 x 480 (W x H)
+| Driver_vStreamVideoOut | RGB888 B-G-R, resolution 480 x 800 (W x H)
 
 ## SETOOLS
 
