@@ -14,8 +14,7 @@
  *           This file is compiled when the OV5675 camera sensor component
  *           is selected in the RTE configuration.
  *
- *           Parameters are not yet sensor-calibrated. Update calibration_data,
- *           port_attr, and chan_attr with sensor-specific tuned values.
+ *           calibration_data holds the OV5675 low-lux calibration.
  ******************************************************************************/
 
 #include "RTE_Components.h"
@@ -38,26 +37,26 @@ ISP_CALIB_DATA_S calibration_data = {
             .enable = 1,
             .opType = OP_TYPE_MANUAL,
             .manualAttr = {
-                .blackLevel = {64, 64, 64, 64},
+                .blackLevel = {256, 256, 256, 256},
             },
             .autoAttr = {
                 .blackLevel  = {
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
-                    {64, 64, 64, 64},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
+                    {256, 256, 256, 256},
                 },
             },
         },
@@ -92,11 +91,11 @@ ISP_CALIB_DATA_S calibration_data = {
                     .min = 1 * 1024,
                     .max = 1 * 1024,
                 },
-                .aeRunInterval = 6,
-                .aeTarget = 100,
-                .dampOver = 0x10,
-                .dampUnder = 0x10,
-                .tolerance = 30,
+                .aeRunInterval = 2,
+                .aeTarget = 50,
+                .dampOver = 30,
+                .dampUnder = 30,
+                .tolerance = 12,
                 .antiflicker = {
                     .enable = 0,
                     .flickerFreq = 100,
@@ -121,7 +120,7 @@ ISP_CALIB_DATA_S calibration_data = {
         },
 
         .wbm = {
-            .enable   = 0,
+            .enable   = 1,
             .measMode = ISP_AWB_MEAS_MODE_RGB,
             .measRect = {
                 .hOffs = 0,
@@ -140,7 +139,7 @@ ISP_CALIB_DATA_S calibration_data = {
         },
 
         .wb = {
-            .enable = 0,
+            .enable = 1,
             .opType = OP_TYPE_AUTO,
             .manualAttr = {
                 .wbGain = {0x100, 0x100, 0x100, 0x100},
@@ -205,28 +204,28 @@ ISP_CALIB_DATA_S calibration_data = {
                     },
                     .illuminant[ILLUMINANT_A] = {
                         .illuType = ILLUMINANT_A,
-                        .colorTemp = 2856,
-                        .wbGain = { 0x15e, 0x100, 0x100, 0x301 },
+                        .colorTemp = 2800,
+                        .wbGain = { 0x124, 0x100, 0x100, 0x205 },
                     },
                     .illuminant[ILLUMINANT_TL84] = {
                         .illuType = ILLUMINANT_TL84,
-                        .colorTemp = 4000,
-                        .wbGain = { 0x1b5, 0x100, 0x100, 0x23D },
+                        .colorTemp = 3800,
+                        .wbGain = { 0x15B, 0x100, 0x100, 0x1B5 },
                     },
                     .illuminant[ILLUMINANT_CWF] = {
                         .illuType = ILLUMINANT_CWF,
                         .colorTemp = 4100,
-                        .wbGain = { 0x216, 0x100, 0x100, 0x25c },
+                        .wbGain = { 0x178, 0x100, 0x100, 0x1C5 },
                     },
                     .illuminant[ILLUMINANT_D50] = {
                         .illuType = ILLUMINANT_D50,
                         .colorTemp = 5000,
-                        .wbGain = { 0x245, 0x100, 0x100, 0x1AE },
+                        .wbGain = { 0x182, 0x100, 0x100, 0x181 },
                     },
                     .illuminant[ILLUMINANT_D65] = {
                         .illuType = ILLUMINANT_D65,
                         .colorTemp = 6500,
-                        .wbGain = { 0x286, 0x100, 0x100, 0x15E },
+                        .wbGain = { 0x1D4, 0x100, 0x100, 0x140 },
                     },
                 },
             },
@@ -258,8 +257,8 @@ ISP_CALIB_DATA_S calibration_data = {
             .enable = 1,
             .opType = OP_TYPE_MANUAL,
             .manualAttr = {
-                .denoiseLevel = 0,
-                .sharpenLevel = 0,
+                .denoiseLevel = 6,
+                .sharpenLevel = 2,
             },
             .autoAttr = {
                 .denoiseLevel = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -268,12 +267,12 @@ ISP_CALIB_DATA_S calibration_data = {
         },
 
         .ccm = {
-            .opType = OP_TYPE_MANUAL,
+            .opType = OP_TYPE_AUTO,
             .manualAttr = {
                 .colorMatrix = {
-                    289, -70, -16,
-                    -21, 183, -67,
-                    -81, -8, 304
+                    128, 0, 0,
+                    0, 128, 0,
+                    0, 0, 128
                 },
                 .rOffset = 0,
                 .gOffset = 0,
@@ -281,28 +280,28 @@ ISP_CALIB_DATA_S calibration_data = {
             },
             .autoAttr = {
                 .illuminantCCM[ILLUMINANT_A] = {
-                    .colorTemp   = 2856,
-                    .colorMatrix = {192, -6, -57, -70, 230, -24, 11, -149, 276},
+                    .colorTemp   = 2800,
+                    .colorMatrix = {249, -38, -83, -76, 287, -83, -41, -170, 339},
                     .rOffset = 0, .gOffset = 0, .bOffset = 0,
                 },
                 .illuminantCCM[ILLUMINANT_TL84] = {
-                    .colorTemp   = 4000,
-                    .colorMatrix = {222, -60, -32, -64, 236, -35, 1, -78, 222},
+                    .colorTemp   = 3800,
+                    .colorMatrix = {292, -85, -79, -71, 273, -74, -17, -125, 269},
                     .rOffset = 0, .gOffset = 0, .bOffset = 0,
                 },
                 .illuminantCCM[ILLUMINANT_CWF] = {
                     .colorTemp   = 4100,
-                    .colorMatrix = {257, -90, -37, -65, 219, -18, 2, -82, 223},
+                    .colorMatrix = {356, -163, -65, -79, 267, -60, -20, -116, 265},
                     .rOffset = 0, .gOffset = 0, .bOffset = 0,
                 },
                 .illuminantCCM[ILLUMINANT_D50] = {
                     .colorTemp   = 5000,
-                    .colorMatrix = {207, -55, -23, -48, 224, -34, 6, -89, 222},
+                    .colorMatrix = {277, -86, -64, -55, 274, -91, -8, -137, 273},
                     .rOffset = 0, .gOffset = 0, .bOffset = 0,
                 },
                 .illuminantCCM[ILLUMINANT_D65] = {
                     .colorTemp   = 6500,
-                    .colorMatrix = {229, -82, -17, -39, 215, -47, 0, -68, 207},
+                    .colorMatrix = {295, -122, -45, -52, 268, -88, -7, -109, 245},
                     .rOffset = 0, .gOffset = 0, .bOffset = 0,
                 },
             },
@@ -311,8 +310,8 @@ ISP_CALIB_DATA_S calibration_data = {
         .gammaOut = {
             .enable = 1,
             .gammaY = {
-                0x000, 0x049, 0x089, 0x0B7, 0x0DF, 0x11F, 0x154, 0x183, 0x1AD,
-                0x1F6, 0x235, 0x26F, 0x2D3, 0x32A, 0x378, 0x3BF, 0x3FF
+                0, 142, 230, 305, 373, 436, 495, 557, 629,
+                697, 761, 821, 876, 925, 968, 1003, 1023
             },
         },
 
