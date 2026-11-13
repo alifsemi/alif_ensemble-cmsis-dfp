@@ -2687,8 +2687,8 @@ static void I3Cx_HandleSuccess(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *e
 
 /**
   \fn           static void I3Cx_HandleError(I3C_RESOURCES *i3c,
-  \                                         i3c_xfer_t *xfer,
-  \                                         uint32_t *event)
+  \                                          i3c_xfer_t *xfer,
+  \                                          uint32_t *event)
   \brief        Handles error case of interrupts
   \param[in]    i3c      : Pointer to i3c resources structure
   \param[in]    xfer     : Pointer to i3c transfer structure
@@ -2700,64 +2700,85 @@ static void I3Cx_HandleError(I3C_RESOURCES *i3c, i3c_xfer_t *xfer, uint32_t *eve
     bool err_tx = (xfer->status & I3C_XFER_STATUS_ERROR_TX) != 0U;
     bool err_rx = (xfer->status & I3C_XFER_STATUS_ERROR_RX) != 0U;
 
-    /* Abort and any error that names neither direction affect both. */
-    if ((xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) || (!err_tx && !err_rx)) {
-        err_tx = true;
-        err_rx = true;
-        /* Flush all buffers when both directions are affected */
-        i3c_flush_all_buffers(i3c->regs);
-    } else {
-        if (err_tx) {
-            i3c_flush_tx_fifo(i3c->regs);
-        }
-        if (err_rx) {
-            i3c_flush_rx_fifo(i3c->regs);
-        }
-    }
-
-#if I3C_DMA_ENABLE
-    if (i3c->dma_enable) {
-        /* Clear busy before Stop so the sync ABORT callback ignores
-         * this channel. Latch RX only when RX is being dropped; a
-         * TX-only error must not overwrite the armed RX count.
-         */
-        if (err_rx) {
-            I3C_DMA_LatchRxCount(i3c);
-            i3c->status.rx_busy = 0U;
-            I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
-        }
-        if (err_tx) {
-            i3c->status.tx_busy = 0U;
-            I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
-        }
-    } else
-#endif /* I3C_DMA_ENABLE */
-    {
-        if (err_rx) {
-            i3c->status.rx_busy = 0U;
-        }
-        if (err_tx) {
-            i3c->status.tx_busy = 0U;
-        }
-    }
-
     /* mark event as Transfer Error. */
     *event = ARM_I3C_EVENT_TRANSFER_ERROR;
-
-    if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
-        /* Error during address assignment,
-         * so remove slave from Device address table */
-        I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
-        i3c->slave_dat.last_asgd_addr_pos = 0U;
-    }
 
     if (xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) {
         /* mark event as Transfer Error. */
         *event = ARM_I3C_EVENT_MESSAGE_TRANSFER_ABORT;
     }
 
-    i3c_resume(i3c->regs);
-    i3c_clear_xfer_error(i3c->regs);
+    if (!i3c->state.is_master) {
+    /* Handle slave errors */
+#if I3C_DMA_ENABLE
+        if (i3c->dma_enable) {
+            I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+            if (err_rx) {
+                I3C_DMA_LatchRxCount(i3c);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+            }
+        }
+#endif
+        i3c->status.tx_busy = 0U;
+        if (err_rx) {
+            i3c->status.rx_busy = 0U;
+        }
+        i3c_flush_all_buffers(i3c->regs);
+        /* Resumes i3c controller, clears error status and resumes */
+        i3c_resume(i3c->regs);
+        i3c_clear_xfer_error(i3c->regs);
+    } else {
+        /* Handle master errors */
+        if ((xfer->status & I3C_XFER_STATUS_ERROR_XFER_ABORT) || (!err_tx && !err_rx)) {
+            /* Abort and any error that names neither direction affect both. */
+#if I3C_DMA_ENABLE
+            if (i3c->dma_enable) {
+                /* Latch while rx_busy is set. */
+                I3C_DMA_LatchRxCount(i3c);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+                I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+            }
+#endif
+            /* DMA stop has returned. Clear both busy flags. */
+            i3c->status.rx_busy = 0U;
+            i3c->status.tx_busy = 0U;
+            /* Flush all buffers when both directions are affected */
+            i3c_flush_all_buffers(i3c->regs);
+        } else {
+            if (err_tx) {
+#if I3C_DMA_ENABLE
+                if (i3c->dma_enable) {
+                    I3C_DMA_Stop(&i3c->dma_cfg->dma_tx);
+                }
+#endif
+                i3c->status.tx_busy = 0U;
+                i3c_flush_tx_fifo(i3c->regs);
+            }
+
+            if (err_rx) {
+#if I3C_DMA_ENABLE
+                if (i3c->dma_enable) {
+                    /* Latch while rx_busy is set. */
+                    I3C_DMA_LatchRxCount(i3c);
+                    I3C_DMA_Stop(&i3c->dma_cfg->dma_rx);
+                }
+#endif
+                i3c->status.rx_busy = 0U;
+                i3c_flush_rx_fifo(i3c->regs);
+            }
+        }
+
+        /* Resumes i3c controller, clears error status and resumes */
+        i3c_resume(i3c->regs);
+        i3c_clear_xfer_error(i3c->regs);
+
+        if (xfer->status & I3C_XFER_STATUS_ERROR_ADDR_ASSIGN) {
+            /* Error during address assignment,
+             * so remove slave from Device address table */
+            I3C_DetachSlaves(i3c, i3c->xfer.tx_len, i3c->xfer.xfer_cmd.cmd_id);
+            i3c->slave_dat.last_asgd_addr_pos = 0U;
+        }
+    }
 }
 
 /**

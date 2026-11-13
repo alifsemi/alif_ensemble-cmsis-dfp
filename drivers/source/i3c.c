@@ -1429,7 +1429,7 @@ void i3c_setup_tx(I3C_Type *i3c, i3c_xfer_t *xfer, const uint16_t len)
 
     xfer->xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
 
-        temp = 0;
+    temp = 0;
     if (!i3c_is_dma_enable(i3c)) {
         /* write data to tx port (if any) */
         if ((xfer->tx_buf) && (xfer->tx_cur_cnt < xfer->tx_len)) {
@@ -1437,11 +1437,9 @@ void i3c_setup_tx(I3C_Type *i3c, i3c_xfer_t *xfer, const uint16_t len)
             i3c_send(i3c, xfer, resp);
         }
 
-        /* Enable command queue ready status with
-         * Tx threshold status interrupt if not all data sent to queue
-         */
+        /* Enable the Tx threshold interrupt when bytes remain. */
         if (xfer->tx_cur_cnt < xfer->tx_len) {
-            temp = (I3C_INTR_STATUS_EN_TX_THLD_STS_EN | I3C_INTR_STATUS_EN_CMD_QUEUE_READY_STS_EN);
+            temp = I3C_INTR_STATUS_EN_TX_THLD_STS_EN;
         }
     }
 
@@ -1470,9 +1468,12 @@ void i3c_setup_rx(I3C_Type *i3c, const uint16_t len)
     /* Set rx buffer threshold */
     i3c_set_rx_buf_thld(i3c, len);
 
+    temp = 0;
     if (i3c_is_dma_enable(i3c)) {
-        /* Enable only command queue ready status interrupt if DMA is enabled */
-        temp = I3C_INTR_STATUS_EN_CMD_QUEUE_READY_STS_EN;
+        /* Enable only command queue ready status interrupt if master */
+        if (i3c_is_master(i3c)) {
+            temp = I3C_INTR_STATUS_EN_CMD_QUEUE_READY_STS_EN;
+        }
     } else {
         if (i3c_is_master(i3c)) {
             /* Enable command queue ready status with
@@ -1688,23 +1689,6 @@ void i3c_slave_irq_handler(I3C_Type *i3c, i3c_xfer_t *xfer)
                 i3c_disable_intr(i3c, I3C_INTR_STATUS_EN_TX_THLD_STS_EN);
             }
         }
-    }
-
-    if (status & I3C_INTR_STATUS_CMD_QUEUE_READY_STS) {
-        i3c->I3C_QUEUE_THLD_CTRL &= ~I3C_QUEUE_THLD_CTRL_CMD_EMPTY_BUF_THLD_Msk;
-        i3c_disable_intr(i3c, I3C_INTR_STATUS_EN_CMD_QUEUE_READY_STS_EN);
-
-        i3c_set_port(i3c, xfer);
-        if (xfer->xfer_cmd.port_id == I3C_SLV_TX_TID) {
-            /* As per mipi_i3c_databook Section 2.7.13
-             * no command required for transmit,
-             * only data length is required
-             */
-            i3c->I3C_COMMAND_QUEUE_PORT =
-                I3C_COMMAND_QUEUE_PORT_ARG_DATA_LEN(xfer->xfer_cmd.data_len) |
-                I3C_COMMAND_QUEUE_PORT_SLV_PORT_TID(xfer->xfer_cmd.port_id);
-        }
-        xfer->xfer_cmd.cmd_type = I3C_XFER_TYPE_NONE;
     }
 
     /* Checking for dynamic address valid */
