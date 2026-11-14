@@ -1266,6 +1266,9 @@ void i2c_clk_cfg(I3C_Type *i3c, uint32_t core_clk, I3C_I2C_SPEED_MODE i2c_speed_
 */
 void i3c_master_init(I3C_Type *i3c)
 {
+    /* Disables controller */
+    i3c->I3C_DEVICE_CTRL &= ~I3C_DEVICE_CTRL_ENABLE;
+
     i3c->I3C_QUEUE_THLD_CTRL &=
         ~(I3C_QUEUE_THLD_CTRL_IBI_STATUS_THLD_Msk | I3C_QUEUE_THLD_CTRL_RESP_BUF_THLD_Msk);
 
@@ -1290,7 +1293,7 @@ void i3c_master_init(I3C_Type *i3c)
                  This function will :
                   - set slave static address
                   - set secondary master as slave mode
-                  - Enable i3c controller
+                Caller enables the controller after this returns.
   \param[in]    i3c       : Pointer to i3c register
                              set structure
   \param[in]    slv_addr  : Slave own Address
@@ -1336,9 +1339,6 @@ void i3c_slave_init(I3C_Type *i3c, const uint8_t slv_addr, const uint32_t core_c
     timing                          = DIV_ROUND_UP(I3C_BUS_IDLE_TIME_NS, clk_period);
 
     i3c->I3C_BUS_IDLE_TIMING        = I3C_BUS_IDLE_TIMING_BUS_IDLE_TIME(timing);
-
-    /* Enable i3c controller. */
-    i3c->I3C_DEVICE_CTRL           |= I3C_DEVICE_CTRL_ENABLE;
 }
 
 /**
