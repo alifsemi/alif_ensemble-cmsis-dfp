@@ -245,7 +245,7 @@
         <!-- <debugconfig sdf="Debug/SDF/E8/Ensemble E8.sdf" dormant="true"/> --> <!-- disabling till SDF file is added -->
         <debugconfig dormant="true"/>
         <!-- Debug sequences -->
-        <debugvars>
+        <debugvars configfile="Debug/ensemble.dbgconf" version="1.0.0">
           // Below settings currently combine static and dynamic parts.
           // Funnel
           __var FUNNEL_0_ADDRESS    = 0x00100000;
@@ -630,8 +630,10 @@
               // ETR RSZ is expressed in 32-bit words. RRP and RWP identify the valid capture range.
               bufferSize   = ReadAccessAP(ETR_0_ADDRESS + 0x004) * 4;
               etrStatus    = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
-              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014) | (ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 32);
-              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018) | (ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 32);
+              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014);
+              readPointer  = readPointer | ((ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 16) &lt;&lt; 16);
+              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018);
+              writePointer = writePointer | ((ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 16) &lt;&lt; 16);
             </block>
             <control if="bufferSize != 0">
               <control if="(etrStatus &amp; 0x00000001) != 0">
@@ -652,10 +654,8 @@
                 <block>
                 // Read through RRD, which advances RRP through the ETR trace memory.
                 BufferRead(0, 0, ETR_0_ADDRESS + 0x010, bytesToRead, (32 | 0x200));
-                // Stream to single unnamed trace buffer in system by default, insert name if multiple
-                // named buffers specified in PDSC. Decide which xxx_Read_Buffer sequence to call based
-                // on TraceBufferSelected().
-                bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "", 1, 0);
+                // Stream into the trace buffer named ETR. Mode 1 selects the trace-buffer sink.
+                bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "ETR", 1, 0);
                 </block>
               </control>
               <control if="bytesToRead == 0">
@@ -787,8 +787,11 @@
             </block>
           </sequence>
         </sequences>
-        <trace>
-          <tracebuffer />
+        <trace Pname="M55_HP">
+          <tracebuffer name="ETR"/>
+        </trace>
+        <trace Pname="M55_HE">
+          <tracebuffer name="ETR"/>
         </trace>
         <!-- On-chip NVM Region -->
         <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
@@ -1166,7 +1169,7 @@
         <!-- DebugConfig for E7 -->
         <debugconfig sdf="Debug/SDF/E7/Ensemble E7.sdf" dormant="true"/>
         <!-- Debug sequences -->
-        <debugvars>
+        <debugvars configfile="Debug/ensemble.dbgconf" version="1.0.0">
           // Below settings currently combine static and dynamic parts.
           // Funnel
           __var FUNNEL_0_ADDRESS    = 0x00100000;
@@ -1559,8 +1562,10 @@
               // ETR RSZ is expressed in 32-bit words. RRP and RWP identify the valid capture range.
               bufferSize   = ReadAccessAP(ETR_0_ADDRESS + 0x004) * 4;
               etrStatus    = ReadAccessAP(ETR_0_ADDRESS + 0x00C);
-              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014) | (ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 32);
-              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018) | (ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 32);
+              readPointer  = ReadAccessAP(ETR_0_ADDRESS + 0x014);
+              readPointer  = readPointer | ((ReadAccessAP(ETR_0_ADDRESS + 0x038) &lt;&lt; 16) &lt;&lt; 16);
+              writePointer = ReadAccessAP(ETR_0_ADDRESS + 0x018);
+              writePointer = writePointer | ((ReadAccessAP(ETR_0_ADDRESS + 0x03C) &lt;&lt; 16) &lt;&lt; 16);
             </block>
             <control if="bufferSize != 0">
               <control if="(etrStatus &amp; 0x00000001) != 0">
@@ -1581,10 +1586,8 @@
                 <block>
                   // Read through RRD, which advances RRP through the ETR trace memory.
                   BufferRead(0, 0, ETR_0_ADDRESS + 0x010, bytesToRead, (32 | 0x200));
-                  // Stream to single unnamed trace buffer in system by default, insert name if multiple
-                  // named buffers specified in PDSC. Decide which xxx_Read_Buffer sequence to call based
-                  // on TraceBufferSelected().
-                  bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "", 1, 0);
+                  // Stream into the trace buffer named ETR. Mode 1 selects the trace-buffer sink.
+                  bytesStreamed = BufferStreamOut(0, 0, bytesToRead, "ETR", 1, 0);
                 </block>
               </control>
               <control if="bytesToRead == 0">
@@ -1716,8 +1719,11 @@
             </block>
           </sequence>
         </sequences>
-        <trace>
-          <tracebuffer />
+        <trace Pname="M55_HP">
+          <tracebuffer name="ETR"/>
+        </trace>
+        <trace Pname="M55_HE">
+          <tracebuffer name="ETR"/>
         </trace>
         <!-- On-chip NVM Region -->
         <memory name="MRAM" start="0x80000000" size="0x00580000" access="rx" default="1"/>
