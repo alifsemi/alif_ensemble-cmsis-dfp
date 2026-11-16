@@ -8,6 +8,19 @@
   <license>License.txt</license>
 
   <releases>
+      <release version="2.3.0-rc1"  tag="v2.3.0-rc1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.3.0-rc1/AlifSemiconductor.Ensemble.2.3.0-rc1.pack" date="2026-11-16">
+	   - Fix SD demo Pin configuration
+	   - Fix SD card detect GPIO from P3_3 to P6_5 for DevKit-E1C
+	   - Add bare-metal camera demo and viewfinder application
+	   - Overlay alif logo on MIPI interface video display in FreeRTOS Template
+	   - Rename camera I2C_C1_C2 pin to I2C_MUX
+	   - Update controller and target instances for DevKit-e1c
+	   - Add ISP video demo for Baremetal and FreeRTOS
+	   - Add compiler option -funwind-tables for AC6 to prevent GDB debugging issues
+	   - update example projects and documentation
+	   - Update CRC, I2C, I3C, CAN, PDM, UART, Camera, ISP, OSPI drivers
+	   - update SVD files
+    </release>
     <release version="2.2.1"  tag="v2.2.1" url="https://github.com/alifsemi/alif_ensemble-cmsis-dfp/releases/download/v2.2.1/AlifSemiconductor.Ensemble.2.2.1.pack" date="2026-08-26">
        - Update ISP Libs
        - Fixes in SD, I2C, I3C and ISP drivers
