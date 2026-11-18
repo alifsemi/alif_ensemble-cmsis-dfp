@@ -151,7 +151,7 @@
 #define BOARD_MISC_ENABLED                              1
 // </e>
 
-// <o> "ISSI Flash" OSPI instance number <1>
+// <o> "ISSI Flash" OSPI instance number
 #define BOARD_ISSI_FLASH_OSPI_INSTANCE                  1
 
 // <e> PDM module enabled flag
@@ -237,13 +237,13 @@
 //    <1=> UTIMER_COMPARE_B
 #define BOARD_BLUE_LED_UTIMER_COUNTER_TYPE              1
 
-// <o> UTIMER channel red LED instance number <3>
+// <o> UTIMER channel red LED instance number
 #define BOARD_RED_LED_UTIMER_INSTANCE                   3
 
-// <o> UTIMER channel green LED instance number <2>
+// <o> UTIMER channel green LED instance number
 #define BOARD_GREEN_LED_UTIMER_INSTANCE                 2
 
-// <o> UTIMER channel blue LED instance number <1>
+// <o> UTIMER channel blue LED instance number
 #define BOARD_BLUE_LED_UTIMER_INSTANCE                  1
 
 // <o> CMP external trigger UTIMER channel instance number <0-12>
@@ -1619,7 +1619,7 @@
 // PIN5 <6=> PIN6 <7=> PIN7
 #define BOARD_IS66_HYPERRAM_RESET_GPIO_PIN              1
 
-// <o> "PSRAM" OSPI instance number <0> (Do Not Modify!)
+// <o> "PSRAM" OSPI instance number (Do Not Modify!)
 #define BOARD_PSRAM_OSPI_INSTANCE                       0
 
 // OSPI Flash instance number (Do Not Modify!)
@@ -1875,7 +1875,7 @@
 // <o> "DAC_OUTPUT_SCLK" GPIO pin alternate function
 #define BOARD_DAC_OUTPUT_SCLK_ALTERNATE_FUNCTION        3
 
-// <o> "MIC Input" I2S instance number <LP>
+// <o> "MIC Input" I2S instance number
 #define BOARD_MIC_INPUT_I2S_INSTANCE                    LP
 
 // <o> "MIC_INPUT_SDI" GPIO port number <0=> GPIO0 <1=> GPIO1 <2=> GPIO2 <3=> GPIO3 <4=> GPIO4 <5=>

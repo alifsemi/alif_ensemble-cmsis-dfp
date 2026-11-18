@@ -207,13 +207,13 @@
 //    <1=> UTIMER_COMPARE_B
 #define BOARD_BLUE_LED_UTIMER_COUNTER_TYPE              0
 
-// <o> UTIMER channel red LED instance number <9>
+// <o> UTIMER channel red LED instance number
 #define BOARD_RED_LED_UTIMER_INSTANCE                   9
 
-// <o> UTIMER channel green LED instance number <10>
+// <o> UTIMER channel green LED instance number
 #define BOARD_GREEN_LED_UTIMER_INSTANCE                 10
 
-// <o> UTIMER channel blue LED instance number <8>
+// <o> UTIMER channel blue LED instance number
 #define BOARD_BLUE_LED_UTIMER_INSTANCE                  8
 
 // </h>
@@ -1336,7 +1336,7 @@
 // PIN6 <7=> PIN7
 #define BOARD_LCD_RESET_GPIO_PIN                        6
 
-// <o> "PSRAM" OSPI instance number <0> (Do Not Modify!)
+// <o> "PSRAM" OSPI instance number (Do Not Modify!)
 #define BOARD_PSRAM_OSPI_INSTANCE                       0
 
 // OSPI Flash instance number (Do Not Modify!)
