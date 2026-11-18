@@ -29,13 +29,15 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 | Driver_USART4          | UART4      | PRG USB connector (J3)       | STDIN, STDOUT, STDERR
 | Driver_USBD0           | USB        | MCU USB connector (J2)       | CMSIS_USB_Device
 | CMSIS-Driver VIO       | GPIO       | RGB LED, Joystick            | CMSIS_VIO
+| Driver_vStreamAudioIn  | PDM        | T5838 Microphones (U14, U16) | CMSIS_VSTREAM_AUDIO_IN
+| Driver_vStreamAudioOut | I2S2       | WM8904 headphone output (J5) | CMSIS_VSTREAM_AUDIO_OUT
 | Driver_vStreamVideoIn  | MIPI CSI   | MIPI Camera (J9)             | CMSIS_VSTREAM_VIDEO_IN
 | Driver_vStreamVideoOut | MIPI DSI   | GLCD Display (J15)           | CMSIS_VSTREAM_VIDEO_OUT
 
 ### CMSIS-Driver Virtual I/O mapping
 
 | CMSIS-Driver VIO | Board component
-|:-----------------|:----------------------------
+|:-----------------|:----------------------
 |vioBUTTON0        | Joystick Select Button
 |vioJOYup          | Joystick Up
 |vioJOYdown        | Joystick Down
@@ -49,9 +51,11 @@ Refer to ["Alif Conductor Tool Manual"](https://conductor.alifsemi.com/Alif_HTML
 ### CMSIS-Driver vStream configuration
 
 | Driver                 | Stream Format Description
-|:-----------------------|:----------------------------------------------------
-| Driver_vStreamVideoIn  | RAW10 Bayer GRBG video, resolution 1280 x 720 (W x H)
-| Driver_vStreamVideoOut | RGB888 video,           resolution  480 x 800 (W x H)
+|:-----------------------|:---------------------------------------------------------
+| Driver_vStreamAudioIn  | Stereo 16-bit PCM audio, 16000 samples/second per channel
+| Driver_vStreamAudioOut | Stereo 16-bit PCM audio, 16000 samples/second per channel
+| Driver_vStreamVideoIn  | YUYV video,   resolution 480 x 480 (W x H)
+| Driver_vStreamVideoOut | RGB888 B-G-R, resolution 480 x 800 (W x H)
 
 ## SETOOLS
 
