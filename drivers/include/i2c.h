@@ -216,8 +216,6 @@ extern "C" {
                                                       */
 #define I2C_IC_SAR_10BIT_ADDR_MASK           (0x3FF) /* 10bit I2C address mask for slave  address register \
                                                       */
-#define I2C_FS_SPIKE_LENGTH_NS               (50)
-#define I2C_HS_SPIKE_LENGTH_NS               (10)
 
 /* The below macros calculations are wrt configuration
  * IC_CLK_FREQ_OPTIMIZATION = 1
@@ -811,9 +809,23 @@ void i2c_set_target_addr(I2C_Type *i2c, const uint32_t address, const i2c_addres
  *          I2C_SPEED_FAST /
  *          I2C_SPEED_FAST_PLUS /
  *          I2C_SPEED_HIGH
+ * @param   spike_len_ns : Spike length for the selected speed, nanoseconds
  * @retval  none
  */
-void i2c_master_set_clock(I2C_Type *i2c, const uint32_t clk_khz, uint8_t speed_mode);
+void i2c_master_set_clock(I2C_Type *i2c, const uint32_t clk_khz, uint8_t speed_mode,
+                          uint8_t spike_len_ns);
+
+/**
+ * @brief   Set spike length
+ * @note    Writes to I2C_FS_SPKLEN and I2C_HS_SPKLEN
+ * @param   i2c             : Pointer to i2c register map
+ * @param   clk_khz         : Clock
+ * @param   fs_spike_len_ns : SS/FS/FM+ spike length, nanoseconds
+ * @param   hs_spike_len_ns : High-speed spike length, nanoseconds
+ * @retval  none
+ */
+void i2c_set_spike_len(I2C_Type *i2c, uint32_t clk_khz,
+                       uint8_t fs_spike_len_ns, uint8_t hs_spike_len_ns);
 
 /**
  * @brief   initialize i2c master

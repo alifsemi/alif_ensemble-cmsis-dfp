@@ -1572,6 +1572,7 @@ static int32_t ARM_I2C_GetDataCount(const I2C_RESOURCES *I2C)
 static int32_t ARM_I2C_Control(I2C_RESOURCES *I2C, uint32_t control, uint32_t arg)
 {
     int32_t speed;
+    uint8_t spike_len_ns;
 
     /* check i2c driver is initialized or not */
     if (I2C->state.initialized == 0) {
@@ -1605,6 +1606,9 @@ static int32_t ARM_I2C_Control(I2C_RESOURCES *I2C, uint32_t control, uint32_t ar
 
         i2c_slave_init(I2C->regs, arg, I2C->addr_mode);
 
+        /* sets spike length */
+        i2c_set_spike_len(I2C->regs, (I2C->clk / 1000), I2C->fs_spike_len_ns, I2C->hs_spike_len_ns);
+
         /* Sets bus speed*/
         i2c_set_bus_speed(I2C->regs, speed);
 
@@ -1623,9 +1627,16 @@ static int32_t ARM_I2C_Control(I2C_RESOURCES *I2C, uint32_t control, uint32_t ar
         }
         /* arg is i2c bus speed */
         i2c_master_init(I2C->regs, I2C->tar_addr);
+        /* sets spike length */
+        i2c_set_spike_len(I2C->regs, (I2C->clk / 1000), I2C->fs_spike_len_ns, I2C->hs_spike_len_ns);
 
-        /* Sets master clock settings*/
-        i2c_master_set_clock(I2C->regs, (I2C->clk / 1000), I2C->speed_mode);
+        if (I2C->speed_mode == I2C_SPEED_HIGH) {
+            spike_len_ns = I2C->hs_spike_len_ns;
+        } else {
+            spike_len_ns = I2C->fs_spike_len_ns;
+        }
+        /* Sets master clock settings */
+        i2c_master_set_clock(I2C->regs, (I2C->clk / 1000), I2C->speed_mode, spike_len_ns);
 
         /* Sets bus speed*/
         i2c_set_bus_speed(I2C->regs, speed);
@@ -2264,6 +2275,8 @@ static I2C_RESOURCES I2C0_RES = {
     .rx_fifo_threshold = RTE_I2C0_RX_FIFO_THRESHOLD,
     .scl_stuck_timeout = RTE_I2C0_SCL_STUCK_LOW_TIMEOUT,
     .sda_stuck_timeout = RTE_I2C0_SDA_STUCK_LOW_TIMEOUT,
+    .fs_spike_len_ns   = RTE_I2C0_FS_SPIKE_LENGTH_NS,
+    .hs_spike_len_ns   = RTE_I2C0_HS_SPIKE_LENGTH_NS,
     .instance          = I2C_INSTANCE_0
 };
 
@@ -2399,6 +2412,8 @@ static I2C_RESOURCES I2C1_RES = {
     .rx_fifo_threshold = RTE_I2C1_RX_FIFO_THRESHOLD,
     .scl_stuck_timeout = RTE_I2C1_SCL_STUCK_LOW_TIMEOUT,
     .sda_stuck_timeout = RTE_I2C1_SDA_STUCK_LOW_TIMEOUT,
+    .fs_spike_len_ns   = RTE_I2C1_FS_SPIKE_LENGTH_NS,
+    .hs_spike_len_ns   = RTE_I2C1_HS_SPIKE_LENGTH_NS,
     .instance          = I2C_INSTANCE_1
 };
 
@@ -2534,6 +2549,8 @@ static I2C_RESOURCES I2C2_RES = {
     .rx_fifo_threshold = RTE_I2C2_RX_FIFO_THRESHOLD,
     .scl_stuck_timeout = RTE_I2C2_SCL_STUCK_LOW_TIMEOUT,
     .sda_stuck_timeout = RTE_I2C2_SDA_STUCK_LOW_TIMEOUT,
+    .fs_spike_len_ns   = RTE_I2C2_FS_SPIKE_LENGTH_NS,
+    .hs_spike_len_ns   = RTE_I2C2_HS_SPIKE_LENGTH_NS,
     .instance          = I2C_INSTANCE_2
 };
 
@@ -2669,6 +2686,8 @@ static I2C_RESOURCES I2C3_RES = {
     .rx_fifo_threshold = RTE_I2C3_RX_FIFO_THRESHOLD,
     .scl_stuck_timeout = RTE_I2C3_SCL_STUCK_LOW_TIMEOUT,
     .sda_stuck_timeout = RTE_I2C3_SDA_STUCK_LOW_TIMEOUT,
+    .fs_spike_len_ns   = RTE_I2C3_FS_SPIKE_LENGTH_NS,
+    .hs_spike_len_ns   = RTE_I2C3_HS_SPIKE_LENGTH_NS,
     .instance          = I2C_INSTANCE_3
 };
 
@@ -2804,6 +2823,8 @@ static I2C_RESOURCES LPI2C1_RES = {
     .rx_fifo_threshold = RTE_LPI2C1_RX_FIFO_THRESHOLD,
     .scl_stuck_timeout = RTE_LPI2C1_SCL_STUCK_LOW_TIMEOUT,
     .sda_stuck_timeout = RTE_LPI2C1_SDA_STUCK_LOW_TIMEOUT,
+    .fs_spike_len_ns   = RTE_LPI2C1_FS_SPIKE_LENGTH_NS,
+    .hs_spike_len_ns   = RTE_LPI2C1_HS_SPIKE_LENGTH_NS,
     .instance          = I2C_INSTANCE_LP_1
 };
 
