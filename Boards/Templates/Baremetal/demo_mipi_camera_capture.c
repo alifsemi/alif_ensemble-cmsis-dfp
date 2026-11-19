@@ -39,43 +39,42 @@
 /* SE Services */
 #include "se_services_port.h"
 
-#include "Driver_IO.h"
+#include "app_utils.h"
 
-// set to 0: enable selfie camera (cam1)
-// set to 1: enable standard camera (cam2)
-#define STANDARD_CAM_EN 0
-
-
+// Set to 0: Use application-defined arx3A0 pin configuration.
+// Set to 1: Use Conductor-generated pin configuration (from pins.h).
+#define USE_CONDUCTOR_TOOL_PINS_CONFIG 0
 
 extern ARM_DRIVER_CPI Driver_CPI;
 static ARM_DRIVER_CPI *CAMERAdrv = &Driver_CPI;
 
-#if STANDARD_CAM_EN
-/* Switch Camera target. */
-extern ARM_DRIVER_GPIO ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-static ARM_DRIVER_GPIO *GPIO_Driver_SWITCH_CAM =
-        &ARM_Driver_GPIO_(BOARD_CAMERA_I2C_C1_C2_GPIO_PORT);
-#endif
-
-#ifndef CAMERA_SENSOR_SELECT
-#define CAMERA_SENSOR_SELECT         CAMERA_SENSOR_ARX3A0
-#endif
-
-#define CAMERA_SENSOR_ARX3A0         0
-#define CAMERA_SENSOR_MT9M114        1
-#define CAMERA_SENSOR_OV5675         2
-
-
-#if (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_ARX3A0)
+/* Camera Sensor Selection
+ * Supports: ARX3A0, MT9M114, OV5675
+ *
+ * Selection is driven by the RTE components enabled in RTE_Components.h.
+ * Enable the corresponding CAMERA_SENSOR driver in the RTE configuration.
+ *
+ *   - RTE_Drivers_CAMERA_SENSOR_ARX3A0  (560x560,  IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_MT9M114 (1280x720, IPI-16 RAW8)
+ *   - RTE_Drivers_CAMERA_SENSOR_OV5675  (1296x972, IPI-16 RAW8)
+ *
+ * Note: Sensors output RAW10, but CPI interface default is IPI-16 RAW8.
+ *       CPI color mode can be changed via RTE configuration if needed.
+ */
+#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
   #define SELECTED_CAMERA_SENSOR     "ARX3A0"
   #define FRAME_WIDTH                RTE_ARX3A0_CAMERA_SENSOR_FRAME_WIDTH
   #define FRAME_HEIGHT               RTE_ARX3A0_CAMERA_SENSOR_FRAME_HEIGHT
   #define BYTES_PER_PIXEL 1
 
-#elif (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_MT9M114)
+#elif defined(RTE_Drivers_CAMERA_SENSOR_MT9M114)
   #define SELECTED_CAMERA_SENSOR     "MT9M114"
   #define FRAME_WIDTH                 RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_WIDTH
   #define FRAME_HEIGHT                RTE_MT9M114_CAMERA_SENSOR_MIPI_FRAME_HEIGHT
+
+  /* MT9M114 image configuration 0 and 1 uses IPI-16 RAW8 format.
+   * RAW8 requires 1 byte per pixel for the framebuffer.
+   */
   #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 0 ||  \
        RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG == 1)
      #define BYTES_PER_PIXEL 1
@@ -86,22 +85,39 @@ static ARM_DRIVER_GPIO *GPIO_Driver_SWITCH_CAM =
      #error "Unsupported RTE_MT9M114_CAMERA_SENSOR_MIPI_IMAGE_CONFIG"
   #endif
 
-#elif (CAMERA_SENSOR_SELECT == CAMERA_SENSOR_OV5675)
+#elif defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
   #define SELECTED_CAMERA_SENSOR     "OV5675"
   #define FRAME_WIDTH                RTE_OV5675_CAMERA_SENSOR_FRAME_WIDTH
   #define FRAME_HEIGHT               RTE_OV5675_CAMERA_SENSOR_FRAME_HEIGHT
   #define BYTES_PER_PIXEL 1
 
 #else
-  #error "Invalid CAMERA_SENSOR_SELECT! Valid: ARX3A0, MT9M114, OV5675"
+  #error "Enable one RTE_Drivers_CAMERA_SENSOR_* definition"
 #endif
 
+/* Camera Sensor configurations
+ * Resolution and IPI format based on selected sensor:
+ *   - ARX3A0  : 560x560,  IPI-16 RAW8
+ *   - MT9M114 : 1280x720, IPI-16 RAW8
+ *   - OV5675  : 1296x972, IPI-16 RAW8
+ */
 
+/* Allocate Camera frame buffer memory using memory pool section in
+ *  Linker script (sct scatter) file.
+ */
+
+/* pool size for Camera frame buffer:
+ *  which will be frame width x frame height x bytes per pixel
+ */
 #define FRAME_BUFFER_POOL_SIZE ((FRAME_WIDTH) * (FRAME_HEIGHT) * (BYTES_PER_PIXEL))
 
+/* pool area for Camera frame buffer.
+ *  Allocated in the "camera_frame_buf" section.
+ */
 uint8_t framebuffer_pool[FRAME_BUFFER_POOL_SIZE]
     __attribute__((section(".bss.camera_frame_buf"), aligned(32)));
 
+/* Camera callback events */
 typedef enum {
     CAM_CB_EVENT_CAPTURE_STOPPED = (1 << 0),
     CAM_CB_EVENT_ERROR           = (1 << 1)
@@ -109,24 +125,36 @@ typedef enum {
 
 volatile uint32_t event_flag;
 
+/**
+ * \fn          void camera_callback(uint32_t event)
+ * \brief       Camera isr callback
+ * \param[in]   event: Camera Event
+ * \return      none
+ */
 void camera_callback(uint32_t event)
 {
-	/*Capture finished normally */
-
-	if (event & ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED) {
-		event_flag |= CAM_CB_EVENT_CAPTURE_STOPPED;
+    /* Capture finished normally. */
+    if (event & ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED) {
+        event_flag |= CAM_CB_EVENT_CAPTURE_STOPPED;
     }
 
-	/*FIFO overrun or hardware error occurred */
-
-	if (event & (ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
-			    ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN |
-			    ARM_CPI_EVENT_ERR_HARDWARE)) {
-          event_flag |= CAM_CB_EVENT_ERROR;
-	}
+    /* FIFO overrun or hardware error occurred. */
+    if (event & (ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
+                 ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN |
+                 ARM_CPI_EVENT_ERR_HARDWARE)) {
+        event_flag |= CAM_CB_EVENT_ERROR;
+    }
 }
 
-
+#if (!USE_CONDUCTOR_TOOL_PINS_CONFIG)
+/**
+ * \fn          int32_t i2c_pinmux(void)
+ * \brief       i2c hardware pin initialization:
+ *                 - PIN-MUX configuration
+ *                 - PIN-PAD configuration
+ * \param[in]   none
+ * \return      0:success; -1:failure
+ */
 int32_t i2c_pinmux(void)
 {
     int32_t ret;
@@ -160,8 +188,13 @@ int32_t i2c_pinmux(void)
     return 0;
 }
 
-
-
+/**
+ * \fn          int32_t camera_pinmux(void)
+ * \brief       Camera hardware pin initialization:
+ *                  - PIN-MUX configuration
+ * \param[in]   none
+ * \return      0:success; -1:failure
+ */
 int32_t camera_pinmux(void)
 {
     int32_t ret;
@@ -174,11 +207,31 @@ int32_t camera_pinmux(void)
         printf("\r\n Error: Camera Pin-Mux failed.\r\n");
         return ret;
     }
-
+#if defined(BOARD_CAMERA_I2C_MUX_GPIO_PORT) && \
+    defined(BOARD_CAMERA_I2C_MUX_GPIO_PIN) && \
+    defined(BOARD_CAMERA_I2C_MUX_ALTERNATE_FUNCTION)
+    ret = pinconf_set(PORT_(BOARD_CAMERA_I2C_MUX_GPIO_PORT),
+                      BOARD_CAMERA_I2C_MUX_GPIO_PIN,
+                      BOARD_CAMERA_I2C_MUX_ALTERNATE_FUNCTION,
+                      0);
+    if (ret != ARM_DRIVER_OK) {
+        printf("\r\n Error: Camera I2C mux Pin-Mux failed.\r\n");
+        return ret;
+    }
+#endif
     return 0;
 }
 
-
+/**
+ * \fn          int32_t hardware_init(void)
+ * \brief       - i2c hardware pin initialization:
+ *                  - PIN-MUX configuration
+ *                  - PIN-PAD configuration
+ *              - Camera hardware pin initialization:
+ *                  - PIN-MUX configuration
+ * \param[in]   none
+ * \return      0:success; -1:failure
+ */
 int32_t hardware_init(void)
 {
     int32_t ret;
@@ -199,9 +252,22 @@ int32_t hardware_init(void)
 
     return 0;
 }
+#endif
 
 
 
+/**
+ * \fn          void camera_demo(void)
+ * \brief       Baremetal camera capture.
+ *              This demo does:
+ *                   - initialize the camera I2C and clock pins
+ *                   - enable the MIPI clocks
+ *                   - initialize the camera driver
+ *                   - capture one frame into framebuffer_pool
+ *                   - stop the capture
+ *                   - print the debugger commands that dump the frame
+ * \return      none
+ */
 void camera_demo(void)
 {
     int32_t ret = 0;
@@ -211,33 +277,45 @@ void camera_demo(void)
     run_profile_t      runp = {0};
 
     printf("\r\n \t\t >>> %s Camera Sensor demo baremetal is starting up!!! <<< \r\n",
-               SELECTED_CAMERA_SENSOR);
+           SELECTED_CAMERA_SENSOR);
     printf("\r\n \t\t Resolution: %dx%d \r\n", FRAME_WIDTH, FRAME_HEIGHT);
 
+    /* Allocated memory address for
+     *   - Camera frame buffer
+     */
 
-    printf("\n \t frame buffer pool size: 0x%08" PRIX32 "  pool addr: 0x%" PRIxPTR " \r\n ",
-           (uint32_t)FRAME_BUFFER_POOL_SIZE, (uintptr_t)framebuffer_pool);
+    printf("\n \t frame buffer        pool size: 0x%0X  pool addr: 0x%08" PRIx32 " \r\n ",
+           FRAME_BUFFER_POOL_SIZE,
+           (uint32_t) framebuffer_pool);
 
+#if USE_CONDUCTOR_TOOL_PINS_CONFIG
+    /* pin mux and configuration for all device IOs requested from pins.h */
+    ret = board_pins_config();
+    if (ret != 0) {
+        printf("Error in pin-mux configuration: %" PRId32 "\n", ret);
+        return;
+    }
+#else
 
     ret = hardware_init();
     if (ret != 0) {
-         printf("Error: CAMERA Hardware Initialize failed: %" PRId32 "\n", ret);
-         return;
-        }
-
+        printf("Error: CAMERA Hardware Initialize failed: %" PRId32 "\n", ret);
+        return;
+    }
+#endif
 
     /* Initialize SE services */
     se_services_port_init();
 
     error_code = SERVICES_clocks_enable_clock(se_services_s_handle,
-    		                                  CLKEN_CLK_100M,
-											  true, &service_error_code);
+                                              CLKEN_CLK_100M,
+                                              true, &service_error_code);
     if (error_code != SERVICES_REQ_SUCCESS) {
-        printf("SE : MIPI 100MHz clock enable = %"PRId32 "\n", error_code);
-    	return;
+        printf("SE : MIPI 100MHz clock enable = %" PRId32 "\n", error_code);
+        return;
     }
     error_code = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_HFOSC,
-    		                                  true, &service_error_code);
+                                              true, &service_error_code);
     if (error_code != SERVICES_REQ_SUCCESS) {
         printf("SE: MIPI 38.4Mhz(HFOSC) clock enable = %" PRId32 "\n", error_code);
         goto error_disable_100mhz_clk;
@@ -247,61 +325,29 @@ void camera_demo(void)
 
     error_code = SERVICES_get_run_cfg(se_services_s_handle, &runp, &service_error_code);
     if (error_code) {
-    	printf("\r\nSE: get_run_cfg error = %" PRId32 "\n", error_code);
+        printf("\r\nSE: get_run_cfg error = %" PRId32 "\n", error_code);
         goto error_disable_hfosc_clk;
     }
 
     runp.memory_blocks = MRAM_MASK | SRAM0_MASK | SRAM1_MASK;
     runp.phy_pwr_gating = MIPI_PLL_DPHY_MASK | MIPI_TX_DPHY_MASK |
-    		      MIPI_RX_DPHY_MASK | LDO_PHY_MASK;
+                  MIPI_RX_DPHY_MASK | LDO_PHY_MASK;
 
     /*Set new configuration */
 
     error_code = SERVICES_set_run_cfg(se_services_s_handle, &runp, &service_error_code);
     if (error_code) {
-    	printf("\r\nSE: set_run_cfg error = %" PRId32 "\n", error_code);
-    	goto error_disable_hfosc_clk;
-    }
-
-#if STANDARD_CAM_EN
-    ret = GPIO_Driver_SWITCH_CAM->Initialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, NULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Initialize failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
+        printf("\r\nSE: set_run_cfg error = %" PRId32 "\n", error_code);
         goto error_disable_hfosc_clk;
     }
 
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_FULL);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO PowerControl failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_uninitialize_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetDirection(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                               GPIO_PIN_DIRECTION_OUTPUT);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetDirection failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-
-    ret = GPIO_Driver_SWITCH_CAM->SetValue(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN,
-                                           GPIO_PIN_OUTPUT_STATE_HIGH);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO SetValue failed (pin: %d, ret=%" PRId32 ")\r\n",
-               BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ret);
-        goto error_poweroff_gpio;
-    }
-#endif
-
     version = CAMERAdrv->GetVersion();
     printf("\r\n Camera driver version api:0x%" PRIx16 " driver:0x%" PRIx16 " \r\n",
-    		version.api, version.drv);
+            version.api, version.drv);
 
     ret = CAMERAdrv->Initialize(camera_callback);
     if (ret != ARM_DRIVER_OK) {
-    	printf("\r\n Error: CAMERA Initialize failed.\r\n");
+        printf("\r\n Error: CAMERA Initialize failed.\r\n");
         goto error_disable_hfosc_clk;
     }
 
@@ -315,7 +361,7 @@ void camera_demo(void)
     /* Control configuration for camera controller */
     ret = CAMERAdrv->Control(CPI_CONFIGURE, 0);
     if (ret != ARM_DRIVER_OK) {
-    	printf("\r\n Error: CPI configuration failed.\r\n");
+        printf("\r\n Error: CPI configuration failed.\r\n");
         goto error_poweroff_camera;
 
     }
@@ -330,11 +376,11 @@ void camera_demo(void)
 
     /*Control configuration for camera events */
     ret = CAMERAdrv->Control(CPI_EVENTS_CONFIGURE, ARM_CPI_EVENT_CAMERA_CAPTURE_STOPPED |
-    		ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
+            ARM_CPI_EVENT_ERR_CAMERA_INPUT_FIFO_OVERRUN |
             ARM_CPI_EVENT_ERR_CAMERA_OUTPUT_FIFO_OVERRUN |
             ARM_CPI_EVENT_ERR_HARDWARE);
     if (ret != ARM_DRIVER_OK) {
-    	printf("\r\n Error: CAMERA SENSOR Event configuration failed.\r\n");
+        printf("\r\n Error: CAMERA SENSOR Event configuration failed.\r\n");
         goto error_poweroff_camera;
 
     }
@@ -344,8 +390,8 @@ void camera_demo(void)
     printf("\r\n Let's Start Capturing Camera Frame...\r\n");
     ret = CAMERAdrv->CaptureFrame(framebuffer_pool);
     if (ret != ARM_DRIVER_OK) {
-    	printf("\r\n Error : Camera Capture Frame failed.\r\n");
-    	goto error_poweroff_camera;
+        printf("\r\n Error : Camera Capture Frame failed.\r\n");
+        goto error_poweroff_camera;
 
     }
     /* Wait for capture to finish or error to occur */
@@ -364,23 +410,51 @@ void camera_demo(void)
 
     ret = CAMERAdrv->Stop();
     if (ret != ARM_DRIVER_OK) {
-    	 printf("\r\n Error: CAMERA stop Capture failed.\r\n");
-         goto error_poweroff_camera;
+        printf("\r\n Error: CAMERA stop Capture failed.\r\n");
+        goto error_poweroff_camera;
     }
 
+    /* How to dump captured/converted image data from memory address?
+     *  1)To dump memory using ARM DS(Development Studio) and Ulink Pro Debugger
+     *
+     *  Use below command in "Commands" tab:
+     *   dump binary memory path_with_filename.fileformat starting_address ending_address
+     *
+     *   example:(update user directory name)
+     *    dump binary memory ~/cam_image0_560p.bin 0x8000000 0x804C8FF
+     *
+     *
+     *  2)To dump memory using Trace32
+     *  Use below command in "Commands" tab:
+     *   data.save.binary path_with_filename.fileformat starting_address--ending_address
+     *
+     *   example:(update user directory name)
+     *    data.save.binary ~/cam_image0_%s_%dx%d.bin 0x8000000--0x804C8FF
+     *
+     *
+     *   This commands will dump memory from staring address to ending address
+     *   and store it in to given path with filename.
+     *
+     *
+     */
     printf("\n To dump memory using ARM DS with Ulink Pro Debugger or Trace32 :");
     printf("\n  Use below commands in Commands tab: update user directory name \r\n");
 
-    printf("Ulink: ~/%s_%dx%d.bin 0x%" PRIXPTR " 0x%" PRIXPTR "\n",
+    printf("Ulink:\n");
+    printf("dump binary memory /tmp/%s_%dx%d.bin 0x%08" PRIX32 " 0x%08" PRIX32 "\n",
+            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
+            (uint32_t) framebuffer_pool,
+            (uint32_t) (framebuffer_pool + FRAME_BUFFER_POOL_SIZE - 1));
+    printf("T32:\n");
+    printf("data.save.binary /tmp/%s_%dx%d.bin 0x%08" PRIX32 "--0x%08" PRIX32 "\n",
+            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
+            (uint32_t) framebuffer_pool,
+            (uint32_t) (framebuffer_pool + FRAME_BUFFER_POOL_SIZE - 1));
+    printf("Jlink:\n");
+    printf("savebin /tmp/%s_%dx%d.bin 0x%08" PRIX32 " 0x%08" PRIX32 "\n",
            SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uintptr_t)framebuffer_pool,
-           (uintptr_t)(framebuffer_pool + FRAME_BUFFER_POOL_SIZE - 1));
-
-    printf("T32:\n   data.save.binary ~/cam_image0_%s_%dx%d.bin 0x%" PRIxPTR
-           "--0x%" PRIXPTR " \r\n",
-           SELECTED_CAMERA_SENSOR, FRAME_WIDTH, FRAME_HEIGHT,
-           (uintptr_t)framebuffer_pool,
-           (uintptr_t)(framebuffer_pool + FRAME_BUFFER_POOL_SIZE - 1));
+           (uint32_t) framebuffer_pool,
+           (uint32_t) FRAME_BUFFER_POOL_SIZE);
 
     printf("\n  This command will dump memory from staring address to ending address \r");
     printf("\n  and store it in to given path with filename.\r\n\r\n");
@@ -388,6 +462,8 @@ void camera_demo(void)
     printf("\r\n\r\n XXX Camera demo is halting here! XXX...\r\n");
     printf("\r\n Now User can dump captured/converted image data from memory address using any "
               "debugger!!!\r\n");
+    printf("\n This application dumps the raw image data. To convert it into a viewable image format,\r");
+    printf("\n please use an open-source tool or converter.\r\n");
 
 
 error_poweroff_camera:
@@ -398,47 +474,34 @@ error_poweroff_camera:
     }
 
 error_uninitialize_camera:
-
-   ret = CAMERAdrv->Uninitialize();
-   if (ret != ARM_DRIVER_OK) {
+    ret = CAMERAdrv->Uninitialize();
+    if (ret != ARM_DRIVER_OK) {
         printf("\r\n Error: CAMERA Uninitialize failed.\r\n");
-   }
-
-#if STANDARD_CAM_EN
-error_poweroff_gpio:
-    /* Power off GPIO peripheral */
-    ret = GPIO_Driver_SWITCH_CAM->PowerControl(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN, ARM_POWER_OFF);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Power OFF failed.\r\n");
     }
-
-error_uninitialize_gpio:
-    /* Un-initialize GPIO driver */
-    ret = GPIO_Driver_SWITCH_CAM->Uninitialize(BOARD_CAMERA_I2C_C1_C2_GPIO_PIN);
-    if (ret != ARM_DRIVER_OK) {
-        printf("\r\n Error: GPIO Uninitialize failed.\r\n");
-    }
-#endif
 
 error_disable_hfosc_clk:
-	error_code = SERVICES_clocks_enable_clock(se_services_s_handle,
+    error_code = SERVICES_clocks_enable_clock(se_services_s_handle,
                                               CLKEN_HFOSC,
                                               false,
                                               &service_error_code);
     if (error_code != SERVICES_REQ_SUCCESS) {
-    	printf("SE: MIPI 38.4Mhz(HFOSC) clock disable = %" PRId32 "\n", error_code);
+        printf("SE: MIPI 38.4Mhz(HFOSC) clock disable = %" PRId32 "\n", error_code);
 
     }
 error_disable_100mhz_clk:
-	error_code = SERVICES_clocks_enable_clock(se_services_s_handle,
+    error_code = SERVICES_clocks_enable_clock(se_services_s_handle,
                                               CLKEN_CLK_100M,
                                               false,
                                               &service_error_code);
     if (error_code != SERVICES_REQ_SUCCESS) {
-    	printf("SE_MIPI 100MHZ clock disable = %"PRId32"\n", error_code);
+        printf("SE_MIPI 100MHZ clock disable = %" PRId32 "\n", error_code);
 
     }
 
+    printf("\r\n XXX Camera demo thread is exiting XXX...\r\n");
+
+    /* wait forever */
+    WAIT_FOREVER_LOOP
 }
 
 int main(void)
@@ -456,8 +519,5 @@ int main(void)
     SystemCoreClockUpdate();
 
     camera_demo();
-
-    while (1) {
-    }
 
 }
