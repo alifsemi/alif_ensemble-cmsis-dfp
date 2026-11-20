@@ -271,6 +271,8 @@ int main()
     }
 #endif
 
+    printf("SD baremetal test app started\n");
+
     /* Initialize the SE services */
     se_services_port_init();
 
