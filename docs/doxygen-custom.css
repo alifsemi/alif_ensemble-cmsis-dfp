@@ -1,0 +1,19 @@
+/* White wordmark stays readable on the light header and on the dark header. */
+#projectlogo img {
+  background-color: #070B11;
+  padding: 6px 10px;
+  border-radius: 4px;
+  max-height: 48px;
+}
+
+div.image img {
+  max-width: min(100%, 720px);
+  height: auto;
+  background: #ffffff;
+  padding: 4px;
+}
+
+table.markdownTable {
+  margin-top: 0.4em;
+  margin-bottom: 1.4em;
+}

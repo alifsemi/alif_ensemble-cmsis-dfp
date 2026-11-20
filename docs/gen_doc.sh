@@ -20,5 +20,5 @@ fi
 echo "Running Doxygen..."
 doxygen "$DOXYFILE"
 
-echo "Documentation generated in the output directory specified in Doxyfile."
+echo "Documentation generated. Open docs/html/index.html in a browser."
 

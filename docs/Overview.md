@@ -1,5 +1,7 @@
 # Alif Semiconductor Ensemble Device Family Pack
 
+The HTML user guide for this pack is generated from `docs/General/`. From the repository root run `./docs/gen_doc.sh` and open `docs/html/index.html`.
+
 The `Alif Semiconductor Ensemble Device Family Pack` contains Device and Board support for:
 
 - [Alif Semiconductor Ensemble E1C/E1/E3/E5/E7/E8](https://alifsemi.com/products/ensemble/) AI/ML microcontroller series with up to two Arm Cortex-M55 processors and two Arm Ethos-U55/U85 microNPUs.
