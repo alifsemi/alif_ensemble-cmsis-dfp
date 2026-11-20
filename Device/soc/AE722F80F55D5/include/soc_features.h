@@ -36,6 +36,13 @@
 #define SOC_FEAT_PLL_CLK3_MAX_HZ                   (480000000)
 #define SOC_FEAT_PIX_CLKSEL_PLL_HZ                 (480000000)
 
+/* SD card clock select. Pin frequency is 100 MHz / select. */
+#define SOC_FEAT_SDHC_CLK_100MHZ_DIV               (1U)
+#define SOC_FEAT_SDHC_CLK_50MHZ_DIV                (2U)
+#define SOC_FEAT_SDHC_CLK_25MHZ_DIV                (4U)
+#define SOC_FEAT_SDHC_CLK_12P5MHZ_DIV              (8U)
+#define SOC_FEAT_SDHC_CLK_400KHZ_DIV               (0x100U)
+
 /* Memory Regions */
 #define SOC_FEAT_MRAM_SIZE                         (0x00580000)
 #define SOC_FEAT_MRAM_BASE                         (0x80000000)
