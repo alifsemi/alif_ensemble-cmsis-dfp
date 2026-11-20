@@ -8199,6 +8199,18 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C0_SDA_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C0 FS Spike Length (ns) <1-50>
+// <i> Defines the FS spike suppression length for I2C0 (in nanoseconds).
+// <i> Used for Standard, Fast and Fast-mode Plus
+// <i> Default: 50
+#define RTE_I2C0_FS_SPIKE_LENGTH_NS 50
+
+// <o> I2C0 HS Spike Length (ns) <1-10>
+// <i> Defines the HS spike suppression length for I2C0 (in nanoseconds).
+// <i> Used for High-speed mode
+// <i> Default: 10
+#define RTE_I2C0_HS_SPIKE_LENGTH_NS 10
+
 // <o> I2C0 blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -8258,6 +8270,18 @@
 // <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C1_SDA_STUCK_LOW_TIMEOUT 1000000
+
+// <o> I2C1 FS Spike Length (ns) <1-50>
+// <i> Defines the FS spike suppression length for I2C1 (in nanoseconds).
+// <i> Used for Standard, Fast and Fast-mode Plus
+// <i> Default: 50
+#define RTE_I2C1_FS_SPIKE_LENGTH_NS 50
+
+// <o> I2C1 HS Spike Length (ns) <1-10>
+// <i> Defines the HS spike suppression length for I2C1 (in nanoseconds).
+// <i> Used for High-speed mode
+// <i> Default: 10
+#define RTE_I2C1_HS_SPIKE_LENGTH_NS 10
 
 // <o> I2C1 blocking mode enable
 //    <0=> DISABLE
@@ -8320,6 +8344,18 @@
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C2_SDA_STUCK_LOW_TIMEOUT 1000000
 
+// <o> I2C2 FS Spike Length (ns) <1-50>
+// <i> Defines the FS spike suppression length for I2C2 (in nanoseconds).
+// <i> Used for Standard, Fast and Fast-mode Plus
+// <i> Default: 50
+#define RTE_I2C2_FS_SPIKE_LENGTH_NS 50
+
+// <o> I2C2 HS Spike Length (ns) <1-10>
+// <i> Defines the HS spike suppression length for I2C2 (in nanoseconds).
+// <i> Used for High-speed mode
+// <i> Default: 10
+#define RTE_I2C2_HS_SPIKE_LENGTH_NS 10
+
 // <o> I2C2 blocking mode enable
 //    <0=> DISABLE
 //    <1=> ENABLE
@@ -8380,6 +8416,18 @@
 // <i> Defines SDA stuck-at-low timeout (in ic_clk cycles).
 // <i> Default: 10ms (Considered the input clock as 100MHz)
 #define RTE_I2C3_SDA_STUCK_LOW_TIMEOUT 1000000
+
+// <o> I2C3 FS Spike Length (ns) <1-50>
+// <i> Defines the FS spike suppression length for I2C3 (in nanoseconds).
+// <i> Used for Standard, Fast and Fast-mode Plus
+// <i> Default: 50
+#define RTE_I2C3_FS_SPIKE_LENGTH_NS 50
+
+// <o> I2C3 HS Spike Length (ns) <1-10>
+// <i> Defines the HS spike suppression length for I2C3 (in nanoseconds).
+// <i> Used for High-speed mode
+// <i> Default: 10
+#define RTE_I2C3_HS_SPIKE_LENGTH_NS 10
 
 // <o> I2C3 blocking mode enable
 //    <0=> DISABLE
