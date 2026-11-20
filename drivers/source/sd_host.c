@@ -443,6 +443,7 @@ SDHC_STATUS sdhc_set_io(sdmmc_io_t *p_sdmmc_io_param, SDMMC_SET_IO_CMD set_io_cm
         case SDMMC_CLK_50MHZ:
             status = sdhc_set_clk_freq(pHsd, SDMMC_CLK_50_MHZ);
             break;
+        case SDMMC_CLK_ENABLE:
         default:
             status = sdhc_set_clk_freq(pHsd, pHsd->sd_param.clock_freq);
             break;

@@ -990,9 +990,8 @@ RE_INIT:
             sd_set_io(&io_param, SDMMC_SET_IO_CLK);
         }
     } else {
-        /* Default speed mode: set clock frequency */
-        io_param.sdmmc_clock = (p_sd_param->clock_freq > SDMMC_CLK_25_MHZ) ?
-                              SDMMC_CLK_ENABLE : SDMMC_CLK_25MHZ;
+        /* Default speed mode: program the RTE frequency. */
+        io_param.sdmmc_clock = SDMMC_CLK_ENABLE;
         sd_set_io(&io_param, SDMMC_SET_IO_CLK);
     }
 
