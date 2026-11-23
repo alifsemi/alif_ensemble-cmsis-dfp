@@ -1720,6 +1720,10 @@ static int32_t mt9m114_Uninit(CAMERA_SENSOR_DEVICE           *cpi_mt9m114_camera
 
 #if (RTE_MT9M114_CAMERA_SENSOR_MIPI_ENABLE || RTE_MT9M114_CAMERA_SENSOR_CPI_ENABLE)
 
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+extern const struct ISP_SENSOR_PARAMS mt9m114_isp_params;
+#endif
+
 /* MT9M114 CPI Initialize */
 static int32_t mt9m114_CPI_Init(void);
 
@@ -1838,6 +1842,9 @@ static CAMERA_SENSOR_DEVICE cpi_mt9m114_camera_sensor = {
     .csi_info  = &csi_mt9m114_config,
     .dphy_port = RTE_MT9M114_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &cpi_mt9m114_ops,
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    .isp_params = &mt9m114_isp_params,
+#endif
 };
 #endif
 
@@ -1848,6 +1855,9 @@ static CAMERA_SENSOR_DEVICE cpi_mt9m114_camera_sensor = {
     .height    = RTE_MT9M114_CAMERA_SENSOR_CPI_FRAME_HEIGHT,
     .cpi_info  = &cpi_mt9m114_config,
     .ops       = &cpi_mt9m114_ops,
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    .isp_params = &mt9m114_isp_params,
+#endif
 };
 #endif
 
@@ -1964,6 +1974,9 @@ static CAMERA_SENSOR_DEVICE lpcpi_mt9m114_camera_sensor = {
     .height    = RTE_MT9M114_CAMERA_SENSOR_LPCPI_FRAME_HEIGHT,
     .cpi_info  = &lpcpi_mt9m114_config,
     .ops       = &lpcpi_mt9m114_ops,
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    .isp_params = &mt9m114_isp_params,
+#endif
 };
 
 static int32_t mt9m114_LPCPI_Init(void)

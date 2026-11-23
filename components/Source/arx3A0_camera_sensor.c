@@ -2003,6 +2003,9 @@ static CAMERA_SENSOR_OPERATIONS arx3a0_ops = {
 \brief ARX3A0 Camera Sensor Device Structure
 \ref CAMERA_SENSOR_DEVICE
 */
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+extern const struct ISP_SENSOR_PARAMS arx3a0_isp_params;
+#endif
 #ifndef RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT
 #define RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT DPHY_PORT_CSI2_NATIVE
 #endif
@@ -2013,6 +2016,9 @@ static CAMERA_SENSOR_DEVICE arx3a0_camera_sensor = {
     .csi_info  = &arx3a0_csi_info,
     .dphy_port = RTE_ARX3A0_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &arx3a0_ops,
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    .isp_params = &arx3a0_isp_params,
+#endif
 };
 
 /* Registering CPI sensor */
