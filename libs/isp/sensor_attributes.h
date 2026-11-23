@@ -13,15 +13,25 @@
 #include "RTE_Components.h"
 #include "vsi_comm_sns.h"
 
+#if defined(__GNUC__) || defined(__clang__) || defined(__ARMCC_VERSION)
+#define SENSOR_ATTR_MAYBE_UNUSED __attribute__((unused))
+#else
+#define SENSOR_ATTR_MAYBE_UNUSED
+#endif
+
 /**
  * @brief Sensor-specific AE default attributes, selected at compile time
  * by the active RTE_Drivers_CAMERA_SENSOR_* macro.
  * Consumed by AE_GetDefaults() in Driver_ISP.c.
+ *
+ * One table is included per enabled camera sensor component. Single- or
+ * multi-camera builds are supported; AE_GetDefaults() uses the active
+ * sensor via isp_params->ae_defaults.
  */
 
-#ifdef RTE_Drivers_CAMERA_SENSOR_MT9M114
+#if defined(RTE_Drivers_CAMERA_SENSOR_MT9M114)
 
-static AE_SNS_DEFAULT_S sensor_attributes = {
+static AE_SNS_DEFAULT_S mt9m114_sensor_attributes SENSOR_ATTR_MAYBE_UNUSED = {
     /* MT9M114 @ 30fps, 1280x720 MIPI
      * cam_sensor_cfg_frame_length_lines (0xC812) = 1000
      */
@@ -63,9 +73,11 @@ static AE_SNS_DEFAULT_S sensor_attributes = {
     .gainThreshold = 1024,
 };
 
-#elif defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
+#endif /* RTE_Drivers_CAMERA_SENSOR_MT9M114 */
 
-static AE_SNS_DEFAULT_S sensor_attributes = {
+#if defined(RTE_Drivers_CAMERA_SENSOR_OV5675)
+
+static AE_SNS_DEFAULT_S ov5675_sensor_attributes SENSOR_ATTR_MAYBE_UNUSED = {
     /* OV5675 @ 30fps, 1296x972 MIPI (2-lane, 450MHz)
      * VTS (0x380E-0x380F) = 0x07D0 = 2000
      * HTS (0x380C-0x380D) = 0x02EE = 750
@@ -112,9 +124,11 @@ static AE_SNS_DEFAULT_S sensor_attributes = {
     .gainThreshold = 15360,
 };
 
-#else /* ARX3A0 */
+#endif /* RTE_Drivers_CAMERA_SENSOR_OV5675 */
 
-static AE_SNS_DEFAULT_S sensor_attributes = {
+#if defined(RTE_Drivers_CAMERA_SENSOR_ARX3A0)
+
+static AE_SNS_DEFAULT_S arx3a0_sensor_attributes SENSOR_ATTR_MAYBE_UNUSED = {
     /* ARX3A0 @ 90fps, 560x560
      * FRAME_LENGTH_LINES (0x300A) = 0x04A6 = 1190
      */
@@ -163,6 +177,6 @@ static AE_SNS_DEFAULT_S sensor_attributes = {
     .gainThreshold = 12000,
 };
 
-#endif /* sensor selection */
+#endif /* RTE_Drivers_CAMERA_SENSOR_ARX3A0 */
 
 #endif /* SENSOR_ATTRIBUTES_H_ */
