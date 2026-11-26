@@ -27,6 +27,17 @@
 #define SOC_FEAT_PLL_CLK1_MAX_HZ                   (160000000)
 #define SOC_FEAT_PLL_CLK2_MAX_HZ                   (120000000)
 
+/*
+ * In E1C SD base clock is 80MHz according to Alif_E1C_HWRM_v1.6.
+ * SD clock = base_clk / (2 * div);
+ * e.g. div = 1 -> 80 MHz / (2 * 1) -> 40 MHz.
+ */
+#define SOC_FEAT_SDHC_CLK_100MHZ_DIV               (0U)     /* not achievable in e1c*/
+#define SOC_FEAT_SDHC_CLK_50MHZ_DIV                (1U)     /*actual output clock will be 40 MHz*/
+#define SOC_FEAT_SDHC_CLK_25MHZ_DIV                (2U)     /*actual output clock will be 20 MHz*/
+#define SOC_FEAT_SDHC_CLK_12P5MHZ_DIV              (4U)     /*actual output clock will be 10 MHz*/
+#define SOC_FEAT_SDHC_CLK_400KHZ_DIV               (128U)   /*actual output clock will be 312 kHz*/
+
 /* Memory Regions */
 #define SOC_FEAT_MRAM_SIZE                         (0x0018C000)
 #define SOC_FEAT_MRAM_BASE                         (0x80000000)

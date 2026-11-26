@@ -22,6 +22,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "sd_types.h"
 #include "sd_host.h"
+#include "soc_features.h"
 #include "sys_ctrl_sd.h"
 #include "string.h"
 
@@ -249,25 +250,29 @@ static SDHC_STATUS sdhc_set_clk_freq(sd_handle_t *pHsd, uint32_t clk_freq)
         return SDHC_STATUS_OK;
     }
 
-    /* Calculate divider from frequency
-     * SD Clock = Base Clock / (2 * div)
+    /*
+     * Pick the CLK_CTRL divider for the requested card clock.
      * Base clock read from capabilities register, default 50MHz
-     * Divider is 10-bit (SDHC_MAX_DIVIDER max), split across FREQ_SEL and UPPER_FREQ_SEL
      */
-    uint32_t base_clk_mhz = (regs->SDMMC_CAPABILITIES1_R & SDHC_BASE_CLK_FREQ_MASK) >>
-                            SDHC_BASE_CLK_FREQ_POS;
-    if (!base_clk_mhz) {
-        base_clk_mhz = SDHC_DEFAULT_BASE_CLK_MHZ;
-    }
-    uint32_t base_clk_hz = base_clk_mhz * SDHC_MHZ_TO_HZ;
-
-    if (clk_freq >= base_clk_hz) {
-        div = 0;
-    } else {
-        div = (base_clk_hz + (2 * clk_freq) - 1) / (2 * clk_freq);
-        if (div > SDHC_MAX_DIVIDER) {
-            div = SDHC_MAX_DIVIDER;
-        }
+    switch (clk_freq) {
+    case SDMMC_CLK_100_MHZ:
+        div = SOC_FEAT_SDHC_CLK_100MHZ_DIV;
+        break;
+    case SDMMC_CLK_50_MHZ:
+        div = SOC_FEAT_SDHC_CLK_50MHZ_DIV;
+        break;
+    case SDMMC_CLK_25_MHZ:
+        div = SOC_FEAT_SDHC_CLK_25MHZ_DIV;
+        break;
+    case SDMMC_CLK_12P5_MHZ:
+        div = SOC_FEAT_SDHC_CLK_12P5MHZ_DIV;
+        break;
+    case SDHC_INIT_CLOCK_FREQ_HZ:
+        div = SOC_FEAT_SDHC_CLK_400KHZ_DIV;
+        break;
+    default:
+        div = SOC_FEAT_SDHC_CLK_400KHZ_DIV;
+        break;
     }
 
     /* Build clock control value from the split divider fields. */
@@ -1003,3 +1008,4 @@ int sdhc_card_present(struct _sd_handle_t *pHsd, int (*card_det_cb)(void))
     uint32_t pstate = pHsd->regs->SDMMC_PSTATE_REG;
     return (pstate & SDHC_CARD_INSRT_Msk) ? 1 : 0;
 }
+

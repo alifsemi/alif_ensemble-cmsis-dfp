@@ -89,6 +89,7 @@ typedef enum _SET_IO_CMD {
 
 /* SD Clk freq */
 #define SDMMC_CLK_400_KHZ                 400000U    /*!< 400KHz */
+#define SDMMC_CLK_12P5_MHZ                12500000U  /*!< 12.5MHz */
 #define SDMMC_CLK_25_MHZ                  25000000U  /*!< 25MHz  */
 #define SDMMC_CLK_50_MHZ                  50000000U  /*!< 50MHz  */
 #define SDMMC_CLK_100_MHZ                 100000000U /*!< 100MHz */
