@@ -98,13 +98,13 @@ static ARM_DRIVER_WM8904 *wm8904 = &WM8904;
 static TaskHandle_t       xDacHandle;
 static EventGroupHandle_t xEventGroupHandleDac;
 
-#define DAC_TASK_PRIORITY 3
+#define DAC_TASK_PRIORITY configMAX_PRIORITIES - 1
 
 #if !defined(DAC_PREDEFINED_SAMPLES) && defined(BOARD_MIC_INPUT_I2S_INSTANCE)
 static TaskHandle_t       xAdcHandle;
 static EventGroupHandle_t xEventGroupHandleAdc;
 
-#define ADC_TASK_PRIORITY configMAX_PRIORITIES - 1
+#define ADC_TASK_PRIORITY configMAX_PRIORITIES - 2
 #endif
 
 QueueHandle_t xQueueRx;

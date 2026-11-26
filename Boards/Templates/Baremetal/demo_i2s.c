@@ -63,14 +63,20 @@
 #endif
 
 #define NUM_SAMPLES 40000
+#define HALF_SAMPLES (NUM_SAMPLES / 2)
 
 void DAC_Init(void);
 #if !defined(DAC_PREDEFINED_SAMPLES)
 int32_t ADC_Init(void);
-int32_t Receiver(void);
+int32_t Receiver(uint8_t chunk_index);
 
-/* Buffer for ADC samples */
-static uint32_t sample_buf[NUM_SAMPLES];
+/*
+ * Buffer, split in two. One half is played while the
+ * other is filled, so the end of the phrase is still recorded.
+ */
+static uint32_t sample_buf[2][HALF_SAMPLES];
+static uint8_t live_half;   /* 0 or 1: selects the buffer half for capture */
+static uint8_t live_primed; /* Set to 1 after the first half is captured */
 #endif
 
 /* 1 to send the data stream continuously , 0 to send data only once */
@@ -322,15 +328,21 @@ void DAC_Init(void)
         buf_len = sizeof(ulHelloSamples24bit48khz) / sizeof(ulHelloSamples24bit48khz[0]);
         buf     = (uint32_t *) ulHelloSamples24bit48khz;
 #else
-        buf_len = NUM_SAMPLES;
-        buf     = (uint32_t *) sample_buf;
+        if (live_primed == 0U) {
+            /* Fill the first half before playback starts. */
+            status = Receiver(0U);
+            if (status) {
+                printf("ADC Receive failed status = %" PRId32 "\n", status);
+                goto error_adc_receive;
+            }
 
-        /* Function to receive digital signal from mic */
-        status  = Receiver();
-        if (status) {
-            printf("ADC Receive failed status = %" PRId32 "\n", status);
-            goto error_adc_receive;
+            live_primed = 1U;
+            live_half   = 0U;
         }
+
+        buf_len   = HALF_SAMPLES;
+        buf       = sample_buf[live_half];
+        live_half ^= 1U;
 #endif
 
         /* Transmit the samples */
@@ -339,6 +351,15 @@ void DAC_Init(void)
             printf("DAC Send status = %" PRId32 "\n", status);
             goto error_adc_dac;
         }
+
+#if !defined(DAC_PREDEFINED_SAMPLES) && defined(BOARD_MIC_INPUT_I2S_INSTANCE)
+        /* Capture the other half while this half is playing. */
+        status = Receiver(live_half);
+        if (status) {
+            printf("ADC Receive failed status = %" PRId32 "\n", status);
+            goto error_adc_receive;
+        }
+#endif
 
         /* Wait for the completion event */
         while (1) {
@@ -520,17 +541,17 @@ int32_t ADC_Init(void)
 }
 
 /**
-  \fn          int32_t Receiver(void)
+  \fn          int32_t Receiver(uint8_t chunk_index)
   \brief       Function performing reception from mic
-  \param[in]   None
+  \param[in]   chunk_index  Buffer half to fill (0 or 1)
   \return      status
 */
-int32_t Receiver(void)
+int32_t Receiver(uint8_t chunk_index)
 {
     int32_t status;
 
     /* Receive data */
-    status = i2s_adc->Receive((uint32_t *) sample_buf, NUM_SAMPLES);
+    status = i2s_adc->Receive(sample_buf[chunk_index], HALF_SAMPLES);
     if (status) {
         printf("ADC Receive status = %" PRId32 "\n", status);
         return status;
