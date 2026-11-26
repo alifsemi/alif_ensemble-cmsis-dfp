@@ -125,7 +125,7 @@ void vApplicationIdleHook(void)
 /* Shared Bayer capture buffer. Sized for the larger of the two frames.
  */
 uint8_t framebuffer_pool[FRAMEBUFFER_POOL_SIZE]
-    __attribute__((section(".bss.camera_frame_buf"), aligned(8)));
+    __attribute__((section(".bss.camera_frame_buf"), aligned(32)));
 
 /* AIPL aipl_demosaic_rgb888 writes packed RGB888: width x height x 3. */
 #define RGB_BYTES_PER_PIXEL    3U
@@ -540,6 +540,12 @@ void camera_demo_thread_entry(void *pvParameters)
             printf("\r\n Error: CAMERA stop Capture failed.\r\n");
             goto error_poweroff_camera;
         }
+
+        /* The frame was written by the CPI DMA, not the CPU. Invalidate the D-cache
+         * for the captured range so the demosaic reads the new frame from memory
+         * and not stale lines left in the cache by the previous capture/memset.
+         */
+        RTSS_InvalidateDCache_by_Addr(framebuffer_pool, (int32_t) frame_bytes);
 
         ret = aipl_demosaic_rgb888(framebuffer_pool,
                                    rgb_buf,
