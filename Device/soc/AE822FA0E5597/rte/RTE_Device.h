@@ -737,6 +737,83 @@
 #endif
 // </e> ARX3A0 [Driver_ARX3A0]
 
+
+// <e> OG0TC1B [Driver_OG0TC1B]
+// <o> Enable/Disable OG0TC1B camera sensor
+//     <0=> disable
+//     <1=> enable
+// <i> define if to enable or disable OG0TC1B camera sensor
+// <i> default: enable
+#define RTE_OG0TC1B_CAMERA_SENSOR_ENABLE 1
+
+#if (RTE_OG0TC1B_CAMERA_SENSOR_ENABLE)
+
+// <o> Select camera OG0TC1B frequency
+// <i> Defines camera OG0TC1B frequency. 1/2 of the MIPI data rate.
+// <i> Default: 500000000
+#define RTE_OG0TC1B_CAMERA_SENSOR_CSI_FREQ                500000000
+
+// <o> select OG0TC1B CSI2 Data type
+// <i> defines select CSI2 Data type
+// <i> default: 0x2A (RAW8)
+#define RTE_OG0TC1B_CAMERA_SENSOR_CSI_DATA_TYPE           0x2A
+
+// <o> select OG0TC1B number of lanes in DPHY
+// <i> defines select OG0TC1B number of lanes in DPHY.
+// <i> default: 1 one lane
+#define RTE_OG0TC1B_CAMERA_SENSOR_CSI_N_LANES             1
+
+// <o> select OG0TC1B virtual channel ID
+// <i> defines select OG0TC1B virtual channel ID.
+// <i> default: 0
+#define RTE_OG0TC1B_CAMERA_SENSOR_CSI_VC_ID               0
+
+// <o> select OG0TC1B override CPI color mode
+// <i> defines select OG0TC1B override CPI color mode.
+// <i> Allows CSI and CPI to use different formats, for example CSI RAW10 and CPI RAW8.
+// <i> default: 1 (Enable)
+#define RTE_OG0TC1B_CAMERA_SENSOR_OVERRIDE_CPI_COLOR_MODE 1
+
+// <o> select OG0TC1B CPI color mode
+// <i> defines select OG0TC1B CPI color mode.
+// <i> default: 2  (IPI-16 RAW 8)
+#define RTE_OG0TC1B_CAMERA_SENSOR_CPI_COLOR_MODE          2
+
+// <o> select OG0TC1B frame height
+// <i> defines select OG0TC1B frame height.
+// <i> default: 192
+#define RTE_OG0TC1B_CAMERA_SENSOR_FRAME_HEIGHT            192
+
+// <o> select OG0TC1B frame width
+// <i> defines select OG0TC1B frame width.
+// <i> default: 192
+#define RTE_OG0TC1B_CAMERA_SENSOR_FRAME_WIDTH             192
+
+// <o> Select camera sensor OG0TC1B CSI clock source division [Divisor] <2-511>
+// <i> Defines camera sensor OG0TC1B CSI clock source division
+// <i> Default: 20 (400MHz/20 = 20MHz XVCLK on HP)
+#define RTE_OG0TC1B_CAMERA_SENSOR_MIPI_CSI_CLK_SCR_DIV    20
+
+// <o> RTE_OG0TC1B_CAMERA_SENSOR_I2C_INSTANCE
+// <i> Defines camera sensor OG0TC1B i2c instance
+//     <0=>   I2C0
+//     <1=>   I2C1
+//     <2=>   I2C2
+//     <3=>   I2C3
+//     <4=>   I2C OVER I3C
+// <i> Default: 1
+#define RTE_OG0TC1B_CAMERA_SENSOR_I2C_INSTANCE            1
+
+// <o> OG0TC1B manual AE control
+//     <0=> disable
+//     <1=> enable
+// <i> Runtime exposure and gain register writes without the ISP pipeline.
+// <i> Default: enable
+#define RTE_OG0TC1B_CAMERA_SENSOR_MANUAL_AE_CONTROL       1
+
+#endif
+// </e> OG0TC1B [Driver_OG0TC1B]
+
 // <e> AR0144 [Driver_AR0144]
 // <o> Enable/Disable AR0144 camera sensor
 //     <0=> disable
