@@ -151,8 +151,8 @@ const struct gpioconf board_gpioconf[] = {
     {
         PORT_8,
         0,
-        (1 << PIN_3),
-        (1 << PIN_3),
+        0, /* P8_3 is I2S2 SCLK */
+        0,
         0,
         (1 << PIN_5) | (1 << PIN_1),
         (1 << PIN_5) | (1 << PIN_1),

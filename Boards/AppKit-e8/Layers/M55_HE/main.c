@@ -61,6 +61,12 @@ void clock_init(void)
     if ((rval != 0) || (error_code != 0)) {
         return;
     }
+
+    /* Enable HFOSCx2 */
+    rval = SERVICES_clocks_enable_clock(se_services_s_handle, CLKEN_HFOSCx2, true, &error_code);
+    if ((rval != 0) || (error_code != 0)) {
+        return;
+    }
 }
 
 /*

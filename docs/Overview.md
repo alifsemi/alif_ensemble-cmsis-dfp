@@ -105,6 +105,8 @@ Provided API Interface    | Description
  CMSIS_USART              | CMSIS-Driver USART4 connected to PRG USB connector
  CMSIS_USB_Device         | CMSIS-Driver USB connected to MCU USB connector
  CMSIS_VIO                | CMSIS-Driver VIO connected to RGB LED and Joystick
+ CMSIS_VSTREAM_AUDIO_IN   | CMSIS-Driver for Audio input stream via PDM microphones
+ CMSIS_VSTREAM_AUDIO_OUT  | CMSIS-Driver for Audio output stream via LINE OUT
  CMSIS_VSTREAM_VIDEO_IN   | CMSIS-Driver for Video input stream via MIPI Camera
  CMSIS_VSTREAM_VIDEO_OUT  | CMSIS-Driver for Video output stream via GLCD Display
  STDIN, STDOUT, STDERR    | Standard I/O connected to USART4 COM port

@@ -17,6 +17,8 @@ layer:
         - CMSIS_USART
         - CMSIS_USB_Device
         - CMSIS_VIO
+        - CMSIS_VSTREAM_AUDIO_IN
+        - CMSIS_VSTREAM_AUDIO_OUT
         - CMSIS_VSTREAM_VIDEO_IN
         - CMSIS_VSTREAM_VIDEO_OUT
         - STDIN
@@ -55,6 +57,7 @@ layer:
     - component: BSP:AppKit Config&AppKit-E8-AIML
     - component: BSP:External peripherals:CAMERA Sensor OV5675
     - component: BSP:External peripherals:Ethernet PHY
+    - component: BSP:External peripherals:WM8904 CODEC
     - component: BSP:External peripherals:ILI9806E LCD panel
       define:
         - BOARD_LCD_BL_LED_GPIO_PORT: BOARD_LCD_BACKLIGHT_GPIO_PORT
@@ -68,10 +71,13 @@ layer:
       define:
         - CMSIS_GPIO_DISABLE_EVENTS
     - component: CMSIS Driver:I2C
+    - component: CMSIS Driver:SAI
     - component: CMSIS Driver:SPI
     - component: CMSIS Driver:USART
     - component: CMSIS Driver:USB Device
     - component: CMSIS Driver:VIO:Board&AppKit-E8-AIML
+    - component: CMSIS Driver:vStream:AudioIn&AppKit-E8-AIML
+    - component: CMSIS Driver:vStream:AudioOut&AppKit-E8-AIML
     - component: CMSIS Driver:vStream:VideoIn&AppKit-E8-AIML
     - component: CMSIS Driver:vStream:VideoOut&AppKit-E8-AIML
 
@@ -89,6 +95,7 @@ layer:
     - component: Device:SOC Peripherals:MIPI CSI2
     - component: Device:SOC Peripherals:MIPI DSI
     - component: Device:SOC Peripherals:MIPI DSI CSI2 DPHY
+    - component: Device:SOC Peripherals:PDM
     - component: Device:SOC Peripherals:PINCONF
 
     - component: Machine Learning:NPU Support:Ethos-U Driver&Generic U55
