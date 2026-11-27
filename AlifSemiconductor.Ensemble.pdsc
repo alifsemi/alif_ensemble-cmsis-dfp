@@ -3370,6 +3370,19 @@
       <require Cclass="CMSIS Driver" Cgroup="GPIO"/>
     </condition>
 
+    <condition id="AppKit-E8 vStream AudioIn">
+      <description>Requirement for AppKit-E8-AIML vStream AudioIn Driver</description>
+      <require condition="AppKit-E8-AIML"/>
+      <require Cclass="Device" Cgroup="SOC Peripherals" Csub="PDM"/>
+    </condition>
+
+    <condition id="AppKit-E8 vStream AudioOut">
+      <description>Requirement for AppKit-E8-AIML vStream AudioOut Driver</description>
+      <require condition="AppKit-E8-AIML"/>
+      <require Cclass="CMSIS Driver" Cgroup="SAI"/>
+      <require Cclass="BSP" Cgroup="External peripherals" Csub="WM8904 CODEC"/>
+    </condition>
+
     <condition id="AppKit-E8 vStream VideoIn">
       <description>Requirement for AppKit-E8-AIML vStream VideoIn Driver</description>
       <require condition="AppKit-E8-AIML"/>
@@ -3778,6 +3791,29 @@
       </RTE_Components_h>
       <files>
         <file category="source" name="Boards/DevKit-e7/Drivers/vstream_audio_in.c"/>
+      </files>
+    </component>
+
+    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="AudioIn" Cvariant="AppKit-E8-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit-E8 vStream AudioIn">
+      <description>Audio Input vStream implementation for Ensemble AppKit AK-E8-AIML (PDM microphones)</description>
+      <RTE_Components_h>
+        #define RTE_VSTREAM_AUDIOIN
+        #define RTE_VSTREAM_AUDIOIN_APPKIT_E8_AIML
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Boards/AppKit-e8/Drivers/vstream_audio_in.c"/>
+      </files>
+    </component>
+
+    <component Cclass="CMSIS Driver" Cgroup="vStream" Csub="AudioOut" Cvariant="AppKit-E8-AIML" Cversion="1.0.0" Capiversion="1.0.0" condition="AppKit-E8 vStream AudioOut">
+      <description>Audio Output vStream implementation for Ensemble AppKit AK-E8-AIML (WM8904 codec)</description>
+      <RTE_Components_h>
+        #define RTE_VSTREAM_AUDIOOUT
+        #define RTE_VSTREAM_AUDIOOUT_APPKIT_E8_AIML
+      </RTE_Components_h>
+      <files>
+        <file category="source" name="Boards/AppKit-e8/Drivers/vstream_audio_out.c"/>
+        <file category="header" name="Boards/AppKit-e8/Drivers/vstream_audio_out_config.h" version="1.0.0" attr="config"/>
       </files>
     </component>
 
