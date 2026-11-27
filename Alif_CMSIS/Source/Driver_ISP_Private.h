@@ -24,6 +24,7 @@
 #include CMSIS_device_header
 
 #include "Driver_ISP.h"
+#include "Camera_Sensor.h"
 #include "vsi_comm_video.h"
 #include "vsi_comm_isp.h"
 #include "vsi_comm_sns.h"
@@ -57,10 +58,16 @@ typedef struct _ISP_RESOURCES {
     ISP_PORT              isp_port_id;
     ISP_CHN               isp_chn_id;
     ISP_BINNING_ATTR_S   *isp_binning_attr; /**< ISP Binning Attributes         */
+    CAMERA_SENSOR_DEVICE *cam_sensor;     /**< Active camera sensor             */
     ISP_DRIVER_STATE      state;          /**< ISP driver status                */
 } ISP_RESOURCES;
 
+extern ISP_RESOURCES ISP_RES;
+
 extern int VSI_MPI_ISP_Init(ISP_DEV IspDev);
+
+/** \brief Select active camera sensor for ISP. */
+int32_t ISP_Select_Sensor(uint8_t idx);
 
 #ifdef __cplusplus
 }

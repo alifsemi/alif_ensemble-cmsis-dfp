@@ -44,7 +44,6 @@
 
 #include "vsi_comm_ae.h"
 #include "vsi_comm_sns.h"
-#include "sensor_attributes.h"
 
 #include "mpi_isp_binning.h"
 #include "mpi_isp_bls.h"
@@ -122,7 +121,12 @@ static int AE_GetDefaults(ISP_PORT IspPort, AE_SNS_DEFAULT_S *pAeSnsDft)
     if (!pAeSnsDft) {
         return -1;
     }
-    *pAeSnsDft = sensor_attributes;
+    /* AE defaults come from the active camera sensor's ISP param bundle. */
+    if (ISP_RES.cam_sensor == NULL || ISP_RES.cam_sensor->isp_params == NULL ||
+        ISP_RES.cam_sensor->isp_params->ae_defaults == NULL) {
+        return -1;
+    }
+    *pAeSnsDft = *ISP_RES.cam_sensor->isp_params->ae_defaults;
     pAeSnsDft->linesPer500ms =
         pAeSnsDft->fullLines * pAeSnsDft->fps / (2 * ISP_SNS_FPS_ACCU);
     return 0;
@@ -221,10 +225,12 @@ static ARM_ISP_CAPABILITIES ISP_GetCapabilities(void)
 
 /*
  * fn        int32_t ISP_Init (ARM_ISP_SignalEvent_t cb_event,
- *                              ISP_RESOURCES *isp)
+ *                             CAMERA_SENSOR_DEVICE *cam_sensor,
+ *                             ISP_RESOURCES *isp)
  * brief     Initialize ISP Interface.
- * param[in] cb_event pointer to ARM_ISP_SignalEvent_t.
- * param[in] isp Pointer to ISP resource.
+ * param[in] cb_event   Pointer to ARM_ISP_SignalEvent_t.
+ * param[in] cam_sensor Pointer to Camera Sensor Device.
+ * param[in] isp        Pointer to ISP resource.
  * return    @ref execution_status.
  */
 static int32_t ISP_Init(ARM_ISP_SignalEvent_t cb_event, CAMERA_SENSOR_DEVICE *cam_sensor,
@@ -427,6 +433,7 @@ static int32_t ISP_Uninit(ISP_RESOURCES *isp)
     }
 
     isp->cb_event = NULL;
+    isp->cam_sensor = NULL;
     isp->state.initialized = 0;
 
     return ARM_DRIVER_OK;
@@ -1465,11 +1472,8 @@ static int32_t ISP_control(uint32_t control, uint32_t arg, ISP_RESOURCES *isp)
     }
     return ret;
 }
+
 #if (RTE_ISP)
-
-/* ISP sensor access structure */
-static CAMERA_SENSOR_DEVICE *sensor;
-
 static ISP_BINNING_ATTR_S binning_attr = {
     .enable   = RTE_ISP_BINNING_ENABLE,
     .binHStep = RTE_ISP_BINNING_HSTEP,
@@ -1477,9 +1481,9 @@ static ISP_BINNING_ATTR_S binning_attr = {
 };
 
 ISP_RESOURCES ISP_RES = {
-    .isp_calib_info = &calibration_data,
-    .isp_port_attr  = &port_attr,
-    .isp_chan_attr  = &chan_attr,
+    .isp_calib_info = NULL,
+    .isp_port_attr  = NULL,
+    .isp_chan_attr  = NULL,
     .cb_event       = NULL,
     .irq_priority   = RTE_ISP_IRQ_PRIORITY,
     .isp_dev_id     = 0,
@@ -1493,8 +1497,154 @@ ISP_RESOURCES ISP_RES = {
         0, /* Channel ID */
     },
     .isp_binning_attr = &binning_attr,
+    .cam_sensor       = NULL,
     .state = {0},
 };
+
+/*
+ * fn        int32_t ISP_BindParamsFromSensor (CAMERA_SENSOR_DEVICE *cam_sensor)
+ * brief     Bind ISP calibration, port, and channel attributes from the sensor.
+ * param[in] cam_sensor Pointer to Camera Sensor Device.
+ * return    @ref execution_status.
+ */
+static int32_t ISP_BindParamsFromSensor(CAMERA_SENSOR_DEVICE *cam_sensor)
+{
+    const ISP_SENSOR_PARAMS *params;
+
+    if (cam_sensor == NULL || cam_sensor->isp_params == NULL) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+    params = cam_sensor->isp_params;
+    if (params->calib == NULL || params->port == NULL || params->chan == NULL) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+    ISP_RES.isp_calib_info = params->calib;
+    ISP_RES.isp_port_attr  = params->port;
+    ISP_RES.isp_chan_attr  = params->chan;
+    return ARM_DRIVER_OK;
+}
+
+/*
+ * fn        void isp_param_set_crop (vsi_u32_t top, vsi_u32_t left,
+ *                                    vsi_u32_t width, vsi_u32_t height)
+ * brief     Set ISP output crop rectangle on the bound port attributes.
+ * param[in] top    Vertical offset of the crop window.
+ * param[in] left   Horizontal offset of the crop window.
+ * param[in] width  Crop window width.
+ * param[in] height Crop window height.
+ * return    none.
+ */
+void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_t height)
+{
+    /* RECT_S field naming is swapped in the libisp:
+     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
+     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
+     */
+    if (ISP_RES.isp_port_attr == NULL) {
+        return;
+    }
+    ISP_RES.isp_port_attr->outFormRect.top    = left;
+    ISP_RES.isp_port_attr->outFormRect.left   = top;
+    ISP_RES.isp_port_attr->outFormRect.width  = width;
+    ISP_RES.isp_port_attr->outFormRect.height = height;
+}
+
+/*
+ * fn        void isp_param_set_output_dimensions (vsi_u32_t width, vsi_u32_t height)
+ * brief     Set ISP output frame dimensions on the bound channel attributes.
+ * param[in] width  Output frame width.
+ * param[in] height Output frame height.
+ * return    none.
+ */
+void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height)
+{
+    if (ISP_RES.isp_chan_attr == NULL) {
+        return;
+    }
+    ISP_RES.isp_chan_attr->chnFormat.width  = width;
+    ISP_RES.isp_chan_attr->chnFormat.height = height;
+}
+
+/*
+ * fn        int32_t ISP_Select_Sensor (uint8_t idx)
+ * brief     Select the active camera sensor for the ISP driver.
+ * param[in] idx Index of the sensor to activate.
+ * return    @ref execution_status.
+ */
+int32_t ISP_Select_Sensor(uint8_t idx)
+{
+    CAMERA_SENSOR_DEVICE *cam_sensor = Camera_Sensor_Get(idx);
+    ISP_PORT_ATTR_S       isp_port_config;
+    int32_t               ret;
+
+    if (cam_sensor == NULL) {
+        return ARM_DRIVER_ERROR_PARAMETER;
+    }
+    if (ISP_RES.state.streaming == 1) {
+        return ARM_DRIVER_ERROR_BUSY;
+    }
+    ret = ISP_BindParamsFromSensor(cam_sensor);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+    ISP_RES.cam_sensor = cam_sensor;
+    if (ISP_RES.state.initialized == 0) {
+        return ARM_DRIVER_OK;
+    }
+    ret = VSI_MPI_ISP_GetPortAttr(ISP_RES.isp_port_id, &isp_port_config);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+    ISP_RES.isp_port_attr->snsRect.width     = cam_sensor->width;
+    ISP_RES.isp_port_attr->snsRect.height    = cam_sensor->height;
+    ISP_RES.isp_port_attr->inFormRect.width  = cam_sensor->width;
+    ISP_RES.isp_port_attr->inFormRect.height = cam_sensor->height;
+    ISP_RES.isp_port_attr->iSRect.width      = cam_sensor->width;
+    ISP_RES.isp_port_attr->iSRect.height     = cam_sensor->height;
+    /* Default crop is the full sensor frame. Use ISP_CONTROL_SET_CROP for a custom crop. */
+    ISP_RES.isp_port_attr->outFormRect.top    = 0;
+    ISP_RES.isp_port_attr->outFormRect.left   = 0;
+    ISP_RES.isp_port_attr->outFormRect.width  = (vsi_u32_t)cam_sensor->width;
+    ISP_RES.isp_port_attr->outFormRect.height = (vsi_u32_t)cam_sensor->height;
+    isp_port_config.snsRect.width      = cam_sensor->width;
+    isp_port_config.snsRect.height     = cam_sensor->height;
+    isp_port_config.inFormRect.width   = cam_sensor->width;
+    isp_port_config.inFormRect.height  = cam_sensor->height;
+    isp_port_config.iSRect.width       = cam_sensor->width;
+    isp_port_config.iSRect.height      = cam_sensor->height;
+    isp_port_config.outFormRect        = ISP_RES.isp_port_attr->outFormRect;
+    ret = VSI_MPI_ISP_SetPortAttr(ISP_RES.isp_port_id, &isp_port_config);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+    ret = VSI_MPI_ISP_SetChnAttr(ISP_RES.isp_chn_id, ISP_RES.isp_chan_attr);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+    ISP_RES.isp_calib_info->modules.aem.blockWin.hOffs = ISP_RES.isp_port_attr->outFormRect.top;
+    ISP_RES.isp_calib_info->modules.aem.blockWin.vOffs = ISP_RES.isp_port_attr->outFormRect.left;
+    ISP_RES.isp_calib_info->modules.aem.blockWin.hSize = ISP_RES.isp_port_attr->outFormRect.width;
+    ISP_RES.isp_calib_info->modules.aem.blockWin.vSize = ISP_RES.isp_port_attr->outFormRect.height;
+    ret = VSI_MPI_ISP_SetExpmAttr(ISP_RES.isp_port_id, &ISP_RES.isp_calib_info->modules.aem);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+    ISP_RES.isp_calib_info->modules.wbm.measRect.hOffs = ISP_RES.isp_port_attr->outFormRect.top;
+    ISP_RES.isp_calib_info->modules.wbm.measRect.vOffs = ISP_RES.isp_port_attr->outFormRect.left;
+    ISP_RES.isp_calib_info->modules.wbm.measRect.hSize = ISP_RES.isp_port_attr->outFormRect.width;
+    ISP_RES.isp_calib_info->modules.wbm.measRect.vSize = ISP_RES.isp_port_attr->outFormRect.height;
+    ret = VSI_MPI_ISP_SetWbmAttr(ISP_RES.isp_port_id, &ISP_RES.isp_calib_info->modules.wbm);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+
+    ret = VSI_MPI_ISP_SetCalib(ISP_RES.isp_port_id, ISP_RES.isp_calib_info);
+    if (ret) {
+        return ARM_DRIVER_ERROR;
+    }
+
+    return ARM_DRIVER_OK;
+}
 
 /*
  * fn        int32_t ISP_Initialize (ARM_ISP_SignalEvent_t cb_event)
@@ -1504,8 +1654,16 @@ ISP_RESOURCES ISP_RES = {
  */
 static int32_t ISP_Initialize(ARM_ISP_SignalEvent_t cb_event)
 {
-    sensor = Camera_Sensor_Get(CAMERA_SENSOR_INSTANCE_0);
-    return ISP_Init(cb_event, sensor, &ISP_RES);
+    int32_t ret;
+
+    if (ISP_RES.cam_sensor == NULL) {
+        ISP_RES.cam_sensor = Camera_Sensor_Get(0);
+    }
+    ret = ISP_BindParamsFromSensor(ISP_RES.cam_sensor);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+    return ISP_Init(cb_event, ISP_RES.cam_sensor, &ISP_RES);
 }
 
 /*

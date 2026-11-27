@@ -55,6 +55,7 @@ void ARM_MIPI_CSI2_Event_Callback(uint32_t int_event);
 
 #if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
 #include "Driver_ISP.h"
+#include "Driver_ISP_Private.h"
 extern ARM_DRIVER_ISP Driver_ISP;
 
 /*
@@ -1057,6 +1058,13 @@ static int32_t CPI_Switch_Sensor(uint8_t idx)
 
 #if (RTE_MIPI_CSI2)
     ret = CSI2_Select_Sensor(idx);
+    if (ret != ARM_DRIVER_OK) {
+        return ret;
+    }
+#endif
+
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    ret = ISP_Select_Sensor(idx);
     if (ret != ARM_DRIVER_OK) {
         return ret;
     }

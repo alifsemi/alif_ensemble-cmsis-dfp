@@ -24,11 +24,12 @@
 #if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
 
 #include "isp_param.h"
+#include "sensor_attributes.h"
 
 /* ---------------------------------------------------------------------------
  * ISP Calibration Data - ARX3A0
  * --------------------------------------------------------------------------- */
-ISP_CALIB_DATA_S calibration_data = {
+ISP_CALIB_DATA_S arx3a0_calibration_data = {
     .modules = {
         .autoRoute = {
             .autoRoute = {100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200,
@@ -327,7 +328,7 @@ ISP_CALIB_DATA_S calibration_data = {
  * ISP Port Attribute - ARX3A0
  * Native resolution: 560x560 (square mode)
  * --------------------------------------------------------------------------- */
-ISP_PORT_ATTR_S port_attr = {
+ISP_PORT_ATTR_S arx3a0_port_attr = {
     .ispInputType = INPUT_TYPE_SENSOR,
     .ispMode      = ISP_MODE_RAW,
     .hdrMode      = HDR_MODE_LINEAR,
@@ -361,7 +362,7 @@ ISP_PORT_ATTR_S port_attr = {
 /* ---------------------------------------------------------------------------
  * ISP Channel Attribute - ARX3A0
  * --------------------------------------------------------------------------- */
-ISP_CHN_ATTR_S chan_attr = {
+ISP_CHN_ATTR_S arx3a0_chan_attr = {
     .transBus = TRANS_BUS_ONLINE,
     .chnFormat = {
         .width       = RTE_ISP_OUTPUT_WIDTH,
@@ -370,23 +371,14 @@ ISP_CHN_ATTR_S chan_attr = {
     },
 };
 
-void isp_param_set_crop(vsi_u32_t top, vsi_u32_t left, vsi_u32_t width, vsi_u32_t height)
-{
-    /* RECT_S field naming is swapped in the libisp:
-     * RECT_S.top  -> ISP_OUT_H_OFFS (horizontal/left offset)
-     * RECT_S.left -> ISP_OUT_V_OFFS (vertical/top offset)
-     * We swap here so our API uses conventional image coordinates.
-     */
-    port_attr.outFormRect.top    = left;
-    port_attr.outFormRect.left   = top;
-    port_attr.outFormRect.width  = width;
-    port_attr.outFormRect.height = height;
-}
 
-void isp_param_set_output_dimensions(vsi_u32_t width, vsi_u32_t height)
-{
-    chan_attr.chnFormat.width  = width;
-    chan_attr.chnFormat.height = height;
-}
+
+/* ISP Sensor Parameters */
+const ISP_SENSOR_PARAMS arx3a0_isp_params = {
+    .calib       = &arx3a0_calibration_data,
+    .port        = &arx3a0_port_attr,
+    .chan        = &arx3a0_chan_attr,
+    .ae_defaults = &arx3a0_sensor_attributes,
+};
 
 #endif /* defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1) */

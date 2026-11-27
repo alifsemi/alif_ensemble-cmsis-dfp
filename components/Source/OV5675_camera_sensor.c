@@ -1205,6 +1205,9 @@ static CAMERA_SENSOR_OPERATIONS OV5675_ops = {
  * @brief OV5675 Camera Sensor Device Structure
  * \ref CAMERA_SENSOR_DEVICE
  */
+ #if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+extern const struct ISP_SENSOR_PARAMS ov5675_isp_params;
+#endif
 #ifndef RTE_OV5675_CAMERA_SENSOR_DPHY_PORT
 #define RTE_OV5675_CAMERA_SENSOR_DPHY_PORT DPHY_PORT_CSI2_NATIVE
 #endif
@@ -1215,6 +1218,9 @@ static CAMERA_SENSOR_DEVICE OV5675_camera_sensor = {
     .csi_info  = &OV5675_csi_info,
     .dphy_port  = RTE_OV5675_CAMERA_SENSOR_DPHY_PORT,
     .ops       = &OV5675_ops,
+#if defined(RTE_Drivers_ISP) && defined(RTE_ISP) && (RTE_ISP == 1)
+    .isp_params = &ov5675_isp_params,
+#endif
 };
 
 /* Registering CPI sensor */

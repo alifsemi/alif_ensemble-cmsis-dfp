@@ -127,19 +127,22 @@ typedef struct _CAMERA_SENSOR_OPERATIONS {
     int32_t (*Resume)(void);      /* Resume the camera sensor from sleep state */
 } CAMERA_SENSOR_OPERATIONS;
 
+struct ISP_SENSOR_PARAMS;         /* Forward declaration: ISP Sensor Parameters */
+
 /**
 \brief CAMERA Sensor Device
 */
 typedef struct _CAMERA_SENSOR_DEVICE {
-    CAMERA_SENSOR_INTERFACE   interface; /* Camera Sensor interface */
-    int                       width;     /* Frame Width */
-    int                       height;    /* Frame Height */
-    CPI_INFO                 *cpi_info;  /* CPI Camera Sensor device Information */
+    CAMERA_SENSOR_INTERFACE        interface;    /* Camera Sensor interface */
+    int                            width;        /* Frame Width */
+    int                            height;       /* Frame Height */
+    CPI_INFO                       *cpi_info;    /* CPI Camera Sensor device Information */
 #if defined(CSI)
-    CSI_INFO                 *csi_info;  /* CSI Camera Sensor device Information */
-    DPHY_PORT                 dphy_port; /* MIPI DPHY port: CSI2 native / DSI-as-RX */
+    CSI_INFO                       * csi_info;   /* CSI Camera Sensor device Information */
+    DPHY_PORT                      dphy_port;    /* MIPI DPHY port: CSI2 native / DSI-as-RX */
 #endif
-    CAMERA_SENSOR_OPERATIONS *ops;       /* Camera Sensor device Operations */
+    CAMERA_SENSOR_OPERATIONS       * ops;        /* Camera Sensor device Operations */
+    const struct ISP_SENSOR_PARAMS *isp_params;  /* ISP Sensor Parameters */
 } CAMERA_SENSOR_DEVICE;
 
 /****** CAMERA_SENSOR used for registering camera sensor *****/
