@@ -16,9 +16,11 @@
  * @param   i2c        : Pointer to i2c register map
  * @param   clk_khz    : Clock set SCL
  * @param   speed_mode : Speed
+ * @param   spike_len_ns : Spike length for the selected speed, nanoseconds
  * @retval  none
  */
-static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
+static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode,
+                            uint8_t spike_len_ns)
 {
     uint32_t          scl_hcnt = 0U;       /* value for SCL_HCNT */
     uint32_t          scl_lcnt = 0U;       /* value for SCL_LCNT */
@@ -47,7 +49,7 @@ static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
             scl_lcnt = I2C_MIN_SS_LOW_TIME_NS * clk_ns;
         }
 
-        spk_len      = (I2C_FS_SPIKE_LENGTH_NS / clk_ns);
+        spk_len      = (spike_len_ns / clk_ns);
         scl_hi_ptr   = &i2c->I2C_SS_SCL_HCNT;
         scl_lo_ptr   = &i2c->I2C_SS_SCL_LCNT;
         break;
@@ -70,7 +72,7 @@ static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
             scl_lcnt = I2C_MIN_FS_LOW_TIME_NS * clk_ns;
         }
 
-        spk_len      = (I2C_FS_SPIKE_LENGTH_NS / clk_ns);
+        spk_len      = (spike_len_ns / clk_ns);
         scl_hi_ptr   = &i2c->I2C_FS_SCL_HCNT;
         scl_lo_ptr   = &i2c->I2C_FS_SCL_LCNT;
         break;
@@ -93,7 +95,7 @@ static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
             scl_lcnt = I2C_MIN_FS_PLUS_LOW_TIME_NS * clk_ns;
         }
 
-        spk_len      = (I2C_FS_SPIKE_LENGTH_NS / clk_ns);
+        spk_len      = (spike_len_ns / clk_ns);
         scl_hi_ptr   = &i2c->I2C_FS_SCL_HCNT;
         scl_lo_ptr   = &i2c->I2C_FS_SCL_LCNT;
         break;
@@ -116,7 +118,7 @@ static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
             scl_lcnt = I2C_MIN_HS_LOW_TIME_NS * clk_ns;
         }
 
-        spk_len      = (I2C_HS_SPIKE_LENGTH_NS / clk_ns);
+        spk_len      = (spike_len_ns / clk_ns);
         scl_hi_ptr   = &i2c->I2C_HS_SCL_HCNT;
         scl_lo_ptr   = &i2c->I2C_HS_SCL_LCNT;
         break;
@@ -136,52 +138,46 @@ static void i2c_set_scl_cnt(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
     i2c_enable(i2c);
 }
 
- /**
+/**
   * @brief   Set spike length
   * @note    none
   * @param   i2c          : Pointer to i2c register map
   * @param   clk_khz      : Clock set SCL
-  * @param   speed_mode   : Speed
+  * @param   fs_spike_len_ns : SS/FS/FM+ spike length, nanoseconds
+  * @param   hs_spike_len_ns : High-speed spike length, nanoseconds
   * @retval  none
   */
-static void i2c_set_spike_len(I2C_Type *i2c, uint32_t clk_khz, uint8_t speed_mode)
+void i2c_set_spike_len(I2C_Type *i2c, uint32_t clk_khz, uint8_t fs_spike_len_ns, uint8_t hs_spike_len_ns)
 {
-    /* Reference has take from the databook section 2.15 */
+    /* Reference has been taken from the databook section 2.15 */
     uint32_t clk_ns;
-    uint32_t spike_length;
+    uint8_t fs_spike_length;
+    uint8_t hs_spike_length;
 
     i2c_disable(i2c);
 
-    switch (speed_mode) {
-    case I2C_SPEED_HIGH:
-        if (clk_khz <= 1000000) {
-            clk_ns = 1000000 / clk_khz;
-            spike_length = I2C_HS_SPIKE_LENGTH_NS / clk_ns;
+    if (clk_khz <= 1000000U) {
+        clk_ns = 1000000U / clk_khz;
 
-            if ((I2C_HS_SPIKE_LENGTH_NS % clk_ns) != 0) {
-                spike_length += 1;
-            }
-            i2c->I2C_HS_SPKLEN = spike_length;
-        } else {
-            clk_ns = clk_khz / 1000000;
-            i2c->I2C_HS_SPKLEN = I2C_HS_SPIKE_LENGTH_NS * clk_ns;
+        fs_spike_length = fs_spike_len_ns / clk_ns;
+        if ((fs_spike_len_ns % clk_ns) != 0U) {
+            fs_spike_length += 1U;
         }
-        break;
 
-    default:
-        if (clk_khz <= 1000000) {
-            clk_ns = 1000000 / clk_khz;
-            spike_length = I2C_FS_SPIKE_LENGTH_NS / clk_ns;
-
-            if ((I2C_FS_SPIKE_LENGTH_NS % clk_ns) != 0) {
-                spike_length += 1;
-            }
-            i2c->I2C_FS_SPKLEN = spike_length;
-        } else {
-            clk_ns = clk_khz / 1000000;
-            i2c->I2C_FS_SPKLEN = I2C_FS_SPIKE_LENGTH_NS * clk_ns;
+        hs_spike_length = hs_spike_len_ns / clk_ns;
+        if ((hs_spike_len_ns % clk_ns) != 0U) {
+            hs_spike_length += 1U;
         }
-        break;
+
+        /* Standard, Fast and Fast-mode Plus */
+        i2c->I2C_FS_SPKLEN = fs_spike_length;
+        /* High-speed */
+        i2c->I2C_HS_SPKLEN = hs_spike_length;
+    } else {
+        clk_ns = clk_khz / 1000000U;
+
+        i2c->I2C_FS_SPKLEN = fs_spike_len_ns * clk_ns;
+        i2c->I2C_HS_SPKLEN = hs_spike_len_ns * clk_ns;
     }
 
     i2c_enable(i2c);
@@ -408,16 +404,14 @@ void i2c_set_target_addr(I2C_Type *i2c, const uint32_t address, const i2c_addres
  *          I2C_SPEED_FAST /
  *          I2C_SPEED_FAST_PLUS /
  *          I2C_SPEED_HIGH
+ * @param   spike_len_ns : Spike length for the selected speed, nanoseconds
  * @retval  none
  */
-void i2c_master_set_clock(I2C_Type *i2c, const uint32_t clk_khz, uint8_t speed_mode)
+void i2c_master_set_clock(I2C_Type *i2c, const uint32_t clk_khz, uint8_t speed_mode,
+                          uint8_t spike_len_ns)
 {
-    /* Clock setting */
-    i2c_set_spike_len(i2c, clk_khz, speed_mode);
-
     /* set high count and low count for bus speed modes */
-    i2c_set_scl_cnt(i2c, clk_khz, speed_mode);
-
+    i2c_set_scl_cnt(i2c, clk_khz, speed_mode, spike_len_ns);
 }
 
 /**
